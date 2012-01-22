@@ -107,7 +107,11 @@ class Timeline(object):
         if self.update is None: 
             raise TimelineException("The timeline cannot be updated without " + 
                                     "specifying an update function.")
-        return [Status(status) for status in self.update(self.update_args)]
+        if self.update_args is ():
+            new_statuses = self.update()
+        else:
+            new_statuses = self.update(self.update_args)
+        return [Status(status) for status in new_statuses]
 
     def add_new_statuses(self, new_statuses):
         """Adds the given new statuses to the status list of the Timeline."""
