@@ -6,11 +6,9 @@
 
 import re
 
-from util import html_unescape
+from util import html_unescape, retweet_re
 
 from twitter import Status as BaseStatus
-
-retweet_re = re.compile('^RT @\w+:')
 
 #FIXME! comparison between Status objects doesn't work; at least the equality
 class Status(BaseStatus):

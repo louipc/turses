@@ -11,11 +11,7 @@ import string
 from htmlentitydefs import entitydefs
 from time import strftime, gmtime
 
-#def set_console_title():
-    #try:
-        #sys.stdout.write("\x1b]2;Tyrs\x07")
-    #except:
-        #pass
+retweet_re = re.compile('^RT @\w+:')
 
 def get_time():
     return strftime('%H:%M:%S', gmtime())
