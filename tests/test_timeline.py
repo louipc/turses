@@ -6,7 +6,6 @@
 
 import sys
 sys.path.append('../')
-from time import strftime, gmtime
 import unittest
 
 from credentials import *
@@ -25,7 +24,7 @@ class TimelineTest(unittest.TestCase):
         self.timeline = Timeline(update_function=self.api.GetUserTimeline)
 
     def test_user_screen_name(self):
-        self.assertEqual(self.user.screen_name, "tursesclient")
+        self.assertEqual(self.user.screen_name, "tuitclient")
 
     def test_update_timeline(self):
         self.timeline.update_timeline()
