@@ -59,6 +59,11 @@ class BufferList(urwid.Frame):
 
 
 class TimelineBuffer(urwid.WidgetWrap):
+    """
+    A buffer that contains a `TimelineWidget` and its associated timeline. It
+    sets the update callback of the timeline in order to update the widget
+    when new statuses are fetched.
+    """
     def __init__(self, timeline):
         self.timeline = timeline
         urwid.WidgetWrap.__init__(self, TimelineWidget(timeline))
@@ -70,6 +75,10 @@ class TimelineBuffer(urwid.WidgetWrap):
 
 
 class TimelineWidget(urwid.ListBox):
+    """
+    A `urwid.ListBox` containing a list of Twitter statuses, each of which is
+    rendered as a `StatusWidget`.
+    """
     def __init__(self, content):
         widgets = [self._status_to_widget(status) for status in content]
         urwid.ListBox.__init__(self, StatusWalker(widgets))
@@ -91,7 +100,6 @@ class StatusWalker(urwid.SimpleListWalker):
 class StatusWidget(urwid.WidgetWrap):
     """Widget containing a Twitter status."""
     def __init__ (self, status):
-        #TODO!id
         self.status = status
         self.id = status.id
         status_content = urwid.Padding(
