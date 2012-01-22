@@ -89,9 +89,10 @@ class TimelineException(Exception):
 class Timeline(object):
     """List of Twitter statuses."""
 
-    def __init__(self, update_function=None):
+    def __init__(self, update_function=None, update_function_args=()):
         self.statuses = []
         self.update = update_function
+        self.update_args = update_function_args
 
     def update_timeline(self):
         """Updates the Timeline with new statuses."""
@@ -108,7 +109,7 @@ class Timeline(object):
         if self.update is None: 
             raise TimelineException("The timeline cannot be updated without " + 
                                     "specifying an update function.")
-        return [Status(status) for status in self.update()]
+        return [Status(status) for status in self.update(self.update_args)]
 
     def add_new_statuses(self, new_statuses):
         """Adds the given new statuses to the status list of the Timeline."""
@@ -116,7 +117,7 @@ class Timeline(object):
             #FIXME
             if status not in self.statuses:
                 self.statuses.insert(0, status)
-        if self.update_callback:
+        if hasattr(self, 'update_callback'):
             self.update_callback(new_statuses)
 
     def set_update_callback(self, callback):
@@ -127,16 +128,3 @@ class Timeline(object):
 
     def __iter__(self):
         return self.statuses.__iter__()
-
-
-class SearchTimeline(Timeline):
-    """Statuses that match the specified search."""
-    def __init__(self, update_function=None, search_term=''):
-        Timeline.__init__(self, update_function)
-        self.term = search_term
-
-    def get_new_statuses(self):
-        if self.update is None: 
-            raise TimelineException("The timeline cannot be updated without " + 
-                                    "specifying an update function.")
-        return [Status(status) for status in self.update(self.term)]
