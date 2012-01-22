@@ -6,7 +6,7 @@ import urwid
 from credentials import *
 from turses.api import Api
 from turses.timeline import Timeline
-from turses.widget import TimelineBuffer, BufferList
+from turses.widget import TimelineBuffer, BufferList, BufferHeader
 
 # palette
 palette = [
@@ -40,24 +40,28 @@ mentions = Timeline(update_function=api.GetMentions)
 search = Timeline(update_function=api.GetSearch, update_function_args='#python')
 
 # buffers
-tweets_buffer = TimelineBuffer(tweets)
-tl_buffer = TimelineBuffer(timeline)
-mentions_buffer = TimelineBuffer(mentions)
-search_buffer = TimelineBuffer(search)
+tweets_buffer = TimelineBuffer('tweets', tweets)
+tl_buffer = TimelineBuffer('timeline', timeline)
+mentions_buffer = TimelineBuffer('mentions', mentions)
+search_buffer = TimelineBuffer('#python', search)
 
-show_key = urwid.Text(u"", wrap='clip')
-head = urwid.AttrMap(show_key, 'header')
-top = BufferList([tweets_buffer, tl_buffer, mentions_buffer, search_buffer], head)
+buffers = [tweets_buffer, tl_buffer, mentions_buffer, search_buffer]
+
+head = BufferHeader(' '.join([buffer.name for buffer in buffers]))
+#head = urwid.AttrMap(show_key, 'header')
+top = BufferList(buffers)
 
 def show_all_input(input, raw):
     pressed = u''.join([unicode(i) for i in input])
-    show_key.set_text("Pressed " + pressed)
+    #show_key.set_text("Pressed " + pressed)
     if pressed == u'l':
         top.next_buffer()
     elif pressed == u'h':
         top.prev_buffer()
-    elif pressed == u'd':
+    elif pressed == u'r':
         top.current_buffer.update()
+    elif pressed == u'd':
+        top.remove_current_buffer()
     return input
 
 def exit_on_cr(input):

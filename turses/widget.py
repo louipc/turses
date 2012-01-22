@@ -6,20 +6,57 @@
 
 import urwid
 
+class BufferHeader(urwid.Text):
+    def __init__(self, markup):
+        self.buffers = markup.split()
+        if self.buffers:
+            self.active_index = 0
+        else:
+            #TODO
+            pass
+        text = self._create_text()
+        urwid.Text.__init__(self, markup=text)
+
+    def _create_text(self):
+        active = '[' + self.buffers[self.active_index] + ']'
+        text = list(self.buffers)
+        text[self.active_index] = active
+        return '  '.join(text)
+
+    def _update_text(self):
+        text = self._create_text()
+        self.set_text(text)
+
+    def add_buffer(self, buffer_name):
+        self.buffers.append(buffer_name)
+        self._update_text()
+
+    def remove_current_buffer(self):
+        del self.buffers[self.active_index]
+        self._update_text()
+
+    def set_active_buffer(self, pos):
+        self.active_index = pos
+        self._update_text()
+
+
+#FIXME! BufferList widget is not updated when buffers are updated
 class BufferList(urwid.Frame):
     """
     Keeps a list of buffers and provides functions to switch their visibility,
     rendering one at a time.
     """
-    def __init__(self, buffers=[], header=None, footer=None):
+    def __init__(self, buffers=[], footer=None):
         self.buffers = buffers
-        self.header = header
+        self.header = BufferHeader(' '.join([buffer.name for buffer in buffers])) 
         self.footer = footer
         if self.buffers:
-            self.set_buffer(self.buffers[0])
+            self.set_buffer(self.buffers[0])                
         
     def set_buffer(self, buffer):
         self.current_buffer = buffer
+        buffer_index = self.buffers.index(buffer)
+        self.header.set_active_buffer(buffer_index)
         urwid.Frame.__init__(self, self.current_buffer, header=self.header, footer=self.footer)
 
     def _has_previous(self, buffer):
@@ -33,19 +70,22 @@ class BufferList(urwid.Frame):
     def prev_buffer(self):
         if self._has_previous(self.current_buffer):
             new_index = self.buffers.index(self.current_buffer) - 1
+            self.header.set_active_buffer(new_index)
             new_buffer = self.buffers[new_index]
             self.set_buffer(new_buffer)
 
     def next_buffer(self):
         if self._has_next(self.current_buffer):
             new_index = self.buffers.index(self.current_buffer) + 1
+            self.header.set_active_buffer(new_index)
             new_buffer = self.buffers[new_index]
             self.set_buffer(new_buffer)
 
     def add_buffer(self, buffer):
         self.buffers.append(buffer)
+        self.header.add_buffer(buffer.name)
 
-    def remove_buffer(self, buffer):
+    def _remove_buffer(self, buffer):
         if len(self.buffers) == 1 and buffer in self.buffers:
             raise urwid.ExitMainLoop()
         try:
@@ -57,6 +97,13 @@ class BufferList(urwid.Frame):
         except ValueError:
             pass
 
+    def remove_current_buffer(self):
+        self._remove_buffer(self.current_buffer)
+        self.header.remove_current_buffer()
+
+    def __iter__(self):
+        return self.buffers.__iter__()
+        
 
 class TimelineBuffer(urwid.WidgetWrap):
     """
@@ -64,7 +111,8 @@ class TimelineBuffer(urwid.WidgetWrap):
     sets the update callback of the timeline in order to update the widget
     when new statuses are fetched.
     """
-    def __init__(self, timeline):
+    def __init__(self, name, timeline):
+        self.name = name
         self.timeline = timeline
         urwid.WidgetWrap.__init__(self, TimelineWidget(timeline))
         self.timeline.set_update_callback(self._w.update)
