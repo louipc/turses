@@ -74,10 +74,8 @@ class Status(BaseStatus):
         origin = str(origin)
         return origin
 
-    def __eq__(self, other):
-        if isinstance(other, Status):
-            return self.status == other.status
-        return False
+    def __cmp__(self, other):
+        return self.status.__cmp__(other.status)
 
 
 class TimelineException(Exception):
