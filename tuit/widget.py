@@ -1,4 +1,5 @@
 ###############################################################################
+#                               coding=utf-8                                  #
 #           Copyright (c) 2012 Nicolas Paris and Alejandro Gómez.             #
 #       Licensed under the GPL License. See LICENSE.txt for full details.     #
 ###############################################################################
@@ -62,6 +63,10 @@ class TimelineBuffer(urwid.WidgetWrap):
         self.timeline = timeline
         urwid.WidgetWrap.__init__(self, TimelineWidget(timeline))
         self.timeline.set_update_callback(self._w.update)
+
+    #TODO! make this happen periodically in a separate thread
+    def update(self):
+        self.timeline.update_timeline()
 
 
 class TimelineWidget(urwid.ListBox):
