@@ -1,3 +1,9 @@
+###############################################################################
+#                               coding=utf-8                                  #
+#                     Copyright (c) 2012 Alejandro Gómez.                     #
+#       Licensed under the GPL License. See LICENSE.txt for full details.     #
+###############################################################################
+
 import sys
 sys.path.append('..')
 
@@ -7,28 +13,8 @@ from credentials import *
 from turses.api import Api
 from turses.timeline import Timeline
 from turses.widget import TimelineBuffer, BufferList, BufferHeader
+from turses.constant import palette
 
-# palette
-palette = [
-    ('body','default', '', 'standout'),
-    ('focus','dark red', '', 'standout'),
-    ('header','light blue', ''),
-    ('line', 'dark blue', ''),
-    ('info_msg', 'dark green', ''),
-    ('warn_msg', 'dark red', ''),
-    ('current_tab', 'light blue', ''),
-    ('other_tab', 'dark blue', ''),
-    ('read', 'dark blue', ''),
-    ('unread', 'dark red', ''),
-    ('hashtag', 'dark green', ''),
-    ('attag', 'brown', ''),
-    ('highlight', 'dark red', ''),
-    ('highlight_nick', 'light red', ''),
-    ('help_bar', 'yellow', 'dark blue'),
-    ('help_key', 'dark red', ''),
-    ('header', 'white', 'black'),
-    ('reveal focus', 'black', 'dark cyan', 'standout'),
-]
 
 # api
 api = Api(consumer_key, consumer_secret, access_token_key, access_token_secret)
