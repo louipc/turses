@@ -9,6 +9,7 @@ import os
 import sys
 import string
 from htmlentitydefs import entitydefs
+from time import strftime, gmtime
 
 #def set_console_title():
     #try:
