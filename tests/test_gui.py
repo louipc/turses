@@ -16,6 +16,16 @@ from turses.widget import TimelineBuffer, BufferList, BufferHeader
 from turses.constant import palette
 
 
+class UpdateThread(Thread):
+    def __init__(self, buffers):
+        self.buffers = buffers
+        Thread.__init__(self)
+
+    def run(self):
+        for buffer in self.buffers:
+            buffer.update()
+
+
 # api
 api = Api(consumer_key, consumer_secret, access_token_key, access_token_secret)
 api.VerifyCredentials()
@@ -33,8 +43,6 @@ search_buffer = TimelineBuffer('#python', search)
 
 buffers = [tweets_buffer, tl_buffer, mentions_buffer, search_buffer]
 
-head = BufferHeader(' '.join([buffer.name for buffer in buffers]))
-#head = urwid.AttrMap(show_key, 'header')
 top = BufferList(buffers)
 
 def show_all_input(input, raw):
@@ -45,7 +53,8 @@ def show_all_input(input, raw):
     elif pressed == u'h':
         top.prev_buffer()
     elif pressed == u'r':
-        top.current_buffer.update()
+        thread = UpdateThread(buffers)
+        thread.run()
     elif pressed == u'd':
         top.remove_current_buffer()
     return input
