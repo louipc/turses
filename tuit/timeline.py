@@ -12,6 +12,7 @@ from twitter import Status as BaseStatus
 
 retweet_re = re.compile('^RT @\w+:')
 
+#FIXME! comparison between Status objects doesn't work; at least the equality
 class Status(BaseStatus):
     def __init__(self, status):
         self.status = status
@@ -75,13 +76,18 @@ class Status(BaseStatus):
         origin = str(origin)
         return origin
 
+    def __eq__(self, other):
+        if isinstance(other, Status):
+            return self.status == other.status
+        return False
+
 
 class TimelineException(Exception):
     pass
 
 
 class Timeline(object):
-    """Maintains a list of Twitter statuses."""
+    """List of Twitter statuses."""
 
     def __init__(self, update_function=None):
         self.statuses = []
@@ -107,6 +113,7 @@ class Timeline(object):
     def add_new_statuses(self, new_statuses):
         """Adds the given new statuses to the status list of the Timeline."""
         for status in new_statuses:
+            #FIXME
             if status not in self.statuses:
                 self.statuses.insert(0, status)
         if self.update_callback:
@@ -120,3 +127,16 @@ class Timeline(object):
 
     def __iter__(self):
         return self.statuses.__iter__()
+
+
+class SearchTimeline(Timeline):
+    """Statuses that match the specified search."""
+    def __init__(self, update_function=None, search_term=''):
+        Timeline.__init__(self, update_function)
+        self.term = search_term
+
+    def get_new_statuses(self):
+        if self.update is None: 
+            raise TimelineException("The timeline cannot be updated without " + 
+                                    "specifying an update function.")
+        return [Status(status) for status in self.update(self.term)]
