@@ -6,26 +6,30 @@
 
 import urwid
 
-class BufferHeader(urwid.Text):
-    def __init__(self, markup):
-        self.buffers = markup.split()
+class BufferHeader(urwid.WidgetWrap):
+    def __init__(self, buffers):
+        self.buffers = buffers
         if self.buffers:
             self.active_index = 0
         else:
             #TODO
             pass
         text = self._create_text()
-        urwid.Text.__init__(self, markup=text)
+        urwid.WidgetWrap.__init__(self, urwid.Text(text))
 
     def _create_text(self):
-        active = '[' + self.buffers[self.active_index] + ']'
-        text = list(self.buffers)
-        text[self.active_index] = active
-        return '  '.join(text)
+        text = []
+        for i, buffer_name in enumerate(self.buffers):
+            buffer_tab = buffer_name.upper() + ' '
+            if i == self.active_index:
+                text.append(('active_tab', buffer_tab))
+            else:
+                text.append(('inactive_tab', buffer_tab))
+        return text
 
     def _update_text(self):
         text = self._create_text()
-        self.set_text(text)
+        self._w.set_text(text)
 
     def add_buffer(self, buffer_name):
         self.buffers.append(buffer_name)
@@ -40,16 +44,16 @@ class BufferHeader(urwid.Text):
         self._update_text()
 
 
-#FIXME! BufferList widget is not updated when buffers are updated
 class BufferList(urwid.Frame):
     """
     Keeps a list of buffers and provides functions to switch their visibility,
     rendering one at a time.
     """
-    def __init__(self, buffers=[], footer=None):
+    def __init__(self, buffers=[]):
         self.buffers = buffers
-        self.header = BufferHeader(' '.join([buffer.name for buffer in buffers])) 
-        self.footer = footer
+        self.header = BufferHeader([buff.name for buff in buffers])
+        #TODO footer
+        self.footer = urwid.Text('')
         if self.buffers:
             self.set_buffer(self.buffers[0])                
         
@@ -60,12 +64,12 @@ class BufferList(urwid.Frame):
         urwid.Frame.__init__(self, self.current_buffer, header=self.header, footer=self.footer)
 
     def _has_previous(self, buffer):
-        current_buffer_index = self.buffers.index(buffer)
-        return current_buffer_index > 0
+        buffer_index = self.buffers.index(buffer)
+        return buffer_index > 0
 
     def _has_next(self, buffer):
-        current_buffer_index = self.buffers.index(buffer)
-        return current_buffer_index < len(self.buffers) - 1
+        buffer_index = self.buffers.index(buffer)
+        return buffer_index < len(self.buffers) - 1
 
     def prev_buffer(self):
         if self._has_previous(self.current_buffer):
@@ -117,7 +121,6 @@ class TimelineBuffer(urwid.WidgetWrap):
         urwid.WidgetWrap.__init__(self, TimelineWidget(timeline))
         self.timeline.set_update_callback(self._w.update)
 
-    #TODO! make this happen periodically in a separate thread
     def update(self):
         self.timeline.update_timeline()
 
@@ -129,7 +132,7 @@ class TimelineWidget(urwid.ListBox):
     """
     def __init__(self, content):
         widgets = [self._status_to_widget(status) for status in content]
-        urwid.ListBox.__init__(self, StatusWalker(widgets))
+        urwid.ListBox.__init__(self, urwid.SimpleListWalker(widgets))
 
     def _status_to_widget(self, status):
         return StatusWidget(status)
@@ -140,9 +143,9 @@ class TimelineWidget(urwid.ListBox):
             self.body.insert(0, widget)
 
 
-class StatusWalker(urwid.SimpleListWalker):
-    def __init__(self, content):
-        urwid.SimpleListWalker.__init__(self, content)
+#class StatusWalker(urwid.SimpleListWalker):
+    #def __init__(self, content):
+        #urwid.SimpleListWalker.__init__(self, content)
 
 
 class StatusWidget(urwid.WidgetWrap):
