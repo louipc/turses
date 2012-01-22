@@ -5,7 +5,6 @@
 ###############################################################################
 
 import re
-import os
 import sys
 import string
 from htmlentitydefs import entitydefs
@@ -32,12 +31,6 @@ def get_exact_nick(word):
         pass
     return word
 
-def encode(string):
-    try:
-        return string.encode(sys.stdout.encoding, 'replace')
-    except AttributeError:
-        return string
-
 def html_unescape(str):
     """Unescapes HTML entities."""
     def entity_replacer(m):
@@ -48,21 +41,6 @@ def html_unescape(str):
             return m.group(0)
 
     return re.sub(r'&([^;]+);', entity_replacer, str)
-
-def get_source(source):
-    if source != 'web':
-        source = source.split('>')
-        source = source[1:]
-        source = ' '.join(source)
-        source = source.split('<')[:1]
-        source = source[:1]
-        source = ' '.join(source)
-    return source
-
-def open_image(user):
-    image = user.profile_image_url
-    command = tyrs.get_conf().params['open_image_command']
-    os.system(command % image)
 
 def get_urls(text):
     return re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', text)
