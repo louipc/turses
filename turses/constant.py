@@ -4,6 +4,7 @@
 #       Licensed under the GPL License. See LICENSE.txt for full details.     #
 ###############################################################################
 
+# palette for the ncurses interface created with `urwid`
 palette = [
     ('body'          , 'default'   , '', 'standout') ,
     ('focus'         , 'dark red'  , '', 'standout') ,

@@ -18,7 +18,7 @@ except ImportError:
 DEFAULT_CACHE = object()
 
 class Api(BaseApi):
-    """TODO"""
+    """Subclass of `python-twitter` library's `Api` class."""
     def __init__(self,
                  consumer_key=None,
                  consumer_secret=None,
