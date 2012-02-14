@@ -6,6 +6,7 @@
 
 import sys
 sys.path.append('..')
+from threading import Thread
 
 import urwid
 
