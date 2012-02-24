@@ -6,16 +6,21 @@
 
 import urwid
 
-class Key(object):
-    """Handles key bindings."""
+class BufferListMotionKeyHandler(object):
+    """Handles motion key bindings associated with a `BufferList`."""
     def __init__(self, bufferlist):
         self.bufferlist = bufferlist
 
-    def handle(self, ch):
+    def handle(self, input, raw):
+        clean_input = ''.join(input)
         #TODO
-        if any([ch == 'q', ch == 'Q', ch == 'esc']):
+        if any([clean_input == 'q', clean_input == 'Q', clean_input == 'esc']):
             raise urwid.ExitMainLoop()
-        elif ch == 'h':
-            self.bufferlist.prev_buffer()
-        elif ch == 'l':
-            self.bufferlist.next_buffer()
+        elif clean_input == 'h':
+            self.bufferlist.display_previous_buffer()
+            self.bufferlist.update()
+        elif clean_input == 'l':
+            self.bufferlist.display_next_buffer()
+            self.bufferlist.update()
+        else:
+            return input
