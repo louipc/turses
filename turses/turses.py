@@ -26,6 +26,7 @@ class Turses(object):
         self.timelines = []
 
         # tweets from friends
+        # FIXME All the timelines are the same
         friends_timeline = Timeline()
         friend_tl_manager = TimelineManager(friends_timeline, 
                                             self.api.GetFriendsTimeline)
@@ -36,11 +37,17 @@ class Turses(object):
         mention_tl_manager = TimelineManager(mentions, self.api.GetMentions)
         self.timelines.append(mention_tl_manager)
 
+        # favorites
+        favorites = Timeline()
+        favorite_tl_manager = TimelineManager(favorites, self.api.GetFavorites)
+        self.timelines.append(favorite_tl_manager)
+
         # create UI
         friends_tl_buffer = TimelineBuffer('Tweets', friends_timeline)
         mention_tl_buffer = TimelineBuffer('Mentions', mentions)
+        favorite_tl_buffer = TimelineBuffer('Favorites', favorites)
 
-        buffers = [friends_tl_buffer, mention_tl_buffer]
+        buffers = [friends_tl_buffer, mention_tl_buffer, favorite_tl_buffer]
 
         self.buffer_list = BufferList(buffers)
 
