@@ -9,6 +9,7 @@ sys.path.append('../')
 import unittest
 from datetime import datetime
 
+from mock import MagicMock
 from twitter import Status
 
 from turses.timeline import Timeline
@@ -75,7 +76,41 @@ class TimelineTest(unittest.TestCase):
         # get newers than `new_status`
         newers = self.timeline.get_newer_than(new_created_at)
         self.assertEqual(len(newers), 0)
-        
+
+    def test_clear(self):
+        old_created_at = datetime(1988, 12, 19)
+        old_status = self._create_status_with_id_and_datetime(1, 
+                                                              old_created_at)
+        new_created_at = datetime.now()
+        new_status = self._create_status_with_id_and_datetime(2, 
+                                                              new_created_at)
+        self.timeline.add_statuses([old_status, new_status])
+        self.timeline.clear()
+        self.assertEqual(len(self.timeline), 0)
+        # add them again and check that they are inserted back
+        self.timeline.add_statuses([old_status, new_status])
+        self.assertEqual(len(self.timeline), 2)
+
+    def test_update_with_no_args(self):
+        mock = MagicMock(name='update')
+        timeline = Timeline([], mock)
+        timeline.update()
+        mock.assert_called_once_with()
+
+    def test_update_with_one_arg(self):
+        mock = MagicMock(name='update')
+        arg = '#python'
+        timeline = Timeline([], mock, arg)
+        timeline.update()
+        mock.assert_called_once_with(arg)
+
+    def test_update_with_multiple_args(self):
+        mock = MagicMock(name='update')
+        args = ('#python', '#mock')
+        timeline = Timeline([], mock, args)
+        timeline.update()
+        mock.assert_called_once_with(args)
+
 
 if __name__ == '__main__':
     unittest.main()

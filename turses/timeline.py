@@ -27,9 +27,15 @@ def is_more_recent(status, datetime):
     
 
 class Timeline(object):
-    """List of Twitter statuses ordered reversely by date."""
+    """
+    List of Twitter statuses ordered reversely by date. Optionally with
+    a function that updates the current timeline and its arguments.
+    """
 
-    def __init__(self, statuses=[]):
+    def __init__(self, 
+                 statuses=[],
+                 update_function=None,
+                 update_function_args=None):
         self._key = lambda status: datetime_from_status(status)
         if statuses:
             self.statuses = sorted(statuses,
@@ -37,6 +43,8 @@ class Timeline(object):
                                    reverse=True)
         else:
             self.statuses = statuses
+        self.update_function = update_function
+        self.update_function_args = update_function_args
 
     def add_status(self, new_status):
         """
@@ -63,6 +71,13 @@ class Timeline(object):
         """Returns the statuses that are more recent than `datetime`."""
         return filter(lambda status : is_more_recent(status, datetime),
                       self.statuses)
+
+    def update(self):
+        if self.update_function_args:
+            new_statuses = self.update_function(self.update_function_args)
+        else:
+            new_statuses = self.update_function()
+        self.add_statuses(new_statuses)
 
     def __len__(self):
         return len(self.statuses)
