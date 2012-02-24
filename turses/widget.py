@@ -44,85 +44,127 @@ class BufferHeader(urwid.WidgetWrap):
         self._update_text()
 
 
-class BufferList(urwid.Frame):
-    """
-    Keeps a list of buffers and provides functions to switch their visibility,
-    rendering one at a time.
-    """
-    def __init__(self, buffers=[]):
-        self.buffers = buffers
-        self.header = BufferHeader([buff.name for buff in buffers])
-        #TODO footer
-        self.footer = urwid.Text('')
-        if self.buffers:
-            self.set_buffer(self.buffers[0])                
-        
-    def set_buffer(self, buffer):
-        self.current_buffer = buffer
-        buffer_index = self.buffers.index(buffer)
-        self.header.set_active_buffer(buffer_index)
-        urwid.Frame.__init__(self, self.current_buffer, header=self.header, footer=self.footer)
-
-    def _has_previous(self, buffer):
-        buffer_index = self.buffers.index(buffer)
-        return buffer_index > 0
-
-    def _has_next(self, buffer):
-        buffer_index = self.buffers.index(buffer)
-        return buffer_index < len(self.buffers) - 1
-
-    def prev_buffer(self):
-        if self._has_previous(self.current_buffer):
-            new_index = self.buffers.index(self.current_buffer) - 1
-            self.header.set_active_buffer(new_index)
-            new_buffer = self.buffers[new_index]
-            self.set_buffer(new_buffer)
-
-    def next_buffer(self):
-        if self._has_next(self.current_buffer):
-            new_index = self.buffers.index(self.current_buffer) + 1
-            self.header.set_active_buffer(new_index)
-            new_buffer = self.buffers[new_index]
-            self.set_buffer(new_buffer)
-
-    def add_buffer(self, buffer):
-        self.buffers.append(buffer)
-        self.header.add_buffer(buffer.name)
-
-    def _remove_buffer(self, buffer):
-        if len(self.buffers) == 1 and buffer in self.buffers:
-            raise urwid.ExitMainLoop()
-        try:
-            if self._has_previous(buffer):
-                self.prev_buffer()
-            else:
-                self.next_buffer()
-            self.buffers.remove(buffer)
-        except ValueError:
+#TODO:contextual help, messages
+class BufferFooter(urwid.WidgetWrap):
+    def __init__(self, help_widgets, message):
+        #FIXME
+        #self.widgets = widgets
+        if self.widgets:
+            self.active_index = 0
+        else:
+            #TODO
             pass
+        text = self._create_text()
+        urwid.WidgetWrap.__init__(self, urwid.Text(text))
+
+    def _create_text(self):
+        text = []
+        #TODO,room for a message
+        for i, buffer_name in enumerate(self.buffers):
+            buffer_tab = buffer_name.upper() + ' '
+            if i == self.active_index:
+                text.append(('active_tab', buffer_tab))
+            else:
+                text.append(('inactive_tab', buffer_tab))
+        return text
+
+    def _update_text(self):
+        text = self._create_text()
+        self._w.set_text(text)
+
+    def add_buffer(self, buffer_name):
+        self.buffers.append(buffer_name)
+        self._update_text()
 
     def remove_current_buffer(self):
-        self._remove_buffer(self.current_buffer)
-        self.header.remove_current_buffer()
+        del self.buffers[self.active_index]
+        self._update_text()
+
+    def set_active_buffer(self, pos):
+        self.active_index = pos
+        self._update_text()
+
+
+class BufferList(urwid.Frame):
+    """A tabbed list of buffers."""
+
+    def __init__(self, buffers=[]):
+        self.buffers = buffers
+        if self.buffers:
+            self.display_buffer(0)                
+
+    def _is_valid_index(self, index):
+        return index > 0 and index < len(self.buffers)
+
+    def _active_buffer_index(self):
+        return self.buffers.index(self.active_buffer)
+        
+    def _has_previous_buffer(self):
+        return self._active_buffer_index() > 0
+
+    def _has_next_buffer(self):
+        return self._active_buffer_index() < len(self.buffers) - 1
+
+    def display_buffer(self, index):
+        """
+        Displays the buffer that is in `index`-th position if it is
+        within the bounds.
+        """
+        if self._is_valid_index(index):
+            return
+        self.active_buffer = self.buffers[index]
+        urwid.Frame.__init__(self, 
+                             self.active_buffer,)
+
+    def display_previous_buffer(self):
+        """
+        Displays the previous buffer and considers it as the active buffer.
+
+        If the active buffer is the first, it does nothing.
+        """
+        if self._has_previous_buffer():
+            new_index = self._active_buffer_index() - 1
+            self.active_buffer = self.buffers[new_index]
+            self.display_buffer(new_index)
+
+    def display_next_buffer(self):
+        """
+        Displays the next buffer and considers it as the active buffer.
+
+        If the active buffer is the last, it does nothing.
+        """
+        if self._has_next_buffer():
+            new_index = self._active_buffer_index() + 1
+            self.active_buffer = self.buffers[new_index]
+            self.display_buffer(new_index)
+
+    def append_buffer(self, buffer):
+        """Appends a new buffer to the end of the list."""
+        self.buffers.append(buffer)
+        # TODO: update required components
 
     def __iter__(self):
         return self.buffers.__iter__()
         
 
 class TimelineBuffer(urwid.WidgetWrap):
-    """
-    A buffer that contains a `TimelineWidget` and its associated timeline. It
-    sets the update callback of the timeline in order to update the widget
-    when new statuses are fetched.
-    """
+    """A widget that displays its associated `Timeline` object."""
+
     def __init__(self, name, timeline):
         self.name = name
         self.timeline = timeline
         urwid.WidgetWrap.__init__(self, TimelineWidget(timeline))
-        self.timeline.set_update_callback(self._w.update)
+
+    def clear(self):
+        """Clears its Timeline and the UI."""
+        raise NotImplemented
 
     def update(self):
-        self.timeline.update_timeline()
+        """
+        Reads the statuses from its Timeline and updates the widget
+        accordingly.
+        """
+        raise NotImplemented
 
 
 class TimelineWidget(urwid.ListBox):
@@ -130,26 +172,15 @@ class TimelineWidget(urwid.ListBox):
     A `urwid.ListBox` containing a list of Twitter statuses, each of which is
     rendered as a `StatusWidget`.
     """
+
     def __init__(self, content):
-        widgets = [self._status_to_widget(status) for status in content]
-        urwid.ListBox.__init__(self, urwid.SimpleListWalker(widgets))
-
-    def _status_to_widget(self, status):
-        return StatusWidget(status)
-
-    def update(self, new_content):
-        for status in new_content:
-            widget = self._status_to_widget(status)
-            self.body.insert(0, widget)
-
-
-#class StatusWalker(urwid.SimpleListWalker):
-    #def __init__(self, content):
-        #urwid.SimpleListWalker.__init__(self, content)
+        status_widgets = [StatusWidget(status) for status in content]
+        urwid.ListBox.__init__(self, urwid.SimpleListWalker(status_widgets))
 
 
 class StatusWidget(urwid.WidgetWrap):
     """Widget containing a Twitter status."""
+
     def __init__ (self, status):
         self.status = status
         self.id = status.id
@@ -171,6 +202,7 @@ class StatusWidget(urwid.WidgetWrap):
 
 class BoxDecoration(urwid.WidgetDecoration, urwid.WidgetWrap):
     """Draw a box around `original_widget`."""
+
     def __init__(self, original_widget, title=''):
         self.color = 'header'
         if int(urwid.__version__[0]) == 1:
