@@ -5,7 +5,6 @@
 ###############################################################################
 
 import re
-import sys
 import string
 from htmlentitydefs import entitydefs
 from time import strftime, gmtime
