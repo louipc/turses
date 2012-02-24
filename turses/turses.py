@@ -23,7 +23,18 @@ class Turses(object):
                        access_token_key, 
                        access_token_secret)
 
-        self.init_timelines()
+        self.timelines = []
+
+        # tweets from friends
+        friends_timeline = Timeline()
+        friend_tl_manager = TimelineManager(friends_timeline, 
+                                            self.api.GetFriendsTimeline)
+        self.timelines.append(friend_tl_manager)
+        
+        # mentions
+        mentions = Timeline()
+        mention_tl_manager = TimelineManager(mentions, self.api.GetMentions)
+        self.timelines.append(mention_tl_manager)
 
         # create UI
         friends_tl_buffer = TimelineBuffer('Tweets', friends_timeline)
@@ -43,21 +54,6 @@ class Turses(object):
                               input_filter=self.motion_key_handler.handle,
                               unhandled_input=self.action_key_handler,) 
         loop.run()
-
-    def init_timelines(self):
-        """Creates the default timelines."""
-        self.timelines = []
-
-        # tweets from friends
-        friends_timeline = Timeline()
-        friend_tl_manager = TimelineManager(friends_timeline, 
-                                            self.api.GetFriendsTimeline)
-        self.timelines.append(friend_tl_manager)
-        
-        # mentions
-        mentions = Timeline()
-        mention_tl_manager = TimelineManager(mentions, self.api.GetMentions)
-        self.timelines.append(mention_tl_manager)
 
     def update_all_timelines(self):
         for timeline in self.timelines:
