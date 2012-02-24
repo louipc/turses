@@ -4,78 +4,12 @@
 #       Licensed under the GPL License. See LICENSE.txt for full details.     #
 ###############################################################################
 
-import re
 
-from util import html_unescape, retweet_re
-
-from twitter import Status as BaseStatus
-
-#FIXME! comparison between Status objects doesn't work; at least the equality
-class Status(BaseStatus):
-    def __init__(self, status):
-        self.status = status
-        self.status.text = html_unescape(self.status.text)
-
-    @property
-    def id(self):
-        return self.status.id
-
-    def get_time(self):
-        """
-        Convert the time format given by the api to something more
-        readable.
-        """
-        try:
-            result =  self.status.GetRelativeCreatedAt()
-        except AttributeError:
-            hour = time.gmtime(self.status.GetCreatedAtInSeconds() - time.altzone)
-            result = time.strftime('%H:%M', hour)
-        return result
-
-    def get_text(self):
-        return self.status.text
-
-    def get_source(self):
-        source = ''
-        if hasattr(self.status, 'source'):
-            source = get_source(self.status.source)
-        return source
-
-    def get_username(self):
-        if hasattr(self.status, 'user'):
-            username = self.status.user.screen_name
-        else:
-            # Used for direct messages
-            username = self.status.sender_screen_name
-        return username
-
-    def get_retweet_count(self):
-        if hasattr(self.status, 'retweet_count'):
-            return self.status.retweet_count
-
-    def is_retweet(self):
-        return bool(retweet_re.match(status.text))
-
-    def is_reply(self, status):
-        if hasattr(self.status, 'in_reply_to_screen_name'):
-            reply = self.status.in_reply_to_screen_name
-            if reply:
-                return True
-        return False
-
-    def origin_of_retweet(self, status):
-        """
-        When its a retweet, return the first person who tweeted it,
-        not the retweeter.
-        """
-        origin = status.text
-        origin = origin[4:]
-        origin = origin.split(':')[0]
-        origin = str(origin)
-        return origin
-
-    def __cmp__(self, other):
-        return self.status.__cmp__(other.status)
+# TODO: 
+#  - comparation for not repeating them in timeline
+#  - helper functions
+class Status():
+    pass
 
 
 class TimelineException(Exception):
@@ -83,48 +17,37 @@ class TimelineException(Exception):
 
 
 class Timeline(object):
-    """List of Twitter statuses."""
+    """List of Twitter statuses ordered reversely by date."""
 
-    def __init__(self, update_function=None, update_function_args=()):
-        self.statuses = []
-        self.update = update_function
-        self.update_args = update_function_args
+    def __init__(self, statuses=[]):
+        self.statuses = sorted(statuses,
+                               key=lambda status: status.created_at,
+                               reverse=True)
 
-    def update_timeline(self):
-        """Updates the Timeline with new statuses."""
-        new_statuses = self.get_new_statuses()
-        if new_statuses:
-            new_statuses.reverse()
-            self.add_new_statuses(new_statuses)
-
-    def get_new_statuses(self):
+    def add_status(self, new_status):
         """
-        If a function to update the Timeline has been specified, it fetches the
-        new statuses calling it. If not, raises a `TimelineException`.
+        Adds the given status to the status list of the Timeline if it's
+        not already in it.
         """
-        if self.update is None: 
-            raise TimelineException("The timeline cannot be updated without " + 
-                                    "specifying an update function.")
-        if self.update_args is ():
-            new_statuses = self.update()
-        else:
-            new_statuses = self.update(self.update_args)
-        return [Status(status) for status in new_statuses]
+        # TODO insert ordered
+        self.statuses.insert(0, new_status)
+        self.statuses = sorted(self.statuses,
+                              key=lambda status: status.created_at,
+                              reverse=True)
 
-    def add_new_statuses(self, new_statuses):
-        """Adds the given new statuses to the status list of the Timeline."""
+    def add_statuses(self, new_statuses):
+        """
+        Adds the given new statuses to the status list of the Timeline
+        if they are not already in it.
+        """
         for status in new_statuses:
-            #FIXME
-            if status not in self.statuses:
-                self.statuses.insert(0, status)
-        if hasattr(self, 'update_callback'):
-            self.update_callback(new_statuses)
-
-    def set_update_callback(self, callback):
-        self.update_callback = callback
+            self.add_status(status)
 
     def __len__(self):
         return len(self.statuses)
 
     def __iter__(self):
         return self.statuses.__iter__()
+
+    def __getitem__(self, i):
+        return self.statuses[i]
