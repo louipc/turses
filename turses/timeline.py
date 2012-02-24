@@ -4,36 +4,34 @@
 #       Licensed under the GPL License. See LICENSE.txt for full details.     #
 ###############################################################################
 
-
-# TODO: 
-#  - comparation for not repeating them in timeline
-#  - helper functions
-class Status():
-    pass
+from datetime import datetime
 
 
-class TimelineException(Exception):
-    pass
+def datetime_from_status_date(date):
+    """Converts a date on a Twitter status to a `datetime` object."""
+    return datetime.strptime(date, '%a %b %d %H:%M:%S +0000 %Y') 
 
 
 class Timeline(object):
     """List of Twitter statuses ordered reversely by date."""
 
     def __init__(self, statuses=[]):
-        self.statuses = sorted(statuses,
-                               key=lambda status: status.created_at,
-                               reverse=True)
+        self._key = lambda status: datetime_from_status_date(status.created_at)
+        if statuses:
+            self.statuses = sorted(statuses,
+                                   key=self._key,
+                                   reverse=True)
+        else:
+            self.statuses = statuses
 
     def add_status(self, new_status):
         """
         Adds the given status to the status list of the Timeline if it's
         not already in it.
         """
-        # TODO insert ordered
-        self.statuses.insert(0, new_status)
-        self.statuses = sorted(self.statuses,
-                              key=lambda status: status.created_at,
-                              reverse=True)
+        if new_status not in self.statuses:
+            self.statuses.append(new_status)
+            self.statuses.sort(key=self._key, reverse=True)
 
     def add_statuses(self, new_statuses):
         """
@@ -42,6 +40,10 @@ class Timeline(object):
         """
         for status in new_statuses:
             self.add_status(status)
+
+    def clear(self):
+        """Clears the Timeline."""
+        self.statuses = []
 
     def __len__(self):
         return len(self.statuses)

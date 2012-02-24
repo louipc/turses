@@ -7,42 +7,59 @@
 import sys
 sys.path.append('../')
 import unittest
+from datetime import datetime
 
-from credentials import *
-from turses.api import Api
-from turses.util import get_time
-from turses.timeline import Timeline, TimelineException
+from twitter import Status
 
-        
+from turses.timeline import Timeline
+
 class TimelineTest(unittest.TestCase):
     def setUp(self):
-        self.api = Api(consumer_key, 
-                       consumer_secret, 
-                       access_token_key, 
-                       access_token_secret)
-        self.user = self.api.VerifyCredentials()
-        self.timeline = Timeline(update_function=self.api.GetUserTimeline)
-
-    def test_user_screen_name(self):
-        self.assertEqual(self.user.screen_name, "tuitclient")
-
-    def test_update_timeline(self):
-        self.timeline.update_timeline()
-        self.assertTrue(self.timeline.statuses)
-
-    def test_updates_only_new_statuses(self):
-        status_count = len(self.timeline)
-        # post a new update
-        #FIXME! TwitterError: Status is a duplicate
-        self.api.PostUpdate(status="unittest at %s" % get_time())
-        self.timeline.update_timeline()
-        # check if we have one more status
-        self.assertTrue(status_count == len(self.timeline) - 1)
-
-    def test_raises_exception_without_update_function(self):
         self.timeline = Timeline()
-        self.assertRaises(TimelineException, self.timeline.update_timeline)
+        self.timeline.clear()
+        self.assertEqual(len(self.timeline), 0)
 
+    def _create_status_with_id_and_datetime(self, id, datetime):
+        created_at = datetime.strftime('%a %b %d %H:%M:%S +0000 %Y')
+        return Status(created_at=created_at, id=id,)
+
+    def test_unique_statuses_in_timeline(self):
+        self.assertEqual(len(self.timeline), 0)
+        # create and add the status
+        status = self._create_status_with_id_and_datetime(1, datetime.now())
+        self.timeline.add_status(status)
+        self.assertEqual(len(self.timeline), 1)
+        # check that adding more than once does not duplicate element
+        self.timeline.add_status(status)
+        self.assertEqual(len(self.timeline), 1)
+
+    def test_insert_different_statuses(self):
+        old_status = self._create_status_with_id_and_datetime(1, 
+                                                              datetime(1988, 12, 19))
+        new_status = self._create_status_with_id_and_datetime(2, 
+                                                              datetime.now())
+        self.timeline.add_statuses([old_status, new_status])
+        self.assertEqual(len(self.timeline), 2)
+
+    def test_insert_different_statuses_individually(self):
+        old_status = self._create_status_with_id_and_datetime(1, 
+                                                              datetime(1988, 12, 19))
+        new_status = self._create_status_with_id_and_datetime(2, 
+                                                              datetime.now())
+        self.timeline.add_status(old_status)
+        self.assertEqual(len(self.timeline), 1)
+        self.timeline.add_status(new_status)
+        self.assertEqual(len(self.timeline), 2)
+
+    def test_statuses_ordered_reversely_by_date(self):
+        old_status = self._create_status_with_id_and_datetime(1, 
+                                                              datetime(1988, 12, 19))
+        new_status = self._create_status_with_id_and_datetime(2, 
+                                                              datetime.now())
+        self.timeline.add_statuses([old_status, new_status])
+        self.assertEqual(self.timeline[0], new_status)
+        self.assertEqual(self.timeline[1], old_status)
+        
 
 if __name__ == '__main__':
     unittest.main()
