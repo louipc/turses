@@ -24,8 +24,8 @@ def is_more_recent(status, datetime):
 ##
 #  Classes
 ##
-    
 
+    
 class Timeline(object):
     """
     List of Twitter statuses ordered reversely by date. Optionally with
@@ -87,3 +87,61 @@ class Timeline(object):
 
     def __getitem__(self, i):
         return self.statuses[i]
+
+
+class NamedTimelineList(object):
+    """
+    A list of (name, timeline) tuples. Only one is the 'active'
+    timeline.
+    """
+
+    def __init__(self):
+        self.timelines = []
+        self.active_index = -1
+
+    def _is_valid_index(self, index):
+        return index >= 0 and index < len(self.timelines)
+
+    def has_timelines(self):
+        return self.active_timeline_index != 1 and self.timelines
+
+    def get_active_timeline(self):
+        if self.has_timelines():
+            _, timeline = self.timelines[self.active_index]
+            return timeline
+
+    def get_active_timeline_name(self):
+        if self.has_timelines():
+            name, _ = self.timelines[self.active_index]
+            return name
+
+    def append_timeline(self, name, timeline):
+        """Appends a new `(name, timeline)` to the end of the list."""
+        if self.active_index == -1:
+            self.active_index = 0
+            self.active_timeline_name = name
+            self.active_timeline = timeline
+        self.timelines.append((name, timeline))
+
+    def update_all(self):
+        """Updates every `Timeline`."""
+        for _, timeline in self.timelines:
+            timeline.update()
+
+    def activate_previous(self):
+        """Marks as active the next `Timeline` if it exists."""
+        new_index = self.active_index - 1
+        if self._is_valid_index(new_index):
+            self.active_index = new_index
+
+    def activate_next(self):
+        """Marks as active the next `Timeline` if it exists."""
+        new_index = self.active_index + 1
+        if self._is_valid_index(new_index):
+            self.active_index = new_index
+
+    def get_timeline_names(self):
+        return [name for name, _ in self.timelines]
+
+    def __iter__(self):
+        return self.timelines.__iter__()

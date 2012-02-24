@@ -53,104 +53,28 @@ class BufferListException(Exception):
     pass
 
 
-class BufferList(urwid.WidgetWrap):
-    """
-    A tabbed list of buffers.
-    
-    It is instantiated giving it a list of buffers that cannot be
-    empty.
-    """
-
-    def __init__(self, buffers=[]):
-        if buffers:
-            self.buffers = buffers
-            self.active_buffer = self.buffers[0]
-            self.header = BufferHeader([buffer.name for buffer in self.buffers])
-            urwid.WidgetWrap.__init__(self, 
-                                      urwid.Frame(self.buffers[0],
-                                                  header=self.header),)
-        else:
-            raise BufferListException('`BufferList` must be instantiated at least' \
-                                        'with one buffer instance.')
-
-    def _is_valid_index(self, index):
-        return index >= 0 and index < len(self.buffers)
-
-    def _active_buffer_index(self):
-        return self.buffers.index(self.active_buffer)
-        
-    def _has_previous_buffer(self):
-        return self._active_buffer_index() > 0
-
-    def _has_next_buffer(self):
-        return self._active_buffer_index() < len(self.buffers) - 1
-
-    def display_buffer(self, index):
-        """
-        Displays the buffer that is in `index`-th position if it is
-        within the bounds.
-        """
-        if not self._is_valid_index(index):
-            return
-        self.active_buffer = self.buffers[index]
-        self.header.set_active_buffer(index)
-        self._w = urwid.Frame(self.active_buffer,
-                              header=self.header,)
-
-    def display_previous_buffer(self):
-        """
-        Displays the previous buffer and considers it as the active buffer.
-
-        If the active buffer is the first, it does nothing.
-        """
-        if self._has_previous_buffer():
-            new_index = self._active_buffer_index() - 1
-            self.active_buffer = self.buffers[new_index]
-            self.display_buffer(new_index)
-
-    def display_next_buffer(self):
-        """
-        Displays the next buffer and considers it as the active buffer.
-
-        If the active buffer is the last, it does nothing.
-        """
-        if self._has_next_buffer():
-            new_index = self._active_buffer_index() + 1
-            self.active_buffer = self.buffers[new_index]
-            self.display_buffer(new_index)
-
-    def append_buffer(self, buffer):
-        """Appends a new buffer to the end of the list."""
-        self.buffers.append(buffer)
-
-    def update(self):
-        """Updates every `TimelineBuffer` in this `BufferList`."""
-        for buffer in self.buffers:
-            buffer.update()
-
-    def __iter__(self):
-        return self.buffers.__iter__()
-        
 
 class TimelineBuffer(urwid.WidgetWrap):
     """A widget that displays its associated `Timeline` object."""
 
-    def __init__(self, name, timeline=[]):
-        self.name = name
+    def __init__(self, timeline=[]):
         self.timeline = timeline
         urwid.WidgetWrap.__init__(self, TimelineWidget(timeline))
 
     def clear(self):
-        """Clears its Timeline and the UI."""
-        self.timeline.clear()
-        self.update()
+        """Clears the buffer."""
+        return self._render([])
 
     def update(self):
         """
         Reads the statuses from its Timeline and updates the widget
         accordingly.
         """
-        self._w = TimelineWidget(self.timeline)
+        return self._render(self.timeline)
+
+    def _render(self, timeline):
+        """Renders the given statuses."""
+        self._w = TimelineWidget(timeline)
 
 
 class TimelineWidget(urwid.ListBox):
