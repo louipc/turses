@@ -112,5 +112,10 @@ class TimelineTest(unittest.TestCase):
         mock.assert_called_once_with(args)
 
 
+class NamedTimelineListTest(unittest.TestCase):
+    def setUp(self):
+        self.named_timeline_list = NamedTimelineList()
+
+
 if __name__ == '__main__':
     unittest.main()
