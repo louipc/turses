@@ -20,7 +20,7 @@ class BufferHeader(urwid.WidgetWrap):
         """Creates the text that is rendered as the header."""
         text = []
         for i, name in enumerate(self.buffer_names):
-            buffer_tab = name.upper() + ' '
+            buffer_tab = name + ' '
             if i == self.active_index:
                 text.append(('active_tab', buffer_tab))
             else:
