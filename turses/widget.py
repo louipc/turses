@@ -6,9 +6,43 @@
 
 import urwid
 
-# TODO
+
 class BufferHeader(urwid.WidgetWrap):
-    pass
+    """Displays the names of the buffers, highlighting the active buffer."""
+
+    def __init__(self, buffer_names):
+        self.buffer_names = buffer_names
+        self.active_index = 0
+        text = self._create_text()
+        urwid.WidgetWrap.__init__(self, urwid.Text(text))
+
+    def _create_text(self):
+        """Creates the text that is rendered as the header."""
+        text = []
+        for i, name in enumerate(self.buffer_names):
+            buffer_tab = name.upper() + ' '
+            if i == self.active_index:
+                text.append(('active_tab', buffer_tab))
+            else:
+                text.append(('inactive_tab', buffer_tab))
+        return text
+
+    def _update_text(self):
+        text = self._create_text()
+        self._w.set_text(text)
+
+    def append_buffer_name(self, buffer_name):
+        self.buffer_names.append(buffer_name)
+        self._update_text()
+
+    def remove_current_buffer_name(self):
+        del self.buffer_names[self.active_index]
+        self._update_text()
+
+    def set_active_buffer(self, pos):
+        self.active_index = pos
+        self._update_text()
+
 
 #TODO
 class BufferFooter(urwid.WidgetWrap):
@@ -31,7 +65,10 @@ class BufferList(urwid.WidgetWrap):
         if buffers:
             self.buffers = buffers
             self.active_buffer = self.buffers[0]
-            urwid.WidgetWrap.__init__(self, urwid.Frame(self.buffers[0]))
+            self.header = BufferHeader([buffer.name for buffer in self.buffers])
+            urwid.WidgetWrap.__init__(self, 
+                                      urwid.Frame(self.buffers[0],
+                                                  header=self.header),)
         else:
             raise BufferListException('`BufferList` must be instantiated at least' \
                                         'with one buffer instance.')
@@ -56,7 +93,9 @@ class BufferList(urwid.WidgetWrap):
         if not self._is_valid_index(index):
             return
         self.active_buffer = self.buffers[index]
-        self._w = urwid.Frame(self.active_buffer,)
+        self.header.set_active_buffer(index)
+        self._w = urwid.Frame(self.active_buffer,
+                              header=self.header,)
 
     def display_previous_buffer(self):
         """
