@@ -6,17 +6,31 @@
 
 from datetime import datetime
 
+##
+#  Helper functions
+##
 
-def datetime_from_status_date(date):
+def datetime_from_status(status):
     """Converts a date on a Twitter status to a `datetime` object."""
-    return datetime.strptime(date, '%a %b %d %H:%M:%S +0000 %Y') 
+    seconds = status.GetCreatedAtInSeconds()
+    return datetime.utcfromtimestamp(seconds)
 
+def is_more_recent(status, datetime):
+    """Checks wether `status.created_at` is newer than `datetime`."""
+    created_at = datetime_from_status(status)
+    return created_at > datetime
+
+
+##
+#  Classes
+##
+    
 
 class Timeline(object):
     """List of Twitter statuses ordered reversely by date."""
 
     def __init__(self, statuses=[]):
-        self._key = lambda status: datetime_from_status_date(status.created_at)
+        self._key = lambda status: datetime_from_status(status)
         if statuses:
             self.statuses = sorted(statuses,
                                    key=self._key,
@@ -44,6 +58,11 @@ class Timeline(object):
     def clear(self):
         """Clears the Timeline."""
         self.statuses = []
+
+    def get_newer_than(self, datetime):
+        """Returns the statuses that are more recent than `datetime`."""
+        return filter(lambda status : is_more_recent(status, datetime),
+                      self.statuses)
 
     def __len__(self):
         return len(self.statuses)

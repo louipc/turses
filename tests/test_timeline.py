@@ -59,6 +59,22 @@ class TimelineTest(unittest.TestCase):
         self.timeline.add_statuses([old_status, new_status])
         self.assertEqual(self.timeline[0], new_status)
         self.assertEqual(self.timeline[1], old_status)
+
+    def test_get_newer_than(self):
+        old_created_at = datetime(1988, 12, 19)
+        old_status = self._create_status_with_id_and_datetime(1, 
+                                                              old_created_at)
+        new_created_at = datetime.now()
+        new_status = self._create_status_with_id_and_datetime(2, 
+                                                              new_created_at)
+        self.timeline.add_statuses([old_status, new_status])
+        # get newers than `old_status`
+        newers = self.timeline.get_newer_than(old_created_at)
+        self.assertEqual(len(newers), 1)
+        self.assertEqual(newers[0].id, new_status.id)
+        # get newers than `new_status`
+        newers = self.timeline.get_newer_than(new_created_at)
+        self.assertEqual(len(newers), 0)
         
 
 if __name__ == '__main__':
