@@ -84,6 +84,11 @@ class BufferList(urwid.WidgetWrap):
         """Appends a new buffer to the end of the list."""
         self.buffers.append(buffer)
 
+    def update(self):
+        """Updates every `TimelineBuffer` in this `BufferList`."""
+        for buffer in self.buffers:
+            buffer.update()
+
     def __iter__(self):
         return self.buffers.__iter__()
         
