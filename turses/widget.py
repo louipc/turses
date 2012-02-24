@@ -6,95 +6,38 @@
 
 import urwid
 
+# TODO
 class BufferHeader(urwid.WidgetWrap):
-    def __init__(self, buffers):
-        self.buffers = buffers
-        if self.buffers:
-            self.active_index = 0
-        else:
-            #TODO
-            pass
-        text = self._create_text()
-        urwid.WidgetWrap.__init__(self, urwid.Text(text))
+    pass
 
-    def _create_text(self):
-        text = []
-        for i, buffer_name in enumerate(self.buffers):
-            buffer_tab = buffer_name.upper() + ' '
-            if i == self.active_index:
-                text.append(('active_tab', buffer_tab))
-            else:
-                text.append(('inactive_tab', buffer_tab))
-        return text
-
-    def _update_text(self):
-        text = self._create_text()
-        self._w.set_text(text)
-
-    def add_buffer(self, buffer_name):
-        self.buffers.append(buffer_name)
-        self._update_text()
-
-    def remove_current_buffer(self):
-        del self.buffers[self.active_index]
-        self._update_text()
-
-    def set_active_buffer(self, pos):
-        self.active_index = pos
-        self._update_text()
-
-
-#TODO:contextual help, messages
+#TODO
 class BufferFooter(urwid.WidgetWrap):
-    def __init__(self, help_widgets, message):
-        #FIXME
-        #self.widgets = widgets
-        if self.widgets:
-            self.active_index = 0
-        else:
-            #TODO
-            pass
-        text = self._create_text()
-        urwid.WidgetWrap.__init__(self, urwid.Text(text))
-
-    def _create_text(self):
-        text = []
-        #TODO,room for a message
-        for i, buffer_name in enumerate(self.buffers):
-            buffer_tab = buffer_name.upper() + ' '
-            if i == self.active_index:
-                text.append(('active_tab', buffer_tab))
-            else:
-                text.append(('inactive_tab', buffer_tab))
-        return text
-
-    def _update_text(self):
-        text = self._create_text()
-        self._w.set_text(text)
-
-    def add_buffer(self, buffer_name):
-        self.buffers.append(buffer_name)
-        self._update_text()
-
-    def remove_current_buffer(self):
-        del self.buffers[self.active_index]
-        self._update_text()
-
-    def set_active_buffer(self, pos):
-        self.active_index = pos
-        self._update_text()
+    pass
 
 
-class BufferList(urwid.Frame):
-    """A tabbed list of buffers."""
+class BufferListException(Exception):
+    pass
+
+
+class BufferList(urwid.WidgetWrap):
+    """
+    A tabbed list of buffers.
+    
+    It is instantiated giving it a list of buffers that cannot be
+    empty.
+    """
 
     def __init__(self, buffers=[]):
-        self.buffers = buffers
-        if self.buffers:
-            self.display_buffer(0)                
+        if buffers:
+            self.buffers = buffers
+            self.active_buffer = self.buffers[0]
+            urwid.WidgetWrap.__init__(self, urwid.Frame(self.buffers[0]))
+        else:
+            raise BufferListException('`BufferList` must be instantiated at least' \
+                                        'with one buffer instance.')
 
     def _is_valid_index(self, index):
-        return index > 0 and index < len(self.buffers)
+        return index >= 0 and index < len(self.buffers)
 
     def _active_buffer_index(self):
         return self.buffers.index(self.active_buffer)
@@ -110,11 +53,10 @@ class BufferList(urwid.Frame):
         Displays the buffer that is in `index`-th position if it is
         within the bounds.
         """
-        if self._is_valid_index(index):
+        if not self._is_valid_index(index):
             return
         self.active_buffer = self.buffers[index]
-        urwid.Frame.__init__(self, 
-                             self.active_buffer,)
+        self._w = urwid.Frame(self.active_buffer,)
 
     def display_previous_buffer(self):
         """
@@ -141,7 +83,6 @@ class BufferList(urwid.Frame):
     def append_buffer(self, buffer):
         """Appends a new buffer to the end of the list."""
         self.buffers.append(buffer)
-        # TODO: update required components
 
     def __iter__(self):
         return self.buffers.__iter__()
@@ -150,21 +91,22 @@ class BufferList(urwid.Frame):
 class TimelineBuffer(urwid.WidgetWrap):
     """A widget that displays its associated `Timeline` object."""
 
-    def __init__(self, name, timeline):
+    def __init__(self, name, timeline=[]):
         self.name = name
         self.timeline = timeline
         urwid.WidgetWrap.__init__(self, TimelineWidget(timeline))
 
     def clear(self):
         """Clears its Timeline and the UI."""
-        raise NotImplemented
+        self.timeline.clear()
+        self.update()
 
     def update(self):
         """
         Reads the statuses from its Timeline and updates the widget
         accordingly.
         """
-        raise NotImplemented
+        self._w = TimelineWidget(self.timeline)
 
 
 class TimelineWidget(urwid.ListBox):
@@ -185,9 +127,9 @@ class StatusWidget(urwid.WidgetWrap):
         self.status = status
         self.id = status.id
         status_content = urwid.Padding(
-            urwid.AttrWrap(urwid.Text(status.get_text()), 'body'), left=1, right=1)
+            urwid.AttrWrap(urwid.Text(status.text), 'body'), left=1, right=1)
         # TODO!Header
-        widget = urwid.AttrWrap(BoxDecoration(status_content, title=status.get_username()), 
+        widget = urwid.AttrWrap(BoxDecoration(status_content, title=status.user.screen_name), 
                                               'line', 
                                               'focus')
         self.__super.__init__(widget)
