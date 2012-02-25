@@ -53,26 +53,21 @@ class BufferListException(Exception):
     pass
 
 
+class BufferList(urwid.Frame):
+    pass
+
 
 class TimelineBuffer(urwid.WidgetWrap):
-    """A widget that displays its associated `Timeline` object."""
+    """A widget that displays a `Timeline` object."""
 
     def __init__(self, timeline=[]):
-        self.timeline = timeline
         urwid.WidgetWrap.__init__(self, TimelineWidget(timeline))
 
     def clear(self):
         """Clears the buffer."""
-        return self._render([])
+        return self.render([])
 
-    def update(self):
-        """
-        Reads the statuses from its Timeline and updates the widget
-        accordingly.
-        """
-        return self._render(self.timeline)
-
-    def _render(self, timeline):
+    def render(self, timeline):
         """Renders the given statuses."""
         self._w = TimelineWidget(timeline)
 
