@@ -5,12 +5,22 @@
 ###############################################################################
 
 import urwid
+import twitter
 
 from credentials import *
 from constant import palette
-from widget import TabsWidget, TimelineBuffer
+from widget import TabsWidget, TimelineBuffer, BufferFooter, TweetEditor
 from api import Api
 from timeline import Timeline, NamedTimelineList
+
+# TODO move to utils
+def valid_status_text(text):
+    """Checks the validity of a status text."""
+    return text and len(text) <= 140
+
+def valid_search_text(text):
+    """Checks the validity of a search text."""
+    return text
 
 
 class Turses(object):
@@ -28,13 +38,14 @@ class Turses(object):
         self.header = TabsWidget(tl_names)
         self.timelines.update_active_timeline()
         self.body= TimelineBuffer(self.timelines.get_active_timeline())
+        self.footer = BufferFooter()
         self.ui = urwid.Frame(self.body,
-                              header=self.header)
+                              header=self.header,
+                              footer=self.footer)
         # start main loop
         self.loop = urwid.MainLoop(self.ui,
                                    palette, 
-                                   input_filter=self.motion_key_handler,
-                                   unhandled_input=self.action_key_handler,) 
+                                   unhandled_input=self.key_handler,)
         self.loop.run()
 
     def init_timelines(self):
@@ -59,26 +70,44 @@ class Turses(object):
                                                 update_function_args=update_args))
 
     def refresh_timeline(self):
+        self.timelines.update_active_timeline()
         active_timeline = self.timelines.get_active_timeline()
         self.body.render_timeline(active_timeline)
+
+    def status_message(self, text):
+        self.footer = BufferFooter(text)
+        self.ui.set_footer(self.footer)
 
     # -- Event handling -------------------------------------------------------
 
     # TODO
-    def motion_key_handler(self, input, raw):
+    def key_handler(self, input):
         clean_input = ''.join(input)
-        if clean_input == 'l':
+        if clean_input == 'e':
+            self.footer = TweetEditor()
+            self.ui.set_footer(self.footer)
+            self.ui.set_focus('footer')
+            urwid.connect_signal(self.footer, 'done', self.tweet_handler)
+        elif clean_input == 's':
+            self.footer = TweetEditor()
+            self.ui.set_footer(self.footer)
+            self.ui.set_focus('footer')
+            urwid.connect_signal(self.footer, 'done', self.search_handler)
+        elif clean_input == 'l':
             self.next_timeline()
         elif clean_input == 'h':
             self.previous_timeline()
+        elif clean_input == 'r':
+            self.refresh_timeline()
+        elif clean_input == 'c':
+            self.body.clear()
+        elif clean_input == 't':
+            import ipdb
+            ipdb.set_trace()
+        elif clean_input == 'q':
+            raise urwid.ExitMainLoop
         else:
             return input
-
-    def up(self):
-        pass
-
-    def down(self):
-        pass
 
     def previous_timeline(self):
         self.timelines.activate_previous()
@@ -90,18 +119,44 @@ class Turses(object):
         self.header.activate_next()
         self.refresh_timeline()
 
-    def action_key_handler(self, input):
-        """Handles keypresses that are not motion keys."""
-        if input == 'r':
+    def tweet_handler(self, text):
+        """Handles the post as a tweet of the given `text`."""
+        # disconnect signal
+        urwid.disconnect_signal(self, self.ui.footer, 'done', self.tweet_handler)
+        if not valid_status_text(text):
+            # TODO error message editor and continue editing
+            return
+        self.ui.set_focus('body')
+        self.status_message('Sending tweet')
+        # API call
+        try:
+            tweet = self.api.PostUpdate(text)
+        except twitter.TwitterError:
+            # FIXME `PostUpdate` ALWAYS raises this exception but
+            #       it posts the tweet anyway.
+            pass
+        else:
+            # TODO background
             self.refresh_timeline()
-        elif input == 'c':
-            self.body.clear()
-        elif input == 't':
-            import ipdb
-            ipdb.set_trace()
-        elif input == 'q':
-            raise urwid.ExitMainLoop
+        finally:
+            self.status_message('Tweet sent!')
 
+    def search_handler(self, text):
+        """
+        Handles creating a timeline tracking the search term given in 
+        `text`.
+        """
+        # disconnect signal
+        urwid.disconnect_signal(self, self.ui.footer, 'done', self.search_handler)
+        if not valid_search_text(text):
+            # TODO error message editor and continue editing
+            return
+        tl_name = 'Search: %s' % text
+        self.append_timeline(tl_name, self.api.GetSearch, text)
+        # update header
+        self.header.append_tab(tl_name)
+        self.ui.set_focus('body')
+            
 
 if __name__ == '__main__':
     Turses()

@@ -7,6 +7,55 @@
 import urwid
 
 
+class Editor(urwid.Edit):
+    """
+    Basic editor widget.
+    
+    The editing action is confirmed pressing <CR> twice in a row and cancelled
+    pressing <Esc>.
+    """
+
+    __metaclass__ = urwid.signals.MetaSignals
+    signals = ['done']
+    last_key = ''
+
+    def keypress(self, size, key):
+        if key == 'enter' and self.last_key == 'enter':
+            urwid.emit_signal(self, 'done', self.get_edit_text())
+            return
+        elif key == 'esc':
+            urwid.emit_signal(self, 'done', None)
+            return
+
+        self.last_key = key
+        urwid.Edit.keypress(self, size, key)
+
+
+class TweetEditor(urwid.WidgetWrap):
+    """Editor for creating tweets."""
+
+    __metaclass__ = urwid.signals.MetaSignals
+    signals = ['done']
+
+    def __init__(self, prompt='', content=''):
+        if content:
+            content += ' '
+        self.editor = Editor(u'%s (twice enter key to validate or esc) \n>> ' % prompt, content)
+        self.counter = urwid.Text('0')
+        w = urwid.Columns([ ('fixed', 4, self.counter), self.editor])
+
+        urwid.connect_signal(self.editor, 'done', self.emit_done_signal)
+        urwid.connect_signal(self.editor, 'change', self.update_count)
+
+        self.__super.__init__(w)
+
+    def emit_done_signal(self, content):
+        urwid.emit_signal(self, 'done', content)
+
+    def update_count(self, edit, new_edit_text):
+        self.counter.set_text(str(len(new_edit_text)))
+
+
 class TabsWidget(urwid.WidgetWrap):
     """
     TODO
@@ -63,9 +112,9 @@ class TabsWidget(urwid.WidgetWrap):
             self._set_active_tab(next_index)
 
 
-#TODO
 class BufferFooter(urwid.WidgetWrap):
-    pass
+    def __init__(self, text=''):
+        urwid.WidgetWrap.__init__(self, urwid.Text(text))
 
 
 class TimelineBuffer(urwid.WidgetWrap):
