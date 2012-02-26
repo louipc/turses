@@ -19,6 +19,7 @@ from util import valid_status_text, valid_search_text
 __revision__ = 'alpha'
 
 
+
 def arguments():
     """Parse all argument from the command line."""
 
