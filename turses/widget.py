@@ -5,6 +5,7 @@
 ###############################################################################
 
 import urwid
+import twitter
 
 
 class TextEditor(urwid.WidgetWrap):
@@ -73,7 +74,6 @@ class Editor(urwid.Edit):
 
         self.last_key = key
         urwid.Edit.keypress(self, size, key)
-
 
 
 class TabsWidget(urwid.WidgetWrap):
@@ -165,10 +165,13 @@ class StatusWidget(urwid.WidgetWrap):
         self.id = status.id
         status_content = urwid.Padding(
             urwid.AttrWrap(urwid.Text(status.text), 'body'), left=1, right=1)
-        # TODO!Header
-        widget = urwid.AttrWrap(BoxDecoration(status_content, title=status.user.screen_name), 
-                                              'line', 
-                                              'focus')
+        # TODO render more information
+        if status.__class__ ==  twitter.DirectMessage:
+            name = status.sender_screen_name
+        elif status.__class__ == twitter.Status:
+            name = status.user.screen_name
+        widget = urwid.AttrWrap(BoxDecoration(status_content, title=name), 
+                                'line', 'focus')
         self.__super.__init__(widget)
 
     def selectable(self):
