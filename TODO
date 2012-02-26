@@ -1,4 +1,10 @@
 
+* editor
+  - tweet
+  - search
+* mock API for debugging
+* lists (menu for selecting list?)
+* document
 * action commands
   * delete buffer
   * move buffer left/right
