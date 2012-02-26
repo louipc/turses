@@ -56,6 +56,9 @@ class Turses(object):
         self.append_timeline('Mentions', self.api.GetMentions)
         # favorites
         self.append_timeline('Favorites', self.api.GetFavorites)
+        # DMs
+        self.append_timeline('Direct Messages', self.api.GetDirectMessages)
+        
 
     def append_timeline(self, name, update_function, update_args=None):
         """
