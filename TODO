@@ -18,8 +18,7 @@
   * buffers
     - User profile 
     - help
-* configuration
-  * key bindings
+* key bindings
   * palette
     * modify widgets to include attributes of the palette
     * make palette configurable

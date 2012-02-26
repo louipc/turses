@@ -4,14 +4,18 @@
 #       Licensed under the GPL License. See LICENSE.txt for full details.     #
 ###############################################################################
 
+import argparse
+
 import urwid
 import twitter
 
-from credentials import consumer_key, consumer_secret, access_token_key, access_token_secret
 from constant import palette
 from widget import TabsWidget, TimelineBuffer, BufferFooter, TextEditor, TweetEditor
 from api import Api
 from timeline import Timeline, NamedTimelineList
+from config import Configuration
+
+__revision__ = 'alpha'
 
 # TODO move to utils
 def valid_status_text(text):
@@ -22,15 +26,31 @@ def valid_search_text(text):
     """Checks the validity of a search text."""
     return text
 
+def arguments():
+    """Parse all argument from the command line."""
+
+    parser = argparse.ArgumentParser(
+            "turses: a ncurses Twitter client written in Python.")
+    parser.add_argument("-a", "--account",
+            help="Use another account, store in a different file.")
+    parser.add_argument("-c", "--config",
+            help="Use another configuration file.")
+    parser.add_argument("-g", "--generate-config",
+            help="Generate a default configuration file.")
+    parser.add_argument("-v", "--version", action="version", version="turses %s" % __revision__,
+            help="Show the current version of turses")
+    args = parser.parse_args()
+    return args
 
 class Turses(object):
     """Controller of the program."""
 
     def __init__(self):
-        self.api = Api(consumer_key, 
-                       consumer_secret, 
-                       access_token_key, 
-                       access_token_secret)
+        self.configuration = Configuration(arguments())
+        self.api = Api(self.configuration.token[self.configuration.service]['consumer_key'],
+                       self.configuration.token[self.configuration.service]['consumer_secret'],
+                       self.configuration.oauth_token,
+                       self.configuration.oauth_token_secret,)
         self.timelines = NamedTimelineList()
         self.init_timelines()
         # create UI

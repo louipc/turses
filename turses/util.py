@@ -4,6 +4,7 @@
 #       Licensed under the GPL License. See LICENSE.txt for full details.     #
 ###############################################################################
 
+import sys
 import re
 import string
 from htmlentitydefs import entitydefs
@@ -43,3 +44,9 @@ def html_unescape(str):
 
 def get_urls(text):
     return re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', text)
+
+def encode(string):
+    try:
+        return string.encode(sys.stdout.encoding, 'replace')
+    except AttributeError:
+        return string
