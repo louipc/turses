@@ -1,12 +1,9 @@
 
-* finish implementing the UI
-* motion commands
-  * move accross TLs and buffers
 * action commands
-  * clear, refresh buffer
   * delete buffer
   * move buffer left/right
   * move buffer beggining/end
+  * create tweet/reply/DM
   * create TL/mention/favorites/DMs/Thread/User/Search/List buffer
 * configuration
   * key bindings

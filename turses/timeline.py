@@ -103,17 +103,21 @@ class NamedTimelineList(object):
         return index >= 0 and index < len(self.timelines)
 
     def has_timelines(self):
-        return self.active_timeline_index != 1 and self.timelines
-
-    def get_active_timeline(self):
-        if self.has_timelines():
-            _, timeline = self.timelines[self.active_index]
-            return timeline
+        return self.active_index != -1 and self.timelines
 
     def get_active_timeline_name(self):
         if self.has_timelines():
             name, _ = self.timelines[self.active_index]
             return name
+        else:
+            raise Exception("There are no timelines in the list")
+
+    def get_active_timeline(self):
+        if self.has_timelines():
+            _, timeline = self.timelines[self.active_index]
+            return timeline
+        else:
+            raise Exception("There are no timelines in the list")
 
     def append_timeline(self, name, timeline):
         """Appends a new `(name, timeline)` to the end of the list."""
@@ -123,16 +127,27 @@ class NamedTimelineList(object):
             self.active_timeline = timeline
         self.timelines.append((name, timeline))
 
-    def update_all(self):
-        """Updates every `Timeline`."""
-        for _, timeline in self.timelines:
-            timeline.update()
-
     def activate_previous(self):
-        """Marks as active the next `Timeline` if it exists."""
+        """Marks as active the previous `Timeline` if it exists."""
         new_index = self.active_index - 1
         if self._is_valid_index(new_index):
             self.active_index = new_index
+    
+    # TODO
+    def shift_active_left(self):
+        pass
+
+    # TODO
+    def shift_active_right(self):
+        pass
+
+    # TODO
+    def shift_active_beggining(self):
+        pass
+
+    # TODO
+    def shift_active_end(self):
+        pass
 
     def activate_next(self):
         """Marks as active the next `Timeline` if it exists."""
@@ -140,8 +155,25 @@ class NamedTimelineList(object):
         if self._is_valid_index(new_index):
             self.active_index = new_index
 
+    def update_active_timeline(self):
+        # TODO: control errors
+        _, tl = self.timelines[self.active_index]
+        tl.update()
+
+    def update_all(self):
+        """Updates every `Timeline`."""
+        for _, timeline in self.timelines:
+            timeline.update()
+
+
+    def get_timelines(self):
+        return [timeline for _, timeline in self.timelines]
+
     def get_timeline_names(self):
         return [name for name, _ in self.timelines]
 
     def __iter__(self):
         return self.timelines.__iter__()
+
+    def __len__(self):
+        return self.timelines.__len__()

@@ -8,10 +8,9 @@ import urwid
 
 from credentials import *
 from constant import palette
-from widget import TimelineBuffer, BufferHeader
+from widget import TabsWidget, TimelineBuffer
 from api import Api
 from timeline import Timeline, NamedTimelineList
-from managers import TimelineManager
 
 
 class Turses(object):
@@ -23,18 +22,14 @@ class Turses(object):
                        access_token_key, 
                        access_token_secret)
         self.timelines = NamedTimelineList()
-        # tweets from friends
-        tl_name = 'Tweets'
-        tl = Timeline(update_function=self.api.GetFriendsTimeline)
-        self.timelines.append_timeline(tl_name, tl)
-        # mentions
-        tl_name = 'Mentions'
-        tl = Timeline(update_function=self.api.GetSearch, update_function_args='#python')
-        self.timelines.append_timeline(tl_name, tl)
+        self.init_timelines()
         # create UI
-        self.timelines.update_all()
-        self.ui = urwid.Frame(TimelineBuffer(self.timelines.get_active_timeline()),
-                              header=BufferHeader([self.timelines.get_timeline_names()]))
+        tl_names = self.timelines.get_timeline_names()
+        self.header = TabsWidget(tl_names)
+        self.timelines.update_active_timeline()
+        self.body= TimelineBuffer(self.timelines.get_active_timeline())
+        self.ui = urwid.Frame(self.body,
+                              header=self.header)
         # start main loop
         self.loop = urwid.MainLoop(self.ui,
                                    palette, 
@@ -42,56 +37,68 @@ class Turses(object):
                                    unhandled_input=self.action_key_handler,) 
         self.loop.run()
 
-    def update_active_timeline(self):
-        """Updates the active timeline and its representation."""
-        # XXX TimelineManager
-        self.timelines.update_all()
+    def init_timelines(self):
+        """Initializes the timelines that appear by default."""
+        # friends
+        self.append_timeline('Tweets', self.api.GetFriendsTimeline)
+        # mentions
+        self.append_timeline('Mentions', self.api.GetMentions)
+        # favorites
+        self.append_timeline('Favorites', self.api.GetFavorites)
 
-    def redraw_screen(self):
-        self.loop.draw_screen()
+    def append_timeline(self, name, update_function, update_args=None):
+        """
+        Given a name, function to update a timeline and optionally
+        arguments to the update function, it creates the timeline and
+        appends it to `timelines`.
+        """
+        timeline =  update_function()
+        self.timelines.append_timeline(name,
+                                       Timeline(timeline,                            
+                                                update_function=update_function,
+                                                update_function_args=update_args))
+
+    def refresh_timeline(self):
+        active_timeline = self.timelines.get_active_timeline()
+        self.body.render_timeline(active_timeline)
+
+    # -- Event handling -------------------------------------------------------
 
     # TODO
     def motion_key_handler(self, input, raw):
-        if input == 'l':
-            pass
-        elif input == 'r':
-            pass
+        clean_input = ''.join(input)
+        if clean_input == 'l':
+            self.next_timeline()
+        elif clean_input == 'h':
+            self.previous_timeline()
         else:
             return input
+
+    def up(self):
+        pass
+
+    def down(self):
+        pass
+
+    def previous_timeline(self):
+        self.timelines.activate_previous()
+        self.header.activate_previous()
+        self.refresh_timeline()
+
+    def next_timeline(self):
+        self.timelines.activate_next()
+        self.header.activate_next()
+        self.refresh_timeline()
 
     def action_key_handler(self, input):
         """Handles keypresses that are not motion keys."""
         if input == 'r':
-            # XXX separate thread
-            self.update_active_timeline()
+            self.refresh_timeline()
         elif input == 'c':
-            # XXX clear timeline from `Turses`, not from `TimelineBuffer`
-            self.buffer_list.clear_active_buffer()
-        elif input == 'm':
-            # mentions
-            mentions = Timeline()
-            mention_tl_manager = TimelineManager(mentions, self.api.GetMentions)
-            self.timelines.append(mention_tl_manager)
-            mention_tl_buffer = TimelineBuffer('Mentions', mentions)
-            self.buffer_list.append_buffer(mention_tl_buffer)
-            self.redraw_screen()
-        elif input == 'a':
-            self.buffer_list.display_previous_buffer()
-            self.redraw_screen()
-        elif input == 'd':
-            self.buffer_list.display_next_buffer()
-            self.redraw_screen()
+            self.body.clear()
         elif input == 't':
-            import pdb
-            pdb.set_trace()
-        elif input == 'f':
-            # favorites
-            favorites = Timeline()
-            favorite_tl_manager = TimelineManager(favorites, self.api.GetFavorites)
-            self.timelines.append(favorite_tl_manager)
-            favorite_tl_buffer = TimelineBuffer('Favorites', favorites)
-            self.buffer_list.append_buffer(favorite_tl_buffer)
-            self.redraw_screen()
+            import ipdb
+            ipdb.set_trace()
         elif input == 'q':
             raise urwid.ExitMainLoop
 

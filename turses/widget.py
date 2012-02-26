@@ -7,7 +7,7 @@
 import urwid
 
 
-class Tabs(urwid.WidgetWrap):
+class TabsWidget(urwid.WidgetWrap):
     """
     TODO
     """
