@@ -7,53 +7,64 @@
 import urwid
 
 
-class BufferHeader(urwid.WidgetWrap):
-    """Displays the names of the buffers, highlighting the active buffer."""
+class Tabs(urwid.WidgetWrap):
+    """
+    TODO
+    """
 
-    def __init__(self, buffer_names):
-        self.buffer_names = buffer_names
-        self.active_index = 0
+    def __init__(self, tabs=[]):
+        """Creates tabs with the names given in `tabs`."""
+        self.tabs = tabs
+        if tabs:
+            self.active_index = 0
+        else:
+            self.active_index = -1
         text = self._create_text()
         urwid.WidgetWrap.__init__(self, urwid.Text(text))
 
+    def _is_valid_index(self, index):
+        return index >= 0 and index < len(self.tabs)
+
     def _create_text(self):
-        """Creates the text that is rendered as the header."""
+        """Creates the text that is rendered as the tab list."""
         text = []
-        for i, name in enumerate(self.buffer_names):
-            buffer_tab = name + ' '
+        for i, tab in enumerate(self.tabs):
+            tab = tab + ' '
             if i == self.active_index:
-                text.append(('active_tab', buffer_tab))
+                text.append(('active_tab', tab))
             else:
-                text.append(('inactive_tab', buffer_tab))
+                text.append(('inactive_tab', tab))
         return text
 
     def _update_text(self):
         text = self._create_text()
         self._w.set_text(text)
 
-    def append_buffer_name(self, buffer_name):
-        self.buffer_names.append(buffer_name)
+    def append_tab(self, tab):
+        self.tabs.append(tab)
         self._update_text()
 
-    def remove_current_buffer_name(self):
-        del self.buffer_names[self.active_index]
+    def delete_current_tab(self):
+        del self.tabs[self.active_index]
         self._update_text()
 
-    def set_active_buffer(self, pos):
+    def _set_active_tab(self, pos):
         self.active_index = pos
         self._update_text()
+
+    def activate_previous(self):
+        next_index = self.active_index - 1
+        if self._is_valid_index(next_index):
+            self._set_active_tab(next_index)
+
+    def activate_next(self):
+        next_index = self.active_index + 1
+        if self._is_valid_index(next_index):
+            self._set_active_tab(next_index)
 
 
 #TODO
 class BufferFooter(urwid.WidgetWrap):
-    pass
-
-
-class BufferListException(Exception):
-    pass
-
-
-class BufferList(urwid.Frame):
     pass
 
 
@@ -65,9 +76,9 @@ class TimelineBuffer(urwid.WidgetWrap):
 
     def clear(self):
         """Clears the buffer."""
-        return self.render([])
+        return self.render_timeline([])
 
-    def render(self, timeline):
+    def render_timeline(self, timeline):
         """Renders the given statuses."""
         self._w = TimelineWidget(timeline)
 
@@ -78,8 +89,8 @@ class TimelineWidget(urwid.ListBox):
     rendered as a `StatusWidget`.
     """
 
-    def __init__(self, content):
-        status_widgets = [StatusWidget(status) for status in content]
+    def __init__(self, timeline):
+        status_widgets = [StatusWidget(status) for status in timeline]
         urwid.ListBox.__init__(self, urwid.SimpleListWalker(status_widgets))
 
 
