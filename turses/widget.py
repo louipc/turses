@@ -7,28 +7,23 @@
 import urwid
 
 
-class Editor(urwid.Edit):
-    """
-    Basic editor widget.
-    
-    The editing action is confirmed pressing <CR> twice in a row and cancelled
-    pressing <Esc>.
-    """
+class TextEditor(urwid.WidgetWrap):
+    """Editor for creating arbitrary text."""
 
     __metaclass__ = urwid.signals.MetaSignals
     signals = ['done']
-    last_key = ''
 
-    def keypress(self, size, key):
-        if key == 'enter' and self.last_key == 'enter':
-            urwid.emit_signal(self, 'done', self.get_edit_text())
-            return
-        elif key == 'esc':
-            urwid.emit_signal(self, 'done', None)
-            return
+    def __init__(self, prompt='', content=''):
+        if content:
+            content += ' '
+        self.editor = Editor(u'%s (twice enter key to validate or esc) \n>> ' % prompt, content)
 
-        self.last_key = key
-        urwid.Edit.keypress(self, size, key)
+        urwid.connect_signal(self.editor, 'done', self.emit_done_signal)
+
+        self.__super.__init__(self.editor)
+
+    def emit_done_signal(self, content):
+        urwid.emit_signal(self, 'done', content)
 
 
 class TweetEditor(urwid.WidgetWrap):
@@ -54,6 +49,31 @@ class TweetEditor(urwid.WidgetWrap):
 
     def update_count(self, edit, new_edit_text):
         self.counter.set_text(str(len(new_edit_text)))
+
+
+class Editor(urwid.Edit):
+    """
+    Basic editor widget.
+    
+    The editing action is confirmed pressing <CR> twice in a row and cancelled
+    pressing <Esc>.
+    """
+
+    __metaclass__ = urwid.signals.MetaSignals
+    signals = ['done']
+    last_key = ''
+
+    def keypress(self, size, key):
+        if key == 'enter' and self.last_key == 'enter':
+            urwid.emit_signal(self, 'done', self.get_edit_text())
+            return
+        elif key == 'esc':
+            urwid.emit_signal(self, 'done', None)
+            return
+
+        self.last_key = key
+        urwid.Edit.keypress(self, size, key)
+
 
 
 class TabsWidget(urwid.WidgetWrap):
@@ -97,19 +117,13 @@ class TabsWidget(urwid.WidgetWrap):
         del self.tabs[self.active_index]
         self._update_text()
 
-    def _set_active_tab(self, pos):
+    def set_active_tab(self, pos):
         self.active_index = pos
         self._update_text()
 
-    def activate_previous(self):
-        next_index = self.active_index - 1
-        if self._is_valid_index(next_index):
-            self._set_active_tab(next_index)
-
-    def activate_next(self):
-        next_index = self.active_index + 1
-        if self._is_valid_index(next_index):
-            self._set_active_tab(next_index)
+    def set_tabs(self, tabs):
+        self.tabs = tabs
+        self._update_text()
 
 
 class BufferFooter(urwid.WidgetWrap):

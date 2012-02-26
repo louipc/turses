@@ -1,16 +1,23 @@
-
-* editor
-  - tweet
-  - search
+* write tests with 100% coverage `timelines.py`
+* document
 * mock API for debugging
 * lists (menu for selecting list?)
-* document
+* event handling in a separate class (?)
 * action commands
-  * delete buffer
-  * move buffer left/right
-  * move buffer beggining/end
   * create tweet/reply/DM
-  * create TL/mention/favorites/DMs/Thread/User/Search/List buffer
+  * favorite tweet
+  * retweet
+  * follow/unfollow
+  * create TLs
+    - friends TL
+    - mentions 
+    - favorites
+    - DMs
+    - Thread view
+    - List buffer
+  * buffers
+    - User profile 
+    - help
 * configuration
   * key bindings
   * palette

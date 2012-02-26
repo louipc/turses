@@ -7,9 +7,9 @@
 import urwid
 import twitter
 
-from credentials import *
+from credentials import consumer_key, consumer_secret, access_token_key, access_token_secret
 from constant import palette
-from widget import TabsWidget, TimelineBuffer, BufferFooter, TweetEditor
+from widget import TabsWidget, TimelineBuffer, BufferFooter, TextEditor, TweetEditor
 from api import Api
 from timeline import Timeline, NamedTimelineList
 
@@ -69,10 +69,13 @@ class Turses(object):
                                                 update_function=update_function,
                                                 update_function_args=update_args))
 
-    def refresh_timeline(self):
-        self.timelines.update_active_timeline()
-        active_timeline = self.timelines.get_active_timeline()
-        self.body.render_timeline(active_timeline)
+    def refresh_screen(self):
+        if self.timelines.has_timelines():
+            active_timeline = self.timelines.get_active_timeline()
+            self.body.render_timeline(active_timeline)
+        else:
+            # TODO help
+            pass
 
     def status_message(self, text):
         self.footer = BufferFooter(text)
@@ -80,28 +83,65 @@ class Turses(object):
 
     # -- Event handling -------------------------------------------------------
 
-    # TODO
+    # TODO subsitute literals with configuration values
     def key_handler(self, input):
         clean_input = ''.join(input)
-        if clean_input == 'e':
+        if clean_input == 't':
             self.footer = TweetEditor()
             self.ui.set_footer(self.footer)
             self.ui.set_focus('footer')
             urwid.connect_signal(self.footer, 'done', self.tweet_handler)
         elif clean_input == 's':
-            self.footer = TweetEditor()
+            self.footer = TextEditor()
             self.ui.set_footer(self.footer)
             self.ui.set_focus('footer')
             urwid.connect_signal(self.footer, 'done', self.search_handler)
+        elif clean_input == '<':
+            if self.timelines.has_timelines():
+                self.timelines.shift_active_left()
+                self._update_header()
+        elif clean_input == '>':
+            if self.timelines.has_timelines():
+                self.timelines.shift_active_right()
+                self._update_header()
+        elif clean_input == 'g':
+            if self.timelines.has_timelines():
+                self.timelines.activate_first()
+                self._update_header()
+                self.refresh_screen()
+        elif clean_input == 'G':
+            if self.timelines.has_timelines():
+                self.timelines.activate_last()
+                self._update_header()
+                self.refresh_screen()
+        elif clean_input == 'a':
+            if self.timelines.has_timelines():
+                self.timelines.shift_active_beggining()
+                self._update_header()
+        elif clean_input == 'e':
+            if self.timelines.has_timelines():
+                self.timelines.shift_active_end()
+                self._update_header()
         elif clean_input == 'l':
             self.next_timeline()
         elif clean_input == 'h':
             self.previous_timeline()
         elif clean_input == 'r':
-            self.refresh_timeline()
+            if self.timelines.has_timelines():
+                self.timelines.update_active_timeline()
+                self.refresh_screen()
         elif clean_input == 'c':
             self.body.clear()
-        elif clean_input == 't':
+        elif clean_input == 'd':
+            self.timelines.delete_active_timeline()
+            if self.timelines.has_timelines():
+                self.refresh_screen()
+                self._update_header()
+            else:
+                # TODO help
+                self.body.clear()
+                self.header.set_tabs([''])
+        elif clean_input == 'b':
             import ipdb
             ipdb.set_trace()
         elif clean_input == 'q':
@@ -109,15 +149,21 @@ class Turses(object):
         else:
             return input
 
+    def _update_header(self):
+        self.header.set_tabs(self.timelines.get_timeline_names())
+        self.header.set_active_tab(self.timelines.active_index)
+
     def previous_timeline(self):
-        self.timelines.activate_previous()
-        self.header.activate_previous()
-        self.refresh_timeline()
+        if self.timelines.has_timelines():
+            self.timelines.activate_previous()
+            self._update_header()
+            self.refresh_screen()
 
     def next_timeline(self):
-        self.timelines.activate_next()
-        self.header.activate_next()
-        self.refresh_timeline()
+        if self.timelines.has_timelines():
+            self.timelines.activate_next()
+            self._update_header()
+            self.refresh_screen()
 
     def tweet_handler(self, text):
         """Handles the post as a tweet of the given `text`."""
@@ -130,14 +176,14 @@ class Turses(object):
         self.status_message('Sending tweet')
         # API call
         try:
-            tweet = self.api.PostUpdate(text)
+            self.api.PostUpdate(text)
         except twitter.TwitterError:
             # FIXME `PostUpdate` ALWAYS raises this exception but
             #       it posts the tweet anyway.
             pass
         else:
             # TODO background
-            self.refresh_timeline()
+            self.refresh_screen()
         finally:
             self.status_message('Tweet sent!')
 
@@ -151,11 +197,13 @@ class Turses(object):
         if not valid_search_text(text):
             # TODO error message editor and continue editing
             return
+        # append timeline
         tl_name = 'Search: %s' % text
         self.append_timeline(tl_name, self.api.GetSearch, text)
-        # update header
-        self.header.append_tab(tl_name)
+        # construct UI
+        self._update_header()
         self.ui.set_focus('body')
+        self.status_message('')
             
 
 if __name__ == '__main__':

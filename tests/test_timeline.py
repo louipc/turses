@@ -205,6 +205,34 @@ class NamedTimelineListTest(unittest.TestCase):
         self.named_timeline_list.append_timeline(name, timeline)
         self.assertEqual(len(self.named_timeline_list), 2)
 
+    def test_shift_active_left(self):
+        # -1 when there are no timelines
+        self.named_timeline_list.shift_active_left()
+        self.assertEqual(self.named_timeline_list.active_index, -1)
+        # does not change if its the first
+        name = 'Timeline'
+        timeline = Timeline()
+        self.named_timeline_list.append_timeline(name, timeline)
+        self.named_timeline_list.shift_active_left()
+        self.assertEqual(self.named_timeline_list.active_index, 0)
+
+    def test_shift_active_right(self):
+        # -1 when there are no timelines
+        self.named_timeline_list.shift_active_right()
+        self.assertEqual(self.named_timeline_list.active_index, -1)
+        # does not change if its the first
+        name = 'Timeline'
+        timeline = Timeline()
+        self.named_timeline_list.append_timeline(name, timeline)
+        self.named_timeline_list.shift_active_right()
+        self.assertEqual(self.named_timeline_list.active_index, 0)
+        # it increases until reaching the end
+        self.named_timeline_list.append_timeline(name, timeline)
+        self.named_timeline_list.shift_active_right()
+        self.assertEqual(self.named_timeline_list.active_index, 1)
+        self.named_timeline_list.shift_active_right()
+        self.assertEqual(self.named_timeline_list.active_index, 1)
+    
     # TODO test update functions with mocks
     # TODO get_*
 

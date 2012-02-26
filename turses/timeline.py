@@ -133,38 +133,85 @@ class NamedTimelineList(object):
         if self._is_valid_index(new_index):
             self.active_index = new_index
     
-    # TODO
-    def shift_active_left(self):
-        pass
-
-    # TODO
-    def shift_active_right(self):
-        pass
-
-    # TODO
-    def shift_active_beggining(self):
-        pass
-
-    # TODO
-    def shift_active_end(self):
-        pass
-
     def activate_next(self):
         """Marks as active the next `Timeline` if it exists."""
         new_index = self.active_index + 1
         if self._is_valid_index(new_index):
             self.active_index = new_index
 
+    def activate_first(self):
+        if self.has_timelines():
+            self.active_index = 0
+
+    def activate_last(self):
+        if self.has_timelines():
+            self.active_index = len(self.timelines) - 1
+
+    def _swap_timelines(self, one, other):
+        """
+        Given the indexes of two timelines `one` and `other`, it swaps the 
+        (name, timeline) tuples contained in those positions.
+        """
+        if self._is_valid_index(one) and self._is_valid_index(other):
+            self.timelines[one], self.timelines[other] = \
+                    self.timelines[other], self.timelines[one]
+
+    def shift_active_left(self):
+        """Shifts the active buffer one position to the left."""
+        active_index = self.active_index
+        previous_index = active_index - 1
+        if self._is_valid_index(previous_index):
+            self._swap_timelines(previous_index, active_index)
+            self.active_index = previous_index
+
+    def shift_active_right(self):
+        """Shifts the active buffer one position to the right."""
+        active_index = self.active_index
+        next_index = active_index + 1
+        if self._is_valid_index(next_index):
+            self._swap_timelines(active_index, next_index)
+            self.active_index = next_index
+
+    def shift_active_beggining(self):
+        """Shifts the active buffer (if any) to the begginning of the list."""
+        if self.has_timelines():
+            first_index = 0
+            self.timelines.insert(first_index, self.timelines[self.active_index])
+            del self.timelines[self.active_index + 1]
+            self.active_index = first_index
+
+    def shift_active_end(self):
+        """Shifts the active buffer (if any) to the begginning of the list."""
+        if self.has_timelines():
+            last_index = len(self.timelines)
+            self.timelines.insert(last_index, self.timelines[self.active_index])
+            self.delete_active_timeline()
+            self.active_index = last_index - 1
+
+    def delete_active_timeline(self):
+        """
+        Deletes the active timeline (if any) and shifts the active index 
+        to the left.
+        """
+        if self.has_timelines():
+            del self.timelines[self.active_index]
+            if self.has_timelines() and self.active_index == 0:
+                return
+            self.active_index = self.active_index - 1
+
     def update_active_timeline(self):
-        # TODO: control errors
-        _, tl = self.timelines[self.active_index]
-        tl.update()
+        if self.has_timelines():
+            _, tl = self.timelines[self.active_index]
+            tl.update()
 
     def update_all(self):
         """Updates every `Timeline`."""
         for _, timeline in self.timelines:
             timeline.update()
 
+    def delete_all(self):
+        """Deletes every `Timeline`."""
+        self.timelines = []
 
     def get_timelines(self):
         return [timeline for _, timeline in self.timelines]
