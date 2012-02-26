@@ -50,3 +50,12 @@ def encode(string):
         return string.encode(sys.stdout.encoding, 'replace')
     except AttributeError:
         return string
+
+def valid_status_text(text):
+    """Checks the validity of a status text."""
+    return text and len(text) <= 140
+
+def valid_search_text(text):
+    """Checks the validity of a search text."""
+    return bool(text)
+

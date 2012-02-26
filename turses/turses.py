@@ -14,17 +14,10 @@ from widget import TabsWidget, TimelineBuffer, BufferFooter, TextEditor, TweetEd
 from api import Api
 from timeline import Timeline, NamedTimelineList
 from config import Configuration
+from util import valid_status_text, valid_search_text
 
 __revision__ = 'alpha'
 
-# TODO move to utils
-def valid_status_text(text):
-    """Checks the validity of a status text."""
-    return text and len(text) <= 140
-
-def valid_search_text(text):
-    """Checks the validity of a search text."""
-    return text
 
 def arguments():
     """Parse all argument from the command line."""
