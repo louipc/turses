@@ -33,7 +33,7 @@ class Timeline(object):
     """
 
     def __init__(self, 
-                 statuses=[],
+                 statuses=None,
                  update_function=None,
                  update_function_args=None):
         self._key = lambda status: datetime_from_status(status)
@@ -42,7 +42,7 @@ class Timeline(object):
                                    key=self._key,
                                    reverse=True)
         else:
-            self.statuses = statuses
+            self.statuses = []
         self.update_function = update_function
         self.update_function_args = update_function_args
 
