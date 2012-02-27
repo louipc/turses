@@ -29,10 +29,9 @@ token = {
         'consumer_key':     'OEn4hrNGknVz9ozQytoR0A',
         'consumer_secret':  'viud49uVgdVO9dnOGxSQJRo7jphTioIlEn3OdpkZI'
     },
-    # TODO
     'identica': {
-        'consumer_key':     '',
-        'consumer_secret':  ''
+        'consumer_key':     '29d5dec21c629682e10bc45f11baf3ab',
+        'consumer_secret':  '0f25e5b8e441492bdc654583e21451d4'
     }
 }
 
