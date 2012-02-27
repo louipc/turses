@@ -2,10 +2,7 @@ turses
 ======
 
 A ncurses Twitter client written in Python. Most of the codebase is from
-the Tyrs project by Nicolas Paris:
-
-    http://tyrs.nicosphere.net
-    http://github.com/Nic0/tyrs
+the [Tyrs](http://tyrs.nicosphere.net) project by [Nicolas Paris](http://github.com/Nic0).
 
 License
 =======
