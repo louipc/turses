@@ -59,3 +59,5 @@ def valid_search_text(text):
     """Checks the validity of a search text."""
     return bool(text)
 
+def is_retweet(status):
+    return bool(retweet_re.match(status.text))

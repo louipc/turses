@@ -90,7 +90,7 @@ params = {
     'box_position':         1,
     'url_shorter':          'ur1ca',
     'logging_level':        3,
-    'header_template':      ' {nick}{retweeted}{retweeter} - {time}{reply} {retweet_count} ',
+    'header_template':      ' {username}{retweeted}{retweeter} - {time}{reply} {retweet_count} ',
     'proxy':                None,
     'beep':                 False,
 }

@@ -4,8 +4,11 @@
 #       Licensed under the GPL License. See LICENSE.txt for full details.     #
 ###############################################################################
 
+from time import altzone, gmtime, strftime
+
 import urwid
-import twitter
+
+from util import is_retweet, encode
 
 
 class TextEditor(urwid.WidgetWrap):
@@ -78,7 +81,9 @@ class Editor(urwid.Edit):
 
 class TabsWidget(urwid.WidgetWrap):
     """
-    TODO
+    A widget that renders tabs with the given strings as titles.
+
+    One of them is highlighted as the active tab.
     """
 
     def __init__(self, tabs=[]):
@@ -164,14 +169,13 @@ class StatusWidget(urwid.WidgetWrap):
         self.status = status
         self.id = status.id
         status_content = urwid.Padding(
-            urwid.AttrWrap(urwid.Text(status.text), 'body'), left=1, right=1)
-        # TODO render more information
-        if status.__class__ ==  twitter.DirectMessage:
-            name = status.sender_screen_name
-        elif status.__class__ == twitter.Status:
-            name = status.user.screen_name
-        widget = urwid.AttrWrap(BoxDecoration(status_content, title=name), 
-                                'line', 'focus')
+            urwid.AttrWrap(urwid.Text(status.text), 'body'), 
+            left=1, 
+            right=1)
+        header = self.create_header(status)
+        widget = urwid.AttrWrap(BoxDecoration(status_content, title=header), 
+                                'line', 
+                                'focus')
         self.__super.__init__(widget)
 
     def selectable(self):
@@ -180,6 +184,95 @@ class StatusWidget(urwid.WidgetWrap):
     def keypress(self, size, key):
         #TODO! modify widget attributes in response to certain actions
         return key
+
+    def create_header(self, status):
+        """Returns the header text for the status associated with this widget."""
+        retweeted = ''
+        reply = ''
+        retweet_count = ''
+        retweeter = ''
+        source = self.get_source(status)
+        username = self.get_username(status)
+        time = self.get_time(status)
+
+        if self.is_reply(status):
+            reply = u' \u2709'
+        if is_retweet(status):
+            retweeted = u" \u267b "
+            retweeter = username
+            username = self.origin_of_retweet(status)
+
+        if self.get_retweet_count(status):
+            retweet_count = str(self.get_retweet_count(status))
+            
+        # TODO take template from configuration
+        header_template = ' {username}{retweeted}{retweeter} - {time}{reply} {retweet_count} '
+        header = unicode(header_template).format(
+            time = time,
+            username= username,
+            reply = reply,
+            retweeted = retweeted,
+            source = source,
+            retweet_count = retweet_count,
+            retweeter = retweeter
+            )
+
+        return encode(header)
+
+    def get_source(self, status):
+        source = ''
+        if hasattr(status, 'source'):
+            source = status.source
+        return source
+
+    def get_username(self, status):
+        if hasattr(status, 'user'):
+            nick = status.user.screen_name
+        else:
+            # Used for direct messages
+            nick = status.sender_screen_name
+        return nick
+
+    def get_time(self, status):
+        """
+        Convert the time format given by the API to something more
+        readable.
+
+        Args:
+          date: full iso time format.
+
+        Returns string: human readable time.
+        """
+        if hasattr(status, 'GetRelativeCreatedAt'):
+            return status.GetRelativeCreatedAt()
+
+        hour = gmtime(status.GetCreatedAtInSeconds() - altzone)
+        result = strftime('%H:%M', hour)
+        if strftime('%d %b', hour) != strftime("%d %b", gmtime()):
+            result += strftime(' - %d %b', hour)
+
+        return result
+
+    def is_reply(self, status):
+        if hasattr(status, 'in_reply_to_screen_name'):
+            reply = status.in_reply_to_screen_name
+            if reply:
+                return True
+        return False
+
+    def origin_of_retweet(self, status):
+        """
+        Returns the original author of the tweet being retweeted.
+        """
+        origin = status.text
+        origin = origin[4:]
+        origin = origin.split(':')[0]
+        origin = str(origin)
+        return origin
+
+    def get_retweet_count(self, status):
+        if hasattr(status, 'retweet_count'):
+            return status.retweet_count
 
 
 class BoxDecoration(urwid.WidgetDecoration, urwid.WidgetWrap):

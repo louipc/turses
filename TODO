@@ -1,8 +1,11 @@
+* palette
+  * modify widgets to include attributes of the palette
+  * make palette configurable
 * write tests with 100% coverage `timelines.py`
 * document
 * mock API for debugging
 * lists (menu for selecting list?)
-* event handling in a separate class (?)
+* reorganize `turses.py`
 * action commands
   * create reply/DM
   * favorite tweet
@@ -19,9 +22,5 @@
     - User profile 
     - help
 * key bindings
-  * palette
-    * modify widgets to include attributes of the palette
-    * make palette configurable
 * packaging
-  * python package
   * upload to PyPI
