@@ -4,7 +4,7 @@
 #       Licensed under the GPL License. See LICENSE.txt for full details.     #
 ###############################################################################
 
-import argparse
+import random
 
 import urwid
 import twitter
@@ -13,40 +13,52 @@ from constant import palette
 from widget import TabsWidget, TimelineBuffer, BufferFooter, TextEditor, TweetEditor
 from api import Api
 from timeline import Timeline, NamedTimelineList
-from config import Configuration
 from util import valid_status_text, valid_search_text
 
-__version__ = 'v0.1alpha'
 
+def _GetSampleUser():
+    return twitter.User(id=718443,
+                        name='Kesuke Miyagi',
+                        screen_name='kesuke',
+                        description=u'Canvas. JC Penny. Three ninety-eight.',
+                        location='Okinawa, Japan',
+                        url='https://twitter.com/kesuke',
+                        profile_image_url='https://twitter.com/system/user/pro'
+                                          'file_image/718443/normal/kesuke.pn'
+                                          'g')
 
-def arguments():
-    """Parse all argument from the command line."""
+def _GetSampleStatus():
+    return twitter.Status(created_at='Fri Jan 26 23:17:14 +0000 2007',
+                          id=4391023,
+                          text=u'A légpárnás hajóm tele van angolnákkal.',
+                          user=_GetSampleUser())
 
-    parser = argparse.ArgumentParser(
-            "turses: a ncurses Twitter client written in Python.")
-    parser.add_argument("-a", "--account",
-            help="Use another account, store in a different file.")
-    parser.add_argument("-c", "--config",
-            help="Use another configuration file.")
-    parser.add_argument("-g", "--generate-config",
-            help="Generate a default configuration file.")
-    parser.add_argument("-v", "--version", action="version", version="turses %s" % __version__,
-            help="Show the current version of turses")
-    args = parser.parse_args()
-    return args
-
+def _dummy_status_list():
+    """Returns a list of dummy statuses."""
+    statuses = []
+    for _ in xrange(0, random.randint(1, 11)):
+        statuses.append(_GetSampleStatus())
+    return statuses
 
 class Turses(object):
     """Controller of the program."""
 
-    def __init__(self):
-        self.configuration = Configuration(arguments())
+    def __init__(self, configuration):
+        self.configuration = configuration
         self.api = Api(self.configuration.token[self.configuration.service]['consumer_key'],
                        self.configuration.token[self.configuration.service]['consumer_secret'],
                        self.configuration.oauth_token,
                        self.configuration.oauth_token_secret,)
+        # default timelines
         self.timelines = NamedTimelineList()
-        self.init_timelines()
+        self._append_home_timeline()
+        self._append_home_timeline()
+        self._append_home_timeline()
+        self._append_home_timeline()
+        # TODO commented while offline
+        #self._append_mentions_timeline()
+        #self._append_favorites_timeline()
+        #self._append_direct_messages_timeline()
         # create UI
         tl_names = self.timelines.get_timeline_names()
         self.header = TabsWidget(tl_names)
@@ -62,18 +74,18 @@ class Turses(object):
                                    unhandled_input=self.key_handler,)
         self.loop.run()
 
-    def init_timelines(self):
-        """Initializes the timelines that appear by default."""
-        # friends
-        self.append_timeline('Tweets', self.api.GetFriendsTimeline)
-        # mentions
+    def _append_home_timeline(self):
+        self.append_timeline('Tweets', _dummy_status_list)
+
+    def _append_mentions_timeline(self):
         self.append_timeline('Mentions', self.api.GetMentions)
-        # favorites
+
+    def _append_favorites_timeline(self):
         self.append_timeline('Favorites', self.api.GetFavorites)
-        # DMs
+
+    def _append_direct_messages_timeline(self):
         self.append_timeline('Direct Messages', self.api.GetDirectMessages)
         
-
     def append_timeline(self, name, update_function, update_args=None):
         """
         Given a name, function to update a timeline and optionally
