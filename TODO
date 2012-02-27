@@ -1,26 +1,20 @@
+* mock API for debugging; --debug argument
+* `TweetEditor` don't allow tweets with more than 140 chars
+  * use different signals for succesfull edits (e.g. 'done')
+    and for cancelling (maybe 'cancelled' ?)
 * palette
   * modify widgets to include attributes of the palette
-  * make palette configurable
 * write tests with 100% coverage `timelines.py`
 * document
-* mock API for debugging
 * lists (menu for selecting list?)
-* reorganize `turses.py`
 * action commands
   * create reply/DM
   * favorite tweet
   * retweet
   * follow/unfollow
   * create TLs
-    - friends TL
-    - mentions 
-    - favorites
-    - DMs
     - Thread view
     - List buffer
   * buffers
     - User profile 
     - help
-* key bindings
-* packaging
-  * upload to PyPI
