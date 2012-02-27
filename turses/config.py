@@ -21,6 +21,7 @@ except ImportError:
 import constant
 from util import encode
 
+
 def print_ask_service(token_file):
     print ''
     print encode(_('Couldn\'t find any profile.'))

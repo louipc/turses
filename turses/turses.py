@@ -332,6 +332,7 @@ class Turses(object):
         urwid.disconnect_signal(self, self.ui.footer, 'done', self.search_handler)
         if not valid_search_text(text):
             # TODO error message editor and continue editing
+            self.status_message('Search canceled')
             return
         # append timeline
         tl_name = 'Search: %s' % text
