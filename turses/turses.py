@@ -112,56 +112,86 @@ class Turses(object):
 
     # -- Event handling -------------------------------------------------------
 
-    # TODO subsitute literals with configuration values
     def key_handler(self, input):
-        clean_input = ''.join(input)
-        if clean_input == 't':
-            self.footer = TweetEditor()
-            self.ui.set_footer(self.footer)
-            self.ui.set_focus('footer')
-            urwid.connect_signal(self.footer, 'done', self.tweet_handler)
-        elif clean_input == 's':
-            self.footer = TextEditor()
-            self.ui.set_footer(self.footer)
-            self.ui.set_focus('footer')
-            urwid.connect_signal(self.footer, 'done', self.search_handler)
-        elif clean_input == '<':
+        ch = ''.join(input)
+        ##
+        #  Motion commands
+        ## 
+        # Right
+        if ch == self.configuration.keys['right'] or ch == 'right':
+            self.next_timeline()
+        # Left
+        elif ch == self.configuration.keys['left'] or ch == 'left':
+            self.previous_timeline()
+        # Up
+        elif ch == self.configuration.keys['up']:
+            self.body.scroll_up()
+        # Down
+        elif ch == self.configuration.keys['down']:
+            self.body.scroll_down()
+        # Scroll to Top
+        elif ch == self.configuration.keys['scroll_to_top']:
+            raise NotImplemented
+        # Scroll to Bottom
+        elif ch == self.configuration.keys['scroll_to_bottom']:
+            raise NotImplemented
+        # Shift active buffer left
+        elif ch == self.configuration.keys['shift_buffer_left']:
             if self.timelines.has_timelines():
                 self.timelines.shift_active_left()
                 self._update_header()
-        elif clean_input == '>':
+        # Shift active buffer right
+        elif ch == self.configuration.keys['shift_buffer_right']:
             if self.timelines.has_timelines():
                 self.timelines.shift_active_right()
                 self._update_header()
-        elif clean_input == 'g':
+        # Shift active buffer beggining
+        elif ch == self.configuration.keys['shift_buffer_beggining']:
+            if self.timelines.has_timelines():
+                self.timelines.shift_active_beggining()
+                self._update_header()
+        # Shift active buffer end
+        elif ch == self.configuration.keys['shift_buffer_end']:
+            if self.timelines.has_timelines():
+                self.timelines.shift_active_end()
+                self._update_header()
+        # Activate first buffer
+        elif ch == self.configuration.keys['activate_first_buffer']:
             if self.timelines.has_timelines():
                 self.timelines.activate_first()
                 self._update_header()
                 self.refresh_screen()
-        elif clean_input == 'G':
+        # Activate last buffer
+        elif ch == self.configuration.keys['activate_last_buffer']:
             if self.timelines.has_timelines():
                 self.timelines.activate_last()
                 self._update_header()
                 self.refresh_screen()
-        elif clean_input == 'a':
-            if self.timelines.has_timelines():
-                self.timelines.shift_active_beggining()
-                self._update_header()
-        elif clean_input == 'e':
-            if self.timelines.has_timelines():
-                self.timelines.shift_active_end()
-                self._update_header()
-        elif clean_input == 'l':
-            self.next_timeline()
-        elif clean_input == 'h':
-            self.previous_timeline()
-        elif clean_input == 'r':
+        ##
+        #  Action commands
+        ##
+        # Update
+        elif ch == self.configuration.keys['update']:
             if self.timelines.has_timelines():
                 self.timelines.update_active_timeline()
                 self.refresh_screen()
-        elif clean_input == 'c':
-            self.body.clear()
-        elif clean_input == 'd':
+        # Tweet
+        elif ch == self.configuration.keys['tweet']:
+            self.footer = TweetEditor()
+            self.ui.set_footer(self.footer)
+            self.ui.set_focus('footer')
+            urwid.connect_signal(self.footer, 'done', self.tweet_handler)
+        # Reply
+        elif ch == self.configuration.keys['reply']:
+            raise NotImplemented
+        # Retweet
+        elif ch == self.configuration.keys['retweet']:
+            raise NotImplemented
+        # Retweet and Edit
+        elif ch == self.configuration.keys['retweet_and_edit']:
+            raise NotImplemented
+        # Delete buffer
+        elif ch == self.configuration.keys['delete_buffer']:
             self.timelines.delete_active_timeline()
             if self.timelines.has_timelines():
                 self.refresh_screen()
@@ -170,11 +200,86 @@ class Turses(object):
                 # TODO help
                 self.body.clear()
                 self.header.set_tabs([''])
-        elif clean_input == 'b':
-            import ipdb
-            ipdb.set_trace()
-        elif clean_input == 'q':
-            raise urwid.ExitMainLoop
+        # Delete tweet
+        elif ch == self.configuration.keys['delete_tweet']:
+            raise NotImplemented
+        # Clear statuses
+        elif ch == self.configuration.keys['clear']:
+            self.body.clear()
+        # Follow Selected
+        elif ch == self.configuration.keys['follow_selected']:
+            raise NotImplemented
+        # Unfollow Selected
+        elif ch == self.configuration.keys['unfollow_selected']:
+            raise NotImplemented
+        # Follow
+        elif ch == self.configuration.keys['follow']:
+            raise NotImplemented
+        # Unfollow
+        elif ch == self.configuration.keys['unfollow']:
+            raise NotImplemented
+        # Send Direct Message
+        #FIXME
+        #elif ch == self.configuration.keys['sendDM']:
+            #self.api.direct_message()
+        # Create favorite
+        elif ch == self.configuration.keys['fav']:
+            raise NotImplemented
+        # Get favorite
+        elif ch == self.configuration.keys['get_fav']:
+            raise NotImplemented
+        # Destroy favorite
+        elif ch == self.configuration.keys['delete_fav']:
+            raise NotImplemented
+        # Open URL
+        elif ch == self.configuration.keys['openurl']:
+            raise NotImplemented
+        # Open image
+        elif ch == self.configuration.keys['open_image']:
+            raise NotImplemented
+        ##
+        #  Timelines, Threads, User info, Help
+        ##
+        # Home Timeline
+        elif ch == self.configuration.keys['home']:
+            self._append_home_timeline()
+        # Mention timeline
+        elif ch == self.configuration.keys['mentions']:
+            self._append_mentions_timeline()
+        # Direct Message Timeline
+        elif ch == self.configuration.keys['DMs']:
+            self._append_direct_messages_timeline()
+        # Search
+        elif ch == self.configuration.keys['search']:
+            self.footer = TextEditor(prompt='Search: ')
+            self.ui.set_footer(self.footer)
+            self.ui.set_focus('footer')
+            urwid.connect_signal(self.footer, 'done', self.search_handler)
+        # Search User
+        elif ch == self.configuration.keys['search_user']:
+            raise NotImplemented
+        # Search Myself
+        elif ch == self.configuration.keys['search_myself']:
+            raise NotImplemented
+        # Search Current User
+        elif ch == self.configuration.keys['search_current_user']:
+            raise NotImplemented
+        # Thread
+        elif ch == self.configuration.keys['thread']:
+            raise NotImplemented
+        # User info
+        elif ch == self.configuration.keys['user_info']:
+            raise NotImplemented
+        # Help
+        elif ch == self.configuration.keys['help']:
+            raise NotImplemented
+        ##
+        #  Misc
+        ##
+        elif ch == self.configuration.keys['quit']:
+            raise urwid.ExitMainLoop()
+        elif ch == self.configuration.keys['redraw']:
+            self.loop.draw_screen()
         else:
             return input
 
@@ -198,10 +303,12 @@ class Turses(object):
         """Handles the post as a tweet of the given `text`."""
         # disconnect signal
         urwid.disconnect_signal(self, self.ui.footer, 'done', self.tweet_handler)
-        if not valid_status_text(text):
-            # TODO error message editor and continue editing
-            return
+        # remove editor
         self.ui.set_focus('body')
+        if not valid_status_text(text):
+            # <Esc> was pressed
+            self.status_message('Tweet canceled')
+            return
         self.status_message('Sending tweet')
         # API call
         try:
