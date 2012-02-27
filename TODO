@@ -1,3 +1,4 @@
+* refactor keys and available actions
 * mock API for debugging; --debug argument
 * `TweetEditor` don't allow tweets with more than 140 chars
   * use different signals for succesfull edits (e.g. 'done')
