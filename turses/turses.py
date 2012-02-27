@@ -16,7 +16,7 @@ from timeline import Timeline, NamedTimelineList
 from config import Configuration
 from util import valid_status_text, valid_search_text
 
-__version__ = 'alpha'
+__version__ = 'v0.1alpha'
 
 
 def arguments():

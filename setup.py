@@ -9,12 +9,12 @@ from distutils.core import setup
 
 setup(
     name='turses',
-    version='alpha',
+    version='v0.1alpha',
     author='Nicolas Paris and Alejandro Gómez',
     author_email='alejandroogomez@gmail.com',
     license='GPLv3',
     description='Twitter and Identica ncurses client.',
-    #long_description=open('README.md').read(),
+    long_description=open('README.md').read(),
     packages=['turses',],
     package_dir={'turses':'turses'},
     scripts=["bin/turses"],
