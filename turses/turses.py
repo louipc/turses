@@ -16,8 +16,7 @@ from timeline import Timeline, NamedTimelineList
 from config import Configuration
 from util import valid_status_text, valid_search_text
 
-__revision__ = 'alpha'
-
+__version__ = 'alpha'
 
 
 def arguments():
@@ -31,10 +30,11 @@ def arguments():
             help="Use another configuration file.")
     parser.add_argument("-g", "--generate-config",
             help="Generate a default configuration file.")
-    parser.add_argument("-v", "--version", action="version", version="turses %s" % __revision__,
+    parser.add_argument("-v", "--version", action="version", version="turses %s" % __version__,
             help="Show the current version of turses")
     args = parser.parse_args()
     return args
+
 
 class Turses(object):
     """Controller of the program."""
@@ -221,7 +221,3 @@ class Turses(object):
         self._update_header()
         self.ui.set_focus('body')
         self.status_message('')
-            
-
-if __name__ == '__main__':
-    Turses()

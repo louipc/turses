@@ -1,4 +1,6 @@
 *.pyc
 .env
 credentials.py
+dist/
 build/
+MANIFEST
