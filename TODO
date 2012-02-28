@@ -20,3 +20,5 @@
     - User profile 
     - help
 * multiple account support
+* update timelines periodically on a separate thread
+* use signals to notify UI components that have to be updated
