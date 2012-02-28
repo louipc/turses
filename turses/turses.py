@@ -102,10 +102,10 @@ class Turses(object):
             self.body.scroll_down()
         # Scroll to Top
         elif ch == self.configuration.keys['scroll_to_top']:
-            raise NotImplemented
+            self.body.scroll_top()
         # Scroll to Bottom
         elif ch == self.configuration.keys['scroll_to_bottom']:
-            raise NotImplemented
+            self.body.scroll_bottom()
         # Shift active buffer left
         elif ch == self.configuration.keys['shift_buffer_left']:
             if self.timelines.has_timelines():

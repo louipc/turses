@@ -156,10 +156,11 @@ class TimelineBuffer(urwid.WidgetWrap):
     def scroll_down(self):
         self._w.focus_next()
 
-    #def focus_index(self):
-        #_, index = self._w.get_focus()
-        #return index
+    def scroll_top(self):
+        self._w.focus_first()
 
+    def scroll_bottom(self):
+        self._w.focus_last()
 
 class TimelineWidget(urwid.ListBox):
     """
@@ -168,8 +169,8 @@ class TimelineWidget(urwid.ListBox):
     """
 
     def __init__(self, timeline):
-        status_widgets = [StatusWidget(status) for status in timeline]
-        urwid.ListBox.__init__(self, urwid.SimpleListWalker(status_widgets))
+        self.status_widgets = [StatusWidget(status) for status in timeline]
+        urwid.ListBox.__init__(self, urwid.SimpleListWalker(self.status_widgets))
 
     def focus_previous(self):
         """Sets the focus in the previous element (if any) of the `Timeline`."""
@@ -179,9 +180,20 @@ class TimelineWidget(urwid.ListBox):
 
     def focus_next(self):
         """Sets the focus in the next element (if any) of the `Timeline`."""
-        # FIXME control bound
         focus_status, pos = self.get_focus()
-        self.set_focus(pos + 1)
+        if pos is not None and pos < len(self.status_widgets):
+            self.set_focus(pos + 1)
+
+    def focus_first(self):
+        """Sets the focus in the first element (if any) of the `Timeline`."""
+        if len(self.status_widgets):
+            self.set_focus(0)
+
+    def focus_last(self):
+        """Sets the focus in the last element (if any) of the `Timeline`."""
+        last = len(self.status_widgets) - 1
+        if last:
+            self.set_focus(last)
 
 
 class StatusWidget(urwid.WidgetWrap):

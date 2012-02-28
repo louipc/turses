@@ -9,7 +9,7 @@ import argparse
 from config import Configuration
 from turses import Turses
 
-__version__ = 'v0.1alpha'
+__version__ = '0.1alpha'
 
 
 def arguments():
