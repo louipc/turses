@@ -4,8 +4,6 @@
 #       Licensed under the GPL License. See LICENSE.txt for full details.     #
 ###############################################################################
 
-import random
-
 import urwid
 import twitter
 
@@ -16,30 +14,6 @@ from timeline import Timeline, TimelineList
 from help import HelpBuffer
 from util import valid_status_text, valid_search_text
 
-
-def _GetSampleUser():
-    return twitter.User(id=718443,
-                        name='Kesuke Miyagi',
-                        screen_name='kesuke',
-                        description=u'Canvas. JC Penny. Three ninety-eight.',
-                        location='Okinawa, Japan',
-                        url='https://twitter.com/kesuke',
-                        profile_image_url='https://twitter.com/system/user/pro'
-                                          'file_image/718443/normal/kesuke.pn'
-                                          'g')
-
-def _GetSampleStatus():
-    return twitter.Status(created_at='Fri Jan 26 23:17:14 +0000 2007',
-                          id=4391023,
-                          text=u'A légpárnás hajóm tele van angolnákkal.',
-                          user=_GetSampleUser())
-
-def _dummy_status_list():
-    """Returns a list of dummy statuses."""
-    statuses = []
-    for _ in xrange(0, random.randint(1, 11)):
-        statuses.append(_GetSampleStatus())
-    return statuses
 
 class Turses(object):
     """Controller of the program."""
@@ -82,7 +56,6 @@ class Turses(object):
                                                 statuses=statuses,                            
                                                 update_function=update_function,
                                                 update_function_args=update_args))
-
 
     def _append_home_timeline(self):
         self.append_timeline('Tweets', self.api.GetFriendsTimeline)
