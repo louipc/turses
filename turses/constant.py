@@ -43,32 +43,33 @@ key = {
     'right':                  'l',
     'scroll_to_top':          'g',
     'scroll_to_bottom':       'G',
+    # Buffers
     'shift_buffer_left':      '<',
     'shift_buffer_right':     '>',
     'shift_buffer_beggining': 'ctrl a',
-    'shift_buffer_end':       'ctrol e',
+    'shift_buffer_end':       'ctrl e',
     'activate_first_buffer':  'a',
     'activate_last_buffer':   'e',
-    # Action
-    'update':                 'u',
+    'delete_buffer':          'd',
+    'clear':                  'c',
+    # Tweets
     'tweet':                  't',
+    'delete_tweet':           'D',
     'reply':                  'r',
     'retweet':                'R',
     'retweet_and_edit':       'E',
-    'delete_buffer':          'd',
-    'delete_tweet':           'D',
-    'clear':                  'c',
+    'sendDM':                 'D',
+    'update':                 'u',
+    # Friendship
     'follow_selected':        'f',
     'unfollow_selected':      'U',
     'follow':                 'F',
     'unfollow':               'L',
-    'sendDM':                 'D',
+    # Favorites
     'fav':                    'b',
     'get_fav':                'B',
     'delete_fav':             'ctrl b',
-    'openurl':                'o',
-    'open_image':             'ctrl i',
-    # Timelines, Threads, User info, Help
+    # Timelines
     'home':                   '.',
     'mentions':               'm',
     'DMs':                    'M',
@@ -81,6 +82,8 @@ key = {
     'help':                   '?',
     # Misc
     'quit':                   'q',
+    'openurl':                'o',
+    'open_image':             'ctrl i',
     'redraw':                 'ctrl l',
 }
 

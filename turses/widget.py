@@ -150,6 +150,16 @@ class TimelineBuffer(urwid.WidgetWrap):
         """Renders the given statuses."""
         self._w = TimelineWidget(timeline)
 
+    def scroll_up(self):
+        self._w.focus_previous()
+
+    def scroll_down(self):
+        self._w.focus_next()
+
+    #def focus_index(self):
+        #_, index = self._w.get_focus()
+        #return index
+
 
 class TimelineWidget(urwid.ListBox):
     """
@@ -160,6 +170,18 @@ class TimelineWidget(urwid.ListBox):
     def __init__(self, timeline):
         status_widgets = [StatusWidget(status) for status in timeline]
         urwid.ListBox.__init__(self, urwid.SimpleListWalker(status_widgets))
+
+    def focus_previous(self):
+        """Sets the focus in the previous element (if any) of the `Timeline`."""
+        focus_status, pos = self.get_focus()
+        if pos:
+            self.set_focus(pos - 1)
+
+    def focus_next(self):
+        """Sets the focus in the next element (if any) of the `Timeline`."""
+        # FIXME control bound
+        focus_status, pos = self.get_focus()
+        self.set_focus(pos + 1)
 
 
 class StatusWidget(urwid.WidgetWrap):
