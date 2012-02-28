@@ -53,13 +53,9 @@ class Turses(object):
         # default timelines
         self.timelines = TimelineList()
         self._append_home_timeline()
-        self._append_home_timeline()
-        self._append_home_timeline()
-        self._append_home_timeline()
-        # TODO commented while offline
-        #self._append_mentions_timeline()
-        #self._append_favorites_timeline()
-        #self._append_direct_messages_timeline()
+        self._append_mentions_timeline()
+        self._append_favorites_timeline()
+        self._append_direct_messages_timeline()
         # create UI
         tl_names = self.timelines.get_timeline_names()
         self.header = TabsWidget(tl_names)
@@ -75,18 +71,6 @@ class Turses(object):
                                    unhandled_input=self.key_handler,)
         self.loop.run()
 
-    def _append_home_timeline(self):
-        self.append_timeline('Tweets', _dummy_status_list)
-
-    def _append_mentions_timeline(self):
-        self.append_timeline('Mentions', self.api.GetMentions)
-
-    def _append_favorites_timeline(self):
-        self.append_timeline('Favorites', self.api.GetFavorites)
-
-    def _append_direct_messages_timeline(self):
-        self.append_timeline('Direct Messages', self.api.GetDirectMessages)
-        
     def append_timeline(self, name, update_function, update_args=None):
         """
         Given a name, function to update a timeline and optionally
@@ -99,6 +83,19 @@ class Turses(object):
                                                 update_function=update_function,
                                                 update_function_args=update_args))
 
+
+    def _append_home_timeline(self):
+        self.append_timeline('Tweets', self.api.GetFriendsTimeline)
+
+    def _append_mentions_timeline(self):
+        self.append_timeline('Mentions', self.api.GetMentions)
+
+    def _append_favorites_timeline(self):
+        self.append_timeline('Favorites', self.api.GetFavorites)
+
+    def _append_direct_messages_timeline(self):
+        self.append_timeline('Direct Messages', self.api.GetDirectMessages)
+        
     def refresh_screen(self):
         if self.timelines.has_timelines():
             active_timeline = self.timelines.get_active_timeline()
