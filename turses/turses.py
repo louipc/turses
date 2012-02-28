@@ -12,7 +12,7 @@ import twitter
 from constant import palette
 from widget import TabsWidget, TimelineBuffer, BufferFooter, TextEditor, TweetEditor
 from api import Api
-from timeline import Timeline, NamedTimelineList
+from timeline import Timeline, TimelineList
 from help import HelpBuffer
 from util import valid_status_text, valid_search_text
 
@@ -51,7 +51,7 @@ class Turses(object):
                        self.configuration.oauth_token,
                        self.configuration.oauth_token_secret,)
         # default timelines
-        self.timelines = NamedTimelineList()
+        self.timelines = TimelineList()
         self._append_home_timeline()
         self._append_home_timeline()
         self._append_home_timeline()
@@ -93,9 +93,9 @@ class Turses(object):
         arguments to the update function, it creates the timeline and
         appends it to `timelines`.
         """
-        timeline =  update_function()
-        self.timelines.append_timeline(name,
-                                       Timeline(timeline,                            
+        statuses = update_function()
+        self.timelines.append_timeline(Timeline(name=name,
+                                                statuses=statuses,                            
                                                 update_function=update_function,
                                                 update_function_args=update_args))
 

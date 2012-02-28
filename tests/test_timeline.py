@@ -12,7 +12,7 @@ from datetime import datetime
 from mock import MagicMock
 from twitter import Status
 
-from turses.timeline import Timeline, NamedTimelineList
+from turses.timeline import Timeline, TimelineList
 
 class TimelineTest(unittest.TestCase):
     def setUp(self):
@@ -93,145 +93,135 @@ class TimelineTest(unittest.TestCase):
 
     def test_update_with_no_args(self):
         mock = MagicMock(name='update')
-        timeline = Timeline([], mock)
+        timeline = Timeline(update_function=mock,)
         timeline.update()
         mock.assert_called_once_with()
 
     def test_update_with_one_arg(self):
         mock = MagicMock(name='update')
         arg = '#python'
-        timeline = Timeline([], mock, arg)
+        timeline = Timeline(update_function=mock, update_function_args=arg)
         timeline.update()
         mock.assert_called_once_with(arg)
 
     def test_update_with_multiple_args(self):
         mock = MagicMock(name='update')
         args = ('#python', '#mock')
-        timeline = Timeline([], mock, args)
+        timeline = Timeline(update_function=mock, update_function_args=args)
         timeline.update()
         mock.assert_called_once_with(args)
 
 
-class NamedTimelineListTest(unittest.TestCase):
+class TimelineListTest(unittest.TestCase):
     def setUp(self):
-        self.named_timeline_list = NamedTimelineList()
+        self.timeline_list = TimelineList()
 
     def test_has_timelines_false_if_empty(self):
-        self.failIf(self.named_timeline_list.has_timelines())
+        self.failIf(self.timeline_list.has_timelines())
+
+    def append_timeline(self):
+        self.timeline_list.append_timeline(Timeline('Timeline'))
 
     def test_has_timelines_true_otherwise(self):
-        self.named_timeline_list.append_timeline('Timeline', [])
-        self.failUnless(self.named_timeline_list.has_timelines())
+        self.append_timeline()
+        self.failUnless(self.timeline_list.has_timelines())
 
     def test_active_index_minus_1_with_no_timelines(self):
-        self.assertEqual(self.named_timeline_list.active_index, -1)
+        self.assertEqual(self.timeline_list.active_index, -1)
 
     def test_active_index_0_when_appending_first_timeline(self):
-        name = 'Timeline'
-        timeline = Timeline()
-        self.named_timeline_list.append_timeline(name, timeline)
-        self.assertEqual(self.named_timeline_list.active_index, 0)
+        self.append_timeline()
+        self.assertEqual(self.timeline_list.active_index, 0)
 
     def test_activate_previous(self):
         # -1 when there are no timelines
-        self.named_timeline_list.activate_previous()
-        self.assertEqual(self.named_timeline_list.active_index, -1)
+        self.timeline_list.activate_previous()
+        self.assertEqual(self.timeline_list.active_index, -1)
         # does not change if its the first
-        name = 'Timeline'
-        timeline = Timeline()
-        self.named_timeline_list.append_timeline(name, timeline)
-        self.assertEqual(self.named_timeline_list.active_index, 0)
+        self.append_timeline()
+        self.assertEqual(self.timeline_list.active_index, 0)
+        self.timeline_list.activate_previous()
+        self.assertEqual(self.timeline_list.active_index, 0)
 
     def test_activate_next(self):
         # -1 when there are no timelines
-        self.named_timeline_list.activate_next()
-        self.assertEqual(self.named_timeline_list.active_index, -1)
-        # does not change if its the first
-        name = 'Timeline'
-        timeline = Timeline()
-        self.named_timeline_list.append_timeline(name, timeline)
-        self.assertEqual(self.named_timeline_list.active_index, 0)
-
-    def append_timeline(self):
-        name = 'Timeline'
-        timeline = Timeline()
-        self.named_timeline_list.append_timeline(name, timeline)
+        self.timeline_list.activate_next()
+        self.assertEqual(self.timeline_list.active_index, -1)
+        # does not change if its the last
+        self.append_timeline()
+        self.assertEqual(self.timeline_list.active_index, 0)
+        self.timeline_list.activate_next()
+        self.assertEqual(self.timeline_list.active_index, 0)
 
     def test_activate_previous_and_activate_next(self):
         self.append_timeline()
         self.append_timeline()
         self.append_timeline()
         # next
-        self.named_timeline_list.activate_next()
-        self.assertEqual(self.named_timeline_list.active_index, 1)
-        self.named_timeline_list.activate_next()
-        self.assertEqual(self.named_timeline_list.active_index, 2)
+        self.timeline_list.activate_next()
+        self.assertEqual(self.timeline_list.active_index, 1)
+        self.timeline_list.activate_next()
+        self.assertEqual(self.timeline_list.active_index, 2)
         # previous
-        self.named_timeline_list.activate_previous()
-        self.assertEqual(self.named_timeline_list.active_index, 1)
-        self.named_timeline_list.activate_previous()
-        self.assertEqual(self.named_timeline_list.active_index, 0)
+        self.timeline_list.activate_previous()
+        self.assertEqual(self.timeline_list.active_index, 1)
+        self.timeline_list.activate_previous()
+        self.assertEqual(self.timeline_list.active_index, 0)
 
     def test_get_active_timeline_name_returns_first_appended(self):
         # append
         name = 'Timeline'
-        timeline = Timeline()
-        self.named_timeline_list.append_timeline(name, timeline)
+        timeline = Timeline(name)
+        self.timeline_list.append_timeline(timeline)
         # assert
-        active_timeline_name = self.named_timeline_list.get_active_timeline_name()
+        active_timeline_name = self.timeline_list.get_active_timeline_name()
         self.assertEqual(name, active_timeline_name)
 
     def test_get_active_timeline_name_raises_exception_when_empty(self):
-        self.assertRaises(Exception, self.named_timeline_list.get_active_timeline_name)
+        self.assertRaises(Exception, self.timeline_list.get_active_timeline_name)
 
     def test_get_active_timeline_returns_first_appended(self):
         # append
         name = 'Timeline'
-        timeline = Timeline()
-        self.named_timeline_list.append_timeline(name, timeline)
+        timeline = Timeline(name)
+        self.timeline_list.append_timeline(timeline)
         # assert
-        active_timeline = self.named_timeline_list.get_active_timeline()
+        active_timeline = self.timeline_list.get_active_timeline()
         self.assertEqual(timeline, active_timeline)
 
     def test_get_active_timeline_raises_exception_when_empty(self):
-        self.assertRaises(Exception, self.named_timeline_list.get_active_timeline)
+        self.assertRaises(Exception, self.timeline_list.get_active_timeline)
 
     def test_append_timeline_increases_timeline_size(self):
-        self.assertEqual(len(self.named_timeline_list), 0)
-        name = 'Timeline'
-        timeline = Timeline()
-        self.named_timeline_list.append_timeline(name, timeline)
-        self.assertEqual(len(self.named_timeline_list), 1)
-        self.named_timeline_list.append_timeline(name, timeline)
-        self.assertEqual(len(self.named_timeline_list), 2)
+        self.assertEqual(len(self.timeline_list), 0)
+        self.append_timeline()
+        self.assertEqual(len(self.timeline_list), 1)
+        self.append_timeline()
+        self.assertEqual(len(self.timeline_list), 2)
 
     def test_shift_active_left(self):
         # -1 when there are no timelines
-        self.named_timeline_list.shift_active_left()
-        self.assertEqual(self.named_timeline_list.active_index, -1)
+        self.timeline_list.shift_active_left()
+        self.assertEqual(self.timeline_list.active_index, -1)
         # does not change if its the first
-        name = 'Timeline'
-        timeline = Timeline()
-        self.named_timeline_list.append_timeline(name, timeline)
-        self.named_timeline_list.shift_active_left()
-        self.assertEqual(self.named_timeline_list.active_index, 0)
+        self.append_timeline()
+        self.timeline_list.shift_active_left()
+        self.assertEqual(self.timeline_list.active_index, 0)
 
     def test_shift_active_right(self):
         # -1 when there are no timelines
-        self.named_timeline_list.shift_active_right()
-        self.assertEqual(self.named_timeline_list.active_index, -1)
-        # does not change if its the first
-        name = 'Timeline'
-        timeline = Timeline()
-        self.named_timeline_list.append_timeline(name, timeline)
-        self.named_timeline_list.shift_active_right()
-        self.assertEqual(self.named_timeline_list.active_index, 0)
+        self.timeline_list.shift_active_right()
+        self.assertEqual(self.timeline_list.active_index, -1)
+        # does not change if its the last
+        self.append_timeline()
+        self.timeline_list.shift_active_right()
+        self.assertEqual(self.timeline_list.active_index, 0)
         # it increases until reaching the end
-        self.named_timeline_list.append_timeline(name, timeline)
-        self.named_timeline_list.shift_active_right()
-        self.assertEqual(self.named_timeline_list.active_index, 1)
-        self.named_timeline_list.shift_active_right()
-        self.assertEqual(self.named_timeline_list.active_index, 1)
+        self.append_timeline()
+        self.timeline_list.shift_active_right()
+        self.assertEqual(self.timeline_list.active_index, 1)
+        self.timeline_list.shift_active_right()
+        self.assertEqual(self.timeline_list.active_index, 1)
     
     # TODO test update functions with mocks
     # TODO get_*

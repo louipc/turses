@@ -29,13 +29,16 @@ def is_more_recent(status, datetime):
 class Timeline(object):
     """
     List of Twitter statuses ordered reversely by date. Optionally with
-    a function that updates the current timeline and its arguments.
+    a name, a function that updates the current timeline and its arguments.
     """
 
     def __init__(self, 
+                 name='',
                  statuses=None,
                  update_function=None,
                  update_function_args=None):
+        self.name = name
+        # key for sorting
         self._key = lambda status: datetime_from_status(status)
         if statuses:
             self.statuses = sorted(statuses,
@@ -89,9 +92,9 @@ class Timeline(object):
         return self.statuses[i]
 
 
-class NamedTimelineList(object):
+class TimelineList(object):
     """
-    A list of (name, timeline) tuples. Only one is the 'active'
+    A list of `Timeline` objects in which only one is the 'active'
     timeline.
     """
 
@@ -107,25 +110,23 @@ class NamedTimelineList(object):
 
     def get_active_timeline_name(self):
         if self.has_timelines():
-            name, _ = self.timelines[self.active_index]
-            return name
+            timeline = self.timelines[self.active_index]
+            return timeline.name
         else:
             raise Exception("There are no timelines in the list")
 
     def get_active_timeline(self):
         if self.has_timelines():
-            _, timeline = self.timelines[self.active_index]
+            timeline = self.timelines[self.active_index]
             return timeline
         else:
             raise Exception("There are no timelines in the list")
 
-    def append_timeline(self, name, timeline):
-        """Appends a new `(name, timeline)` to the end of the list."""
+    def append_timeline(self, timeline):
+        """Appends a new `Timeline` to the end of the list."""
         if self.active_index == -1:
             self.active_index = 0
-            self.active_timeline_name = name
-            self.active_timeline = timeline
-        self.timelines.append((name, timeline))
+        self.timelines.append(timeline)
 
     def activate_previous(self):
         """Marks as active the previous `Timeline` if it exists."""
@@ -150,14 +151,14 @@ class NamedTimelineList(object):
     def _swap_timelines(self, one, other):
         """
         Given the indexes of two timelines `one` and `other`, it swaps the 
-        (name, timeline) tuples contained in those positions.
+        `Timeline` objects contained in those positions.
         """
         if self._is_valid_index(one) and self._is_valid_index(other):
             self.timelines[one], self.timelines[other] = \
                     self.timelines[other], self.timelines[one]
 
     def shift_active_left(self):
-        """Shifts the active buffer one position to the left."""
+        """Shifts the active timeline one position to the left."""
         active_index = self.active_index
         previous_index = active_index - 1
         if self._is_valid_index(previous_index):
@@ -165,7 +166,7 @@ class NamedTimelineList(object):
             self.active_index = previous_index
 
     def shift_active_right(self):
-        """Shifts the active buffer one position to the right."""
+        """Shifts the active timeline one position to the right."""
         active_index = self.active_index
         next_index = active_index + 1
         if self._is_valid_index(next_index):
@@ -173,7 +174,7 @@ class NamedTimelineList(object):
             self.active_index = next_index
 
     def shift_active_beggining(self):
-        """Shifts the active buffer (if any) to the begginning of the list."""
+        """Shifts the active timeline (if any) to the begginning of the list."""
         if self.has_timelines():
             first_index = 0
             self.timelines.insert(first_index, self.timelines[self.active_index])
@@ -181,7 +182,7 @@ class NamedTimelineList(object):
             self.active_index = first_index
 
     def shift_active_end(self):
-        """Shifts the active buffer (if any) to the begginning of the list."""
+        """Shifts the active timeline (if any) to the begginning of the list."""
         if self.has_timelines():
             last_index = len(self.timelines)
             self.timelines.insert(last_index, self.timelines[self.active_index])
@@ -201,12 +202,12 @@ class NamedTimelineList(object):
 
     def update_active_timeline(self):
         if self.has_timelines():
-            _, tl = self.timelines[self.active_index]
-            tl.update()
+            timeline = self.timelines[self.active_index]
+            timeline.update()
 
     def update_all(self):
         """Updates every `Timeline`."""
-        for _, timeline in self.timelines:
+        for timeline in self.timelines:
             timeline.update()
 
     def delete_all(self):
@@ -214,10 +215,10 @@ class NamedTimelineList(object):
         self.timelines = []
 
     def get_timelines(self):
-        return [timeline for _, timeline in self.timelines]
+        return self.timelines
 
     def get_timeline_names(self):
-        return [name for name, _ in self.timelines]
+        return [timeline.name for timeline in self.timelines]
 
     def __iter__(self):
         return self.timelines.__iter__()
