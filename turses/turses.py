@@ -13,6 +13,7 @@ from constant import palette
 from widget import TabsWidget, TimelineBuffer, BufferFooter, TextEditor, TweetEditor
 from api import Api
 from timeline import Timeline, NamedTimelineList
+from help import HelpBuffer
 from util import valid_status_text, valid_search_text
 
 
@@ -272,7 +273,7 @@ class Turses(object):
             raise NotImplemented
         # Help
         elif ch == self.configuration.keys['help']:
-            raise NotImplemented
+            self.show_help_buffer()
         ##
         #  Misc
         ##
@@ -341,3 +342,10 @@ class Turses(object):
         self._update_header()
         self.ui.set_focus('body')
         self.status_message('')
+
+    def show_help_buffer(self):
+        # TODO
+        #  remove TL event handler, when closed enable it again
+        self.status_message('Type <Esc> or q to leave the help page.')
+        self.body = HelpBuffer(self.configuration)
+        self.ui.set_body(self.body)
