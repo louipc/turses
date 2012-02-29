@@ -149,11 +149,10 @@ class TabsWidget(urwid.WidgetWrap):
         """Creates the text that is rendered as the tab list."""
         text = []
         for i, tab in enumerate(self.tabs):
-            tab = tab + ' '
             if i == self.active_index:
-                text.append(('active_tab', tab))
+                text.append(('active_tab', '│' + tab + '│'))
             else:
-                text.append(('inactive_tab', tab))
+                text.append(('inactive_tab', ' ' + tab + ' '))
         return text
 
     def _update_text(self):
