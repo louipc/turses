@@ -13,9 +13,8 @@
 * document
 * lists (menu for selecting list?)
 * action commands
-  * create reply/DM
+  * create DM
   * favorite tweet
-  * retweet
   * follow/unfollow
   * create TLs
     - Thread view
@@ -26,3 +25,4 @@
 * multiple account support
 * update timelines periodically on a separate thread
 * use signals to notify UI components that have to be updated
+* check for URLError exceptions and fail gracefully

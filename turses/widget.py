@@ -237,20 +237,6 @@ class ShiftScrollableListBox(ScrollableListBox):
         # TODO
         pass
 
-class TimelineBuffer(ScrollableListBoxWrapper):
-    """A widget that displays a `Timeline` object."""
-
-    def __init__(self, timeline=None):
-        urwid.WidgetWrap.__init__(self, TimelineWidget(timeline))
-
-    def clear(self):
-        """Clears the buffer."""
-        return self.render_timeline([])
-
-    def render_timeline(self, timeline):
-        """Renders the given statuses."""
-        self._w = TimelineWidget(timeline)
-
 
 class HelpBuffer(ScrollableListBoxWrapper):
     """
@@ -347,6 +333,26 @@ class HelpBuffer(ScrollableListBoxWrapper):
         ]))
 
 
+class TimelineBuffer(ScrollableListBoxWrapper):
+    """A widget that displays a `Timeline` object."""
+
+    def __init__(self, timeline=None):
+        urwid.WidgetWrap.__init__(self, TimelineWidget(timeline))
+
+    def clear(self):
+        """Clears the buffer."""
+        return self.render_timeline([])
+
+    def render_timeline(self, timeline):
+        """Renders the given statuses."""
+        self._w = TimelineWidget(timeline)
+
+    def get_focused_status(self):
+        widget = self._w.get_focused_widget()
+        if widget:
+            return widget.status
+
+
 class TimelineWidget(ScrollableListBox):
     """
     A `urwid.ListBox` containing a list of Twitter statuses, each of which is
@@ -357,6 +363,13 @@ class TimelineWidget(ScrollableListBox):
         statuses = timeline if timeline else []
         status_widgets = [StatusWidget(status) for status in statuses]
         ScrollableListBox.__init__(self, status_widgets)
+
+    def get_focused_widget(self):
+        """Returns the currently focused `StatusWidget` (if any)."""
+        _, pos = self.get_focus()
+        if pos is not None:
+            widget = self.body[pos]
+            return widget
 
 
 class StatusWidget(urwid.WidgetWrap):

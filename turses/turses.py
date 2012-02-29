@@ -201,31 +201,54 @@ class Turses(object):
             urwid.connect_signal(self.footer, 'done', self.tweet_handler)
         # Reply
         elif input == self.configuration.keys['reply']:
-            # TODO retrieve twitter usernames pass them as `content`
-            self.footer = TweetEditor(prompt='Reply: ', content='')
-            self.ui.set_footer(self.footer)
-            self.ui.set_focus('footer')
-            urwid.connect_signal(self.footer, 'done', self.tweet_handler)
+            # TODO
+            #  '@author_of_tweet <cursor> [@mentioned_author...]
+            status = self.body.get_focused_status()
+            if hasattr(status, 'user'):
+                username = ''.join(['@', status.user.screen_name])
+                is_username = lambda n: n.startswith('@') and n != username
+                usernames = filter(is_username, status.text.split())
+                usernames.insert(0, username)
+                reply_text = ' '.join(usernames)
+                # TODO filter own username
+                # TODO set the cursor after `username`
+                self.footer = TweetEditor(prompt='Reply: ', content=reply_text)
+                self.ui.set_footer(self.footer)
+                self.ui.set_focus('footer')
+                urwid.connect_signal(self.footer, 'done', self.tweet_handler)
         # Retweet
         elif input == self.configuration.keys['retweet']:
-            raise NotImplemented
+            status = self.body.get_focused_status()
+            try:
+                # TODO make it in background and set status message
+                #      'Retweet posted'
+                self.status_message('Posting retweet...')
+                self.api.PostRetweet(status.id)
+            except twitter.TwitterError, e:
+                self.status_message('Error posting retweet: %s' % e)
         # Retweet and Edit
         elif input == self.configuration.keys['retweet_and_edit']:
+            status = self.body.get_focused_status()
             raise NotImplemented
         # Delete (own) tweet
         elif input == self.configuration.keys['delete_tweet']:
+            status = self.body.get_focused_status()
             raise NotImplemented
         # Follow Selected
         elif input == self.configuration.keys['follow_selected']:
+            status = self.body.get_focused_status()
             raise NotImplemented
         # Unfollow Selected
         elif input == self.configuration.keys['unfollow_selected']:
+            status = self.body.get_focused_status()
             raise NotImplemented
         # Follow
         elif input == self.configuration.keys['follow']:
+            status = self.body.get_focused_status()
             raise NotImplemented
         # Unfollow
         elif input == self.configuration.keys['unfollow']:
+            status = self.body.get_focused_status()
             raise NotImplemented
         # Send Direct Message
         #FIXME
@@ -233,12 +256,15 @@ class Turses(object):
             #self.api.direct_message()
         # Create favorite
         elif input == self.configuration.keys['fav']:
+            status = self.body.get_focused_status()
             raise NotImplemented
         # Get favorite
         elif input == self.configuration.keys['get_fav']:
+            status = self.body.get_focused_status()
             raise NotImplemented
         # Destroy favorite
         elif input == self.configuration.keys['delete_fav']:
+            status = self.body.get_focused_status()
             raise NotImplemented
         # Show home Timeline
         elif input == self.configuration.keys['home']:
@@ -257,6 +283,7 @@ class Turses(object):
             urwid.connect_signal(self.footer, 'done', self.search_handler)
         # Ssearch User
         elif input == self.configuration.keys['search_user']:
+            status = self.body.get_focused_status()
             raise NotImplemented
         # Search Myself
         elif input == self.configuration.keys['search_myself']:
@@ -266,9 +293,11 @@ class Turses(object):
             raise NotImplemented
         # Thread
         elif input == self.configuration.keys['thread']:
+            status = self.body.get_focused_status()
             raise NotImplemented
         # User info
         elif input == self.configuration.keys['user_info']:
+            status = self.body.get_focused_status()
             raise NotImplemented
 
     def _external_program_handler(self, input):
@@ -298,7 +327,6 @@ class Turses(object):
             self._update_header()
         else:
             raise urwid.ExitMainLoopException
-
 
     def _help_mode(self):
         """Activates help mode."""

@@ -9,14 +9,14 @@ Features
 
  * Sexy ncurses interface
  * Multiple timelines (buffers)
- * Tweet 
+ * Tweet, Reply, Retweet
  * Search
  * Fully customizable
 
 Working on
 ==========
 
- * DM, Retweet, Reply
+ * DM
  * Follow/Unfollow
  * Favorite/Unfavorite
  * Thread view
