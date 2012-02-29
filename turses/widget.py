@@ -16,6 +16,41 @@ from util import is_retweet, encode
 TWEET_MAX_CHARS = 140
 
 
+class WelcomeBuffer(urwid.WidgetWrap):
+    """Displays information about the program."""
+
+    # width, in columns, of the banner
+    col_width = 30
+
+    def __init__(self):
+        self.text = []
+        self.__super.__init__(self._create_text())
+
+    def _create_text(self):
+        """Creates the text to display in the welcome buffer."""
+        self.text = []
+        __version__ = (0, 1, 0)
+        banner = [ "| |_ _   _ _ __ ___  ___  ___ ",
+                   "| __| | | | '__/ __|/ _ \/ __|",
+                   "| |_| |_| | |  \__ \  __/\__ \\",
+                   "\___|\____|_|  |___/\___||___/",
+                   "(%i.%i.%i)" % __version__, 
+                   "",
+                   "",
+                   "A ncurses Twitter client.",
+                   "http://github.com/alejandrogomez/turses",]
+                   
+
+        for line in banner:
+            self._insert_line(line)
+
+        return ScrollableListBox(self.text)
+
+    def _insert_line(self, line):
+        text= urwid.Text(line, align='center')
+        self.text.append(text)
+        
+
 class TextEditor(urwid.WidgetWrap):
     """Editor for creating arbitrary text."""
 
@@ -62,7 +97,8 @@ class TweetEditor(urwid.WidgetWrap):
         self.counter_widget.set_text(str(self.counter))
 
     def keypress(self, size, key):
-        if key == 'backspace' or self.counter < TWEET_MAX_CHARS:
+        # FIXME allow motion keys whem chars == TWEET_MAX_CHARS
+        if any([key == 'backspace', key == 'left', key == 'right']) or self.counter < TWEET_MAX_CHARS:
             Editor.keypress(self.editor, size, key)
             if self.counter == TWEET_MAX_CHARS:
                 # TODO highlight counter
@@ -113,7 +149,8 @@ class TabsWidget(urwid.WidgetWrap):
             self.active_index = 0
         else:
             self.active_index = -1
-        text = self._create_text()
+        created_text = self._create_text()
+        text = created_text if created_text else ''
         urwid.WidgetWrap.__init__(self, urwid.Text(text))
 
     def _is_valid_index(self, index):
@@ -132,7 +169,7 @@ class TabsWidget(urwid.WidgetWrap):
 
     def _update_text(self):
         text = self._create_text()
-        self._w.set_text(text)
+        self._w = urwid.Text(text)
 
     def append_tab(self, tab):
         self.tabs.append(tab)
@@ -148,6 +185,10 @@ class TabsWidget(urwid.WidgetWrap):
 
     def set_tabs(self, tabs):
         self.tabs = tabs
+        self._update_text()
+
+    def clear(self):
+        self.tabs = ['']
         self._update_text()
 
 
@@ -283,10 +324,8 @@ class HelpBuffer(ScrollableListBoxWrapper):
         self.insert_help_item('update', _('Refresh current timeline'))
 
         self.insert_division(_('Friendship'))
-        self.insert_help_item('follow_selected', _('Follow selected twitter'))
-        self.insert_help_item('unfollow_selected', _('Unfollow selected twitter'))
-        self.insert_help_item('follow', _('Follow a twitter'))
-        self.insert_help_item('unfollow', _('Unfollow a twitter'))
+        self.insert_help_item('follow_selected', _('Follow selected tweet\'s author'))
+        self.insert_help_item('unfollow_selected', _('Unfollow selected tweet\'s author'))
 
         self.insert_division(_('Favorites'))
         self.insert_help_item('fav', _('Mark selected tweet as favorite'))

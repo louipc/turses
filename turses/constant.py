@@ -63,8 +63,6 @@ key = {
     # Friendship
     'follow_selected':        'f',
     'unfollow_selected':      'U',
-    'follow':                 'F',
-    'unfollow':               'L',
     # Favorites
     'fav':                    'b',
     'get_fav':                'B',

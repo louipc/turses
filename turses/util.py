@@ -10,10 +10,19 @@ import string
 from htmlentitydefs import entitydefs
 from time import strftime, gmtime
 
+from twitter import Status, DirectMessage
+
 retweet_re = re.compile('^RT @\w+:')
+username_re = re.compile('@\w+')
+
 
 def get_time():
     return strftime('%H:%M:%S', gmtime())
+
+def get_usernames(text):
+    """Retrieve all the Twitter usernames found on `text`."""
+    # TODO
+    pass
 
 def cut_attag(name):
     if name[0] == '@':
@@ -59,5 +68,15 @@ def valid_search_text(text):
     """Checks the validity of a search text."""
     return bool(text)
 
+def is_tweet(status):
+    return status.__class__ == Status
+
 def is_retweet(status):
     return bool(retweet_re.match(status.text))
+
+def is_DM(status):
+    return status.__class__ == DirectMessage
+
+def is_username(string):
+    # TODO
+    pass

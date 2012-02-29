@@ -9,7 +9,7 @@ Features
 
  * Sexy ncurses interface
  * Multiple timelines (buffers)
- * Tweet, Reply, Retweet
+ * Tweet, Reply, Retweet, Delete tweet
  * Search
  * Fully customizable
 
@@ -22,6 +22,7 @@ Working on
  * Thread view
  * User info
  * List view
+ * Asynchronous API calls
 
 Development
 ===========
