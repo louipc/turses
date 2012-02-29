@@ -13,21 +13,24 @@ __version__ = '0.1alpha'
 
 
 def arguments():
-    """Parse all argument from the command line."""
+    """Parse all arguments from the command line."""
 
     parser = argparse.ArgumentParser(
             "turses: a ncurses Twitter client written in Python.")
+
     parser.add_argument("-a", "--account",
             help="Use another account, store in a different file.")
+
     parser.add_argument("-c", "--config",
             help="Use another configuration file.")
+
     parser.add_argument("-g", "--generate-config",
             help="Generate a default configuration file.")
-    # TODO
-    #parser.add_argument("-d", "--debug",
-            #help="Debugging mode.")
-    parser.add_argument("-v", "--version", action="version", version="turses %s" % __version__,
+
+    version = "turses %s" % __version__
+    parser.add_argument("-v", "--version", action="version", version=version,
             help="Show the current version of turses")
+
     args = parser.parse_args()
     return args
 

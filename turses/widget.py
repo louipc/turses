@@ -4,11 +4,16 @@
 #       Licensed under the GPL License. See LICENSE.txt for full details.     #
 ###############################################################################
 
+
 from time import altzone, gmtime, strftime
+from gettext import gettext as _
 
 import urwid
 
 from util import is_retweet, encode
+
+
+TWEET_MAX_CHARS = 140
 
 
 class TextEditor(urwid.WidgetWrap):
@@ -40,19 +45,34 @@ class TweetEditor(urwid.WidgetWrap):
         if content:
             content += ' '
         self.editor = Editor(u'%s (twice enter key to validate or esc) \n>> ' % prompt, content)
-        self.counter = urwid.Text('0')
-        w = urwid.Columns([ ('fixed', 4, self.counter), self.editor])
+        self.counter = len(content)
+        self.counter_widget = urwid.Text(str(self.counter))
+        w = urwid.Columns([('fixed', 4, self.counter_widget), self.editor])
 
         urwid.connect_signal(self.editor, 'done', self.emit_done_signal)
-        urwid.connect_signal(self.editor, 'change', self.update_count)
+        urwid.connect_signal(self.editor, 'change', self.update_counter)
 
         self.__super.__init__(w)
-
+    
     def emit_done_signal(self, content):
         urwid.emit_signal(self, 'done', content)
 
-    def update_count(self, edit, new_edit_text):
-        self.counter.set_text(str(len(new_edit_text)))
+    def update_counter(self, edit, new_edit_text):
+        self.counter = len(new_edit_text)
+        self.counter_widget.set_text(str(self.counter))
+
+    def keypress(self, size, key):
+        if key == 'backspace' or self.counter < TWEET_MAX_CHARS:
+            Editor.keypress(self.editor, size, key)
+            if self.counter == TWEET_MAX_CHARS:
+                # TODO highlight counter
+                pass
+        elif self.editor.last_key == 'enter' and key == 'enter':
+            urwid.emit_signal(self, 'done', self.editor.get_edit_text())
+        elif key == 'esc':
+            urwid.emit_signal(self, 'done', None)
+
+        return
 
 
 class Editor(urwid.Edit):
@@ -131,24 +151,27 @@ class TabsWidget(urwid.WidgetWrap):
         self._update_text()
 
 
-class BufferFooter(urwid.WidgetWrap):
+class Footer(urwid.WidgetWrap):
+    """Displays a text."""
     def __init__(self, text=''):
         urwid.WidgetWrap.__init__(self, urwid.Text(text))
 
-
-class TimelineBuffer(urwid.WidgetWrap):
-    """A widget that displays a `Timeline` object."""
-
-    def __init__(self, timeline=[]):
-        urwid.WidgetWrap.__init__(self, TimelineWidget(timeline))
+    def message(self, text):
+        """Write `text` on the footer.""" 
+        self._w.set_text(text)
 
     def clear(self):
-        """Clears the buffer."""
-        return self.render_timeline([])
+        """Clear the text."""
+        self._w.set_text('')
 
-    def render_timeline(self, timeline):
-        """Renders the given statuses."""
-        self._w = TimelineWidget(timeline)
+
+class ScrollableListBoxWrapper(urwid.WidgetWrap):
+    """
+    A `urwid.WidgetWrap` subclass intented to wrap `ScrollableListBox`
+    elements, provides an interface for the scrolling capabilities.
+    """
+    def __init__(self, contents):
+        urwid.WidgetWrap.__init__(self, contents)
 
     def scroll_up(self):
         self._w.focus_previous()
@@ -162,38 +185,178 @@ class TimelineBuffer(urwid.WidgetWrap):
     def scroll_bottom(self):
         self._w.focus_last()
 
-class TimelineWidget(urwid.ListBox):
-    """
-    A `urwid.ListBox` containing a list of Twitter statuses, each of which is
-    rendered as a `StatusWidget`.
-    """
 
-    def __init__(self, timeline):
-        self.status_widgets = [StatusWidget(status) for status in timeline]
-        urwid.ListBox.__init__(self, urwid.SimpleListWalker(self.status_widgets))
+class ScrollableListBox(urwid.ListBox):
+    """
+    A `urwid.ListBox` subclass with additional methods for scrolling the
+    focus up by one element, down by one element, to the bottom and to 
+    the top.
+    """
+    def __init__(self, contents):
+        urwid.ListBox.__init__(self, urwid.SimpleListWalker(contents))
 
     def focus_previous(self):
-        """Sets the focus in the previous element (if any) of the `Timeline`."""
+        """Sets the focus in the previous element (if any) of the listbox."""
         focus_status, pos = self.get_focus()
         if pos:
             self.set_focus(pos - 1)
 
     def focus_next(self):
-        """Sets the focus in the next element (if any) of the `Timeline`."""
+        """Sets the focus in the next element (if any) of the listbox."""
         focus_status, pos = self.get_focus()
-        if pos is not None and pos < len(self.status_widgets):
+        if pos is not None and pos < len(self.body):
             self.set_focus(pos + 1)
 
     def focus_first(self):
-        """Sets the focus in the first element (if any) of the `Timeline`."""
-        if len(self.status_widgets):
+        """Sets the focus in the first element (if any) of the listbox."""
+        if len(self.body):
             self.set_focus(0)
 
     def focus_last(self):
-        """Sets the focus in the last element (if any) of the `Timeline`."""
-        last = len(self.status_widgets) - 1
+        """Sets the focus in the last element (if any) of the listbox."""
+        last = len(self.body) - 1
         if last:
             self.set_focus(last)
+
+
+class ShiftScrollableListBox(ScrollableListBox):
+    """
+    A `ScrollableListBox` subclass that, instead of steping up and down 
+    by one element, it changes focus to the first non-visible elements
+    on top or bottom.
+    """
+    def focus_previous(self):
+        """Sets the focus in the first non-visible widget of the top of
+        the list (if any)."""
+        # TODO
+        pass
+
+    def focus_next(self):
+        """Sets the focus in the first non-visible widget of the botto of
+        the list (if any)."""
+        # TODO
+        pass
+
+class TimelineBuffer(ScrollableListBoxWrapper):
+    """A widget that displays a `Timeline` object."""
+
+    def __init__(self, timeline=None):
+        urwid.WidgetWrap.__init__(self, TimelineWidget(timeline))
+
+    def clear(self):
+        """Clears the buffer."""
+        return self.render_timeline([])
+
+    def render_timeline(self, timeline):
+        """Renders the given statuses."""
+        self._w = TimelineWidget(timeline)
+
+
+class HelpBuffer(ScrollableListBoxWrapper):
+    """
+    A widget that displays all the keybindings of the given configuration.
+    """
+
+    col = [30, 7]
+
+    def __init__ (self, configuration):
+        self.configuration = configuration
+        self.items = []
+        w = urwid.AttrWrap(self.create_help_buffer(), 'body')
+        self.__super.__init__(w)
+
+    def create_help_buffer(self):
+        self.insert_header()
+        # Motion
+        self.insert_division(_('Motion'))
+        self.insert_help_item('up', _('Scroll up one tweet'))
+        self.insert_help_item('down', _('Scroll down one tweet'))
+        self.insert_help_item('left', _('Activate the timeline on the left'))
+        self.insert_help_item('right', _('Activate the timeline on the right'))
+        self.insert_help_item('scroll_to_top', _('Scroll to first tweet'))
+        self.insert_help_item('scroll_to_bottom', _('Scroll to last tweet'))
+
+        self.insert_division(_('Buffers'))
+        self.insert_help_item('shift_buffer_left', _('Shift active buffer one position to the left'))
+        self.insert_help_item('shift_buffer_right', _('Shift active buffer one position to the right'))
+        self.insert_help_item('shift_buffer_beggining', _('Shift active buffer to the beggining'))
+        self.insert_help_item('shift_buffer_end', _('Shift active buffer to the end'))
+        self.insert_help_item('activate_first_buffer', _('Activate first buffer'))
+        self.insert_help_item('activate_last_buffer', _('Activate last buffer'))
+        self.insert_help_item('delete_buffer', _('Delete active buffer'))
+        self.insert_help_item('clear', _('Clear active buffer'))
+
+        # Twitter
+        self.insert_division(_('Tweets'))
+        self.insert_help_item('tweet', _('Compose a tweet'))
+        self.insert_help_item('delete_tweet', _('Delete selected tweet (must be yours)'))
+        self.insert_help_item('reply', _('Reply to selected tweet'))
+        self.insert_help_item('retweet', _('Retweet selected tweet'))
+        self.insert_help_item('retweet_and_edit', _('Retweet selected tweet editing it first'))
+        self.insert_help_item('sendDM', _('Send direct message'))
+        self.insert_help_item('update', _('Refresh current timeline'))
+
+        self.insert_division(_('Friendship'))
+        self.insert_help_item('follow_selected', _('Follow selected twitter'))
+        self.insert_help_item('unfollow_selected', _('Unfollow selected twitter'))
+        self.insert_help_item('follow', _('Follow a twitter'))
+        self.insert_help_item('unfollow', _('Unfollow a twitter'))
+
+        self.insert_division(_('Favorites'))
+        self.insert_help_item('fav', _('Mark selected tweet as favorite'))
+        self.insert_help_item('get_fav', _('Go to favorites timeline'))
+        self.insert_help_item('delete_fav', _('Remove a tweet from favorites'))
+
+        self.insert_division(_('Timelines'))
+        self.insert_help_item('home', _('Go to home timeline'))
+        self.insert_help_item('mentions', _('Go to mentions timeline'))
+        self.insert_help_item('DMs', _('Go to direct message timeline'))
+        self.insert_help_item('search', _('Search for term and show resulting timeline'))
+        self.insert_help_item('search_user', _('Show somebody\'s public timeline'))
+        self.insert_help_item('search_myself', _('Show your public timeline'))
+        self.insert_help_item('thread', _('Open selected thread'))
+        self.insert_help_item('user_info', _('Show user information '))
+        self.insert_help_item('help', _('Show help buffer'))
+
+        # Others
+        self.insert_division(_('Others'))
+        self.insert_help_item('quit', _('Leave turses'))
+        self.insert_help_item('openurl', _('Open URL in browser'))
+        self.insert_help_item('open_image', _('Open image'))
+        self.insert_help_item('redraw', _('Redraw the screen'))
+
+        return ShiftScrollableListBox(self.items)
+
+    def insert_division(self, title):
+        self.items.append(urwid.Divider(' '))
+        self.items.append(urwid.Padding(urwid.AttrWrap(urwid.Text(title), 'focus'), left=4))
+        self.items.append(urwid.Divider(' '))
+
+    def insert_header(self):
+        self.items.append( urwid.Columns([
+            ('fixed', self.col[0], urwid.Text('  Name')),
+            ('fixed', self.col[1], urwid.Text('Key')),
+            urwid.Text('Description')
+        ]))
+
+    def insert_help_item(self, key, description):
+        self.items.append( urwid.Columns([
+            ('fixed', self.col[0], urwid.Text('  ' + key)),
+            ('fixed', self.col[1], urwid.Text(self.configuration.keys[key])),
+            urwid.Text(description)
+        ]))
+
+
+class TimelineWidget(ScrollableListBox):
+    """
+    A `urwid.ListBox` containing a list of Twitter statuses, each of which is
+    rendered as a `StatusWidget`.
+    """
+
+    def __init__(self, timeline=None):
+        statuses = timeline if timeline else []
+        status_widgets = [StatusWidget(status) for status in statuses]
+        ScrollableListBox.__init__(self, status_widgets)
 
 
 class StatusWidget(urwid.WidgetWrap):

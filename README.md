@@ -4,8 +4,36 @@ turses
 A ncurses Twitter client written in Python. Most of the codebase is from
 the [Tyrs](http://tyrs.nicosphere.net) project by [Nicolas Paris](http://github.com/Nic0).
 
+Features
+========
+
+ * Sexy ncurses interface
+ * Multiple timelines (buffers)
+ * Tweet 
+ * Search
+ * Fully customizable
+
+Working on
+==========
+
+ * DM, Retweet, Reply
+ * Follow/Unfollow
+ * Favorite/Unfavorite
+ * Thread view
+ * User info
+ * List view
+
 Development
 ===========
+
+`turses` is still a work in progress, a list of tasks can be found on 
+the `TODO` file. 
+
+I plan to move every task and bug to the repository's [issue tracker](http://github.com/alejandrogomez/turses/issues). Feel free open issues with bugs, enhancements and features you will like
+to see in `turses`; or hack them yourselves and send a pull request!
+
+Code
+====
 
 The code is hosted on [GitHub](http://github.com/alejandrogomez/turses).
 

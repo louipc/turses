@@ -6,6 +6,10 @@
 * palette
   * modify widgets to include attributes of the palette
 * write tests with 100% coverage `timelines.py`
+* more customization for scrolling
+  * top/bottom offset around focused tweet
+  * move by pages (visible tweets)
+  * customizable offset scroll
 * document
 * lists (menu for selecting list?)
 * action commands

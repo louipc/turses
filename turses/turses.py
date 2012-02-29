@@ -4,14 +4,14 @@
 #       Licensed under the GPL License. See LICENSE.txt for full details.     #
 ###############################################################################
 
+
 import urwid
 import twitter
 
 from constant import palette
-from widget import TabsWidget, TimelineBuffer, BufferFooter, TextEditor, TweetEditor
+from widget import TabsWidget, TimelineBuffer, Footer, TextEditor, TweetEditor, HelpBuffer
 from api import Api
 from timeline import Timeline, TimelineList
-from help import HelpBuffer
 from util import valid_status_text, valid_search_text
 
 
@@ -20,10 +20,12 @@ class Turses(object):
 
     def __init__(self, configuration):
         self.configuration = configuration
+        # TODO: initialize API on background and render UI
         self.api = Api(self.configuration.token[self.configuration.service]['consumer_key'],
                        self.configuration.token[self.configuration.service]['consumer_secret'],
                        self.configuration.oauth_token,
                        self.configuration.oauth_token_secret,)
+        # TODO make this configurable
         # default timelines
         self.timelines = TimelineList()
         self._append_home_timeline()
@@ -35,7 +37,7 @@ class Turses(object):
         self.header = TabsWidget(tl_names)
         self.timelines.update_active_timeline()
         self.body= TimelineBuffer(self.timelines.get_active_timeline())
-        self.footer = BufferFooter()
+        self.footer = Footer()
         self.ui = urwid.Frame(self.body,
                               header=self.header,
                               footer=self.footer)
@@ -69,190 +71,240 @@ class Turses(object):
     def _append_direct_messages_timeline(self):
         self.append_timeline('Direct Messages', self.api.GetDirectMessages)
         
-    def refresh_screen(self):
-        if self.timelines.has_timelines():
-            active_timeline = self.timelines.get_active_timeline()
-            self.body.render_timeline(active_timeline)
-        else:
-            # TODO help
-            pass
-
     def status_message(self, text):
-        self.footer = BufferFooter(text)
+        """Sets `text` as a status message on the footer."""
+        if self.footer.__class__ is not Footer:
+            self.footer = Footer()
+        self.footer.message(text)
         self.ui.set_footer(self.footer)
+
+    def clear_status(self):
+        """Clears the status bar."""
+        self.footer.clear()
 
     # -- Event handling -------------------------------------------------------
 
     def key_handler(self, input):
         ch = ''.join(input)
+        
+        # Motion commands
+        motion_action = self._motion_key_handler(ch)
+        if motion_action:
+            return
+        else:
+            # check wether we are in a Help buffer
+            if self.body.__class__ == HelpBuffer:
+                # help only accepts motion commands and 'q'
+                if ch == 'q':
+                    self._timeline_mode()
+                return
+
+        # Buffer commands
+        buffer_action = self._buffer_key_handler(ch)
+        if buffer_action:
+            return
+
+        # Twitter commands
+        twitter_action = self._twitter_key_handler(ch)
+        if twitter_action:
+            return
+
+        # Turses commands
+        turses_action = self._turses_key_handler(ch)
+        if turses_action:
+            return
+        
+        # Help
+        elif ch == self.configuration.keys['help']:
+            self._help_mode()
         ##
-        #  Motion commands
-        ## 
-        # Right
-        if ch == self.configuration.keys['right'] or ch == 'right':
-            self.next_timeline()
-        # Left
-        elif ch == self.configuration.keys['left'] or ch == 'left':
-            self.previous_timeline()
+        #  Misc
+        ##
+        else:
+            return input
+
+    def _motion_key_handler(self, input):
         # Up
-        elif ch == self.configuration.keys['up']:
+        if input == self.configuration.keys['up']:
             self.body.scroll_up()
         # Down
-        elif ch == self.configuration.keys['down']:
+        elif input == self.configuration.keys['down']:
             self.body.scroll_down()
         # Scroll to Top
-        elif ch == self.configuration.keys['scroll_to_top']:
+        elif input == self.configuration.keys['scroll_to_top']:
             self.body.scroll_top()
         # Scroll to Bottom
-        elif ch == self.configuration.keys['scroll_to_bottom']:
+        elif input == self.configuration.keys['scroll_to_bottom']:
             self.body.scroll_bottom()
+
+    def _buffer_key_handler(self, input):
+        # Right
+        if input == self.configuration.keys['right'] or input == 'right':
+            self.next_timeline()
+        # Left
+        elif input == self.configuration.keys['left'] or input == 'left':
+            self.previous_timeline()
         # Shift active buffer left
-        elif ch == self.configuration.keys['shift_buffer_left']:
+        elif input == self.configuration.keys['shift_buffer_left']:
             if self.timelines.has_timelines():
                 self.timelines.shift_active_left()
                 self._update_header()
         # Shift active buffer right
-        elif ch == self.configuration.keys['shift_buffer_right']:
+        elif input == self.configuration.keys['shift_buffer_right']:
             if self.timelines.has_timelines():
                 self.timelines.shift_active_right()
                 self._update_header()
         # Shift active buffer beggining
-        elif ch == self.configuration.keys['shift_buffer_beggining']:
+        elif input == self.configuration.keys['shift_buffer_beggining']:
             if self.timelines.has_timelines():
                 self.timelines.shift_active_beggining()
                 self._update_header()
         # Shift active buffer end
-        elif ch == self.configuration.keys['shift_buffer_end']:
+        elif input == self.configuration.keys['shift_buffer_end']:
             if self.timelines.has_timelines():
                 self.timelines.shift_active_end()
                 self._update_header()
         # Activate first buffer
-        elif ch == self.configuration.keys['activate_first_buffer']:
+        elif input == self.configuration.keys['activate_first_buffer']:
             if self.timelines.has_timelines():
                 self.timelines.activate_first()
-                self._update_header()
-                self.refresh_screen()
+                self._timeline_mode()
         # Activate last buffer
-        elif ch == self.configuration.keys['activate_last_buffer']:
+        elif input == self.configuration.keys['activate_last_buffer']:
             if self.timelines.has_timelines():
                 self.timelines.activate_last()
-                self._update_header()
-                self.refresh_screen()
-        ##
-        #  Action commands
-        ##
-        # Update
-        elif ch == self.configuration.keys['update']:
+                self._timeline_mode()
+        # Delete buffer
+        elif input == self.configuration.keys['delete_buffer']:
+            self.timelines.delete_active_timeline()
+            if self.timelines.has_timelines():
+                self._timeline_mode()
+            else:
+                # TODO help
+                self.body.clear()
+                self.header.set_tabs([''])
+        # Clear buffer
+        elif input == self.configuration.keys['clear']:
+            self.body.clear()
+
+    def _twitter_key_handler(self, input):
+        # Update timeline
+        if input == self.configuration.keys['update']:
             if self.timelines.has_timelines():
                 self.timelines.update_active_timeline()
-                self.refresh_screen()
+                self._timeline_mode()
         # Tweet
-        elif ch == self.configuration.keys['tweet']:
+        elif input == self.configuration.keys['tweet']:
             self.footer = TweetEditor()
             self.ui.set_footer(self.footer)
             self.ui.set_focus('footer')
             urwid.connect_signal(self.footer, 'done', self.tweet_handler)
         # Reply
-        elif ch == self.configuration.keys['reply']:
-            raise NotImplemented
+        elif input == self.configuration.keys['reply']:
+            # TODO retrieve twitter usernames pass them as `content`
+            self.footer = TweetEditor(prompt='Reply: ', content='')
+            self.ui.set_footer(self.footer)
+            self.ui.set_focus('footer')
+            urwid.connect_signal(self.footer, 'done', self.tweet_handler)
         # Retweet
-        elif ch == self.configuration.keys['retweet']:
+        elif input == self.configuration.keys['retweet']:
             raise NotImplemented
         # Retweet and Edit
-        elif ch == self.configuration.keys['retweet_and_edit']:
+        elif input == self.configuration.keys['retweet_and_edit']:
             raise NotImplemented
-        # Delete buffer
-        elif ch == self.configuration.keys['delete_buffer']:
-            self.timelines.delete_active_timeline()
-            if self.timelines.has_timelines():
-                self.refresh_screen()
-                self._update_header()
-            else:
-                # TODO help
-                self.body.clear()
-                self.header.set_tabs([''])
-        # Delete tweet
-        elif ch == self.configuration.keys['delete_tweet']:
+        # Delete (own) tweet
+        elif input == self.configuration.keys['delete_tweet']:
             raise NotImplemented
-        # Clear statuses
-        elif ch == self.configuration.keys['clear']:
-            self.body.clear()
         # Follow Selected
-        elif ch == self.configuration.keys['follow_selected']:
+        elif input == self.configuration.keys['follow_selected']:
             raise NotImplemented
         # Unfollow Selected
-        elif ch == self.configuration.keys['unfollow_selected']:
+        elif input == self.configuration.keys['unfollow_selected']:
             raise NotImplemented
         # Follow
-        elif ch == self.configuration.keys['follow']:
+        elif input == self.configuration.keys['follow']:
             raise NotImplemented
         # Unfollow
-        elif ch == self.configuration.keys['unfollow']:
+        elif input == self.configuration.keys['unfollow']:
             raise NotImplemented
         # Send Direct Message
         #FIXME
-        #elif ch == self.configuration.keys['sendDM']:
+        #elif input == self.configuration.keys['sendDM']:
             #self.api.direct_message()
         # Create favorite
-        elif ch == self.configuration.keys['fav']:
+        elif input == self.configuration.keys['fav']:
             raise NotImplemented
         # Get favorite
-        elif ch == self.configuration.keys['get_fav']:
+        elif input == self.configuration.keys['get_fav']:
             raise NotImplemented
         # Destroy favorite
-        elif ch == self.configuration.keys['delete_fav']:
+        elif input == self.configuration.keys['delete_fav']:
             raise NotImplemented
-        # Open URL
-        elif ch == self.configuration.keys['openurl']:
-            raise NotImplemented
-        # Open image
-        elif ch == self.configuration.keys['open_image']:
-            raise NotImplemented
-        ##
-        #  Timelines, Threads, User info, Help
-        ##
-        # Home Timeline
-        elif ch == self.configuration.keys['home']:
+        # Show home Timeline
+        elif input == self.configuration.keys['home']:
             self._append_home_timeline()
         # Mention timeline
-        elif ch == self.configuration.keys['mentions']:
+        elif input == self.configuration.keys['mentions']:
             self._append_mentions_timeline()
         # Direct Message Timeline
-        elif ch == self.configuration.keys['DMs']:
+        elif input == self.configuration.keys['DMs']:
             self._append_direct_messages_timeline()
         # Search
-        elif ch == self.configuration.keys['search']:
-            self.footer = TextEditor(prompt='Search: ')
+        elif input == self.configuration.keys['search']:
+            self.footer = TextEditor(prompt='search: ')
             self.ui.set_footer(self.footer)
             self.ui.set_focus('footer')
             urwid.connect_signal(self.footer, 'done', self.search_handler)
-        # Search User
-        elif ch == self.configuration.keys['search_user']:
+        # Ssearch User
+        elif input == self.configuration.keys['search_user']:
             raise NotImplemented
         # Search Myself
-        elif ch == self.configuration.keys['search_myself']:
+        elif input == self.configuration.keys['search_myself']:
             raise NotImplemented
         # Search Current User
-        elif ch == self.configuration.keys['search_current_user']:
+        elif input == self.configuration.keys['search_current_user']:
             raise NotImplemented
         # Thread
-        elif ch == self.configuration.keys['thread']:
+        elif input == self.configuration.keys['thread']:
             raise NotImplemented
         # User info
-        elif ch == self.configuration.keys['user_info']:
+        elif input == self.configuration.keys['user_info']:
             raise NotImplemented
-        # Help
-        elif ch == self.configuration.keys['help']:
-            self.show_help_buffer()
-        ##
-        #  Misc
-        ##
-        elif ch == self.configuration.keys['quit']:
+
+    def _external_program_handler(self, input):
+        # Open URL
+        if input == self.configuration.keys['openurl']:
+            raise NotImplemented
+        # Open image
+        elif input == self.configuration.keys['open_image']:
+            raise NotImplemented
+
+    def _turses_key_handler(self, input):
+        # Quit
+        if input == self.configuration.keys['quit']:
             raise urwid.ExitMainLoop()
-        elif ch == self.configuration.keys['redraw']:
+        # Redraw screen
+        elif input == self.configuration.keys['redraw']:
             self.loop.draw_screen()
+
+    def _timeline_mode(self):
+        """Activates the Timeline mode."""
+        if self.timelines.has_timelines():
+            active_timeline = self.timelines.get_active_timeline()
+            if self.body.__class__ == HelpBuffer:
+                self.body = TimelineBuffer()
+            self.body.render_timeline(active_timeline)
+            self.ui.set_body(self.body)
+            self._update_header()
         else:
-            return input
+            raise urwid.ExitMainLoopException
+
+
+    def _help_mode(self):
+        """Activates help mode."""
+        self.status_message('Type <Esc> or q to leave the help page.')
+        self.body = HelpBuffer(self.configuration)
+        self.ui.set_body(self.body)
 
     def _update_header(self):
         self.header.set_tabs(self.timelines.get_timeline_names())
@@ -261,14 +313,12 @@ class Turses(object):
     def previous_timeline(self):
         if self.timelines.has_timelines():
             self.timelines.activate_previous()
-            self._update_header()
-            self.refresh_screen()
+            self._timeline_mode()
 
     def next_timeline(self):
         if self.timelines.has_timelines():
             self.timelines.activate_next()
-            self._update_header()
-            self.refresh_screen()
+            self._timeline_mode()
 
     def tweet_handler(self, text):
         """Handles the post as a tweet of the given `text`."""
@@ -290,7 +340,7 @@ class Turses(object):
             pass
         else:
             # TODO background
-            self.refresh_screen()
+            self._timeline_mode()
         finally:
             self.status_message('Tweet sent!')
 
@@ -311,11 +361,4 @@ class Turses(object):
         # construct UI
         self._update_header()
         self.ui.set_focus('body')
-        self.status_message('')
-
-    def show_help_buffer(self):
-        # TODO
-        #  remove TL event handler, when closed enable it again
-        self.status_message('Type <Esc> or q to leave the help page.')
-        self.body = HelpBuffer(self.configuration)
-        self.ui.set_body(self.body)
+        self.clear_status()

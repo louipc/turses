@@ -1,2 +1,0 @@
-* scrolling down in a empty Timeline raises an exception
-* pip complains about `long_decription` parameter in `setup.py`
