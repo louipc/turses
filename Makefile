@@ -7,11 +7,12 @@ DIST=$(PY) setup.py sdist
 PIPI=pip install
 PIPFLAGS=--ignore-installed --no-deps
 
-TESTS=$(shell find -name "test_*.py")
+TESTRUNNER=nosetests
+TESTFLAGS=--with-coverage --cover-package=turses
 
 all: turses
 
-turses: clean dist install
+turses: clean test dist install
 
 dist:  
 	$(DIST)
@@ -21,3 +22,11 @@ install: $(DISTPKG)
 
 clean:
 	rm -rf dist/
+
+test:
+	$(TESTRUNNER) $(TESTFLAGS)
+
+release: clean test upload
+	
+upload:
+	$(PY) setup.py sdist upload

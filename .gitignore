@@ -1,5 +1,6 @@
 *.pyc
 .env
+.coverage
 credentials.py
 dist/
 build/

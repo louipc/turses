@@ -5,3 +5,5 @@ python-twitter==0.8.2
 simplejson==2.3.2
 urwid==1.0.1
 wsgiref==0.1.2
+nose==1.1.2
+coverage==3.5.1
