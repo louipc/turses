@@ -11,6 +11,7 @@ from gettext import gettext as _
 import urwid
 
 from util import is_retweet, encode
+from constant import banner
 
 
 TWEET_MAX_CHARS = 140
@@ -29,18 +30,6 @@ class WelcomeBuffer(urwid.WidgetWrap):
     def _create_text(self):
         """Creates the text to display in the welcome buffer."""
         self.text = []
-        __version__ = (0, 1, 0)
-        banner = [ "| |_ _   _ _ __ ___  ___  ___ ",
-                   "| __| | | | '__/ __|/ _ \/ __|",
-                   "| |_| |_| | |  \__ \  __/\__ \\",
-                   "\___|\____|_|  |___/\___||___/",
-                   "(%i.%i.%i)" % __version__, 
-                   "",
-                   "",
-                   "A ncurses Twitter client.",
-                   "http://github.com/alejandrogomez/turses",]
-                   
-
         for line in banner:
             self._insert_line(line)
 

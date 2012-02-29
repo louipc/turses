@@ -5,22 +5,26 @@
 ###############################################################################
 
 from distutils.core import setup
+from turses import __version__
 
 
 setup(
     name='turses',
-    version='v0.1alpha',
+    version='%s' % __version__,
     author='Nicolas Paris and Alejandro Gómez',
     author_email='alejandroogomez@gmail.com',
     license='GPLv3',
-    description='Twitter and Identica ncurses client.',
-    long_description=open('README.md').read(),
+    description='A ncurses Twitter client.',
+    long_description="""`turses` is a Twitter client with a sexy 
+                        ncurses interface.
+                        
+                        http://github.com/alejandrogomez/turses""",
     packages=['turses',],
     package_dir={'turses':'turses'},
     scripts=["bin/turses"],
     platforms=['linux'],
     classifiers = [
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Environment :: Console :: Curses',
         'Intended Audience :: End Users/Desktop',
         'License :: OSI Approved :: GNU General Public License (GPL)',

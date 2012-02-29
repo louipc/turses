@@ -195,6 +195,7 @@ class Turses(object):
                 # help only accepts motion commands and <Esc>
                 if ch == 'esc':
                     self._timeline_mode()
+                    self.clear_status()
                 return
 
         # Buffer commands

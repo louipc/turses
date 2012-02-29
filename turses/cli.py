@@ -6,10 +6,9 @@
 
 import argparse
 
+from turses import __version__
 from config import Configuration
-from turses import Turses
-
-__version__ = '0.1alpha'
+from controller import Turses
 
 
 def arguments():

@@ -4,6 +4,9 @@
 #       Licensed under the GPL License. See LICENSE.txt for full details.     #
 ###############################################################################
 
+from turses import __version__
+
+
 # palette for the ncurses interface created with `urwid`
 palette = [
     ['body','default', '', 'standout'],
@@ -114,3 +117,12 @@ filter = {
     'except':           [],
 }
 
+banner = [ "| |_ _   _ _ __ ___  ___  ___ ",
+           "| __| | | | '__/ __|/ _ \/ __|",
+           "| |_| |_| | |  \__ \  __/\__ \\",
+           "\___|\____|_|  |___/\___||___/",
+           "(%s)" % __version__, 
+           "",
+           "",
+           "A ncurses Twitter client.",
+           "http://github.com/alejandrogomez/turses",]
