@@ -61,8 +61,8 @@ class Turses(object):
         self._append_mentions_timeline()
         self._append_favorites_timeline()
         self._append_direct_messages_timeline()
-        self._timeline_mode()
         self.clear_status()
+        self._timeline_mode()
 
     # -- Modes ----------------------------------------------------------------
 
@@ -78,10 +78,10 @@ class Turses(object):
             self.body.render_timeline(active_timeline)
             self.ui.set_body(self.body)
             self._update_header()
-            self.redraw_screen()
         else:
             self._info_mode()
             self.clear_status()
+        self.redraw_screen()
 
     def _info_mode(self):
         """Shows program info."""
@@ -123,6 +123,8 @@ class Turses(object):
 
     # -- Timeline mode --------------------------------------------------------
 
+    # TODO decorator `timeline_mode` for checking `has_timelines`
+
     def previous_timeline(self):
         if self.timelines.has_timelines():
             self.timelines.activate_previous()
@@ -132,6 +134,43 @@ class Turses(object):
         if self.timelines.has_timelines():
             self.timelines.activate_next()
             self._timeline_mode()
+
+    def shift_buffer_left(self):
+        if self.timelines.has_timelines():
+            self.timelines.shift_active_left()
+            self._update_header()
+
+    def shift_buffer_right(self):
+        if self.timelines.has_timelines():
+            self.timelines.shift_active_right()
+            self._update_header()
+
+    def shift_buffer_beggining(self):
+        if self.timelines.has_timelines():
+            self.timelines.shift_active_beggining()
+            self._update_header()
+
+    def shift_buffer_end(self):
+        if self.timelines.has_timelines():
+            self.timelines.shift_active_end()
+            self._update_header()
+
+    def activate_first_buffer(self):
+        if self.timelines.has_timelines():
+            self.timelines.activate_first()
+            self._timeline_mode()
+
+    def activate_last_buffer(self):
+        if self.timelines.has_timelines():
+            self.timelines.activate_last()
+            self._timeline_mode()
+
+    def delete_buffer(self):
+        self.timelines.delete_active_timeline()
+        if self.timelines.has_timelines():
+            self._timeline_mode()
+        else:
+            self._info_mode()
 
     # -- Header ---------------------------------------------------------------
     
@@ -147,6 +186,7 @@ class Turses(object):
             self.footer = Footer()
         self.footer.message(text)
         self.ui.set_footer(self.footer)
+        self.redraw_screen()
 
     def status_error_message(self, message):
         self.status_message("[error] " + message)
@@ -163,8 +203,11 @@ class Turses(object):
     def redraw_screen(self):
         self.loop.draw_screen()
 
-    def show_editor(self, prompt='', content=''):
-        pass
+    def show_search_editor(self, prompt='', content=''):
+        self.footer = TextEditor(prompt=prompt, content=content)
+        self.ui.set_footer(self.footer)
+        self.ui.set_focus('footer')
+        urwid.connect_signal(self.footer, 'done', self.search_handler)
 
     def show_tweet_editor(self, prompt='', content=''):
         """Shows the tweet editor and connects the 'done' signal."""
@@ -174,9 +217,31 @@ class Turses(object):
         self.ui.set_focus('footer')
         urwid.connect_signal(self.footer, 'done', self.tweet_handler)
 
+    def show_reply_editor(self):
+        # TODO
+        #  '@author_of_tweet <cursor> [@mentioned_author...]
+        status = self.body.get_focused_status()
+        if is_tweet(status):
+            username = ''.join(['@', status.user.screen_name])
+            is_username = lambda n: n.startswith('@') and n != username
+            usernames = filter(is_username, status.text.split())
+            usernames.insert(0, username)
+            reply_text = ' '.join(usernames)
+            # TODO filter own username
+            # TODO set the cursor after `username`
+            self.show_tweet_editor(prompt='Reply: ', content=reply_text)
+        elif is_DM(status):
+            # TODO
+            pass
+
+
     # -- Event handling -------------------------------------------------------
 
     def key_handler(self, input):
+        """
+        Handles the keyboard input that is not handled by the widgets by 
+        default.
+        """
         ch = ''.join(input)
 
         # Turses commands
@@ -207,10 +272,6 @@ class Turses(object):
         twitter_action = self._twitter_key_handler(ch)
         if twitter_action:
             return
-
-        ##
-        #  Misc
-        ##
         else:
             return input
 
@@ -220,12 +281,13 @@ class Turses(object):
             raise urwid.ExitMainLoop()
         # Redraw screen
         elif input == self.configuration.keys['redraw']:
-            self.loop.draw_screen()
+            self.redraw_screen()
         # Help
         elif input == self.configuration.keys['help']:
             self._help_mode()
 
     def _motion_key_handler(self, input):
+        # TODO move handling of motion commands to the Widgets
         # Up
         if input == self.configuration.keys['up']:
             self.body.scroll_up()
@@ -248,41 +310,25 @@ class Turses(object):
             self.previous_timeline()
         # Shift active buffer left
         elif input == self.configuration.keys['shift_buffer_left']:
-            if self.timelines.has_timelines():
-                self.timelines.shift_active_left()
-                self._update_header()
+            self.shift_buffer_left()
         # Shift active buffer right
         elif input == self.configuration.keys['shift_buffer_right']:
-            if self.timelines.has_timelines():
-                self.timelines.shift_active_right()
-                self._update_header()
+            self.shift_buffer_right()
         # Shift active buffer beggining
         elif input == self.configuration.keys['shift_buffer_beggining']:
-            if self.timelines.has_timelines():
-                self.timelines.shift_active_beggining()
-                self._update_header()
+            self.shift_buffer_beggining()
         # Shift active buffer end
         elif input == self.configuration.keys['shift_buffer_end']:
-            if self.timelines.has_timelines():
-                self.timelines.shift_active_end()
-                self._update_header()
+            self.shift_buffer_end()
         # Activate first buffer
         elif input == self.configuration.keys['activate_first_buffer']:
-            if self.timelines.has_timelines():
-                self.timelines.activate_first()
-                self._timeline_mode()
+            self.activate_first_buffer()
         # Activate last buffer
         elif input == self.configuration.keys['activate_last_buffer']:
-            if self.timelines.has_timelines():
-                self.timelines.activate_last()
-                self._timeline_mode()
+            self.activate_last_buffer()
         # Delete buffer
         elif input == self.configuration.keys['delete_buffer']:
-            self.timelines.delete_active_timeline()
-            if self.timelines.has_timelines():
-                self._timeline_mode()
-            else:
-                self._info_mode()
+            self.delete_buffer()
         # Clear buffer
         elif input == self.configuration.keys['clear']:
             self.body.clear()
@@ -290,106 +336,41 @@ class Turses(object):
     def _twitter_key_handler(self, input):
         # Update timeline
         if input == self.configuration.keys['update']:
-            if self.timelines.has_timelines():
-                update_thread = Thread(target=self.update_active_timeline)
-                update_thread.start()
+            self.update_active_timeline()
         # Tweet
         elif input == self.configuration.keys['tweet']:
             self.show_tweet_editor()
         # Reply
         elif input == self.configuration.keys['reply']:
-            # TODO
-            #  '@author_of_tweet <cursor> [@mentioned_author...]
-            status = self.body.get_focused_status()
-            if is_tweet(status):
-                username = ''.join(['@', status.user.screen_name])
-                is_username = lambda n: n.startswith('@') and n != username
-                usernames = filter(is_username, status.text.split())
-                usernames.insert(0, username)
-                reply_text = ' '.join(usernames)
-                # TODO filter own username
-                # TODO set the cursor after `username`
-                self.show_tweet_editor(prompt='Reply: ', content=reply_text)
-            elif is_DM(status):
-                # TODO
-                pass
+            self.show_reply_editor()
         # Retweet
         elif input == self.configuration.keys['retweet']:
-            status = self.body.get_focused_status()
-            try:
-                # TODO make it in background and set status message
-                #      'Retweet posted'
-                self.status_info_message('Posting retweet...')
-                self.api.PostRetweet(status.id)
-            except twitter.TwitterError, e:
-                self.status_error_message('%s' % e)
+            self.retweet()
         # Retweet and Edit
         elif input == self.configuration.keys['retweet_and_edit']:
-            status = self.body.get_focused_status()
-            rt_text = 'RT ' + status.text
-            if valid_status_text(' ' + rt_text):
-                self.show_tweet_editor(content=rt_text)
-            else:
-                self.status_error_message('Tweet too long for manual retweet')
+            self.manual_retweet()
         # Delete (own) tweet
         elif input == self.configuration.keys['delete_tweet']:
-            status = self.body.get_focused_status()
-            if is_tweet(status):
-                try:
-                    self.api.DestroyStatus(status.id)
-                    self.status_info_message(_('Tweet deleted'))
-                    # TODO remove it from active_timeline, render_timeline,
-                    #      and put the cursor on top of the deleted tweet
-                except twitter.TwitterError:
-                    self.status_error_message(_('You can delete your own tweets only'))
-                except urllib2.URLError:
-                    self.status_error_message(_('There was a problem with network communication, we can not ensure that the tweet has been deleted'))
+            self.delete_tweet()
         # Follow Selected
         elif input == self.configuration.keys['follow_selected']:
-            status = self.body.get_focused_status()
-            if is_retweet(status):
-                # TODO
-                pass
-            elif is_tweet(status):
-                username = status.user.screen_name
-                try:
-                    self.api.CreateFriendship(status.id)
-                    self.status_info_message(_('You are now following @%s' % username))
-                except twitter.TwitterError:
-                    self.status_error_message(_('Twitter responded with an error, maybe you already follow @%s' % username))
-                except urllib2.URLError:
-                    self.status_error_message(_('There was a problem with network communication, we can not ensure that you are now following @%s' % username))
+            self.follow_selected()
         # Unfollow Selected
         elif input == self.configuration.keys['unfollow_selected']:
-            status = self.body.get_focused_status()
-            if is_retweet(status):
-                # TODO
-                pass
-            elif is_tweet(status):
-                username = status.user.screen_name
-                try:
-                    self.api.DestroyFriendship(status.id)
-                    self.status_info_message(_('You are no longer following @%s' % username))
-                except twitter.TwitterError:
-                    self.status_error_message(_('Twitter responded with an error, maybe you do not follow @%s' % username))
-                except urllib2.URLError:
-                    self.status_error_message(_('There was a problem with network communication, we can not ensure that you are not following @%s' % username))
+            self.unfollow_selected()
         # Send Direct Message
-        #FIXME
-        #elif input == self.configuration.keys['sendDM']:
-            #self.api.direct_message()
+        elif input == self.configuration.keys['sendDM']:
+            self.direct_message()
+            self.status_info_message('Still to implement!')
         # Create favorite
         elif input == self.configuration.keys['fav']:
-            status = self.body.get_focused_status()
-            raise NotImplemented
+            self.status_info_message('Still to implement!')
         # Get favorite
         elif input == self.configuration.keys['get_fav']:
-            status = self.body.get_focused_status()
-            raise NotImplemented
+            self.status_info_message('Still to implement!')
         # Destroy favorite
         elif input == self.configuration.keys['delete_fav']:
-            status = self.body.get_focused_status()
-            raise NotImplemented
+            self.status_info_message('Still to implement!')
         # Show home Timeline
         elif input == self.configuration.keys['home']:
             self._append_home_timeline()
@@ -401,43 +382,38 @@ class Turses(object):
             self._append_direct_messages_timeline()
         # Search
         elif input == self.configuration.keys['search']:
-            self.footer = TextEditor(prompt='search: ')
-            self.ui.set_footer(self.footer)
-            self.ui.set_focus('footer')
-            urwid.connect_signal(self.footer, 'done', self.search_handler)
+            self.show_search_editor()
         # Ssearch User
         elif input == self.configuration.keys['search_user']:
-            status = self.body.get_focused_status()
-            raise NotImplemented
+            self.status_info_message('Still to implement!')
         # Search Myself
         elif input == self.configuration.keys['search_myself']:
-            raise NotImplemented
+            self.status_info_message('Still to implement!')
         # Search Current User
         elif input == self.configuration.keys['search_current_user']:
-            raise NotImplemented
+            self.status_info_message('Still to implement!')
         # Thread
         elif input == self.configuration.keys['thread']:
-            status = self.body.get_focused_status()
-            raise NotImplemented
+            self.status_info_message('Still to implement!')
         # User info
         elif input == self.configuration.keys['user_info']:
-            status = self.body.get_focused_status()
-            raise NotImplemented
+            self.status_info_message('Still to implement!')
 
     def _external_program_handler(self, input):
         # Open URL
         if input == self.configuration.keys['openurl']:
-            raise NotImplemented
+            self.status_info_message('Still to implement!')
         # Open image
         elif input == self.configuration.keys['open_image']:
-            raise NotImplemented
+            self.status_info_message('Still to implement!')
 
     # -- Twitter --------------------------------------------------------------
 
     def update_active_timeline(self):
-        active_timeline = self.timelines.get_active_timeline()
-        active_timeline.update()
-        self._timeline_mode()
+        thread = Thread(target=self._update_active_timeline)
+        thread.start()
+
+    # Editor event handlers
 
     def tweet_handler(self, text):
         """Handles the post as a tweet of the given `text`."""
@@ -445,20 +421,14 @@ class Turses(object):
         urwid.disconnect_signal(self, self.ui.footer, 'done', self.tweet_handler)
         # remove editor
         self.ui.set_focus('body')
+        self.status_info_message('Sending tweet')
         if not valid_status_text(text):
             # <Esc> was pressed
             self.status_info_message('Tweet canceled')
             return
-        self.status_info_message('Sending tweet')
-        # TODO asynchronous API call
-        try:
-            self.api.PostUpdate(text)
-        except twitter.TwitterError:
-            # `PostUpdate` ALWAYS raises this exception but
-            # it posts the tweet anyway.
-            pass
-        finally:
-            self.status_info_message(_('Tweet sent!'))
+        args = (text,)
+        tweet_thread = Thread(target=self._tweet, args=args)
+        tweet_thread.start()
 
     def search_handler(self, text):
         """
@@ -478,3 +448,110 @@ class Turses(object):
         self._update_header()
         self.ui.set_focus('body')
         self.clear_status()
+
+    def retweet(self):
+        status = self.body.get_focused_status()
+        args = (status.id,)
+        retweet_thread = Thread(target=self._retweet, args=args)
+        retweet_thread.start()
+
+    def manual_retweet(self):
+        status = self.body.get_focused_status()
+        rt_text = 'RT ' + status.text
+        if valid_status_text(' ' + rt_text):
+            self.show_tweet_editor(content=rt_text)
+        else:
+            self.status_error_message(_('Tweet too long for manual retweet'))
+
+    def delete_tweet(self):
+        status = self.body.get_focused_status()
+        if is_tweet(status):
+            args = (status.id,)
+            delete_tweet_thread = Thread(target=self._delete_tweet, args=args)
+            delete_tweet_thread.start()
+        elif is_DM(status):
+            self.status_error_message(_('Can not delete direct messages'))
+
+    def follow_selected(self):
+        status = self.body.get_focused_status()
+        args = (status,)
+        follow_thread = Thread(target=self._follow_status_author, args=args)
+        follow_thread.start()
+
+    def unfollow_selected(self):
+        status = self.body.get_focused_status()
+        args = (status,)
+        unfollow_thread = Thread(target=self._unfollow_status_author, args=args)
+        unfollow_thread.start()
+
+    def direct_message(self):
+        # TODO
+        pass
+
+    # Asynchronous API calls
+
+    def _update_active_timeline(self):
+        """Updates the timeline and renders the active timeline."""
+        if self.timelines.has_timelines():
+            active_timeline = self.timelines.get_active_timeline()
+            active_timeline.update()
+            if self.body.__class__ == TimelineBuffer:
+                self._timeline_mode()
+            self.status_info_message('%s updated' % active_timeline.name)
+
+    def _tweet(self, text):
+        try:
+            self.api.PostUpdate(text)
+        except twitter.TwitterError, e:
+            # `PostUpdate` ALWAYS raises this exception but
+            # it posts the tweet anyway.
+            self.status_error_message(_('%s' % e))
+        finally:
+            self.status_info_message(_('Tweet sent!'))
+
+    def _retweet(self, id):
+        try:
+            self.status_info_message('Posting retweet...')
+            self.api.PostRetweet(id)
+        except twitter.TwitterError, e:
+            self.status_error_message('%s' % e)
+
+    def _delete_tweet(self, id):
+        try:
+            self.api.DestroyStatus(id)
+            self.update_active_timeline()
+            self.status_info_message(_('Tweet deleted'))
+            # TODO remove it from active_timeline, render_timeline,
+            #      and put the cursor on top of the deleted tweet
+        except twitter.TwitterError, e:
+            self.status_error_message('%s' % e)
+        except urllib2.URLError:
+            self.status_error_message(_('There was a problem with network communication, we can not ensure that the tweet has been deleted'))
+
+    def _follow_status_author(self, status):
+        if is_retweet(status):
+            # TODO search original twet author and follow
+            pass
+        elif is_tweet(status):
+            username = status.user.screen_name
+            try:
+                self.api.CreateFriendship(status.id)
+                self.status_info_message(_('You are now following @%s' % username))
+            except twitter.TwitterError:
+                self.status_error_message(_('Twitter responded with an error, maybe you already follow @%s' % username))
+            except urllib2.URLError:
+                self.status_error_message(_('There was a problem with network communication, we can not ensure that you are now following @%s' % username))
+
+    def _unfollow_status_author(self, status):
+        if is_retweet(status):
+            # TODO
+            pass
+        elif is_tweet(status):
+            username = status.user.screen_name
+            try:
+                self.api.DestroyFriendship(status.id)
+                self.status_info_message(_('You are no longer following @%s' % username))
+            except twitter.TwitterError:
+                self.status_error_message(_('Twitter responded with an error, maybe you do not follow @%s' % username))
+            except urllib2.URLError:
+                self.status_error_message(_('There was a problem with network communication, we can not ensure that you are not following @%s' % username))
