@@ -37,6 +37,7 @@ setup(
         'argparse',
         'httplib2==0.6.0',
         'urwid',
+        'oauth2==1.5.211',
     ],
     test_requires=['mock==0.8.0'],
 )
