@@ -10,7 +10,7 @@ from gettext import gettext as _
 
 import urwid
 
-from util import is_retweet, encode
+from util import is_retweet, encode, html_unescape
 from constant import banner
 
 
@@ -405,8 +405,9 @@ class StatusWidget(urwid.WidgetWrap):
     def __init__ (self, status):
         self.status = status
         self.id = status.id
+        unescaped_text = html_unescape(status.text)
         status_content = urwid.Padding(
-            urwid.AttrWrap(urwid.Text(status.text), 'body'), 
+            urwid.AttrWrap(urwid.Text(unescaped_text), 'body'), 
             left=1, 
             right=1)
         header = self.create_header(status)

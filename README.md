@@ -22,7 +22,6 @@ Working on
  * Thread view
  * User info
  * List view
- * Asynchronous API calls
 
 Development
 ===========
