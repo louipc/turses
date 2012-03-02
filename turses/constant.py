@@ -57,7 +57,7 @@ key = {
     'clear':                  'c',
     # Tweets
     'tweet':                  't',
-    'delete_tweet':           'D',
+    'delete_tweet':           'X',
     'reply':                  'r',
     'retweet':                'R',
     'retweet_and_edit':       'E',
