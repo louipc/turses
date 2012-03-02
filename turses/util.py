@@ -80,3 +80,10 @@ def is_DM(status):
 def is_username(string):
     # TODO
     pass
+
+def get_authors_username(status):
+    """Returns the original author's username of the given status."""
+    if is_tweet(status) or is_retweet(status):
+        return status.user
+    elif is_DM(status):
+        return status.sender_screen_name
