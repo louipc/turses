@@ -99,6 +99,19 @@ class TweetEditor(urwid.WidgetWrap):
 
         return
 
+class DmEditor(TweetEditor):
+    """Editor for creating DMs."""
+
+    __metaclass__ = urwid.signals.MetaSignals
+    signals = ['done']
+
+    def __init__(self, recipient, prompt='', content=''):
+        self.recipient = recipient
+        TweetEditor.__init__(self, prompt, content)
+    
+    def emit_done_signal(self, content):
+        urwid.emit_signal(self, 'done', self.recipient, content)
+
 
 class Editor(urwid.Edit):
     """
@@ -150,9 +163,9 @@ class TabsWidget(urwid.WidgetWrap):
         text = []
         for i, tab in enumerate(self.tabs):
             if i == self.active_index:
-                text.append(('active_tab', '│' + tab + '│'))
+                text.append(('active_tab', u'│' + tab + u'│'))
             else:
-                text.append(('inactive_tab', ' ' + tab + ' '))
+                text.append(('inactive_tab', u' ' + tab + u' '))
         return text
 
     def _update_text(self):
@@ -160,7 +173,7 @@ class TabsWidget(urwid.WidgetWrap):
         self._w = urwid.Text(text)
 
     def append_tab(self, tab):
-        self.tabs.append(tab)
+        self.tabs.append(unicode(tab))
         self._update_text()
 
     def delete_current_tab(self):

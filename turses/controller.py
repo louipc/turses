@@ -13,10 +13,12 @@ import urwid
 import twitter
 
 from constant import palette
-from widget import WelcomeBuffer, TabsWidget, TimelineBuffer, Footer, TextEditor, TweetEditor, HelpBuffer
+from widget import WelcomeBuffer, TabsWidget, TimelineBuffer, Footer 
+from widget import TextEditor, TweetEditor, HelpBuffer, DmEditor
 from api import Api
 from timeline import Timeline, TimelineList
 from util import valid_status_text, valid_search_text, is_tweet, is_DM, is_retweet
+from util import get_authors_username
 
 
 class Turses(object):
@@ -103,11 +105,11 @@ class Turses(object):
         arguments to the update function, it creates the timeline and
         appends it to `timelines`.
         """
-        statuses = update_function()
-        self.timelines.append_timeline(Timeline(name=name,
-                                                statuses=statuses,                            
-                                                update_function=update_function,
-                                                update_function_args=update_args))
+        timeline = Timeline(name=name,
+                            update_function=update_function,
+                            update_function_args=update_args) 
+        timeline.update()
+        self.timelines.append_timeline(timeline)
 
     def _append_home_timeline(self):
         self.append_timeline('Tweets', self.api.GetFriendsTimeline)
@@ -203,19 +205,41 @@ class Turses(object):
     def redraw_screen(self):
         self.loop.draw_screen()
 
-    def show_search_editor(self, prompt='', content=''):
-        self.footer = TextEditor(prompt=prompt, content=content)
+    def show_editor(self, 
+                    editor_cls, 
+                    done_signal_handler, 
+                    prompt='', content='',
+                    *args, **kwargs):
+        # TODO add `cursor` parameter to set the cursor
+        self.footer = editor_cls(prompt=prompt, content=content, *args, **kwargs)
         self.ui.set_footer(self.footer)
         self.ui.set_focus('footer')
-        urwid.connect_signal(self.footer, 'done', self.search_handler)
+        urwid.connect_signal(self.footer, 'done', done_signal_handler)
+
+    def show_search_editor(self, prompt='', content=''):
+        self.show_editor(TextEditor, 
+                         self.search_handler, 
+                         prompt=prompt, 
+                         content=content)
 
     def show_tweet_editor(self, prompt='', content=''):
         """Shows the tweet editor and connects the 'done' signal."""
-        # TODO add `cursor` parameter to set the cursor
-        self.footer = TweetEditor(prompt=prompt, content=content)
-        self.ui.set_footer(self.footer)
-        self.ui.set_focus('footer')
-        urwid.connect_signal(self.footer, 'done', self.tweet_handler)
+        self.show_editor(TweetEditor, 
+                         self.tweet_handler, 
+                         prompt=prompt, 
+                         content=content)
+
+    def show_dm_editor(self, prompt='', content=''):
+        """Shows the DM editor and connects the 'done' signal."""
+        status = self.body.get_focused_status()
+        recipient = get_authors_username(status)
+        if prompt == '':
+            prompt = _('DM to %s' % recipient) 
+        self.show_editor(DmEditor, 
+                         self.dm_handler, 
+                         prompt=prompt, 
+                         content=content,
+                         recipient=recipient,)
 
     def show_reply_editor(self):
         # TODO
@@ -360,7 +384,7 @@ class Turses(object):
             self.unfollow_selected()
         # Send Direct Message
         elif input == self.configuration.keys['sendDM']:
-            self.direct_message()
+            #self.show_dm_editor()
             self.status_info_message('Still to implement!')
         # Create favorite
         elif input == self.configuration.keys['fav']:
@@ -421,7 +445,7 @@ class Turses(object):
         urwid.disconnect_signal(self, self.ui.footer, 'done', self.tweet_handler)
         # remove editor
         self.ui.set_focus('body')
-        self.status_info_message('Sending tweet')
+        self.status_info_message('sending tweet')
         if not valid_status_text(text):
             # <Esc> was pressed
             self.status_info_message('Tweet canceled')
@@ -430,6 +454,21 @@ class Turses(object):
         tweet_thread = Thread(target=self._tweet, args=args)
         tweet_thread.start()
 
+    def dm_handler(self, username, text):
+        """Handles the post as a DM of the given `text`."""
+        # disconnect signal
+        urwid.disconnect_signal(self, self.ui.footer, 'done', self.dm_handler)
+        # remove editor
+        self.ui.set_focus('body')
+        self.status_info_message('Sending DM')
+        if not valid_status_text(text):
+            # <Esc> was pressed
+            self.status_info_message('DM canceled')
+            return
+        args = (username, text,)
+        dm_thread = Thread(target=self._direct_message, args=args)
+        dm_thread.start()
+
     def search_handler(self, text):
         """
         Handles creating a timeline tracking the search term given in 
@@ -437,13 +476,18 @@ class Turses(object):
         """
         # disconnect signal
         urwid.disconnect_signal(self, self.ui.footer, 'done', self.search_handler)
+        # remove editor
+        self.ui.set_focus('body')
+        self.status_info_message(_('Creating search timeline'))
         if not valid_search_text(text):
             # TODO error message editor and continue editing
             self.status_info_message('Search canceled')
             return
         # append timeline
-        tl_name = 'Search: %s' % text
-        self.append_timeline(tl_name, self.api.GetSearch, text)
+        tl_name = 'Search: %s' % text                
+        args = (tl_name, self.api.GetSearch, text)
+        search_thread = Thread(target=self.append_timeline, args=args)
+        search_thread.start()
         # construct UI
         self._update_header()
         self.ui.set_focus('body')
@@ -484,10 +528,6 @@ class Turses(object):
         unfollow_thread = Thread(target=self._unfollow_status_author, args=args)
         unfollow_thread.start()
 
-    def direct_message(self):
-        # TODO
-        pass
-
     # Asynchronous API calls
 
     def _update_active_timeline(self):
@@ -527,6 +567,17 @@ class Turses(object):
             self.status_error_message('%s' % e)
         except urllib2.URLError:
             self.status_error_message(_('There was a problem with network communication, we can not ensure that the tweet has been deleted'))
+
+    def _direct_message(self, username, text):
+        # FIXME `httplib` launches a `BadStatusLine` exception
+        #try:
+            #self.api.PostDirectMessage(username, text)
+        #except twitter.TwitterError, e:
+            #self.status_error_message('%s' % e)
+        #else:
+            #self.status_info_message(_('DM to %s sent!' % username))
+        pass
+
 
     def _follow_status_author(self, status):
         if is_retweet(status):
