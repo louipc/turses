@@ -199,6 +199,38 @@ class TimelineListTest(unittest.TestCase):
         self.append_timeline()
         self.assertEqual(len(self.timeline_list), 2)
 
+    def test_activate_first(self):
+        # -1 when there are no timelines
+        self.timeline_list.activate_first()
+        self.assertEqual(self.timeline_list.active_index, -1)
+        # does not change if its the first
+        self.append_timeline()
+        self.assertEqual(self.timeline_list.active_index, 0)
+        self.timeline_list.activate_first()
+        self.assertEqual(self.timeline_list.active_index, 0)
+        # moves to the first when in another position
+        self.append_timeline()
+        self.append_timeline()
+        self.timeline_list.activate_next()
+        self.timeline_list.activate_next()
+        self.timeline_list.activate_first()
+        self.assertEqual(self.timeline_list.active_index, 0)
+
+    def test_activate_last(self):
+        # -1 when there are no timelines
+        self.timeline_list.activate_last()
+        self.assertEqual(self.timeline_list.active_index, -1)
+        # does not change if its the last
+        self.append_timeline()
+        self.assertEqual(self.timeline_list.active_index, 0)
+        self.timeline_list.activate_last()
+        self.assertEqual(self.timeline_list.active_index, 0)
+        # moves to the last when in another position
+        self.append_timeline()
+        self.append_timeline()
+        self.timeline_list.activate_last()
+        self.assertEqual(self.timeline_list.active_index, 2)
+
     def test_shift_active_left(self):
         # -1 when there are no timelines
         self.timeline_list.shift_active_left()
@@ -220,9 +252,13 @@ class TimelineListTest(unittest.TestCase):
         self.append_timeline()
         self.timeline_list.shift_active_right()
         self.assertEqual(self.timeline_list.active_index, 1)
+        self.append_timeline()
         self.timeline_list.shift_active_right()
-        self.assertEqual(self.timeline_list.active_index, 1)
-    
+        self.assertEqual(self.timeline_list.active_index, 2)
+        self.timeline_list.shift_active_right()
+        self.assertEqual(self.timeline_list.active_index, 2)
+
+
     # TODO test update functions with mocks
     # TODO get_*
 
