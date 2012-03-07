@@ -212,6 +212,7 @@ class TimelineList(object):
 
     def delete_all(self):
         """Deletes every `Timeline`."""
+        self.active_index = -1
         self.timelines = []
 
     def get_timelines(self):

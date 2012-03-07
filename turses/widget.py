@@ -86,18 +86,10 @@ class TweetEditor(urwid.WidgetWrap):
         self.counter_widget.set_text(str(self.counter))
 
     def keypress(self, size, key):
-        # FIXME allow motion keys whem chars == TWEET_MAX_CHARS
-        if any([key == 'backspace', key == 'left', key == 'right']) or self.counter < TWEET_MAX_CHARS:
-            Editor.keypress(self.editor, size, key)
-            if self.counter == TWEET_MAX_CHARS:
-                # TODO highlight counter
-                pass
-        elif self.editor.last_key == 'enter' and key == 'enter':
-            urwid.emit_signal(self, 'done', self.editor.get_edit_text())
-        elif key == 'esc':
-            urwid.emit_signal(self, 'done', None)
+        if self.counter > TWEET_MAX_CHARS and key == 'enter' and self.editor.last_key == 'enter':
+                return
+        Editor.keypress(self.editor, size, key)
 
-        return
 
 class DmEditor(TweetEditor):
     """Editor for creating DMs."""

@@ -1,8 +1,7 @@
 * refactor keys and available actions
 * mock API for debugging; --debug argument
-* `TweetEditor` don't allow tweets with more than 140 chars
-  * use different signals for succesfull edits (e.g. 'done')
-    and for cancelling (maybe 'cancelled' ?)
+* `Editor`: use different signals for succesfull edits (e.g. 'done')
+and for cancelling (maybe 'cancelled' ?)
 * palette
   * modify widgets to include attributes of the palette
 * write tests with 100% coverage `timelines.py`
