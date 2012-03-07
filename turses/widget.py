@@ -322,11 +322,11 @@ class HelpBuffer(ScrollableListBoxWrapper):
 
         self.insert_division(_('Favorites'))
         self.insert_help_item('fav', _('Mark selected tweet as favorite'))
-        self.insert_help_item('get_fav', _('Go to favorites timeline'))
         self.insert_help_item('delete_fav', _('Remove a tweet from favorites'))
 
         self.insert_division(_('Timelines'))
         self.insert_help_item('home', _('Go to home timeline'))
+        self.insert_help_item('favorites', _('Go to favorites timeline'))
         self.insert_help_item('mentions', _('Go to mentions timeline'))
         self.insert_help_item('DMs', _('Go to direct message timeline'))
         self.insert_help_item('search', _('Search for term and show resulting timeline'))

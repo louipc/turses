@@ -388,20 +388,20 @@ class Turses(object):
             self.status_info_message('Still to implement!')
         # Create favorite
         elif input == self.configuration.keys['fav']:
-            self.status_info_message('Still to implement!')
-        # Get favorite
-        elif input == self.configuration.keys['get_fav']:
-            self.status_info_message('Still to implement!')
+            self.favorite()
         # Destroy favorite
         elif input == self.configuration.keys['delete_fav']:
-            self.status_info_message('Still to implement!')
+            self.unfavorite()
         # Show home Timeline
         elif input == self.configuration.keys['home']:
             self._append_home_timeline()
+        # Favorites timeline
+        elif input == self.configuration.keys['favorites']:
+            self._append_favorites_timeline()
         # Mention timeline
         elif input == self.configuration.keys['mentions']:
             self._append_mentions_timeline()
-        # Direct Message Timeline
+        # Direct Message timeline
         elif input == self.configuration.keys['DMs']:
             self._append_direct_messages_timeline()
         # Search
@@ -528,6 +528,18 @@ class Turses(object):
         unfollow_thread = Thread(target=self._unfollow_status_author, args=args)
         unfollow_thread.start()
 
+    def favorite(self):
+        status = self.body.get_focused_status()
+        args = (status,)
+        fav_thread = Thread(target=self._favorite, args=args)
+        fav_thread.start()
+
+    def unfavorite(self):
+        status = self.body.get_focused_status()
+        args = (status,)
+        unfav_thread = Thread(target=self._unfavorite, args=args)
+        unfav_thread.start()
+
     # Asynchronous API calls
 
     def _update_active_timeline(self):
@@ -606,3 +618,21 @@ class Turses(object):
                 self.status_error_message(_('Twitter responded with an error, maybe you do not follow @%s' % username))
             except urllib2.URLError:
                 self.status_error_message(_('There was a problem with network communication, we can not ensure that you are not following @%s' % username))
+
+    def _favorite(self, status):
+        try:
+            self.api.CreateFavorite(status)
+            self.status_info_message(_('Tweet marked as favorite'))
+        except twitter.TwitterError:
+            self.status_error_message(_('Twitter responded with an error'))
+        except urllib2.URLError:
+            self.status_error_message(_('There was a problem with network communication, we can not ensure that you have favorited the tweet'))
+
+    def _unfavorite(self, status):
+        try:
+            self.api.DestroyFavorite(status)
+            self.status_info_message(_('Tweet deleted from favorites'))
+        except twitter.TwitterError:
+            self.status_error_message(_('Twitter responded with an error'))
+        except urllib2.URLError:
+            self.status_error_message(_('There was a problem with network communication, we can not ensure that you have unfavorited the tweet'))

@@ -68,10 +68,10 @@ key = {
     'unfollow_selected':      'U',
     # Favorites
     'fav':                    'b',
-    'get_fav':                'B',
     'delete_fav':             'ctrl b',
     # Timelines
     'home':                   '.',
+    'favorites':              'B',
     'mentions':               'm',
     'DMs':                    'M',
     'search':                 '/',
