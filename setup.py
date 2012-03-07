@@ -33,11 +33,11 @@ setup(
         'Programming Language :: Python :: 2',
     ],
     install_requires=[
-        'python-twitter>=0.8.2',
+        'python-twitter',
         'argparse',
-        'httplib2==0.6.0',
+        'httplib2',
         'urwid',
-        'oauth2==1.5.211',
+        'oauth2',
     ],
     test_requires=['mock==0.8.0'],
 )
