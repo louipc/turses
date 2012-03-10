@@ -416,9 +416,11 @@ class StatusWidget(urwid.WidgetWrap):
             left=1, 
             right=1)
         header = self.create_header(status)
-        widget = urwid.AttrWrap(BoxDecoration(status_content, title=header), 
-                                'line', 
-                                'focus')
+        box = BoxDecoration(status_content, title=header)
+        if self.is_favorite(status):
+            widget = urwid.AttrWrap(box, 'favorited', 'focus')
+        else:
+            widget = urwid.AttrWrap(box, 'line', 'focus')
         self.__super.__init__(widget)
 
     def selectable(self):
@@ -448,7 +450,9 @@ class StatusWidget(urwid.WidgetWrap):
         if self.get_retweet_count(status):
             retweet_count = str(self.get_retweet_count(status))
             
-        # TODO take template from configuration
+        # TODO 
+        #  - take template from configuration
+        #  - {favorite} template variable
         header_template = ' {username}{retweeted}{retweeter} - {time}{reply} {retweet_count} '
         header = unicode(header_template).format(
             time = time,
@@ -516,6 +520,10 @@ class StatusWidget(urwid.WidgetWrap):
     def get_retweet_count(self, status):
         if hasattr(status, 'retweet_count'):
             return status.retweet_count
+
+    def is_favorite(self, status):
+        if hasattr(status, 'favorited'):
+            return status.favorited
 
 
 class BoxDecoration(urwid.WidgetDecoration, urwid.WidgetWrap):

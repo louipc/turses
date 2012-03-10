@@ -13,6 +13,7 @@ palette = [
     ['focus','dark red', '', 'standout'],
     ['header','light blue', ''],
     ['line', 'dark blue', ''],
+    ['favorited', 'yellow', ''],
     ['info_msg', 'dark green', ''],
     ['warn_msg', 'dark red', ''],
     ['active_tab', 'light blue', ''],
