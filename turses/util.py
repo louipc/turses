@@ -84,6 +84,6 @@ def is_username(string):
 def get_authors_username(status):
     """Returns the original author's username of the given status."""
     if is_tweet(status) or is_retweet(status):
-        return status.user
+        return status.user.screen_name
     elif is_DM(status):
         return status.sender_screen_name

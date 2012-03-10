@@ -17,7 +17,7 @@ from widget import WelcomeBuffer, TabsWidget, TimelineBuffer, Footer
 from widget import TextEditor, TweetEditor, HelpBuffer, DmEditor
 from api import Api
 from timeline import Timeline, TimelineList
-from util import valid_status_text, valid_search_text, is_tweet, is_DM, is_retweet
+from util import valid_status_text, valid_search_text, is_tweet, is_DM
 from util import get_authors_username
 
 
@@ -582,47 +582,38 @@ class Turses(object):
 
     def _direct_message(self, username, text):
         # FIXME `httplib` launches a `BadStatusLine` exception
-        #try:
-            #self.api.PostDirectMessage(username, text)
-        #except twitter.TwitterError, e:
-            #self.status_error_message('%s' % e)
-        #else:
-            #self.status_info_message(_('DM to %s sent!' % username))
-        pass
-
+        try:
+            self.api.PostDirectMessage(username, text)
+        except twitter.TwitterError, e:
+            self.status_error_message('%s' % e)
+        else:
+            self.status_info_message(_('DM to %s sent!' % username))
 
     def _follow_status_author(self, status):
-        if is_retweet(status):
-            # TODO search original twet author and follow
-            pass
-        elif is_tweet(status):
-            username = status.user.screen_name
-            try:
-                self.api.CreateFriendship(status.id)
-                self.status_info_message(_('You are now following @%s' % username))
-            except twitter.TwitterError:
-                self.status_error_message(_('Twitter responded with an error, maybe you already follow @%s' % username))
-            except urllib2.URLError:
-                self.status_error_message(_('There was a problem with network communication, we can not ensure that you are now following @%s' % username))
+        username = get_authors_username(status)
+        try:
+            self.api.CreateFriendship(username)
+            self.status_info_message(_('You are now following @%s' % username))
+        except twitter.TwitterError:
+            self.status_error_message(_('Twitter responded with an error, maybe you already follow @%s' % username))
+        except urllib2.URLError:
+            self.status_error_message(_('There was a problem with network communication, we can not ensure that you are now following @%s' % username))
 
     def _unfollow_status_author(self, status):
-        if is_retweet(status):
-            # TODO
-            pass
-        elif is_tweet(status):
-            username = status.user.screen_name
-            try:
-                self.api.DestroyFriendship(status.id)
-                self.status_info_message(_('You are no longer following @%s' % username))
-            except twitter.TwitterError:
-                self.status_error_message(_('Twitter responded with an error, maybe you do not follow @%s' % username))
-            except urllib2.URLError:
-                self.status_error_message(_('There was a problem with network communication, we can not ensure that you are not following @%s' % username))
+        username = get_authors_username(status)
+        try:
+            self.api.DestroyFriendship(username)
+            self.status_info_message(_('You are no longer following @%s' % username))
+        except twitter.TwitterError:
+            self.status_error_message(_('Twitter responded with an error, maybe you do not follow @%s' % username))
+        except urllib2.URLError:
+            self.status_error_message(_('There was a problem with network communication, we can not ensure that you are not following @%s' % username))
 
     def _favorite(self, status):
         try:
             self.api.CreateFavorite(status)
             self.status_info_message(_('Tweet marked as favorite'))
+            # TODO: change `StatusWidget` attributes
         except twitter.TwitterError:
             self.status_error_message(_('Twitter responded with an error'))
         except urllib2.URLError:

@@ -10,6 +10,7 @@ Features
  * Sexy ncurses interface
  * Multiple timelines (buffers)
  * Tweet, Reply, Retweet, Delete tweet
+ * Follow/Unfollow
  * Favorite/Unfavorite
  * Search
  * Fully customizable
@@ -18,7 +19,6 @@ Working on
 ==========
 
  * DM
- * Follow/Unfollow
  * Thread view
  * User info
  * List view
