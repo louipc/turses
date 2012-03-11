@@ -1,3 +1,6 @@
+* 0.0.4
+ - follow and unfollow
+
 * 0.0.3
  - bug with non-ascii characters in search solved
  - asynchronous API calls
