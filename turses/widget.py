@@ -592,3 +592,20 @@ class BoxDecoration(urwid.WidgetDecoration, urwid.WidgetWrap):
 
         urwid.WidgetDecoration.__init__(self, original_widget)
         urwid.WidgetWrap.__init__(self, pile)
+
+
+class UserBuffer(object):
+    """
+    A buffer that shows information for a certain user and its associated
+    timelines.
+    """
+    # TODO
+    pass
+
+
+class UserWidget(object):
+    """
+    A widget with a user's information.
+    """
+    # TODO
+    pass
