@@ -192,13 +192,14 @@ class TimelineList(object):
     def delete_active_timeline(self):
         """
         Deletes the active timeline (if any) and shifts the active index 
-        to the left.
+        to the right.
         """
         if self.has_timelines():
             del self.timelines[self.active_index]
-            if self.has_timelines() and self.active_index == 0:
-                return
-            self.active_index = self.active_index - 1
+            if self._is_valid_index(self.active_index):
+                pass
+            else:
+                self.active_index -= 1
 
     def update_active_timeline(self):
         if self.has_timelines():

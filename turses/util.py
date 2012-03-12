@@ -77,13 +77,24 @@ def is_retweet(status):
 def is_DM(status):
     return status.__class__ == DirectMessage
 
-def is_username(string):
-    # TODO
-    pass
-
 def get_authors_username(status):
     """Returns the original author's username of the given status."""
     if is_tweet(status) or is_retweet(status):
-        return status.user.screen_name
+        username = status.user.screen_name
     elif is_DM(status):
-        return status.sender_screen_name
+        username = status.sender_screen_name
+    return ''.join(['@', username])
+    def is_username(string):
+        return string.startswith('@')
+
+def is_username(string):
+    return string.startswith('@')
+
+def sanitize_username(username):
+    is_legal_username_char = lambda char: char.isalnum()
+    sanitized = filter(is_legal_username_char, username[1:])
+    return ''.join(['@', sanitized])
+
+def get_mentioned_usernames(status):
+    usernames = filter(is_username, status.text.split())
+    return map(sanitize_username, usernames)

@@ -181,8 +181,7 @@ class TabsWidget(urwid.WidgetWrap):
         self._update_text()
 
     def clear(self):
-        self.tabs = ['']
-        self._update_text()
+        self._w.set_text('')
 
 
 class Footer(urwid.WidgetWrap):
