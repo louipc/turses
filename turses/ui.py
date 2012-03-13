@@ -9,7 +9,98 @@ from widget import WelcomeBuffer, TabsWidget, TimelineBuffer, Footer, HelpBuffer
 from widget import TextEditor, TweetEditor, DmEditor
 
 
-class CursesInterface(Frame):
+class UserInterface(object):
+    """Base API that a UI for turses has to implement."""
+
+    # -- Modes ----------------------------------------------------------------
+
+    def timeline_mode(self, timelines):
+        """Activates the Timeline mode."""
+        pass
+
+    def is_in_timeline_mode(self):
+        pass
+
+    def info_mode(self):
+        """Shows program info."""
+        pass
+
+    def is_in_info_mode(self):
+        pass
+
+    def help_mode(self, configuration):
+        """Activates help mode."""
+        pass
+
+    def is_in_help_mode(self):
+        pass
+
+    # -- Header ---------------------------------------------------------------
+
+    def clear_header(self):
+        pass
+
+    def update_header(self, timelines):
+        pass
+
+    # -- Footer ---------------------------------------------------------------
+        
+    def status_message(self, text):
+        """Sets `text` as a status message on the footer."""
+        pass
+
+    def status_error_message(self, message):
+        pass
+
+    def status_info_message(self, message):
+        pass
+
+    def clear_status(self):
+        """Clears the status bar."""
+        pass
+
+    # -- Timeline mode --------------------------------------------------------
+
+    def draw_timeline(self, timeline):
+        pass
+
+    def set_tab_names(self, names):
+        pass
+
+    def activate_tab(self, index):
+        pass
+
+    def focused_status(self):
+        pass
+
+    # -- Editors --------------------------------------------------------------
+
+    def show_text_editor(self, 
+                         prompt='', 
+                         content='', 
+                         done_signal_handler=None):
+        pass
+
+    def show_tweet_editor(self, 
+                          prompt='', 
+                          content='', 
+                          done_signal_handler=None):
+        pass
+
+    def show_dm_editor(self, 
+                       prompt='', 
+                       content='',
+                       done_signal_handler=None):
+        pass
+
+    def remove_editor(self, done_signal_handler):
+        pass
+
+    def disconnect_editor_done_signal(self, done_signal_handler):
+        pass
+
+
+class CursesInterface(Frame, UserInterface):
     """
     Creates a curses interface for the program, providing functions to draw 
     all the components of the UI.
