@@ -51,31 +51,18 @@ class Turses(object):
             self.init_timelines()
 
     def init_timelines(self):
-        default_timelines = ["Tweets", "Mentions", "Favorites", "Direct Messages"]
-        uncheck = lambda tl: ' '.join(['[ ]', tl])
-        check = lambda tl: ' '.join(['[X]', tl])
-        progress = map(uncheck, default_timelines)
-        self.info_message(_('Initializing timelines: %s' % ', '.join(progress)))
+        self.info_message(_('Initializing timelines'))
         # note that API has to be initialized
         self.timelines = TimelineList()
         # TODO make default timeline list configurable
         # home
         self._append_home_timeline()
-        progress[0] = check(default_timelines[0])
-        self.info_message(_('Initializing timelines: %s' % ', '.join(progress)))
-        self.redraw_screen()
         # mentions
         self._append_mentions_timeline()
-        progress[1] = check(default_timelines[1])
-        self.info_message(_('Initializing timelines: %s' % ', '.join(progress)))
         # favorites
         self._append_favorites_timeline()
-        progress[2] = check(default_timelines[2])
-        self.info_message(_('Initializing timelines: %s' % ', '.join(progress)))
         # DMs
         self._append_direct_messages_timeline()
-        progress[3] = check(default_timelines[3])
-        self.info_message(_('Initializing timelines: %s' % ', '.join(progress)))
         # clear status
         self.clear_status()
 
@@ -135,7 +122,6 @@ class Turses(object):
     # TODO decorator `timeline_mode` for checking `has_timelines` and drawing
 
     def draw_timeline_buffer(self):
-        # redraw screen
         # draw active timeline
         active_timeline = self.timelines.get_active_timeline()
         self.ui.draw_timeline(active_timeline)
@@ -221,7 +207,7 @@ class Turses(object):
 
     # -- Twitter -------------------------------------------------------------- 
 
-    def search(self, prompt='', content=''):
+    def search(self, prompt='Search', content=''):
         self.ui.show_text_editor(prompt, content, self.search_handler)
 
     def tweet(self):
@@ -258,8 +244,7 @@ class Turses(object):
 
     def key_handler(self, input):
         """
-        Handles the keyboard input that is not handled by the widgets by 
-        default.
+        Handles the keyboard input that is not handled by the widgets.
         """
         ch = ''.join(input)
 
