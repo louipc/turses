@@ -60,7 +60,7 @@ class CursesInterface(Frame, UserInterface):
         self.set_body(self.body)
 
     def is_in_help_mode(self):
-        return self.footer.__class__ == HelpBuffer
+        return self.body.__class__ == HelpBuffer
 
     # -- Header ---------------------------------------------------------------
 

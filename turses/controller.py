@@ -267,8 +267,6 @@ class Turses(object):
         if self.ui.is_in_help_mode():
             # help only accepts motion commands and <Esc>
             if ch == 'esc':
-                # FIXME
-                raise Exception
                 self.timeline_mode()
                 self.clear_status()
 
