@@ -1,5 +1,6 @@
 * 0.0.4
  - follow and unfollow
+ - pluggable UI
 
 * 0.0.3
  - bug with non-ascii characters in search solved

@@ -14,7 +14,7 @@ users to:
 Features
 ========
 
- * Sexy ncurses interface
+ * Sexy curses interface
  * Multiple timelines (buffers)
  * Tweet, Reply, Retweet, Delete tweet
  * Follow/Unfollow
