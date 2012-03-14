@@ -9,6 +9,7 @@ import argparse
 from turses import __version__
 from config import Configuration
 from controller import Turses
+from ui import CursesInterface
 
 
 def arguments():
@@ -36,4 +37,5 @@ def arguments():
 
 def main():
     configuration = Configuration(arguments())
-    Turses(configuration)
+    ui = CursesInterface()
+    Turses(configuration, ui)

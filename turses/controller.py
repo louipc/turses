@@ -17,7 +17,6 @@ from api import Api
 from timeline import Timeline, TimelineList
 from util import valid_status_text, valid_search_text, is_tweet, is_DM
 from util import get_authors_username, get_mentioned_usernames
-from ui import CursesInterface
 
 
 class Turses(object):
@@ -25,12 +24,13 @@ class Turses(object):
 
     # -- Initialization -------------------------------------------------------
 
-    def __init__(self, configuration):
+    def __init__(self, configuration, ui):
         self.configuration = configuration
-        self.ui = CursesInterface()
+        self.ui = ui
         # init API in background
         init_api_and_timelines = Thread(target=self.init_api)
         init_api_and_timelines.start()
+        self.info_message(_('Initializing API'))
         # start main loop
         self.loop = urwid.MainLoop(self.ui,
                                    palette, 
@@ -39,7 +39,6 @@ class Turses(object):
 
     def init_api(self):
         try:
-            self.info_message(_('Initializing API'))
             self.api = Api(self.configuration.token[self.configuration.service]['consumer_key'],
                            self.configuration.token[self.configuration.service]['consumer_secret'],
                            self.configuration.oauth_token,
@@ -370,10 +369,10 @@ class Turses(object):
             self.search()
         # Ssearch User
         elif input == self.configuration.keys['search_user']:
-            self.status_info_message('Still to implement!')
+            self.info_message('Still to implement!')
         # Search Myself
         elif input == self.configuration.keys['search_myself']:
-            self.status_info_message('Still to implement!')
+            self.info_message('Still to implement!')
 
     def _twitter_key_handler(self, input):
         # Update timeline
@@ -412,21 +411,21 @@ class Turses(object):
             self.unfavorite()
         # Search Current User
         elif input == self.configuration.keys['search_current_user']:
-            self.status_info_message('Still to implement!')
+            self.info_message('Still to implement!')
         # Thread
         elif input == self.configuration.keys['thread']:
-            self.status_info_message('Still to implement!')
+            self.info_message('Still to implement!')
         # User info
         elif input == self.configuration.keys['user_info']:
-            self.status_info_message('Still to implement!')
+            self.info_message('Still to implement!')
 
     def _external_program_handler(self, input):
         # Open URL
         if input == self.configuration.keys['openurl']:
-            self.status_info_message('Still to implement!')
+            self.info_message('Still to implement!')
         # Open image
         elif input == self.configuration.keys['open_image']:
-            self.status_info_message('Still to implement!')
+            self.info_message('Still to implement!')
 
     # -- Twitter --------------------------------------------------------------
 
@@ -445,7 +444,7 @@ class Turses(object):
         self.info_message('sending tweet')
         if not valid_status_text(text):
             # <Esc> was pressed
-            self.ui.status_info_message('Tweet canceled')
+            self.info_message('Tweet canceled')
             return
         args = (text,)
         tweet_thread = Thread(target=self._tweet, args=args)
@@ -457,10 +456,10 @@ class Turses(object):
         self.ui.remove_editor(self.dm_handler)
         # remove editor
         self.ui.set_focus('body')
-        self.status_info_message('Sending DM')
+        self.info_message('Sending DM')
         if not valid_status_text(text):
             # <Esc> was pressed
-            self.ui.status_info_message('DM canceled')
+            self.info_message('DM canceled')
             return
         args = (username, text,)
         dm_thread = Thread(target=self._direct_message, args=args)
@@ -544,7 +543,7 @@ class Turses(object):
             active_timeline.update()
             if self.ui.is_in_timeline_mode():
                 self.draw_timeline_buffer()
-            self.ui.status_info_message('%s updated' % active_timeline.name)
+            self.info_message('%s updated' % active_timeline.name)
 
     def _tweet(self, text):
         try:
@@ -554,20 +553,22 @@ class Turses(object):
             # it posts the tweet anyway.
             self.status_error_message(_('%s' % e))
         finally:
-            self.status_info_message(_('Tweet sent!'))
+            self.info_message(_('Tweet sent!'))
 
     def _retweet(self, id):
         try:
-            self.status_info_message('Posting retweet...')
+            self.info_message(_('Posting retweet...'))
             self.api.PostRetweet(id)
         except twitter.TwitterError, e:
             self.status_error_message('%s' % e)
+        else:
+            self.info_message(_('Retweet posted'))
 
     def _delete_tweet(self, id):
         try:
             self.api.DestroyStatus(id)
             self.update_active_timeline()
-            self.status_info_message(_('Tweet deleted'))
+            self.info_message(_('Tweet deleted'))
             # TODO remove it from active_timeline, render_timeline,
             #      and put the cursor on top of the deleted tweet
         except twitter.TwitterError, e:
@@ -582,13 +583,13 @@ class Turses(object):
         except twitter.TwitterError, e:
             self.status_error_message('%s' % e)
         else:
-            self.status_info_message(_('DM to %s sent!' % username))
+            self.info_message(_('DM to %s sent!' % username))
 
     def _follow_status_author(self, status):
         username = get_authors_username(status)
         try:
             self.api.CreateFriendship(username)
-            self.status_info_message(_('You are now following @%s' % username))
+            self.info_message(_('You are now following @%s' % username))
         except twitter.TwitterError:
             self.status_error_message(_('Twitter responded with an error, maybe you already follow @%s' % username))
         except urllib2.URLError:
@@ -598,7 +599,7 @@ class Turses(object):
         username = get_authors_username(status)
         try:
             self.api.DestroyFriendship(username)
-            self.status_info_message(_('You are no longer following @%s' % username))
+            self.info_message(_('You are no longer following @%s' % username))
         except twitter.TwitterError:
             self.status_error_message(_('Twitter responded with an error, maybe you do not follow @%s' % username))
         except urllib2.URLError:
@@ -607,7 +608,7 @@ class Turses(object):
     def _favorite(self, status):
         try:
             self.api.CreateFavorite(status)
-            self.status_info_message(_('Tweet marked as favorite'))
+            self.info_message(_('Tweet marked as favorite'))
             # TODO: change `StatusWidget` attributes
         except twitter.TwitterError:
             self.status_error_message(_('Twitter responded with an error'))
@@ -617,7 +618,7 @@ class Turses(object):
     def _unfavorite(self, status):
         try:
             self.api.DestroyFavorite(status)
-            self.status_info_message(_('Tweet deleted from favorites'))
+            self.info_message(_('Tweet deleted from favorites'))
         except twitter.TwitterError:
             self.status_error_message(_('Twitter responded with an error'))
         except urllib2.URLError:

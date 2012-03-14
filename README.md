@@ -17,11 +17,12 @@ Features
  * Favorite/Unfavorite
  * Search
  * Fully customizable
+ * Pluggable UI
 
 Roadmap
 =======
 
- * Pluggable UI and API
+ * Pluggable API
  * Documentation
  * DM
  * Thread view

@@ -16,62 +16,62 @@ class UserInterface(object):
 
     def timeline_mode(self, timelines):
         """Activates the Timeline mode."""
-        pass
+        raise NotImplementedError
 
     def is_in_timeline_mode(self):
-        pass
+        raise NotImplementedError
 
     def info_mode(self):
         """Shows program info."""
-        pass
+        raise NotImplementedError
 
     def is_in_info_mode(self):
-        pass
+        raise NotImplementedError
 
     def help_mode(self, configuration):
         """Activates help mode."""
-        pass
+        raise NotImplementedError
 
     def is_in_help_mode(self):
-        pass
+        raise NotImplementedError
 
     # -- Header ---------------------------------------------------------------
 
     def clear_header(self):
-        pass
+        raise NotImplementedError
 
     def update_header(self, timelines):
-        pass
+        raise NotImplementedError
 
     # -- Footer ---------------------------------------------------------------
         
     def status_message(self, text):
         """Sets `text` as a status message on the footer."""
-        pass
+        raise NotImplementedError
 
     def status_error_message(self, message):
-        pass
+        raise NotImplementedError
 
     def status_info_message(self, message):
-        pass
+        raise NotImplementedError
 
     def clear_status(self):
         """Clears the status bar."""
-        pass
+        raise NotImplementedError
 
     # -- Timeline mode --------------------------------------------------------
 
     def draw_timeline(self, timeline):
-        pass
+        raise NotImplementedError
 
     def set_tab_names(self, names):
-        pass
+        raise NotImplementedError
 
     def activate_tab(self, index):
-        pass
+        raise NotImplementedError
 
     def focused_status(self):
-        pass
+        raise NotImplementedError
 
     # -- Editors --------------------------------------------------------------
 
@@ -79,25 +79,25 @@ class UserInterface(object):
                          prompt='', 
                          content='', 
                          done_signal_handler=None):
-        pass
+        raise NotImplementedError
 
     def show_tweet_editor(self, 
                           prompt='', 
                           content='', 
                           done_signal_handler=None):
-        pass
+        raise NotImplementedError
 
     def show_dm_editor(self, 
                        prompt='', 
                        content='',
                        done_signal_handler=None):
-        pass
+        raise NotImplementedError
 
     def remove_editor(self, done_signal_handler):
-        pass
+        raise NotImplementedError
 
     def disconnect_editor_done_signal(self, done_signal_handler):
-        pass
+        raise NotImplementedError
 
 
 class CursesInterface(Frame, UserInterface):
