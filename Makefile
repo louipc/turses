@@ -14,17 +14,20 @@ all: turses
 
 turses: clean test dist install
 
-dist:  
+dist: pyc 
 	$(DIST)
 
 install: $(DISTPKG)
 	$(PIPI) $(PIPFLAGS) $(DISTPKG)
 
-clean:
+clean: pyc
 	rm -rf dist/
 
 test:
 	$(TESTRUNNER) $(TESTFLAGS)
+
+pyc:
+	find . -name "*.pyc" -exec rm {} \;
 
 release: clean test upload
 	
