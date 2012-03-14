@@ -56,12 +56,16 @@ class Turses(object):
         # TODO make default timeline list configurable
         # home
         self._append_home_timeline()
+        self.draw_timeline_buffer()
         # mentions
         self._append_mentions_timeline()
+        self.draw_timeline_buffer()
         # favorites
         self._append_favorites_timeline()
+        self.draw_timeline_buffer()
         # DMs
         self._append_direct_messages_timeline()
+        self.draw_timeline_buffer()
         # clear status
         self.clear_status()
 
@@ -102,7 +106,6 @@ class Turses(object):
                             update_function_args=update_args) 
         timeline.update()
         self.timelines.append_timeline(timeline)
-        self.draw_timeline_buffer()
 
     def _append_home_timeline(self):
         self.append_timeline('Tweets', self.api.GetFriendsTimeline)
