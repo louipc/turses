@@ -22,3 +22,4 @@ and for cancelling (maybe 'cancelled' ?)
 * check for URLError exceptions and fail gracefully
 * check for TwitterError when using the API
 * keep references to threads and wait for them before quitting
+* tweet with the same hashtags than the focused tweets
