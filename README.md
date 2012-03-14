@@ -4,8 +4,12 @@ turses
 A Twitter client with a curses interface written in Python. Most of the codebase 
 is from the [Tyrs](http://tyrs.nicosphere.net) project by [Nicolas Paris](http://github.com/Nic0).
 
-The goal of the project is to build a full-featured Twitter client for the console,
-implementing all the capabilities of the Twitter API.
+The goal of the project is to build a full-featured Twitter client that allows the
+users to:
+ * fully customize the client;
+ * multiple UIs (`curses`, `gtk`, `qt`, et al.);
+ * choose API backend (currently is using `python-twitter`); and 
+ * implements all the capabilities of the Twitter API.
 
 Features
 ========
@@ -27,8 +31,11 @@ Roadmap
  * DM
  * Thread view
  * User info
- * List view
+ * Lists
  * Multiple accounts
+ * Geo
+ * Blocking
+ * Settings
 
 Development
 ===========
