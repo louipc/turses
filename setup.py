@@ -19,7 +19,10 @@ setup(
                         ncurses interface.
                         
                         http://github.com/alejandrogomez/turses""",
-    packages=['turses',],
+    packages = [
+        'turses', 
+        'turses.ui'
+    ],
     package_dir={'turses':'turses'},
     scripts=["bin/turses"],
     platforms=['linux'],

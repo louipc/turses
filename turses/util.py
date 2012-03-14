@@ -4,6 +4,7 @@
 #       Licensed under the GPL License. See LICENSE.txt for full details.     #
 ###############################################################################
 
+import argparse
 import sys
 import re
 import string
@@ -12,9 +13,32 @@ from time import strftime, gmtime
 
 from twitter import Status, DirectMessage
 
+from turses import __version__
+
 retweet_re = re.compile('^RT @\w+:')
 username_re = re.compile('@\w+')
 
+def parse_arguments():
+    """Parse all arguments from the command line."""
+
+    parser = argparse.ArgumentParser(
+            "turses: a ncurses Twitter client written in Python.")
+
+    parser.add_argument("-a", "--account",
+            help="Use another account, store in a different file.")
+
+    parser.add_argument("-c", "--config",
+            help="Use another configuration file.")
+
+    parser.add_argument("-g", "--generate-config",
+            help="Generate a default configuration file.")
+
+    version = "turses %s" % __version__
+    parser.add_argument("-v", "--version", action="version", version=version,
+            help="Show the current version of turses")
+
+    args = parser.parse_args()
+    return args
 
 def get_time():
     return strftime('%H:%M:%S', gmtime())
@@ -68,6 +92,7 @@ def valid_search_text(text):
     """Checks the validity of a search text."""
     return bool(text)
 
+# TODO: make this functions library independent
 def is_tweet(status):
     return status.__class__ == Status
 
