@@ -23,11 +23,11 @@ Features
  * Search
  * Fully customizable
  * Pluggable UI
+ * Pluggable API
 
 Roadmap
 =======
 
- * Pluggable API
  * Documentation
  * DM
  * Thread view

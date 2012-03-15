@@ -5,17 +5,16 @@
 ###############################################################################
 
 
-import urllib2
 from gettext import gettext as _
 from threading import Thread
+from functools import partial
 
 import urwid
-import twitter
 
 from constant import palette
 from api import Api
 from timeline import Timeline, TimelineList
-from util import valid_status_text, valid_search_text, is_tweet, is_DM
+from util import valid_status_text, valid_search_text
 from util import get_authors_username, get_mentioned_usernames
 
 
@@ -27,27 +26,22 @@ class Turses(object):
     def __init__(self, configuration, ui):
         self.configuration = configuration
         self.ui = ui
-        # init API in background
-        init_api_and_timelines = Thread(target=self.init_api)
-        init_api_and_timelines.start()
+        # init API
         self.info_message(_('Initializing API'))
+        consumer_key = self.configuration.token[self.configuration.service]['consumer_key'] 
+        consumer_secret = self.configuration.token[self.configuration.service]['consumer_secret']
+        oauth_token = self.configuration.oauth_token 
+        oauth_token_secret = self.configuration.oauth_token_secret
+        self.api = Api(consumer_key=consumer_key,
+                       consumer_secret=consumer_secret,
+                       access_token_key=oauth_token,
+                       access_token_secret=oauth_token_secret,)
+        self.api.init_api(callback=self.api_ready)
         # start main loop
         self.loop = urwid.MainLoop(self.ui,
                                    palette, 
                                    unhandled_input=self.key_handler,)
         self.loop.run()
-
-    def init_api(self):
-        try:
-            self.api = Api(self.configuration.token[self.configuration.service]['consumer_key'],
-                           self.configuration.token[self.configuration.service]['consumer_secret'],
-                           self.configuration.oauth_token,
-                           self.configuration.oauth_token_secret,)
-        except urllib2.URLError:
-            # TODO retry
-            self.error_message(_('Couldn\'t initialize API'))
-        else:
-            self.init_timelines()
 
     def init_timelines(self):
         self.info_message(_('Initializing timelines'))
@@ -56,18 +50,45 @@ class Turses(object):
         # TODO make default timeline list configurable
         # home
         self._append_home_timeline()
-        self.draw_timeline_buffer()
         # mentions
         self._append_mentions_timeline()
-        self.draw_timeline_buffer()
         # favorites
         self._append_favorites_timeline()
-        self.draw_timeline_buffer()
         # DMs
         self._append_direct_messages_timeline()
-        self.draw_timeline_buffer()
         # clear status
         self.clear_status()
+
+    # -- Callbacks ------------------------------------------------------------
+
+    def api_ready(self):
+        self.info_message('API initialized')
+        self.init_timelines()
+
+    def tweet_sent(self):
+        self.info_message(_('Tweet sent'))
+
+    def retweet_posted(self):
+        self.info_message(_('Retweet posted'))
+
+    def status_deleted(self):
+        self.update_active_timeline()
+        self.info_message(_('Tweet deleted'))
+
+    def follow_done(self, username=None):
+        if username:
+            self.info_message(_('You are now following %s' % username))
+
+    def unfollow_done(self, username=None):
+        self.update_active_timeline()
+        if username:
+            self.info_message(_('You no longer follow %s' % username))
+
+    def tweet_favorited(self):
+        self.info_message(_('Tweet marked as favorite'))
+
+    def tweet_unfavorited(self):
+        self.info_message(_('Tweet removed from favorites'))
 
     # -- Modes ----------------------------------------------------------------
 
@@ -78,7 +99,7 @@ class Turses(object):
         If not, shows program info.
         """
         if self.timelines.has_timelines():
-            self.draw_timeline_buffer()
+            self.draw_timelines()
         else:
             self.ui.info_mode()
             self.clear_status()
@@ -106,85 +127,88 @@ class Turses(object):
                             update_function_args=update_args) 
         timeline.update()
         self.timelines.append_timeline(timeline)
+        self.timeline_mode()
 
     def _append_home_timeline(self):
-        self.append_timeline('Tweets', self.api.GetFriendsTimeline)
+        self.append_timeline('Tweets', self.api.get_home_timeline)
 
     def _append_mentions_timeline(self):
-        self.append_timeline('Mentions', self.api.GetMentions)
+        self.append_timeline('Mentions', self.api.get_mentions)
 
     def _append_favorites_timeline(self):
-        self.append_timeline('Favorites', self.api.GetFavorites)
+        self.append_timeline('Favorites', self.api.get_favorites)
 
     def _append_direct_messages_timeline(self):
-        self.append_timeline('Direct Messages', self.api.GetDirectMessages)
+        self.append_timeline('Direct Messages', self.api.get_direct_messages)
 
     # -- Timeline mode --------------------------------------------------------
 
-    # TODO decorator `timeline_mode` for checking `has_timelines` and drawing
+    def draw_timelines(self):
+        self.update_header()
+        self.draw_timeline_buffer()
+
+    def update_header(self):
+        self.ui.update_header(self.timelines)
+        # update tabs with buffer names, highlighting the active
+        timeline_names = self.timelines.get_timeline_names()
+        self.ui.set_tab_names(timeline_names)
+        self.ui.activate_tab(self.timelines.active_index)
 
     def draw_timeline_buffer(self):
         # draw active timeline
         active_timeline = self.timelines.get_active_timeline()
         self.ui.draw_timeline(active_timeline)
-        # update tabs with buffer names, highlighting the active
-        timeline_names = self.timelines.get_timeline_names()
-        self.ui.set_tab_names(timeline_names)
-        self.ui.activate_tab(self.timelines.active_index)
         # redraw screen
         self.redraw_screen()
+
+    # TODO decorator `timeline_mode` for checking `has_timelines` and drawing
 
     def previous_timeline(self):
         if self.timelines.has_timelines():
             self.timelines.activate_previous()
-            self.draw_timeline_buffer()
+            self.draw_timelines()
 
     def next_timeline(self):
         if self.timelines.has_timelines():
             self.timelines.activate_next()
-            self.draw_timeline_buffer()
+            self.draw_timelines()
 
     def shift_buffer_left(self):
         if self.timelines.has_timelines():
             self.timelines.shift_active_left()
-            self.draw_timeline_buffer()
+            self.draw_timelines()
 
     def shift_buffer_right(self):
         if self.timelines.has_timelines():
             self.timelines.shift_active_right()
-            self.draw_timeline_buffer()
+            self.draw_timelines()
 
     def shift_buffer_beggining(self):
         if self.timelines.has_timelines():
             self.timelines.shift_active_beggining()
-            self.draw_timeline_buffer()
+            self.draw_timelines()
 
     def shift_buffer_end(self):
         if self.timelines.has_timelines():
             self.timelines.shift_active_end()
-            self.draw_timeline_buffer()
+            self.draw_timelines()
 
     def activate_first_buffer(self):
         if self.timelines.has_timelines():
             self.timelines.activate_first()
-            self.draw_timeline_buffer()
+            self.draw_timelines()
 
     def activate_last_buffer(self):
         if self.timelines.has_timelines():
             self.timelines.activate_last()
-            self.draw_timeline_buffer()
+            self.draw_timelines()
 
     def delete_buffer(self):
         self.timelines.delete_active_timeline()
         if self.timelines.has_timelines():
-            self.draw_timeline_buffer()
+            self.draw_timelines()
         else:
             self.info_mode()
-
-    # -- Header ---------------------------------------------------------------
-    
-    def _update_header(self):
-        self.ui.update_header(self.timelines)
 
     # -- Footer ---------------------------------------------------------------
         
@@ -448,9 +472,7 @@ class Turses(object):
             # <Esc> was pressed
             self.info_message('Tweet canceled')
             return
-        args = (text,)
-        tweet_thread = Thread(target=self._tweet, args=args)
-        tweet_thread.start()
+        self.api.update(text, self.tweet_sent)
 
     def dm_handler(self, username, text):
         """Handles the post as a DM of the given `text`."""
@@ -463,9 +485,7 @@ class Turses(object):
             # <Esc> was pressed
             self.info_message('DM canceled')
             return
-        args = (username, text,)
-        dm_thread = Thread(target=self._direct_message, args=args)
-        dm_thread.start()
+        self.api.direct_message(username, text)
 
     def search_handler(self, text):
         """
@@ -484,16 +504,16 @@ class Turses(object):
             self.info_message(_('Creating search timeline for "%s"' % text))
         # append timeline
         tl_name = 'Search: %s' % text                
-        args = (tl_name, self.api.GetSearch, text)
+        args = (tl_name, self.api.search, text)
         search_thread = Thread(target=self.append_timeline, 
                                args=args)
         search_thread.start()
 
+    # -- API ------------------------------------------------------------------
+
     def retweet(self):
         status = self.ui.focused_status()
-        args = (status.id,)
-        retweet_thread = Thread(target=self._retweet, args=args)
-        retweet_thread.start()
+        self.api.retweet(status, self.retweet_posted)
 
     def manual_retweet(self):
         status = self.ui.focused_status()
@@ -505,36 +525,27 @@ class Turses(object):
 
     def delete_tweet(self):
         status = self.ui.focused_status()
-        if is_tweet(status):
-            args = (status.id,)
-            delete_tweet_thread = Thread(target=self._delete_tweet, args=args)
-            delete_tweet_thread.start()
-        elif is_DM(status):
-            self.error_message(_('Can not delete direct messages'))
+        self.api.destroy(status, self.status_deleted)
 
     def follow_selected(self):
         status = self.ui.focused_status()
-        args = (status,)
-        follow_thread = Thread(target=self._follow_status_author, args=args)
-        follow_thread.start()
+        username = get_authors_username(status)
+        follow_callback = partial(self.follow_done, username=username)
+        self.api.create_friendship(username, follow_callback)
 
     def unfollow_selected(self):
         status = self.ui.focused_status()
-        args = (status,)
-        unfollow_thread = Thread(target=self._unfollow_status_author, args=args)
-        unfollow_thread.start()
+        username = get_authors_username(status)
+        unfollow_callback = partial(self.unfollow_done, username=username)
+        self.api.destroy_friendship(username, unfollow_callback)
 
     def favorite(self):
         status = self.ui.focused_status()
-        args = (status,)
-        fav_thread = Thread(target=self._favorite, args=args)
-        fav_thread.start()
+        self.api.create_favorite(status, self.tweet_favorited)
 
     def unfavorite(self):
         status = self.ui.focused_status()
-        args = (status,)
-        unfav_thread = Thread(target=self._unfavorite, args=args)
-        unfav_thread.start()
+        self.api.destroy_favorite(status, self.tweet_unfavorited)
 
     # Asynchronous API calls
 
@@ -544,84 +555,5 @@ class Turses(object):
             active_timeline = self.timelines.get_active_timeline()
             active_timeline.update()
             if self.ui.is_in_timeline_mode():
-                self.draw_timeline_buffer()
+                self.draw_timelines()
             self.info_message('%s updated' % active_timeline.name)
-
-    def _tweet(self, text):
-        try:
-            self.api.PostUpdate(text)
-        except twitter.TwitterError, e:
-            # `PostUpdate` ALWAYS raises this exception but
-            # it posts the tweet anyway.
-            self.error_message(_('%s' % e))
-        finally:
-            self.info_message(_('Tweet sent!'))
-
-    def _retweet(self, id):
-        try:
-            self.info_message(_('Posting retweet...'))
-            self.api.PostRetweet(id)
-        except twitter.TwitterError, e:
-            self.error_message('%s' % e)
-        else:
-            self.info_message(_('Retweet posted'))
-
-    def _delete_tweet(self, id):
-        try:
-            self.api.DestroyStatus(id)
-            self.update_active_timeline()
-            self.info_message(_('Tweet deleted'))
-            # TODO remove it from active_timeline, render_timeline,
-            #      and put the cursor on top of the deleted tweet
-        except twitter.TwitterError, e:
-            self.error_message('%s' % e)
-        except urllib2.URLError:
-            self.error_message(_('There was a problem with network communication, we can not ensure that the tweet has been deleted'))
-
-    def _direct_message(self, username, text):
-        # FIXME `httplib` launches a `BadStatusLine` exception
-        try:
-            self.api.PostDirectMessage(username, text)
-        except twitter.TwitterError, e:
-            self.error_message('%s' % e)
-        else:
-            self.info_message(_('DM to %s sent!' % username))
-
-    def _follow_status_author(self, status):
-        username = get_authors_username(status)
-        try:
-            self.api.CreateFriendship(username)
-            self.info_message(_('You are now following @%s' % username))
-        except twitter.TwitterError:
-            self.error_message(_('Twitter responded with an error, maybe you already follow @%s' % username))
-        except urllib2.URLError:
-            self.error_message(_('There was a problem with network communication, we can not ensure that you are now following @%s' % username))
-
-    def _unfollow_status_author(self, status):
-        username = get_authors_username(status)
-        try:
-            self.api.DestroyFriendship(username)
-            self.info_message(_('You are no longer following @%s' % username))
-        except twitter.TwitterError:
-            self.error_message(_('Twitter responded with an error, maybe you do not follow @%s' % username))
-        except urllib2.URLError:
-            self.error_message(_('There was a problem with network communication, we can not ensure that you are not following @%s' % username))
-
-    def _favorite(self, status):
-        try:
-            self.api.CreateFavorite(status)
-            self.info_message(_('Tweet marked as favorite'))
-            # TODO: change `StatusWidget` attributes
-        except twitter.TwitterError:
-            self.error_message(_('Twitter responded with an error'))
-        except urllib2.URLError:
-            self.error_message(_('There was a problem with network communication, we can not ensure that you have favorited the tweet'))
-
-    def _unfavorite(self, status):
-        try:
-            self.api.DestroyFavorite(status)
-            self.info_message(_('Tweet deleted from favorites'))
-        except twitter.TwitterError:
-            self.error_message(_('Twitter responded with an error'))
-        except urllib2.URLError:
-            self.error_message(_('There was a problem with network communication, we can not ensure that you have unfavorited the tweet'))
