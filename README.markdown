@@ -1,8 +1,8 @@
 turses
 ======
 
-A Twitter client with a curses interface written in Python. Most of the codebase 
-is from the [Tyrs](http://tyrs.nicosphere.net) project by [Nicolas Paris](http://github.com/Nic0).
+A Twitter client with a curses interface written in Python. Various parts of the codebase 
+are borrowed from the [Tyrs](http://tyrs.nicosphere.net) project by [Nicolas Paris](http://github.com/Nic0).
 
 The goal of the project is to build a full-featured Twitter client that allows the
 users to:
