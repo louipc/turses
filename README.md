@@ -6,6 +6,7 @@ is from the [Tyrs](http://tyrs.nicosphere.net) project by [Nicolas Paris](http:/
 
 The goal of the project is to build a full-featured Twitter client that allows the
 users to:
+
  * fully customize the client;
  * multiple UIs (`curses`, `gtk`, `qt`, et al.);
  * choose API backend (currently is using `python-twitter`); and 
