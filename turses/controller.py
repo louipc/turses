@@ -204,6 +204,7 @@ class Turses(object):
     # -- UI -------------------------------------------------------------------
 
     def redraw_screen(self):
+        # FIXME the position of the cursor is lost when redrawing screen
         if hasattr(self, "loop"):
             self.loop.draw_screen()
 
@@ -500,7 +501,7 @@ class Turses(object):
         if valid_status_text(' ' + rt_text):
             self.tweet(content=rt_text)
         else:
-            self.status_error_message(_('Tweet too long for manual retweet'))
+            self.error_message(_('Tweet too long for manual retweet'))
 
     def delete_tweet(self):
         status = self.ui.focused_status()
@@ -509,7 +510,7 @@ class Turses(object):
             delete_tweet_thread = Thread(target=self._delete_tweet, args=args)
             delete_tweet_thread.start()
         elif is_DM(status):
-            self.status_error_message(_('Can not delete direct messages'))
+            self.error_message(_('Can not delete direct messages'))
 
     def follow_selected(self):
         status = self.ui.focused_status()
@@ -552,7 +553,7 @@ class Turses(object):
         except twitter.TwitterError, e:
             # `PostUpdate` ALWAYS raises this exception but
             # it posts the tweet anyway.
-            self.status_error_message(_('%s' % e))
+            self.error_message(_('%s' % e))
         finally:
             self.info_message(_('Tweet sent!'))
 
@@ -561,7 +562,7 @@ class Turses(object):
             self.info_message(_('Posting retweet...'))
             self.api.PostRetweet(id)
         except twitter.TwitterError, e:
-            self.status_error_message('%s' % e)
+            self.error_message('%s' % e)
         else:
             self.info_message(_('Retweet posted'))
 
@@ -573,16 +574,16 @@ class Turses(object):
             # TODO remove it from active_timeline, render_timeline,
             #      and put the cursor on top of the deleted tweet
         except twitter.TwitterError, e:
-            self.status_error_message('%s' % e)
+            self.error_message('%s' % e)
         except urllib2.URLError:
-            self.status_error_message(_('There was a problem with network communication, we can not ensure that the tweet has been deleted'))
+            self.error_message(_('There was a problem with network communication, we can not ensure that the tweet has been deleted'))
 
     def _direct_message(self, username, text):
         # FIXME `httplib` launches a `BadStatusLine` exception
         try:
             self.api.PostDirectMessage(username, text)
         except twitter.TwitterError, e:
-            self.status_error_message('%s' % e)
+            self.error_message('%s' % e)
         else:
             self.info_message(_('DM to %s sent!' % username))
 
@@ -592,9 +593,9 @@ class Turses(object):
             self.api.CreateFriendship(username)
             self.info_message(_('You are now following @%s' % username))
         except twitter.TwitterError:
-            self.status_error_message(_('Twitter responded with an error, maybe you already follow @%s' % username))
+            self.error_message(_('Twitter responded with an error, maybe you already follow @%s' % username))
         except urllib2.URLError:
-            self.status_error_message(_('There was a problem with network communication, we can not ensure that you are now following @%s' % username))
+            self.error_message(_('There was a problem with network communication, we can not ensure that you are now following @%s' % username))
 
     def _unfollow_status_author(self, status):
         username = get_authors_username(status)
@@ -602,9 +603,9 @@ class Turses(object):
             self.api.DestroyFriendship(username)
             self.info_message(_('You are no longer following @%s' % username))
         except twitter.TwitterError:
-            self.status_error_message(_('Twitter responded with an error, maybe you do not follow @%s' % username))
+            self.error_message(_('Twitter responded with an error, maybe you do not follow @%s' % username))
         except urllib2.URLError:
-            self.status_error_message(_('There was a problem with network communication, we can not ensure that you are not following @%s' % username))
+            self.error_message(_('There was a problem with network communication, we can not ensure that you are not following @%s' % username))
 
     def _favorite(self, status):
         try:
@@ -612,15 +613,15 @@ class Turses(object):
             self.info_message(_('Tweet marked as favorite'))
             # TODO: change `StatusWidget` attributes
         except twitter.TwitterError:
-            self.status_error_message(_('Twitter responded with an error'))
+            self.error_message(_('Twitter responded with an error'))
         except urllib2.URLError:
-            self.status_error_message(_('There was a problem with network communication, we can not ensure that you have favorited the tweet'))
+            self.error_message(_('There was a problem with network communication, we can not ensure that you have favorited the tweet'))
 
     def _unfavorite(self, status):
         try:
             self.api.DestroyFavorite(status)
             self.info_message(_('Tweet deleted from favorites'))
         except twitter.TwitterError:
-            self.status_error_message(_('Twitter responded with an error'))
+            self.error_message(_('Twitter responded with an error'))
         except urllib2.URLError:
-            self.status_error_message(_('There was a problem with network communication, we can not ensure that you have unfavorited the tweet'))
+            self.error_message(_('There was a problem with network communication, we can not ensure that you have unfavorited the tweet'))
