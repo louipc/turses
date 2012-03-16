@@ -4,18 +4,32 @@
 #       Licensed under the GPL License. See LICENSE.txt for full details.     #
 ###############################################################################
 
-from distutils.core import setup
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
+
+import turses
+
 
 name = "turses"
-version = "0.0.4"
 
-requirements = open("pip-requirements.txt").readlines()
-tests_requirements = open("dev-requirements.txt").readlines()
+requirements = [
+    "httplib2",
+    "oauth2",
+    "python-twitter",
+    "simplejson",
+]
+test_requirements = list(requirements)
+test_requirements.extend(["mock"])
 
-long_description = open("README.rst").read() ++ "\n\n" + open("HISTORY.rs").read() 
+try:
+    long_description = open("README.rst").read() + "\n\n" + open("HISTORY.rst").read()
+except IOError:
+    long_description = ""
 
 setup(name="turses",
-      version=version,
+      version=turses.__version__,
       author="Alejandro Gómez",
       author_email="alejandroogomez@gmail.com",
       license="GPLv3",
@@ -26,6 +40,8 @@ setup(name="turses",
           "turses", 
           "turses.ui"
       ],
+      package_data={'': ['LICENSE']},
+      include_package_data=True,
       package_dir={
           "turses":  "turses"
       },
@@ -41,4 +57,4 @@ setup(name="turses",
           "Programming Language :: Python :: 2",
       ],
       install_requires=requirements,
-      tests_require=tests_requirements,)
+      tests_require=test_requirements,)
