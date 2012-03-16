@@ -20,9 +20,11 @@ Instalation
 -----------
 
 **turses** is installed simply by:  ::
+
     $ pip install turses
 
 or:  ::
+
     $ easy_install turses
 
 Features
