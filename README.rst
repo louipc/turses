@@ -2,25 +2,27 @@ turses: a Twitter client written in Python
 ==========================================
 
 A Twitter client with a curses interface written in Python. Various parts of the codebase 
-are borrowed from the `Tyrs`_ project by `Nicolas_Paris`_.
+are borrowed from the `Tyrs`_ project by `Nicolas Paris`_.
 
 .. _`Tyrs`: http://tyrs.nicosphere.net
-.. _`Nicolas_Pars`: http://github.com/Nic0
+.. _`Nicolas Paris`: http://github.com/Nic0
 
 The goal of the project is to build a full-featured Twitter client that is:
 
 - fully  customizable;
 - usable within multiple UIs (*curses*, *gtk*, *qt*, et al.);
-- plugged to different API backends (currently is using `python-twitter`); and 
+- plugged to different API backends (currently is using `python-twitter`_); and 
 - implementing all the Twitter API capabilities and adds some spice.
+
+.. _`python-twitter`: http://code.google.com/p/python-twitter/
 
 Instalation
 -----------
 
-**turses** is installed simply by: ::
+**turses** is installed simply by:  ::
     $ pip install turses
 
-or: ::
+or:  ::
     $ easy_install turses
 
 Features
