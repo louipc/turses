@@ -2,15 +2,15 @@ turses: a Twitter client written in Python
 ==========================================
 
 A Twitter client with a curses interface written in Python. Various parts of the codebase 
-are borrowed from the `Tyrs<http://tyrs.nicosphere.net>` project by 
-`Nicolas Paris<http://github.com/Nic0>`).
+are borrowed from the `Tyrs <http://tyrs.nicosphere.net>` project by 
+`Nicolas Paris <http://github.com/Nic0>`).
 
 The goal of the project is to build a full-featured Twitter client that is:
 
- * fully  customizable;
- * usable within multiple UIs (`curses`, `gtk`, `qt`, et al.);
- * plugged to different API backends (currently is using `python-twitter`); and 
- * implementing all the Twitter API capabilities and adds some spice.
+- fully  customizable;
+- usable within multiple UIs (`curses`, `gtk`, `qt`, et al.);
+- plugged to different API backends (currently is using `python-twitter`); and 
+- implementing all the Twitter API capabilities and adds some spice.
 
 Instalation
 -----------
@@ -24,28 +24,28 @@ or: ::
 Features
 --------
 
- * Sexy curses interface
- * Multiple timelines (buffers)
- * Tweet, Reply, Retweet, Delete tweet
- * Follow/Unfollow
- * Favorite/Unfavorite
- * Search
- * Fully customizable
- * Pluggable UI
- * Pluggable API
+- Sexy curses interface
+- Multiple timelines (buffers)
+- Tweet, Reply, Retweet, Delete tweet
+- Follow/Unfollow
+- Favorite/Unfavorite
+- Search
+- Fully customizable
+- Pluggable UI
+- Pluggable API
 
 Roadmap
 -------
 
- * Documentation
- * DM
- * Thread view
- * User info
- * Lists
- * Multiple accounts
- * Geo
- * Blocking
- * Settings
+- Documentation
+- DM
+- Thread view
+- User info
+- Lists
+- Multiple accounts
+- Geo
+- Blocking
+- Settings
 
 Development
 -----------
@@ -53,14 +53,14 @@ Development
 `turses` is still a work in progress, a list of tasks can be found on 
 the `TODO` file. 
 
-Eventually every task will reside in the repository's `issue tracker<http://github.com/alejandrogomez/turses/issues>`. 
+Eventually every task will reside in the repository's `issue tracker <http://github.com/alejandrogomez/turses/issues>`. 
 Feel free to open issues with bugs, enhancements and features you will like
 to see in `turses`; or hack them yourselves and send a pull request!
 
 Code
 ----
 
-The code is hosted on [GitHub](http://github.com/alejandrogomez/turses).
+The code is hosted on `GitHub <http://github.com/alejandrogomez/turses>`.
 
 License
 -------
