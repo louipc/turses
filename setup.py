@@ -5,42 +5,40 @@
 ###############################################################################
 
 from distutils.core import setup
-from turses import __version__
 
+name = "turses"
+version = "0.0.4"
 
-setup(
-    name='turses',
-    version='%s' % __version__,
-    author='Nicolas Paris and Alejandro Gómez',
-    author_email='alejandroogomez@gmail.com',
-    license='GPLv3',
-    description='A ncurses Twitter client.',
-    long_description="""`turses` is a Twitter client with a sexy 
-                        ncurses interface.
-                        
-                        http://github.com/alejandrogomez/turses""",
-    packages = [
-        'turses', 
-        'turses.ui'
-    ],
-    package_dir={'turses':'turses'},
-    scripts=["bin/turses"],
-    platforms=['linux'],
-    classifiers = [
-        'Development Status :: 4 - Beta',
-        'Environment :: Console :: Curses',
-        'Intended Audience :: End Users/Desktop',
-        'License :: OSI Approved :: GNU General Public License (GPL)',
-        'Natural Language :: English',
-        'Operating System :: POSIX :: Linux',
-        'Programming Language :: Python :: 2',
-    ],
-    install_requires=[
-        'python-twitter',
-        'argparse',
-        'httplib2',
-        'urwid',
-        'oauth2',
-    ],
-    test_requires=['mock==0.8.0'],
-)
+requirements = open("pip-requirements.txt").readlines()
+tests_requirements = open("dev-requirements.txt").readlines()
+
+long_description = open("README.rst").read() ++ "\n\n" + open("HISTORY.rs").read() 
+
+setup(name="turses",
+      version=version,
+      author="Alejandro Gómez",
+      author_email="alejandroogomez@gmail.com",
+      license="GPLv3",
+      description="A Twitter client with a curses interface.",
+      long_description=long_description,
+      keywords="twitter client curses",
+      packages=[
+          "turses", 
+          "turses.ui"
+      ],
+      package_dir={
+          "turses":  "turses"
+      },
+      scripts=["bin/turses"],
+      platforms=["linux"],
+      classifiers=[
+          "Development Status :: 4 - Beta",
+          "Environment :: Console :: Curses",
+          "Intended Audience :: End Users/Desktop",
+          "License :: OSI Approved :: GNU General Public License (GPL)",
+          "Natural Language :: English",
+          "Operating System :: POSIX :: Linux",
+          "Programming Language :: Python :: 2",
+      ],
+      install_requires=requirements,
+      tests_require=tests_requirements,)
