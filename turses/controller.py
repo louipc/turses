@@ -48,9 +48,10 @@ class Turses(object):
             pass
 
     def main_loop(self):
-        self.loop = urwid.MainLoop(self.ui,
-                                   palette, 
-                                   unhandled_input=self.key_handler,)
+        if not hasattr(self, 'loop'):
+            self.loop = urwid.MainLoop(self.ui,
+                                       palette, 
+                                       unhandled_input=self.key_handler,)
         self.loop.run()
 
     def init_timelines(self):
