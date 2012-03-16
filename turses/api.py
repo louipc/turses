@@ -779,7 +779,7 @@ class ApiWrapper(object):
     def destroy(self, status):
         raise NotImplementedError
 
-    def direct_message(self, username, text):
+    def direct_message(self, screen_name, text):
         raise NotImplementedError
 
     def create_friendship(self, screen_name): 
@@ -1076,8 +1076,8 @@ class AsyncApi(ApiWrapper):
         destroy_thread.start()
 
     @wrap_exceptions
-    def direct_message(self, username, text):
-        args = (username, text,)
+    def direct_message(self, screen_name, text):
+        args = (screen_name, text,)
         dm_thread = Thread(target=self._api.direct_message, args=args)
         dm_thread.start()
 

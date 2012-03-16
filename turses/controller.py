@@ -39,6 +39,15 @@ class Turses(object):
         self.api.init_api(on_error=self.api_init_error,
                           on_success=self.init_timelines,)
         # start main loop
+        try:
+            self.main_loop()
+        except:
+            self.main_loop()
+        else:
+            # clear screen
+            pass
+
+    def main_loop(self):
         self.loop = urwid.MainLoop(self.ui,
                                    palette, 
                                    unhandled_input=self.key_handler,)
@@ -469,7 +478,7 @@ class Turses(object):
         # API call
         tweet_sent = partial(self.info_message, _('Tweet sent'))
         tweet_not_sent = partial(self.error_message, _('Tweet not sent'))
-        self.api.update(text, 
+        self.api.update(text=text, 
                         on_success=tweet_sent,
                         on_error=tweet_not_sent,)
 
@@ -484,7 +493,8 @@ class Turses(object):
             # <Esc> was pressed
             self.info_message('DM canceled')
             return
-        self.api.direct_message(username, text)
+        self.api.direct_message(screen_name=username, 
+                                text=text)
 
     def search_handler(self, text):
         """
@@ -513,9 +523,9 @@ class Turses(object):
                                  _('Retweet posted'))
         retweet_post_failed = partial(self.error_message, 
                                       _('Failed to post retweet'))
-        self.api.retweet(status, 
-                         on_error=retweet_post_failed,
-                         on_success=retweet_posted)
+        self.api.retweet(on_error=retweet_post_failed,
+                         on_success=retweet_posted,
+                         status=status,)
 
     def manual_retweet(self):
         status = self.ui.focused_status()
@@ -531,7 +541,7 @@ class Turses(object):
                                  _('Tweet deleted'))
         status_not_deleted = partial(self.error_message, 
                                      _('Failed to delete tweet'))
-        self.api.destroy(status, 
+        self.api.destroy(status=status, 
                          on_error=status_not_deleted,
                          on_success=status_deleted)
 
@@ -542,7 +552,7 @@ class Turses(object):
                               _('You are now following %s' % username))
         follow_error = partial(self.error_message, 
                                _('We can not ensure that you are following %s' % username))
-        self.api.create_friendship(username, 
+        self.api.create_friendship(screen_name=username, 
                                    on_error=follow_error,
                                    on_success=follow_done)
 
@@ -553,7 +563,7 @@ class Turses(object):
                                 _('You are no longer following %s' % username))
         unfollow_error = partial(self.error_message, 
                                _('We can not ensure that you are not following %s' % username))
-        self.api.destroy_friendship(username, 
+        self.api.destroy_friendship(screen_name=username, 
                                     on_error=unfollow_error,
                                     on_success=unfollow_done)
 
@@ -563,7 +573,7 @@ class Turses(object):
                                  _('Failed to mark tweet as favorite'))
         favorite_done = partial(self.info_message,
                                 _('Tweet marked as favorite'))
-        self.api.create_favorite(status, 
+        self.api.create_favorite(status=status, 
                                  on_error=favorite_error,
                                  on_success=favorite_done)
 
@@ -573,7 +583,7 @@ class Turses(object):
                                    _('Failed to remove tweet from favorites'))
         unfavorite_done = partial(self.info_message,
                                   _('Tweet removed from favorites'))
-        self.api.destroy_favorite(status, 
+        self.api.destroy_favorite(status=status, 
                                   on_error=unfavorite_error,
                                   on_success=unfavorite_done)
 
