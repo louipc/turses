@@ -744,30 +744,19 @@ class ApiWrapper(object):
     def init_api(self): 
         raise NotImplementedError
 
-    def get_home_timeline(self, 
-                          on_error=None, 
-                          on_success=None):
+    def get_home_timeline(self): 
         raise NotImplementedError
 
-    def get_mentions(self, 
-                     on_error=None, 
-                     on_success=None):
+    def get_mentions(self): 
         raise NotImplementedError
 
-    def get_favorites(self, 
-                      on_error=None, 
-                      on_success=None):
+    def get_favorites(self):
         raise NotImplementedError
 
-    def get_direct_messages(self, 
-                            on_error=None, 
-                            on_success=None):
+    def get_direct_messages(self):
         raise NotImplementedError
 
-    def search(self, 
-               text, 
-               on_error=None, 
-               on_success=None):
+    def search(self, text):
         raise NotImplementedError
 
     def update(self, text): 
