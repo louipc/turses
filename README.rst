@@ -57,7 +57,7 @@ Development
 -----------
 
 **turses** is still a work in progress, a list of tasks can be found on 
-the TODO_ file. Eventually every task will reside in the repository's 
+the TODO file. Eventually every task will reside in the repository's 
 `issue tracker`_. 
 
 .. _`issue tracker`: http://github.com/alejandrogomez/turses/issues
