@@ -7,11 +7,11 @@
 from turses import __version__
 
 
-# palette for the ncurses interface created with `urwid`
+# palette for the curses interface created with `urwid`
 palette = [
-    ['body','default', '', 'standout'],
+    ['body', 'default', '', 'standout'],
     ['focus','dark red', '', 'standout'],
-    ['header','light blue', ''],
+    ['header', 'light blue', ''],
     ['line', 'dark blue', ''],
     ['favorited', 'yellow', ''],
     ['info_msg', 'dark green', ''],
@@ -118,14 +118,13 @@ filter = {
     'except':           [],
 }
 
-banner = [ "   _                             ",
-           " _| |_ _   _ _ __ ___  ___  ____ ",
-           "|_   _| | | | '__/ __|/   \/ ___|",
-           "  | | | | | | |  |   \  _ ||   \\ ",
-           "  | |_| |_| | |  \__ |  __/\__ | ",
-           "  \___|\____|_| |____/\___||___/ ",
-           "  ······························ ",
-           "(%s)" % __version__, 
-           "",
-           "",
-           "A curses Twitter client.",]
+banner = [ 
+     "   _                             ",
+     " _| |_ _   _ _ __ ___  ___  ____ ",
+     "|_   _| | | | '__/ __|/   \/ ___|",
+     "  | | | | | | |  |   \  _ ||   \\ ",
+     "  | |_| |_| | |  \__ |  __/\__ | ",
+     "  \___|\____|_| |____/\___||___/ ",
+     "  ······························ ",
+     "%s" % __version__,
+]

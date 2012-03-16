@@ -78,6 +78,8 @@ class Timeline(object):
                       self.statuses)
 
     def update(self):
+        if not self.update_function:
+            return
         if self.update_function_args:
             new_statuses = self.update_function(self.update_function_args)
         else:

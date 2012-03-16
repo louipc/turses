@@ -45,20 +45,20 @@ class Turses(object):
         self.loop.run()
 
     def init_timelines(self):
+        timelines_thread = Thread(target=self._init_timelines)
+        timelines_thread.start()
+    
+    def _init_timelines(self):
+        # API has to be authenticated
+        while (not self.api.is_authenticated):
+            pass
         self.info_message(_('Initializing timelines'))
-        # note that API has to be initialized
         self.timelines = TimelineList()
         # TODO make default timeline list configurable
-        # home
-        self._append_home_timeline()
-        # mentions
-        self._append_mentions_timeline()
-        # favorites
-        self._append_favorites_timeline()
-        # DMs
-        self._append_direct_messages_timeline()
-        # clear status
-        self.clear_status()
+        self.append_default_timelines()
+        self.update_all_timelines()
+        self.info_message(_('Timelines loaded'))
+        self.timeline_mode()
 
     # -- Callbacks ------------------------------------------------------------
 
@@ -102,25 +102,38 @@ class Turses(object):
         thread = Thread(target=self._append_timeline, args=args)
         thread.start()
 
+    def append_default_timelines(self):
+        self.append_home_timeline()
+        self.append_mentions_timeline()
+        self.append_favorites_timeline()
+        self.append_direct_messages_timeline()
+
+    def append_home_timeline(self):
+        self._append_timeline(name='Tweets',     
+                              update_function=self.api.get_home_timeline)
+
+    def append_mentions_timeline(self):
+        self._append_timeline(name='Mentions',     
+                              update_function=self.api.get_mentions)
+
+    def append_favorites_timeline(self):
+        self._append_timeline(name='Favorites',     
+                              update_function=self.api.get_favorites)
+
+    def append_direct_messages_timeline(self):
+        self._append_timeline(name='DMs',
+                              update_function=self.api.get_direct_messages)
+
     def _append_timeline(self, name, update_function, update_args=None):
         timeline = Timeline(name=name,
                             update_function=update_function,
                             update_function_args=update_args) 
-        timeline.update()
         self.timelines.append_timeline(timeline)
-        self.timeline_mode()
 
-    def _append_home_timeline(self):
-        self.append_timeline('Tweets', self.api.get_home_timeline)
-
-    def _append_mentions_timeline(self):
-        self.append_timeline('Mentions', self.api.get_mentions)
-
-    def _append_favorites_timeline(self):
-        self.append_timeline('Favorites', self.api.get_favorites)
-
-    def _append_direct_messages_timeline(self):
-        self.append_timeline('Direct Messages', self.api.get_direct_messages)
+    def update_all_timelines(self):
+        for timeline in self.timelines:
+            timeline.update()
+        self.info_message(_('%s updated' % timeline.name))
 
     # -- Timeline mode --------------------------------------------------------
 
@@ -139,8 +152,8 @@ class Turses(object):
         # draw active timeline
         active_timeline = self.timelines.get_active_timeline()
         self.ui.draw_timeline(active_timeline)
-        # redraw screen
-        self.redraw_screen()
+        ## redraw screen
+        #self.redraw_screen()
 
     # TODO decorator `timeline_mode` for checking `has_timelines` and drawing
 
@@ -357,19 +370,19 @@ class Turses(object):
     def _timeline_key_handler(self, input):
         # Show home Timeline
         if input == self.configuration.keys['home']:
-            home_thread = Thread(target=self._append_home_timeline)
+            home_thread = Thread(target=self.append_home_timeline)
             home_thread.start()
         # Favorites timeline
         elif input == self.configuration.keys['favorites']:
-            favorites_thread = Thread(target=self._append_favorites_timeline)
+            favorites_thread = Thread(target=self.append_favorites_timeline)
             favorites_thread.start()
         # Mention timeline
         elif input == self.configuration.keys['mentions']:
-            mentions_thread = Thread(target=self._append_mentions_timeline)
+            mentions_thread = Thread(target=self.append_mentions_timeline)
             mentions_thread.start()
         # Direct Message timeline
         elif input == self.configuration.keys['DMs']:
-            direct_messages_thread = Thread(target=self._append_direct_messages_timeline)
+            direct_messages_thread = Thread(target=self.append_direct_messages_timeline)
             direct_messages_thread.start()
         # Search
         elif input == self.configuration.keys['search']:

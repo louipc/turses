@@ -14,12 +14,12 @@ from twitter import Api as BaseApi
 from twitter import TwitterError, Status, _FileCache
 
 from util import is_DM
-from decorators import *
+from decorators import wrap_exceptions
 
 try:
     import json
 except ImportError:
-    pass  
+    pass
     #import simplejson as json
 
 DEFAULT_CACHE = object()
@@ -974,6 +974,49 @@ class PythonTwitterApi(BaseApi, TwitterApi):
         else:
             self._cache = cache
 
+    def get_home_timeline(self, *args, **kwargs):
+        return self.GetFriendsTimeline(*args, **kwargs)
+
+    def get_mentions(self, *args, **kwargs):
+        return self.GetMentions(*args, **kwargs)
+
+    def get_favorites(self, *args, **kwargs):
+        return self.GetFavorites()
+
+    def get_direct_messages(self, *args, **kwargs):
+        return self.GetDirectMessages()
+
+    def get_search(self, text, *args, **kwargs):
+        return self.GetSearch(text)
+
+    def update(self, text, *args, **kwargs):
+        return self.PostUpdate(text)
+
+    def retweet(self, status, *args, **kwargs):
+        self.PostRetweet(status.id)
+
+    def destroy(self, status, *args, **kwargs):
+        if is_DM(status):
+            destroy = self.DestroyDirectMessage
+        else:
+            destroy = self.DestroyStatus
+        destroy(status.id)
+
+    def direct_message(self, username, text, *args, **kwargs):
+        self.PostDirectMessage(username, text)
+
+    def create_friendship(self, screen_name, *args, **kwargs):
+        self.CreateFriendShip(screen_name)
+
+    def destroy_friendship(self, screen_name, *args, **kwargs):
+        self.DestroyFriendship(screen_name)
+
+    def create_favorite(self, status, *args, **kwargs):
+        self.CreateFavorite(status)
+
+    def destory_favorite(self, status, *args, **kwargs):
+        self.DestroyFavorite(status)
+
 
 class AsyncApi(ApiWrapper):
     """
@@ -994,74 +1037,70 @@ class AsyncApi(ApiWrapper):
                                      access_token_secret=self._access_token_secret,)
         self.is_authenticated = True
 
-    @wrap_exceptions_returns
+    @wrap_exceptions
     def get_home_timeline(self):
-        return self._api.GetFriendsTimeline() 
+        return self._api.get_home_timeline()
 
-    @wrap_exceptions_returns
+    @wrap_exceptions
     def get_mentions(self):
-        return self._api.GetMentions()
+        return self._api.get_mentions()
 
-    @wrap_exceptions_returns
+    @wrap_exceptions
     def get_favorites(self):
-        return self._api.GetFavorites()
+        return self._api.get_favorites()
 
-    @wrap_exceptions_returns
+    @wrap_exceptions
     def get_direct_messages(self):
-        return self._api.GetDirectMessages()
+        return self._api.get_direct_messages()
 
-    @wrap_exceptions_returns_arg
+    @wrap_exceptions
     def search(self, text):
-        return self._api.GetSearch(text)
+        return self._api.get_search(text)
 
-    @wrap_exceptions_arg
+    @wrap_exceptions
     def update(self, text):
         args = text,
-        update_thread = Thread(target=self._api.PostUpdate, args=args)
+        update_thread = Thread(target=self._api.update, args=args)
         update_thread.start()
 
-    @wrap_exceptions_arg
+    @wrap_exceptions
     def retweet(self, status):
-        args = status.id,
-        retweet_thread = Thread(target=self._api.PostRetweet, args=args)
+        args = status,
+        retweet_thread = Thread(target=self._api.retweet, args=args)
         retweet_thread.start()
 
-    @wrap_exceptions_arg
+    @wrap_exceptions
     def destroy(self, status):
-        if is_DM(status):
-            destroy = self._api.DestroyDirectMessage
-        else:
-            destroy = self._api.DestroyStatus
-        args = status.id,
-        destroy_thread = Thread(target=destroy, args=args)
+        args = status,
+        destroy_thread = Thread(target=self._api.destroy, args=args)
         destroy_thread.start()
 
-    @wrap_exceptions_args
+    @wrap_exceptions
     def direct_message(self, username, text):
         args = (username, text,)
-        dm_thread = Thread(target=self._api.PostDirectMessage, args=args)
+        dm_thread = Thread(target=self._api.direct_message, args=args)
         dm_thread.start()
 
-    @wrap_exceptions_arg
+    @wrap_exceptions
     def create_friendship(self, screen_name):
         args = screen_name,
-        follow_thread = Thread(target=self._api.CreateFriendship, args=args)
+        follow_thread = Thread(target=self._api.create_friendship, args=args)
         follow_thread.start()
 
-    @wrap_exceptions_arg
+    @wrap_exceptions
     def destroy_friendship(self, screen_name):
         args = screen_name,
-        unfollow_thread = Thread(target=self._api.DestroyFriendship, args=args)
+        unfollow_thread = Thread(target=self._api.destroy_friendship, args=args)
         unfollow_thread.start()
 
-    @wrap_exceptions_arg
+    @wrap_exceptions
     def create_favorite(self, status):
         args = status,
-        favorite_thread = Thread(target=self._api.CreateFavorite, args=args)
+        favorite_thread = Thread(target=self._api.create_favorite, args=args)
         favorite_thread.start()
 
-    @wrap_exceptions_arg
+    @wrap_exceptions
     def destroy_favorite(self, status):
         args = status,
-        unfavorite_thread = Thread(target=self._DestroyFavorite, args=args)
+        unfavorite_thread = Thread(target=self._api.destroy_favorite, args=args)
         unfavorite_thread.start()
