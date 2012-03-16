@@ -63,6 +63,8 @@ class Timeline(object):
         Adds the given new statuses to the status list of the Timeline
         if they are not already in it.
         """
+        if not new_statuses:
+            return
         for status in new_statuses:
             self.add_status(status)
 

@@ -14,6 +14,7 @@ from twitter import Api as BaseApi
 from twitter import TwitterError, Status, _FileCache
 
 from util import is_DM
+from decorators import *
 
 try:
     import json
@@ -723,9 +724,86 @@ class TwitterApi(object):
         raise NotImplementedError
 
 
+class ApiWrapper(object):
+    """
+    A simplified version of the API to use as a mediator for a `TwitterApi`
+    implementation.
+    """
+
+    def __init__(self,
+                 consumer_key,
+                 consumer_secret,
+                 access_token_key,
+                 access_token_secret,):
+        self._consumer_key = consumer_key
+        self._consumer_secret = consumer_secret
+        self._access_token_key = access_token_key
+        self._access_token_secret = access_token_secret
+        self.is_authenticated = False
+
+    def init_api(self): 
+        raise NotImplementedError
+
+    def get_home_timeline(self, 
+                          on_error=None, 
+                          on_success=None):
+        raise NotImplementedError
+
+    def get_mentions(self, 
+                     on_error=None, 
+                     on_success=None):
+        raise NotImplementedError
+
+    def get_favorites(self, 
+                      on_error=None, 
+                      on_success=None):
+        raise NotImplementedError
+
+    def get_direct_messages(self, 
+                            on_error=None, 
+                            on_success=None):
+        raise NotImplementedError
+
+    def search(self, 
+               text, 
+               on_error=None, 
+               on_success=None):
+        raise NotImplementedError
+
+    def update(self, text): 
+        raise NotImplementedError
+
+    def retweet(self, status): 
+        raise NotImplementedError
+
+    def destroy(self, status):
+        raise NotImplementedError
+
+    def direct_message(self, username, text):
+        raise NotImplementedError
+
+    def create_friendship(self, screen_name): 
+        raise NotImplementedError
+
+    def destroy_friendship(self, screen_name):
+        raise NotImplementedError
+
+    def create_favorite(self, status):
+        raise NotImplementedError
+
+    def destroy_favorite(self, status): 
+        raise NotImplementedError
+
+
+# TODO implement the methods of `TwitterApi`
+#       and use them from `AsyncApi`
 # using python-twitter library
-class PythonTwitterApi(BaseApi):
-    """The Twitter API."""
+class PythonTwitterApi(BaseApi, TwitterApi):
+    """
+    A `TwitterApi` implementation using `python-twitter` library.
+    
+        http://code.google.com/p/python-twitter/
+    """
 
     def __init__(self,
                  consumer_key=None,
@@ -897,157 +975,93 @@ class PythonTwitterApi(BaseApi):
             self._cache = cache
 
 
-class Api(TwitterApi):
+class AsyncApi(ApiWrapper):
+    """
+    Implementation of `ApiWrapper` that executes most of the API calls in
+    background and provides `on_error` and `on_success` callbacks for every
+    method.
+    """
 
-    def __init__(self,
-                 consumer_key,
-                 consumer_secret,
-                 access_token_key,
-                 access_token_secret,):
-        self._consumer_key = consumer_key
-        self._consumer_secret = consumer_secret
-        self._access_token_key = access_token_key
-        self._access_token_secret = access_token_secret
-
-    def init_api(self, callback):
-        args = callback,
-        init_thread = Thread(target=self._init_api, args=args)
+    @wrap_exceptions
+    def init_api(self):
+        init_thread = Thread(target=self._init_api,)
         init_thread.start()
 
-    def _init_api(self, init_callback):
-        try:
-            self._api = PythonTwitterApi(consumer_key=self._consumer_key,
-                                         consumer_secret=self._consumer_secret,
-                                         access_token_key=self._access_token_key,
-                                         access_token_secret=self._access_token_secret,)
-        except TwitterError:
-            self.is_authenticated = False
-        else:
-            self.is_authenticated = True
-            init_callback()
+    def _init_api(self):
+        self._api = PythonTwitterApi(consumer_key=self._consumer_key,
+                                     consumer_secret=self._consumer_secret,
+                                     access_token_key=self._access_token_key,
+                                     access_token_secret=self._access_token_secret,)
+        self.is_authenticated = True
 
+    @wrap_exceptions_returns
     def get_home_timeline(self):
-        return self._api.GetFriendsTimeline()
+        return self._api.GetFriendsTimeline() 
 
+    @wrap_exceptions_returns
     def get_mentions(self):
         return self._api.GetMentions()
 
+    @wrap_exceptions_returns
     def get_favorites(self):
         return self._api.GetFavorites()
 
+    @wrap_exceptions_returns
     def get_direct_messages(self):
         return self._api.GetDirectMessages()
 
+    @wrap_exceptions_returns_arg
     def search(self, text):
         return self._api.GetSearch(text)
 
-    def update(self, text, callback):
-        args = (text, callback)
-        update_thread = Thread(target=self._update, args=args)
+    @wrap_exceptions_arg
+    def update(self, text):
+        args = text,
+        update_thread = Thread(target=self._api.PostUpdate, args=args)
         update_thread.start()
 
-    def _update(self, text, callback):
-        try:
-            self._api.PostUpdate(text)
-        except TwitterError:
-            pass
-        finally:
-            callback()
-
-    def retweet(self, status, callback):
-        args = (status, callback)
-        retweet_thread = Thread(target=self._retweet, args=args)
+    @wrap_exceptions_arg
+    def retweet(self, status):
+        args = status.id,
+        retweet_thread = Thread(target=self._api.PostRetweet, args=args)
         retweet_thread.start()
 
-    def _retweet(self, status, callback):
-        try:
-            self._api.PostRetweet(status.id)
-        except TwitterError:
-            pass
+    @wrap_exceptions_arg
+    def destroy(self, status):
+        if is_DM(status):
+            destroy = self._api.DestroyDirectMessage
         else:
-            callback()
-
-    def destroy(self, status, callback):
-        args = (status, callback)
-        destroy_thread = Thread(target=self._destroy, args=args)
+            destroy = self._api.DestroyStatus
+        args = status.id,
+        destroy_thread = Thread(target=destroy, args=args)
         destroy_thread.start()
 
-    def _destroy(self, status, callback):
-        if is_DM(status):
-            self._api.DestroyDirectMessage(status.id)
-        else:
-            self._api.DestroyStatus(status.id)
-        callback()
-
-    def direct_message(self, username, text, callback):
-        args = (username, text, callback)
-        dm_thread = Thread(target=self._direct_message, args=args)
+    @wrap_exceptions_args
+    def direct_message(self, username, text):
+        args = (username, text,)
+        dm_thread = Thread(target=self._api.PostDirectMessage, args=args)
         dm_thread.start()
 
-    def _direct_message(self, username, text, callback):
-        try:
-            self._api.PostDirectMessage(username, text)
-        except TwitterError:
-            pass
-        else:
-            callback()
-
-    def create_friendship(self, screen_name, callback):
-        args = (screen_name, callback)
-        follow_thread = Thread(target=self._create_friendship, args=args)
+    @wrap_exceptions_arg
+    def create_friendship(self, screen_name):
+        args = screen_name,
+        follow_thread = Thread(target=self._api.CreateFriendship, args=args)
         follow_thread.start()
 
-    def create_friendship(self, screen_name, callback):
-        try:
-            self._api.CreateFriendship(screen_name)
-        except TwitterError:
-            pass
-        except urllib2.URLError:
-            pass
-        else:
-            callback()
+    @wrap_exceptions_arg
+    def destroy_friendship(self, screen_name):
+        args = screen_name,
+        unfollow_thread = Thread(target=self._api.DestroyFriendship, args=args)
+        unfollow_thread.start()
 
-    def destroy_friendship(self, screen_name, callback):
-        args = (screen_name, callback)
-        follow_thread = Thread(target=self._destroy_friendship, args=args)
-        follow_thread.start()
-
-    def destroy_friendship(self, screen_name, callback):
-        try:
-            self._api.DestroyFriendship(screen_name)
-        except TwitterError:
-            pass
-        except urllib2.URLError:
-            pass
-        else:
-            callback()
-
-    def create_favorite(self, status, callback):
-        args = (status, callback)
-        favorite_thread = Thread(target=self._create_favorite, args=args)
+    @wrap_exceptions_arg
+    def create_favorite(self, status):
+        args = status,
+        favorite_thread = Thread(target=self._api.CreateFavorite, args=args)
         favorite_thread.start()
 
-    def _create_favorite(self, status, callback):
-        try:
-            self._api.CreateFavorite(status)
-        except TwitterError:
-            pass
-        except urllib2.URLError:
-            pass
-        else:
-            callback()
-
-    def destroy_favorite(self, status, callback):
-        args = (status, callback)
-        unfavorite_thread = Thread(target=self._destroy_favorite, args=args)
+    @wrap_exceptions_arg
+    def destroy_favorite(self, status):
+        args = status,
+        unfavorite_thread = Thread(target=self._DestroyFavorite, args=args)
         unfavorite_thread.start()
-
-    def _destroy_favorite(self, status, callback):
-        try:
-            self._api.DestroyFavorite(status)
-        except TwitterError:
-            pass
-        except urllib2.URLError:
-            pass
-        else:
-            callback()

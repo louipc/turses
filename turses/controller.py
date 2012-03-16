@@ -12,7 +12,7 @@ from functools import partial
 import urwid
 
 from constant import palette
-from api import Api
+from api import AsyncApi
 from timeline import Timeline, TimelineList
 from util import valid_status_text, valid_search_text
 from util import get_authors_username, get_mentioned_usernames
@@ -32,11 +32,12 @@ class Turses(object):
         consumer_secret = self.configuration.token[self.configuration.service]['consumer_secret']
         oauth_token = self.configuration.oauth_token 
         oauth_token_secret = self.configuration.oauth_token_secret
-        self.api = Api(consumer_key=consumer_key,
-                       consumer_secret=consumer_secret,
-                       access_token_key=oauth_token,
-                       access_token_secret=oauth_token_secret,)
-        self.api.init_api(callback=self.api_ready)
+        self.api = AsyncApi(consumer_key=consumer_key,
+                            consumer_secret=consumer_secret,
+                            access_token_key=oauth_token,
+                            access_token_secret=oauth_token_secret,)
+        self.api.init_api(on_error=self.api_init_error,
+                          on_success=self.init_timelines,)
         # start main loop
         self.loop = urwid.MainLoop(self.ui,
                                    palette, 
@@ -61,34 +62,9 @@ class Turses(object):
 
     # -- Callbacks ------------------------------------------------------------
 
-    def api_ready(self):
-        self.info_message('API initialized')
-        self.init_timelines()
-
-    def tweet_sent(self):
-        self.info_message(_('Tweet sent'))
-
-    def retweet_posted(self):
-        self.info_message(_('Retweet posted'))
-
-    def status_deleted(self):
-        self.update_active_timeline()
-        self.info_message(_('Tweet deleted'))
-
-    def follow_done(self, username=None):
-        if username:
-            self.info_message(_('You are now following %s' % username))
-
-    def unfollow_done(self, username=None):
-        self.update_active_timeline()
-        if username:
-            self.info_message(_('You no longer follow %s' % username))
-
-    def tweet_favorited(self):
-        self.info_message(_('Tweet marked as favorite'))
-
-    def tweet_unfavorited(self):
-        self.info_message(_('Tweet removed from favorites'))
+    def api_init_error(self):
+        # TODO retry
+        self.error_message(_('Couldn\'t initialize API'))
 
     # -- Modes ----------------------------------------------------------------
 
@@ -102,7 +78,7 @@ class Turses(object):
             self.draw_timelines()
         else:
             self.ui.info_mode()
-            self.clear_status()
+        self.clear_status()
         self.redraw_screen()
 
     def info_mode(self):
@@ -120,8 +96,13 @@ class Turses(object):
         """
         Given a name, function to update a timeline and optionally
         arguments to the update function, it creates the timeline and
-        appends it to `timelines`.
+        appends it to `timelines` asynchronously.
         """
+        args = (name, update_function, update_args)
+        thread = Thread(target=self._append_timeline, args=args)
+        thread.start()
+
+    def _append_timeline(self, name, update_function, update_args=None):
         timeline = Timeline(name=name,
                             update_function=update_function,
                             update_function_args=update_args) 
@@ -472,7 +453,12 @@ class Turses(object):
             # <Esc> was pressed
             self.info_message('Tweet canceled')
             return
-        self.api.update(text, self.tweet_sent)
+        # API call
+        tweet_sent = partial(self.info_message, _('Tweet sent'))
+        tweet_not_sent = partial(self.error_message, _('Tweet not sent'))
+        self.api.update(text, 
+                        on_success=tweet_sent,
+                        on_error=tweet_not_sent,)
 
     def dm_handler(self, username, text):
         """Handles the post as a DM of the given `text`."""
@@ -504,16 +490,19 @@ class Turses(object):
             self.info_message(_('Creating search timeline for "%s"' % text))
         # append timeline
         tl_name = 'Search: %s' % text                
-        args = (tl_name, self.api.search, text)
-        search_thread = Thread(target=self.append_timeline, 
-                               args=args)
-        search_thread.start()
+        self.append_timeline(tl_name, self.api.search, text)
 
     # -- API ------------------------------------------------------------------
 
     def retweet(self):
         status = self.ui.focused_status()
-        self.api.retweet(status, self.retweet_posted)
+        retweet_posted = partial(self.info_message, 
+                                 _('Retweet posted'))
+        retweet_post_failed = partial(self.error_message, 
+                                      _('Failed to post retweet'))
+        self.api.retweet(status, 
+                         on_error=retweet_post_failed,
+                         on_success=retweet_posted)
 
     def manual_retweet(self):
         status = self.ui.focused_status()
@@ -525,27 +514,55 @@ class Turses(object):
 
     def delete_tweet(self):
         status = self.ui.focused_status()
-        self.api.destroy(status, self.status_deleted)
+        status_deleted = partial(self.info_message, 
+                                 _('Tweet deleted'))
+        status_not_deleted = partial(self.error_message, 
+                                     _('Failed to delete tweet'))
+        self.api.destroy(status, 
+                         on_error=status_not_deleted,
+                         on_success=status_deleted)
 
     def follow_selected(self):
         status = self.ui.focused_status()
         username = get_authors_username(status)
-        follow_callback = partial(self.follow_done, username=username)
-        self.api.create_friendship(username, follow_callback)
+        follow_done = partial(self.info_message, 
+                              _('You are now following %s' % username))
+        follow_error = partial(self.error_message, 
+                               _('We can not ensure that you are following %s' % username))
+        self.api.create_friendship(username, 
+                                   on_error=follow_error,
+                                   on_success=follow_done)
 
     def unfollow_selected(self):
         status = self.ui.focused_status()
         username = get_authors_username(status)
-        unfollow_callback = partial(self.unfollow_done, username=username)
-        self.api.destroy_friendship(username, unfollow_callback)
+        unfollow_done = partial(self.info_message, 
+                                _('You are no longer following %s' % username))
+        unfollow_error = partial(self.error_message, 
+                               _('We can not ensure that you are not following %s' % username))
+        self.api.destroy_friendship(username, 
+                                    on_error=unfollow_error,
+                                    on_success=unfollow_done)
 
     def favorite(self):
         status = self.ui.focused_status()
-        self.api.create_favorite(status, self.tweet_favorited)
+        favorite_error = partial(self.error_message,
+                                 _('Failed to mark tweet as favorite'))
+        favorite_done = partial(self.info_message,
+                                _('Tweet marked as favorite'))
+        self.api.create_favorite(status, 
+                                 on_error=favorite_error,
+                                 on_success=favorite_done)
 
     def unfavorite(self):
         status = self.ui.focused_status()
-        self.api.destroy_favorite(status, self.tweet_unfavorited)
+        unfavorite_error = partial(self.error_message,
+                                   _('Failed to remove tweet from favorites'))
+        unfavorite_done = partial(self.info_message,
+                                  _('Tweet removed from favorites'))
+        self.api.destroy_favorite(status, 
+                                  on_error=unfavorite_error,
+                                  on_success=unfavorite_done)
 
     # Asynchronous API calls
 
