@@ -72,6 +72,11 @@ The code is hosted on `GitHub`_.
 
 .. _`GitHub`: http://github.com/alejandrogomez/turses
 
+Screenshots
+-----------
+
+.. image:: http://dialelo.com/img/turses_buffers.png
+
 License
 -------
 
