@@ -217,11 +217,11 @@ class Turses(object):
     # -- Footer ---------------------------------------------------------------
         
     def error_message(self, message):
-        self.ui.status_error_message(message)
+        self.ui.footer.error_message(message)
         self.redraw_screen()
 
     def info_message(self, message):
-        self.ui.status_info_message(message)
+        self.ui.footer.info_message(message)
         self.redraw_screen()
 
     def clear_status(self):

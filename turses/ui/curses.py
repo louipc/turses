@@ -31,7 +31,8 @@ class CursesInterface(Frame, UserInterface):
         Frame.__init__(self,
                        WelcomeBuffer(),
                        header=TabsWidget(),
-                       footer=Footer(''))
+                       footer=StatusBar(''))
+
 
     # -- Modes ----------------------------------------------------------------
 
@@ -75,8 +76,8 @@ class CursesInterface(Frame, UserInterface):
         
     def status_message(self, text):
         """Sets `text` as a status message on the footer."""
-        if self.footer.__class__ is not Footer:
-            self.footer = Footer()
+        if self.footer.__class__ is not StatusBar:
+            self.footer = StatusBar()
         self.footer.message(text)
         self.set_footer(self.footer)
 
@@ -88,7 +89,7 @@ class CursesInterface(Frame, UserInterface):
 
     def clear_status(self):
         """Clears the status bar."""
-        self.footer = Footer()
+        self.footer = StatusBar()
         self.set_footer(self.footer)
 
     # -- Timeline mode --------------------------------------------------------
@@ -295,9 +296,9 @@ class TabsWidget(WidgetWrap):
         text = []
         for i, tab in enumerate(self.tabs):
             if i == self.active_index:
-                text.append(('active_tab', u'│' + tab + u'│'))
+                text.append(('active_tab', u' ' + tab + u' '))
             else:
-                text.append(('inactive_tab', u' ' + tab + u' '))
+                text.append(('inactive_tab', u'│' + tab + u'│'))
         return text
 
     def _update_text(self):
@@ -324,14 +325,21 @@ class TabsWidget(WidgetWrap):
         self._w.set_text('')
 
 
-class Footer(WidgetWrap):
-    """Displays a text."""
+class StatusBar(WidgetWrap):
+    """Displays text."""
+
     def __init__(self, text=''):
         WidgetWrap.__init__(self, Text(text))
 
     def message(self, text):
         """Write `text` on the footer.""" 
         self._w.set_text(text)
+
+    def error_message(self, text):
+        self.message(('error', text))
+
+    def info_message(self, text):
+        self.message(('info', text))
 
     def clear(self):
         """Clear the text."""
@@ -601,7 +609,7 @@ class StatusWidget(WidgetWrap):
             source = source,
             retweet_count = retweet_count,
             retweeter = retweeter
-            )
+        )
 
         return encode(header)
 
