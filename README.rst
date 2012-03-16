@@ -7,23 +7,23 @@ are borrowed from the `Tyrs`_ project by `Nicolas Paris`_.
 .. _`Tyrs`: http://tyrs.nicosphere.net
 .. _`Nicolas Paris`: http://github.com/Nic0
 
-The goal of the project is to build a full-featured Twitter client that is:
+The goal of the project is to build a full-featured Twitter client:
 
-- fully  customizable;
-- usable within multiple UIs (*curses*, *gtk*, *qt*, et al.);
+- one that is fully  customizable;
+- usable with multiple UIs (curses, gtk, qt, etc.); 
 - plugged to different API backends (currently is using `python-twitter`_); and 
-- implementing all the Twitter API capabilities and adds some spice.
+- having all the Twitter API capabilities with some spice.
 
 .. _`python-twitter`: http://code.google.com/p/python-twitter/
 
-Instalation
+Installation
 -----------
 
 **turses** is installed simply by:  ::
 
     $ pip install turses
 
-or:  ::
+or (but you should consider using pip):  ::
 
     $ easy_install turses
 
