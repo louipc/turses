@@ -1,5 +1,5 @@
 APPNAME=turses
-VERSION=0.0.4
+VERSION=0.0.5
 DISTPKG=dist/$(APPNAME)-$(VERSION).tar.gz
 
 PY=python
@@ -29,7 +29,11 @@ test:
 pyc:
 	find . -name "*.pyc" -exec rm {} \;
 
-release: clean test upload
+release: clean test master upload
+
+master:
+	git stash
+	git checkout master
 	
 upload:
 	$(PY) setup.py sdist upload
