@@ -14,8 +14,8 @@ import urwid
 from .constant import palette
 from .api import AsyncApi
 from .timeline import Timeline, TimelineList
-from .util import valid_status_text, valid_search_text, is_valid_username
-from .util import get_authors_username, get_mentioned_usernames
+from .models import get_authors_username, get_mentioned_usernames
+from .models import is_valid_status_text, is_valid_search_text, is_valid_username
 
 
 class Turses(object):
@@ -498,7 +498,7 @@ class Turses(object):
         # status message
         self.ui.set_focus('body')
         self.info_message('sending tweet')
-        if not valid_status_text(text):
+        if not is_valid_status_text(text):
             # <Esc> was pressed
             self.info_message('Tweet canceled')
             return
@@ -516,7 +516,7 @@ class Turses(object):
         # remove editor
         self.ui.set_focus('body')
         self.info_message('Sending DM')
-        if not valid_status_text(text):
+        if not is_valid_status_text(text):
             # <Esc> was pressed
             self.info_message('DM canceled')
             return
@@ -532,7 +532,7 @@ class Turses(object):
         self.ui.remove_editor(self.search_handler)
         # remove editor
         self.ui.set_focus('body')
-        if not valid_search_text(text):
+        if not is_valid_search_text(text):
             # TODO error message editor and continue editing
             self.info_message(_('Search cancelled'))
             return
@@ -585,7 +585,7 @@ class Turses(object):
     def manual_retweet(self):
         status = self.ui.focused_status()
         rt_text = 'RT ' + status.text
-        if valid_status_text(' ' + rt_text):
+        if is_valid_status_text(' ' + rt_text):
             self.tweet(content=rt_text)
         else:
             self.error_message(_('Tweet too long for manual retweet'))

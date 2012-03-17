@@ -14,7 +14,8 @@ from urwid import ListBox, SimpleListWalker
 from urwid import signals, emit_signal, connect_signal, disconnect_signal
 from urwid import __version__ as urwid_version
 
-from ..util import is_retweet, encode, html_unescape
+from ..models import is_retweet 
+from ..util import encode, html_unescape
 from ..constant import banner
 from .base import UserInterface
 
