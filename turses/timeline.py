@@ -32,6 +32,7 @@ class Timeline(object):
     a name, a function that updates the current timeline and its arguments.
     """
 
+    # TODO make possible to pass dicts as **kwargs in `update_function_args`
     def __init__(self, 
                  name='',
                  statuses=None,

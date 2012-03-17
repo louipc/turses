@@ -117,13 +117,15 @@ class Turses(object):
         self.append_mentions_timeline()
         self.append_favorites_timeline()
         self.append_direct_messages_timeline()
+        self.append_own_tweets_timeline()
 
     def append_home_timeline(self):
         self._append_timeline(name='Tweets',     
                               update_function=self.api.get_home_timeline)
 
     def append_own_tweets_timeline(self):
-        self._append_timeline(name='@%s' % self.api.user.screen_name,     
+        user = self.api.verify_credentials()
+        self._append_timeline(name='@%s' % user.screen_name,     
                               update_function=self.api.get_own_timeline)
 
     def append_mentions_timeline(self):
@@ -242,8 +244,14 @@ class Turses(object):
 
     # -- Twitter -------------------------------------------------------------- 
 
-    def search(self, prompt='Search', content=''):
-        self.ui.show_text_editor(prompt, content, self.search_handler)
+    def search(self):
+        self.ui.show_text_editor(prompt='Search', 
+                                 done_signal_handler=self.search_handler)
+
+    def search_user(self):
+        self.ui.show_text_editor(prompt=_('Search user (no need to prepend it with "@")'),
+                                 content='',
+                                 done_signal_handler=self.search_user_handler)
 
     def tweet(self):
         self.ui.show_tweet_editor(prompt=_('Tweet'), 
@@ -408,6 +416,7 @@ class Turses(object):
         # Ssearch User
         elif input == self.configuration.keys['search_user']:
             self.info_message('Still to implement!')
+            #self.search_user()
         # Search Myself
         elif input == self.configuration.keys['search_myself']:
             self.info_message('Still to implement!')
@@ -523,6 +532,26 @@ class Turses(object):
         # append timeline
         tl_name = 'Search: %s' % text                
         self.append_timeline(tl_name, self.api.search, text)
+
+    def search_user_handler(self, username):
+        """
+        Handles creating a timeline tracking the searched user's tweets.
+        """
+        # disconnect signal
+        self.ui.remove_editor(self.search_user_handler)
+        # remove editor
+        self.ui.set_focus('body')
+        # TODO validate username
+        #if not valid_search_text(text):
+            ## TODO error message editor and continue editing
+            #self.info_message(_('Search canceled'))
+            #return
+        #else:
+            #self.info_message(_('Creating search timeline for "%s"' % text))
+        # append timeline
+        self.append_timeline(name='@%s' % username,
+                             update_function=self.api.get_user_timeline, 
+                             update_args={'screen_name': username})
 
     # -- API ------------------------------------------------------------------
 
