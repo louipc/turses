@@ -18,8 +18,8 @@ except ImportError:
     pass
     #from cgi import parse_qsl
 
-import constant
-from util import encode
+from . import constant
+from .util import encode
 
 
 def print_ask_service(token_file):

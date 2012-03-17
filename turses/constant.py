@@ -4,7 +4,7 @@
 #       Licensed under the GPL License. See LICENSE.txt for full details.     #
 ###############################################################################
 
-from turses import __version__
+from . import __version__
 
 
 # palette for the curses interface created with `urwid`

@@ -5,15 +5,16 @@
 ###############################################################################
 
 import argparse
-import sys
 import re
+import sys
 import string
 from htmlentitydefs import entitydefs
 from time import strftime, gmtime
 
+# TODO this shouldn't be `python-twitter` specific
 from twitter import Status, DirectMessage
 
-from turses import __version__
+from . import __version__
 
 retweet_re = re.compile('^RT @\w+:')
 username_re = re.compile('@\w+')
