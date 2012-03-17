@@ -979,7 +979,14 @@ class PythonTwitterApi(BaseApi, TwitterApi):
         return self.GetSearch(text)
 
     def update(self, text, *args, **kwargs):
-        return self.PostUpdate(text)
+        try:
+            res = self.PostUpdate(text)
+        except TwitterError:
+            # Frequently while using `python-twitter` to update the state
+            # it raises the "Status is a duplicate" Twitter error
+            pass
+        else:
+            return res
 
     def retweet(self, status, *args, **kwargs):
         self.PostRetweet(status.id)
