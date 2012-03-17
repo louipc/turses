@@ -1059,7 +1059,6 @@ class AsyncApi(ApiWrapper):
     def get_home_timeline(self):
         return self._api.get_home_timeline()
 
-    @wrap_exceptions
     def get_user_timeline(self, screen_name):
         return self._api.get_user_timeline(screen_name=screen_name)
 
@@ -1079,7 +1078,6 @@ class AsyncApi(ApiWrapper):
     def get_direct_messages(self):
         return self._api.get_direct_messages()
 
-    @wrap_exceptions
     def search(self, text):
         return self._api.get_search(text)
 

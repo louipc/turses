@@ -2,6 +2,7 @@
 -----
 - more colorful defaults
 - see your own tweets
+- search for a user's tweets
 
 0.0.4
 -----

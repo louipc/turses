@@ -92,6 +92,9 @@ def valid_search_text(text):
     """Checks the validity of a search text."""
     return bool(text)
 
+def is_valid_username(username):
+    return username.isalnum()
+
 # TODO: make this functions library independent
 def is_tweet(status):
     return status.__class__ == Status

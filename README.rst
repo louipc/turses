@@ -36,9 +36,11 @@ Features
 - Follow/Unfollow
 - Favorite/Unfavorite
 - Search
+- View any user's tweets
 - Fully customizable
 - Pluggable UI
 - Pluggable API
+- Multiple accounts
 
 Roadmap
 -------
@@ -46,12 +48,10 @@ Roadmap
 - Documentation
 - DM
 - Thread view
-- User info
 - Lists
-- Multiple accounts
 - Geo
 - Blocking
-- Settings
+- Improve settings
 
 Development
 -----------

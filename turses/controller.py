@@ -14,7 +14,7 @@ import urwid
 from constant import palette
 from api import AsyncApi
 from timeline import Timeline, TimelineList
-from util import valid_status_text, valid_search_text
+from util import valid_status_text, valid_search_text, is_valid_username
 from util import get_authors_username, get_mentioned_usernames
 
 
@@ -541,7 +541,7 @@ class Turses(object):
         # append timeline
         timeline = Timeline(name='Search: %s' % text,
                             update_function=self.api.search, 
-                            update_function_args=({'text': text}))
+                            update_function_args=text)
         timeline.update()
         self.timelines.append_timeline(timeline)
         self.draw_timelines()
@@ -555,19 +555,16 @@ class Turses(object):
         self.ui.remove_editor(self.search_user_handler)
         # remove editor
         self.ui.set_focus('body')
-        # TODO validate username
-        #if not valid_search_text(text):
-            ## TODO error message editor and continue editing
-            #self.info_message(_('Search canceled'))
-            #return
-        #else:
-        self.info_message(_('Fetching latest tweets from @%s' % username))
+        if not is_valid_username(username):
+            # TODO error message editor and continue editing
+            self.info_message(_('Invalid username'))
+            return
+        else:
+            self.info_message(_('Fetching latest tweets from @%s' % username))
         # append timeline
         timeline = Timeline(name='@%s' % username,
                             update_function=self.api.get_user_timeline, 
-                            update_function_args=({'on_error': None,
-                                                   'on_success': None,
-                                                   'screen_name': username,}),)
+                            update_function_args=username,)
         timeline.update()
         self.timelines.append_timeline(timeline)
         self.draw_timelines()
