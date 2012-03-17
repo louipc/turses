@@ -415,8 +415,8 @@ class Turses(object):
             self.search()
         # Ssearch User
         elif input == self.configuration.keys['search_user']:
-            self.info_message('Still to implement!')
-            #self.search_user()
+            #self.info_message('Still to implement!')
+            self.search_user()
         # Search Myself
         elif input == self.configuration.keys['search_myself']:
             self.info_message('Still to implement!')
@@ -477,8 +477,17 @@ class Turses(object):
     # -- Twitter --------------------------------------------------------------
 
     def update_active_timeline(self):
-        thread = Thread(target=self._update_active_timeline)
-        thread.start()
+        update_thread = Thread(target=self._update_active_timeline)
+        update_thread.start()
+
+    def _update_active_timeline(self):
+        """Updates the timeline and renders the active timeline."""
+        if self.timelines.has_timelines():
+            active_timeline = self.timelines.get_active_timeline()
+            active_timeline.update()
+            if self.ui.is_in_timeline_mode():
+                self.draw_timelines()
+            self.info_message('%s updated' % active_timeline.name)
 
     # Editor event handlers
 
@@ -525,13 +534,18 @@ class Turses(object):
         self.ui.set_focus('body')
         if not valid_search_text(text):
             # TODO error message editor and continue editing
-            self.info_message(_('Search canceled'))
+            self.info_message(_('Search cancelled'))
             return
         else:
             self.info_message(_('Creating search timeline for "%s"' % text))
         # append timeline
-        tl_name = 'Search: %s' % text                
-        self.append_timeline(tl_name, self.api.search, text)
+        timeline = Timeline(name='Search: %s' % text,
+                            update_function=self.api.search, 
+                            update_function_args=({'text': text}))
+        timeline.update()
+        self.timelines.append_timeline(timeline)
+        self.draw_timelines()
+        self.info_message(_('Search timeline for "%s" created' % text))
 
     def search_user_handler(self, username):
         """
@@ -547,11 +561,17 @@ class Turses(object):
             #self.info_message(_('Search canceled'))
             #return
         #else:
-            #self.info_message(_('Creating search timeline for "%s"' % text))
+        self.info_message(_('Fetching latest tweets from @%s' % username))
         # append timeline
-        self.append_timeline(name='@%s' % username,
-                             update_function=self.api.get_user_timeline, 
-                             update_args={'screen_name': username})
+        timeline = Timeline(name='@%s' % username,
+                            update_function=self.api.get_user_timeline, 
+                            update_function_args=({'on_error': None,
+                                                   'on_success': None,
+                                                   'screen_name': username,}),)
+        timeline.update()
+        self.timelines.append_timeline(timeline)
+        self.draw_timelines()
+        self.info_message(_('@%s timeline created' % username))
 
     # -- API ------------------------------------------------------------------
 
@@ -624,14 +644,3 @@ class Turses(object):
         self.api.destroy_favorite(status=status, 
                                   on_error=unfavorite_error,
                                   on_success=unfavorite_done)
-
-    # Asynchronous API calls
-
-    def _update_active_timeline(self):
-        """Updates the timeline and renders the active timeline."""
-        if self.timelines.has_timelines():
-            active_timeline = self.timelines.get_active_timeline()
-            active_timeline.update()
-            if self.ui.is_in_timeline_mode():
-                self.draw_timelines()
-            self.info_message('%s updated' % active_timeline.name)

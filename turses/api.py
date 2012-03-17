@@ -1008,7 +1008,13 @@ class PythonTwitterApi(BaseApi, TwitterApi):
             destroy = self.DestroyDirectMessage
         else:
             destroy = self.DestroyStatus
-        destroy(status.id)
+
+        try:
+            res = destroy(status.id)
+        except TwitterError:
+            pass
+        else:
+            return res
 
     def direct_message(self, username, text, *args, **kwargs):
         self.PostDirectMessage(username, text)
