@@ -5,10 +5,10 @@
 ###############################################################################
 
 
-from util import parse_arguments
-from config import Configuration
-from controller import Turses
-from ui.curses import CursesInterface
+from .util import parse_arguments
+from .config import Configuration
+from .controller import Turses
+from .ui.curses import CursesInterface
 
 
 def main():

@@ -11,11 +11,11 @@ from functools import partial
 
 import urwid
 
-from constant import palette
-from api import AsyncApi
-from timeline import Timeline, TimelineList
-from util import valid_status_text, valid_search_text, is_valid_username
-from util import get_authors_username, get_mentioned_usernames
+from .constant import palette
+from .api import AsyncApi
+from .timeline import Timeline, TimelineList
+from .util import valid_status_text, valid_search_text, is_valid_username
+from .util import get_authors_username, get_mentioned_usernames
 
 
 class Turses(object):

@@ -13,8 +13,8 @@ from threading import Thread
 from twitter import Api as BaseApi 
 from twitter import TwitterError, Status, _FileCache
 
-from util import is_DM
-from decorators import wrap_exceptions
+from .util import is_DM
+from .decorators import wrap_exceptions
 
 try:
     import json
