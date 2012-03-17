@@ -111,6 +111,20 @@ class TimelineTest(unittest.TestCase):
         timeline.update()
         mock.assert_called_once_with(args)
 
+    def test_update_with_kargs(self):
+        mock = MagicMock(name='update')
+        args = ({'text': '#python', 'action': 'search'})
+        timeline = Timeline(update_function=mock, update_function_args=args)
+        timeline.update()
+        mock.assert_called_once_with(args)
+
+    def test_update_with_args_and_kargs(self):
+        mock = MagicMock(name='update')
+        args = ('twitter', 42, {'text': '#python', 'action': 'search'})
+        timeline = Timeline(update_function=mock, update_function_args=args)
+        timeline.update()
+        mock.assert_called_once_with(args)
+
 
 class TimelineListTest(unittest.TestCase):
     def setUp(self):

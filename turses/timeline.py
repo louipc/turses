@@ -48,7 +48,34 @@ class Timeline(object):
         else:
             self.statuses = []
         self.update_function = update_function
-        self.update_function_args = update_function_args
+        if update_function_args:
+            self._extract_args_and_kargs(update_function_args)
+        else:
+            self.update_function_args = None
+            self.update_function_kargs = None
+
+    def _extract_args_and_kargs(self, update_args):
+        self.update_function_args = None
+        self.update_function_kargs = None
+        isdict = lambda d : isinstance(d, dict)
+        if isinstance(update_args, tuple):
+            # multiple arguments
+            args = list(update_args)
+            kargs = args.pop()
+            if isdict(kargs):
+                self.update_function_args = args
+                self.update_function_kargs = kargs
+            else:
+                args.append(kargs)
+                self.update_function_args =  args
+        else:
+            # one argument (possibly kargs)
+            if isinstance(update_args, dict):
+                # kargs
+                self.update_function_kargs = update_args
+            else:
+                # args
+                self.update_function_args = update_args
 
     def add_status(self, new_status):
         """
@@ -81,8 +108,18 @@ class Timeline(object):
     def update(self):
         if not self.update_function:
             return
-        if self.update_function_args:
-            new_statuses = self.update_function(self.update_function_args)
+        if self.update_function_args and self.update_function_kargs:
+            args = list(self.update_function_args)
+            args.append(self.update_function_kargs)
+            new_statuses = self.update_function(tuple(args))
+        elif self.update_function_args:
+            if isinstance(self.update_function_args, list):
+                args = tuple(self.update_function_args)
+            else:
+                args = self.update_function_args
+            new_statuses = self.update_function(args)
+        elif self.update_function_kargs:
+            new_statuses = self.update_function(self.update_function_kargs)
         else:
             new_statuses = self.update_function()
         self.add_statuses(new_statuses)
