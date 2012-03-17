@@ -99,7 +99,6 @@ class Configuration(object):
                     print encode(_('Couldn\'t create the directory in %s/turses')) % self.xdg_config
             self.generate_config_file(self.xdg_config + default_file)
 
-
     def generate_config_file(self, config_file):
         conf = ConfigParser.RawConfigParser()
         conf.read(config_file)
@@ -147,9 +146,10 @@ class Configuration(object):
             self.config_file += '.' + args.config
 
     def new_account(self):
-
         choice = self.ask_service()
         if choice == '2':
+            # XXX remove identi.ca support claim
+            raise NotImplementedError
             self.ask_root_url()
 
         self.authorization()
@@ -258,12 +258,15 @@ class Configuration(object):
             if int(self.conf.get('params', 'compact')) == 1:
                 self.params['compact'] = True
         # Help bar
-        if self.conf.has_option('params', 'help'):
-            if int(self.conf.get('params', 'help')) == 0:
-                self.params['help'] = False
+        # XXX
+        #  in `turses` the 'help' parameter associates the key binding
+        #  for showing program's help
+        #if self.conf.has_option('params', 'help'):
+            #if int(self.conf.get('params', 'help')) == 0:
+                #self.params['help'] = False
 
-        if self.conf.has_option('params', 'margin'):
-            self.params['margin'] = int(self.conf.get('params', 'margin'))
+        #if self.conf.has_option('params', 'margin'):
+            #self.params['margin'] = int(self.conf.get('params', 'margin'))
 
         if self.conf.has_option('params', 'padding'):
             self.params['padding'] = int(self.conf.get('params', 'padding'))

@@ -72,6 +72,7 @@ key = {
     'delete_fav':             'ctrl b',
     # Timelines
     'home':                   '.',
+    'own_tweets':             '_',
     'favorites':              'B',
     'mentions':               'm',
     'DMs':                    'M',

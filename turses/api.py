@@ -138,9 +138,6 @@ class TwitterApi(object):
         """
         raise NotImplementedError
 
-    def get_own_tweets(self):
-        return self.get_user_timeline()
-
     def get_retweeted_to_user(self, username):
         raise NotImplementedError
 
@@ -744,7 +741,16 @@ class ApiWrapper(object):
     def init_api(self): 
         raise NotImplementedError
 
+    def verify_credentials(self):
+        raise NotImplementedError
+
     def get_home_timeline(self): 
+        raise NotImplementedError
+
+    def get_user_timeline(self, screen_name):
+        raise NotImplementedError
+
+    def get_own_timeline(self):
         raise NotImplementedError
 
     def get_mentions(self): 
@@ -963,8 +969,14 @@ class PythonTwitterApi(BaseApi, TwitterApi):
         else:
             self._cache = cache
 
+    def verify_credentials(self, *args, **kwargs):
+        return self.VerifyCredentials()
+
     def get_home_timeline(self, *args, **kwargs):
         return self.GetFriendsTimeline(*args, **kwargs)
+
+    def get_user_timeline(self, *args, **kwargs):
+        return self.GetUserTimeline(*args, **kwargs)
 
     def get_mentions(self, *args, **kwargs):
         return self.GetMentions(*args, **kwargs)
@@ -1032,10 +1044,22 @@ class AsyncApi(ApiWrapper):
                                      access_token_key=self._access_token_key,
                                      access_token_secret=self._access_token_secret,)
         self.is_authenticated = True
+        self.user = self.verify_credentials()
+
+    def verify_credentials(self):
+        return self._api.verify_credentials()
 
     @wrap_exceptions
     def get_home_timeline(self):
         return self._api.get_home_timeline()
+
+    @wrap_exceptions
+    def get_user_timeline(self, screen_name):
+        return self._api.get_user_timeline(screen_name=screen_name)
+
+    @wrap_exceptions
+    def get_own_timeline(self):
+        return self._api.get_user_timeline(screen_name=self.user.screen_name)
 
     @wrap_exceptions
     def get_mentions(self):

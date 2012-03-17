@@ -122,6 +122,10 @@ class Turses(object):
         self._append_timeline(name='Tweets',     
                               update_function=self.api.get_home_timeline)
 
+    def append_own_tweets_timeline(self):
+        self._append_timeline(name='@%s' % self.api.user.screen_name,     
+                              update_function=self.api.get_own_timeline)
+
     def append_mentions_timeline(self):
         self._append_timeline(name='Mentions',     
                               update_function=self.api.get_mentions)
@@ -382,6 +386,10 @@ class Turses(object):
         if input == self.configuration.keys['home']:
             home_thread = Thread(target=self.append_home_timeline)
             home_thread.start()
+        # Own tweets
+        elif input == self.configuration.keys['own_tweets']:
+            own_tweets_thread = Thread(target=self.append_own_tweets_timeline)
+            own_tweets_thread.start()
         # Favorites timeline
         elif input == self.configuration.keys['favorites']:
             favorites_thread = Thread(target=self.append_favorites_timeline)
