@@ -1,6 +1,7 @@
 0.0.6
 -----
 - fix bug with mouse events
+- relative imports to avoid `ImportError` exceptions
 
 0.0.5
 -----
