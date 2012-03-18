@@ -289,6 +289,9 @@ class Turses(object):
         """
         Handles the keyboard input that is not handled by the widgets.
         """
+        if not isinstance(input, str):
+            # TODO: handle mouse input
+            return
         ch = ''.join(input)
 
         # Global commands

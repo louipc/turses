@@ -1,3 +1,7 @@
+0.0.6
+-----
+- fix bug with mouse events
+
 0.0.5
 -----
 - more colorful defaults
