@@ -5,7 +5,7 @@
 ###############################################################################
 
 
-from time import altzone, gmtime, strftime
+from time import gmtime, strftime
 from gettext import gettext as _
 
 from urwid import AttrWrap, WidgetWrap, Padding, WidgetDecoration
@@ -558,6 +558,9 @@ class TimelineWidget(ScrollableListBox):
             return widget
 
 
+# TODO:
+#  all the knowledge must be about the `Status` and `DirectMessage` classes
+#  in `models.py`
 class StatusWidget(WidgetWrap):
     """Widget containing a Twitter status."""
 
@@ -647,12 +650,13 @@ class StatusWidget(WidgetWrap):
         if hasattr(status, 'GetRelativeCreatedAt'):
             return status.GetRelativeCreatedAt()
 
-        hour = gmtime(status.GetCreatedAtInSeconds() - altzone)
-        result = strftime('%H:%M', hour)
-        if strftime('%d %b', hour) != strftime("%d %b", gmtime()):
-            result += strftime(' - %d %b', hour)
+        # TODO
+        #hour = gmtime(status.GetCreatedAtInSeconds() - altzone)
+        #result = strftime('%H:%M', hour)
+        #if strftime('%d %b', hour) != strftime("%d %b", gmtime()):
+            #result += strftime(' - %d %b', hour)
 
-        return result
+        return 'TODO'
 
     def is_reply(self, status):
         if hasattr(status, 'in_reply_to_screen_name'):

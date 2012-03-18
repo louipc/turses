@@ -13,7 +13,7 @@ from threading import Thread
 from twitter import Api as BaseApi 
 from twitter import TwitterError, Status, _FileCache
 
-from .models import is_DM
+from .models import User, DirectMessage, is_DM
 from .decorators import wrap_exceptions
 
 try:
@@ -970,7 +970,9 @@ class PythonTwitterApi(BaseApi, TwitterApi):
             self._cache = cache
 
     def verify_credentials(self, *args, **kwargs):
-        return self.VerifyCredentials()
+        # TODO
+        user = self.VerifyCredentials()
+        return User(user.screen_name)
 
     def get_home_timeline(self, *args, **kwargs):
         return self.GetFriendsTimeline(*args, **kwargs)
@@ -985,7 +987,11 @@ class PythonTwitterApi(BaseApi, TwitterApi):
         return self.GetFavorites()
 
     def get_direct_messages(self, *args, **kwargs):
-        return self.GetDirectMessages()
+        direct_messages = self.GetDirectMessages()
+        convert = lambda d: DirectMessage(id=d.id,
+                                          sender_screen_name=d.sender_screen_name,
+                                          text=d.text)
+        return [convert(dm) for dm in direct_messages]
 
     def get_search(self, text, *args, **kwargs):
         return self.GetSearch(text)

@@ -16,8 +16,9 @@ retweet_re = re.compile('^RT @\w+:')
 
 def datetime_from_status(status):
     """Converts a date on a Twitter status to a `datetime` object."""
-    seconds = status.GetCreatedAtInSeconds()
-    return datetime.utcfromtimestamp(seconds)
+    # TODO
+    #seconds = status.GetCreatedAtInSeconds()
+    return datetime.utcfromtimestamp(0)
 
 def is_more_recent(status, datetime):
     """Checks wether `status.created_at` is newer than `datetime`."""
@@ -35,7 +36,10 @@ def is_DM(status):
 
 def get_authors_username(status):
     """Returns the original author's username of the given status."""
-    username = status.sender_screen_name
+    if is_DM(status):
+        username = status.sender_screen_name
+    else:
+        username = status.user.screen_name
     return ''.join(['@', username])
 
 def is_username(string):
@@ -61,22 +65,35 @@ def is_valid_search_text(text):
 def is_valid_username(username):
     return username.isalnum()
 
-# TODO
-class Status(object):
-
-    def __init__(self,
-                 sender_screen_name=''):
-        pass
-
-
-class DirectMessage(object):
-    pass
 
 ##
 #  Classes
 ##
 
-    
+
+class User(object):
+    def __init__(self,
+                 screen_name):
+        self.screen_name = screen_name
+
+
+class Status(object):
+
+    def __init__(self, user):
+        self.user = user
+
+
+class DirectMessage(object):
+
+    def __init__(self,
+                 id,
+                 sender_screen_name,
+                 text):
+        self.id = id
+        self.sender_screen_name = sender_screen_name
+        self.text = text
+
+
 class Timeline(object):
     """
     List of Twitter statuses ordered reversely by date. Optionally with
