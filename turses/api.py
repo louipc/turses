@@ -976,7 +976,7 @@ class PythonTwitterApi(BaseApi, TwitterApi):
         return self.GetFriendsTimeline(*args, **kwargs)
 
     def get_user_timeline(self, *args, **kwargs):
-        return self.GetUserTimeline(*args, **kwargs)
+        return self.GetUserTimeline(include_rts=True, *args, **kwargs)
 
     def get_mentions(self, *args, **kwargs):
         return self.GetMentions(*args, **kwargs)
@@ -1020,7 +1020,7 @@ class PythonTwitterApi(BaseApi, TwitterApi):
         self.PostDirectMessage(username, text)
 
     def create_friendship(self, screen_name, *args, **kwargs):
-        self.CreateFriendShip(screen_name)
+        self.CreateFriendship(screen_name)
 
     def destroy_friendship(self, screen_name, *args, **kwargs):
         self.DestroyFriendship(screen_name)

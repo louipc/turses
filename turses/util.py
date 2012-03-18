@@ -4,8 +4,8 @@
 #       Licensed under the GPL License. See LICENSE.txt for full details.     #
 ###############################################################################
 
-import argparse
 import sys
+import argparse
 import re
 from htmlentitydefs import entitydefs
 from time import strftime, gmtime

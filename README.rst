@@ -17,7 +17,7 @@ The goal of the project is to build a full-featured Twitter client:
 .. _`python-twitter`: http://code.google.com/p/python-twitter/
 
 Installation
------------
+------------
 
 **turses** is installed simply by:  ::
 

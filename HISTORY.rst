@@ -1,3 +1,12 @@
+0.0.7
+-----
+- fix bug with self follow/unfollow
+
+0.0.6
+-----
+- fix bug with mouse events
+- relative imports to avoid `ImportError` exceptions
+
 0.0.5
 -----
 - more colorful defaults
