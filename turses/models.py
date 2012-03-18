@@ -7,6 +7,8 @@
 import re
 from datetime import datetime
 
+from .util import html_unescape
+
 
 retweet_re = re.compile('^RT @\w+:')
 
@@ -79,8 +81,11 @@ class User(object):
 
 class Status(object):
 
-    def __init__(self, user):
+    def __init__(self, 
+                 user,
+                 text):
         self.user = user
+        self.text = html_unescape(text)
 
 
 class DirectMessage(object):
@@ -91,7 +96,7 @@ class DirectMessage(object):
                  text):
         self.id = id
         self.sender_screen_name = sender_screen_name
-        self.text = text
+        self.text = html_unescape(text)
 
 
 class Timeline(object):

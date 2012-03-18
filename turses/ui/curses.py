@@ -566,10 +566,9 @@ class StatusWidget(WidgetWrap):
 
     def __init__ (self, status):
         self.status = status
-        self.id = status.id
-        unescaped_text = html_unescape(status.text)
+        text = status.text
         status_content = Padding(
-            AttrWrap(Text(unescaped_text), 'body'), 
+            AttrWrap(Text(text), 'body'), 
             left=1, 
             right=1)
         header = self.create_header(status)
