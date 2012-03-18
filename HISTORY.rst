@@ -1,3 +1,7 @@
+0.0.7
+-----
+- fix bug with self follow/unfollow
+
 0.0.6
 -----
 - fix bug with mouse events

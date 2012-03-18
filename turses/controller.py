@@ -62,6 +62,7 @@ class Turses(object):
         # API has to be authenticated
         while (not self.api.is_authenticated):
             pass
+        self.user = self.api.verify_credentials()
         self.info_message(_('Initializing timelines'))
         self.timelines = TimelineList()
         # TODO make default timeline list configurable
@@ -605,18 +606,26 @@ class Turses(object):
 
     def follow_selected(self):
         status = self.ui.focused_status()
-        username = get_authors_username(status)
+        # remove the '@'
+        username = get_authors_username(status)[1:]
+        if username == self.user.screen_name:
+            self.error_message(_('You can\'t follow yourself'))
+            return
         follow_done = partial(self.info_message, 
-                              _('You are now following %s' % username))
+                              _('You are now following @%s' % username))
         follow_error = partial(self.error_message, 
-                               _('We can not ensure that you are following %s' % username))
+                               _('We can not ensure that you are following @%s' % username))
         self.api.create_friendship(screen_name=username, 
                                    on_error=follow_error,
                                    on_success=follow_done)
 
     def unfollow_selected(self):
         status = self.ui.focused_status()
-        username = get_authors_username(status)
+        # remove the '@'
+        username = get_authors_username(status)[1:]
+        if username == self.user.screen_name:
+            self.error_message(_('That doesn\'t make any sense'))
+            return
         unfollow_done = partial(self.info_message, 
                                 _('You are no longer following %s' % username))
         unfollow_error = partial(self.error_message, 
