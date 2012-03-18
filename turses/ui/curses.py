@@ -296,9 +296,9 @@ class TabsWidget(WidgetWrap):
         text = []
         for i, tab in enumerate(self.tabs):
             if i == self.active_index:
-                text.append(('active_tab', u' ' + tab + u' '))
+                text.append(('active_tab', u'│' + tab + u' '))
             else:
-                text.append(('inactive_tab', u'│' + tab + u'│'))
+                text.append(('inactive_tab', u'│' + tab + u' '))
         return text
 
     def _update_text(self):
@@ -328,6 +328,10 @@ class TabsWidget(WidgetWrap):
 class StatusBar(WidgetWrap):
     """Displays text."""
 
+    INFO = "[INFO]"
+    ERROR = "[ERROR]"
+    ARROW = " => "
+
     def __init__(self, text=''):
         WidgetWrap.__init__(self, Text(text))
 
@@ -336,10 +340,12 @@ class StatusBar(WidgetWrap):
         self._w.set_text(text)
 
     def error_message(self, text):
-        self.message(('error', text))
+        self.message([('error', self.ERROR),
+                      ('default', self.ARROW + text),])
 
     def info_message(self, text):
-        self.message(('info', text))
+        self.message([('info', self.INFO),
+                      ('default', self.ARROW +  text),])
 
     def clear(self):
         """Clear the text."""

@@ -976,7 +976,7 @@ class PythonTwitterApi(BaseApi, TwitterApi):
         return self.GetFriendsTimeline(*args, **kwargs)
 
     def get_user_timeline(self, *args, **kwargs):
-        return self.GetUserTimeline(*args, **kwargs)
+        return self.GetUserTimeline(include_rts=True, *args, **kwargs)
 
     def get_mentions(self, *args, **kwargs):
         return self.GetMentions(*args, **kwargs)
