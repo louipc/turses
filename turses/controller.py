@@ -13,7 +13,7 @@ import urwid
 
 from .constant import palette
 from .api import AsyncApi
-from .timeline import Timeline, TimelineList
+from .models import Timeline, TimelineList
 from .models import get_authors_username, get_mentioned_usernames
 from .models import is_valid_status_text, is_valid_search_text, is_valid_username
 

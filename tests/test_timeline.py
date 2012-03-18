@@ -10,9 +10,10 @@ import unittest
 from datetime import datetime
 
 from mock import MagicMock
+# TODO: use Status from `models.py`
 from twitter import Status
 
-from turses.timeline import Timeline, TimelineList
+from turses.models import Timeline, TimelineList
 
 class TimelineTest(unittest.TestCase):
     def setUp(self):
