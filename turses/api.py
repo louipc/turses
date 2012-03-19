@@ -975,11 +975,10 @@ class PythonTwitterApi(BaseApi, TwitterApi):
             self._cache = cache
 
     def verify_credentials(self, *args, **kwargs):
-        try:
-            user = self.VerifyCredentials()
-        except TwitterError:
+        user = self.VerifyCredentials()
+        #except TwitterError:
             # rate limit exceeded
-            raise RateLimitExceededException
+            #raise RateLimitExceededException
         return User(user.screen_name)
 
     def _to_statuses(self, statuses):

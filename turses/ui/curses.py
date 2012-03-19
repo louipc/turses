@@ -128,10 +128,10 @@ class CursesInterface(Frame, UserInterface):
     # -- Help mode ------------------------------------------------------------
 
     def focus_next(self):
-        self.body.scroll_up()
+        self.body.scroll_down()
 
     def focus_previous(self):
-        self.body.scroll_down()
+        self.body.scroll_up()
 
     def focus_first(self):
         self.body.scroll_top()
@@ -411,23 +411,46 @@ class StatusBar(WidgetWrap):
 class ScrollableListBox(ListBox):
     """
     A `ListBox` subclass with additional methods for scrolling the
-    focus up by one element, down by one element, to the bottom and to 
-    the top.
+    focus up and down, to the bottom and to the top.
     """
-    def __init__(self, contents):
-        ListBox.__init__(self, SimpleListWalker(contents))
+    def __init__(self, 
+                 contents, 
+                 offset=1):
+        """
+        Arguments:
+
+        `contents` is a list with the elements contained in the 
+        `ScrollableListBox`.
+
+        `offset` is the number of position that `scroll_up` and `scroll_down`
+        shift the cursor.
+        """
+        self.offset = offset
+
+        ListBox.__init__(self, 
+                         SimpleListWalker(contents))
 
     def focus_previous(self):
         """Sets the focus in the previous element (if any) of the listbox."""
         focus_status, pos = self.get_focus()
-        if pos:
-            self.set_focus(pos - 1)
+        if pos is None:
+            return
+
+        new_pos = pos - self.offset
+        if new_pos < 0:
+            new_pos = 0
+        self.set_focus(new_pos)
 
     def focus_next(self):
         """Sets the focus in the next element (if any) of the listbox."""
         focus_status, pos = self.get_focus()
-        if pos is not None and pos < len(self.body):
-            self.set_focus(pos + 1)
+        if pos is None:
+            return
+
+        new_pos = pos + self.offset
+        if new_pos >= len(self.body):
+            new_pos = len(self.body) - 1
+        self.set_focus(new_pos)
 
     def focus_first(self):
         """Sets the focus in the first element (if any) of the listbox."""
@@ -439,19 +462,6 @@ class ScrollableListBox(ListBox):
         last = len(self.body) - 1
         if last:
             self.set_focus(last)
-
-
-class ShiftScrollableListBox(ScrollableListBox):
-    """
-    A `ScrollableListBox` subclass that, instead of steping up and down 
-    by one element, it changes focus to the first non-visible elements
-    on top or bottom.
-    """
-    def focus_previous(self):
-        self.focus_first()
-
-    def focus_next(self):
-        self.focus_last()
 
 
 class ScrollableListBoxWrapper(WidgetWrap):
@@ -484,16 +494,14 @@ class HelpBuffer(ScrollableListBoxWrapper):
 
     def __init__ (self, configuration):
         self.configuration = configuration
+        
         self.items = []
         self.create_help_buffer()
 
-        # TODO
-        for widget in self.items:
-            def selectable(*arg, **kwarg):
-                return True
-            widget.selectable = selectable
-
-        ScrollableListBoxWrapper.__init__(self, ScrollableListBox(self.items))
+        offset = int(len(self.items) / 2)
+        ScrollableListBoxWrapper.__init__(self, 
+                                          ScrollableListBox(self.items,
+                                                            offset=offset,))
 
     def create_help_buffer(self):
         self.insert_header()
@@ -553,18 +561,18 @@ class HelpBuffer(ScrollableListBoxWrapper):
         self.insert_help_item('open_image', _('Open image'))
         self.insert_help_item('redraw', _('Redraw the screen'))
 
-    def insert_division(self, title):
-        self.items.append(Divider(' '))
-        self.items.append(Padding(AttrWrap(Text(title), 'focus'), left=4))
-        self.items.append(Divider(' '))
-
     def insert_header(self):
         widgets = [
             ('fixed', self.col[0], Text('  Name')),
             ('fixed', self.col[1], Text('Key')),
             Text('Description') 
         ]
-        self.items.append(Columns(widgets, 2))
+        self.items.append(Columns(widgets))
+
+    def insert_division(self, title):
+        self.items.append(Divider(' '))
+        self.items.append(Padding(AttrWrap(Text(title), 'focus'), left=4))
+        self.items.append(Divider(' '))
 
     def insert_help_item(self, key, description):
         widgets = [
@@ -573,6 +581,17 @@ class HelpBuffer(ScrollableListBoxWrapper):
             Text(description) 
         ]
         self.items.append(Columns(widgets))
+
+    # from `ScrollableListBoxWrapper`
+
+    def scroll_up(self):
+        self._w.focus_previous()
+
+    def scroll_down(self):
+        self._w.focus_next()
+
+    def scroll_top(self):
+        self._w.focus_first()
 
 
 class TimelineBuffer(ScrollableListBoxWrapper):

@@ -357,14 +357,14 @@ class Turses(object):
                 active_timeline.activate_previous()
                 self.draw_timelines()
         # Down
-        elif input == self.configuration.keys['down'] and self.ui.is_in_timeline_mode():
+        elif input == self.configuration.keys['down']:
             self.ui.focus_next()
             if self.ui.is_in_timeline_mode():
                 active_timeline = self.timelines.get_active_timeline()
                 active_timeline.activate_next()
                 self.draw_timelines()
         # Scroll to Top
-        elif input == self.configuration.keys['scroll_to_top'] and self.ui.is_in_timeline_mode():
+        elif input == self.configuration.keys['scroll_to_top']:
             self.ui.focus_first()
             if self.ui.is_in_timeline_mode():
                 active_timeline = self.timelines.get_active_timeline()
