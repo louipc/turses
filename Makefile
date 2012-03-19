@@ -8,7 +8,8 @@ PIPI=pip install
 PIPFLAGS=--ignore-installed --no-deps
 
 TESTRUNNER=nosetests
-TESTFLAGS=--with-coverage --cover-package=turses
+TESTFLAGS=--with-progressive --logging-clear-handlers --with-coverage --cover-package=turses
+
 
 all: turses
 
@@ -23,7 +24,7 @@ install: dist $(DISTPKG)
 clean: pyc
 	rm -rf dist/
 
-test:
+test: pyc
 	$(TESTRUNNER) $(TESTFLAGS)
 
 pyc:

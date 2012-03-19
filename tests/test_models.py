@@ -13,6 +13,42 @@ from mock import MagicMock
 
 from turses.models import Status, Timeline, TimelineList
 
+
+# TODO
+class HelperFunctionTest(unittest.TestCase):
+    pass
+
+
+# TODO
+class StatusTest(unittest.TestCase):
+    pass
+
+
+# TODO
+class UserTest(unittest.TestCase):
+    pass
+
+
+# TODO
+class DirectMessageTest(unittest.TestCase):
+    pass
+
+
+# TODO
+class ListTest(unittest.TestCase):
+    pass
+
+
+# TODO
+class ActiveListTest(unittest.TestCase):
+    pass
+
+
+# TODO
+class UnsortedActiveListTest(unittest.TestCase):
+    pass
+
+
 class TimelineTest(unittest.TestCase):
     def setUp(self):
         self.timeline = Timeline()
@@ -273,8 +309,6 @@ class TimelineListTest(unittest.TestCase):
         self.assertEqual(self.timeline_list.active_index, 2)
         self.timeline_list.shift_active_next()
         self.assertEqual(self.timeline_list.active_index, 2)
-
-
     # TODO test update functions with mocks
     # TODO get_*
 

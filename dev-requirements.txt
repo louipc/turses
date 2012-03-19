@@ -7,3 +7,4 @@ urwid==1.0.1
 wsgiref==0.1.2
 nose==1.1.2
 coverage==3.5.1
+nose-progressive==1.3

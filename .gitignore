@@ -3,6 +3,7 @@
 .env
 .coverage
 credentials.py
+test
 dist/
 build/
 MANIFEST
