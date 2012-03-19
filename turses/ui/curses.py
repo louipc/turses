@@ -13,11 +13,22 @@ from urwid import ListBox, SimpleListWalker
 from urwid import signals, emit_signal, connect_signal, disconnect_signal
 from urwid import __version__ as urwid_version
 
+from .. import __version__
 from ..models import is_DM
 from ..util import encode 
-from ..constant import banner
 from .base import UserInterface
+ 
 
+banner = [ 
+     "   _                             ",
+     " _| |_ _   _ _ __ ___  ___  ____ ",
+     "|_   _| | | | '__/ __|/   \/ ___|",
+     "  | | | | | | |  |   \  _ ||   \\ ",
+     "  | |_| |_| | |  \__ |  __/\__ | ",
+     "  \___|\____|_| |____/\___||___/ ",
+     "  ······························ ",
+     "%s" % __version__,
+]
 
 TWEET_MAX_CHARS = 140
 

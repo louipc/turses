@@ -4,8 +4,6 @@
 #       Licensed under the GPL License. See LICENSE.txt for full details.     #
 ###############################################################################
 
-from . import __version__
-
 
 # palette for the curses interface created with `urwid`
 palette = [
@@ -118,14 +116,3 @@ filter = {
     'behavior':         'all',
     'except':           [],
 }
-
-banner = [ 
-     "   _                             ",
-     " _| |_ _   _ _ __ ___  ___  ____ ",
-     "|_   _| | | | '__/ __|/   \/ ___|",
-     "  | | | | | | |  |   \  _ ||   \\ ",
-     "  | |_| |_| | |  \__ |  __/\__ | ",
-     "  \___|\____|_| |____/\___||___/ ",
-     "  ······························ ",
-     "%s" % __version__,
-]
