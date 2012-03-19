@@ -1,7 +1,7 @@
 ###############################################################################
 #                               coding=utf-8                                  #
-#           Copyright (c) 2012 Nicolas Paris and Alejandro Gómez.             #
-#       Licensed under the GPL License. See LICENSE.txt for full details.     #
+#            Copyright (c) 2012 turses contributors. See AUTHORS.             #
+#         Licensed under the GPL License. See LICENSE for full details.       #
 ###############################################################################
 
 
@@ -350,25 +350,33 @@ class Turses(object):
 
     def _motion_key_handler(self, input):
         # Up
-        if input == self.configuration.keys['up'] and self.ui.is_in_timeline_mode():
-            active_timeline = self.timelines.get_active_timeline()
-            active_timeline.activate_previous()
-            self.draw_timelines()
+        if input == self.configuration.keys['up']:
+            self.ui.focus_previous()
+            if self.ui.is_in_timeline_mode():
+                active_timeline = self.timelines.get_active_timeline()
+                active_timeline.activate_previous()
+                self.draw_timelines()
         # Down
         elif input == self.configuration.keys['down'] and self.ui.is_in_timeline_mode():
-            active_timeline = self.timelines.get_active_timeline()
-            active_timeline.activate_next()
-            self.draw_timelines()
+            self.ui.focus_next()
+            if self.ui.is_in_timeline_mode():
+                active_timeline = self.timelines.get_active_timeline()
+                active_timeline.activate_next()
+                self.draw_timelines()
         # Scroll to Top
         elif input == self.configuration.keys['scroll_to_top'] and self.ui.is_in_timeline_mode():
-            active_timeline = self.timelines.get_active_timeline()
-            active_timeline.activate_first()
-            self.draw_timelines()
+            self.ui.focus_first()
+            if self.ui.is_in_timeline_mode():
+                active_timeline = self.timelines.get_active_timeline()
+                active_timeline.activate_first()
+                self.draw_timelines()
         # Scroll to Bottom
-        elif input == self.configuration.keys['scroll_to_bottom'] and self.ui.is_in_timeline_mode():
-            active_timeline = self.timelines.get_active_timeline()
-            active_timeline.activate_last()
-            self.draw_timelines()
+        elif input == self.configuration.keys['scroll_to_bottom']:
+            self.ui.focus_last()
+            if self.ui.is_in_timeline_mode():
+                active_timeline = self.timelines.get_active_timeline()
+                active_timeline.activate_last()
+                self.draw_timelines()
 
     def _buffer_key_handler(self, input):
         # Right

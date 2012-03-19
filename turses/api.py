@@ -1,7 +1,7 @@
 ###############################################################################
 #                               coding=utf-8                                  #
-#           Copyright (c) 2012 Nicolas Paris and Alejandro Gómez.             #
-#       Licensed under the GPL License. See LICENSE.txt for full details.     #
+#            Copyright (c) 2012 turses contributors. See AUTHORS.             #
+#         Licensed under the GPL License. See LICENSE for full details.       #
 ###############################################################################
 
 import os
@@ -53,7 +53,7 @@ class TwitterApi(object):
                           exclude_replies=None,
                           contributor_details=None):
         """
-        Returns the most recent statuses, including retweets if they exist, 
+        Return the most recent statuses, including retweets if they exist, 
         posted by the authenticating user and the user's they follow. 
         
         This is the same timeline seen by a user when they login to twitter.com.
@@ -71,7 +71,7 @@ class TwitterApi(object):
                      exclude_replies=None,
                      contributor_details=None):
         """
-        Returns the 20 most recent mentions (status containing @username) 
+        Return the 20 most recent mentions (status containing @username) 
         for the authenticating user.
 
         The timeline returned is the equivalent of the one seen when you view 
@@ -87,7 +87,7 @@ class TwitterApi(object):
                             trim_user=None,
                             include_entities=None):
         """
-        Returns the 20 most recent retweets posted by the authenticating user.
+        Return the 20 most recent retweets posted by the authenticating user.
         """
         raise NotImplementedError
 
@@ -99,7 +99,7 @@ class TwitterApi(object):
                             trim_user=None,
                             include_entities=None):
         """
-        Returns the 20 most recent retweets posted by users the authenticating 
+        Return the 20 most recent retweets posted by users the authenticating 
         user follow.
         """
         raise NotImplementedError
@@ -112,7 +112,7 @@ class TwitterApi(object):
                             trim_user=None,
                             include_entities=None):
         """
-        Returns the 20 most recent tweets of the authenticated user that have 
+        Return the 20 most recent tweets of the authenticated user that have 
         been retweeted by others.
         """
         raise NotImplementedError
@@ -130,7 +130,7 @@ class TwitterApi(object):
                           exclude_replies=None,
                           contributor_details=None):
         """
-        Returns the 20 most recent statuses posted by the authenticating user. 
+        Return the 20 most recent statuses posted by the authenticating user. 
         It is also possible to request another user's timeline by using the 
         screen_name or user_id parameter. 
         
@@ -152,19 +152,19 @@ class TwitterApi(object):
     # Tweets
 
     def get_retweeted_by(self, status):
-        """Returns a list with the users that retweeted `status`."""
+        """Return a list with the users that retweeted `status`."""
         raise NotImplementedError
 
     def get_retweeted_by_ids(self, status):
-        """Returns a list of IDs of the users that retweeted `status`."""
+        """Return a list of IDs of the users that retweeted `status`."""
         raise NotImplementedError
 
     def get_retweets(self, status):
-        """Returns up to 100 of the first retweets of `status`."""
+        """Return up to 100 of the first retweets of `status`."""
         raise NotImplementedError
 
     def get_status_by_id(self, id):
-        """Returns a single status, specified by the `id` parameter."""
+        """Return a single status, specified by the `id` parameter."""
         raise NotImplementedError
 
     def destroy(self, status):
@@ -191,7 +191,7 @@ class TwitterApi(object):
     # Search
 
     def search(self, text):
-        """Returns tweets that match the specified `text`."""
+        """Return tweets that match the specified `text`."""
         raise NotImplementedError
 
     # Direct Messages
@@ -222,44 +222,44 @@ class TwitterApi(object):
         raise NotImplementedError
 
     def get_direct_message_by_id(self, id):
-        """Returns a single direct message, specified by the `id` parameter."""
+        """Return a single direct message, specified by the `id` parameter."""
         raise NotImplementedError
 
     # Friends & Followers
 
     def get_followers_ids(self, username):
-        """Returns a list of IDs for every user following the specified user."""
+        """Return a list of IDs for every user following the specified user."""
         raise NotImplementedError
 
     def get_friends_ids(self, username):
         """
-        Returns a list of IDs for every user the specified user is following.
+        Return a list of IDs for every user the specified user is following.
         """
         raise NotImplementedError
 
     def friendship_exists(self, a_user, another_user):
         """
-        Returns `True` if the user `a_user` follows the `another_user`.
+        Return `True` if the user `a_user` follows the `another_user`.
         """
         raise NotImplementedError
 
     def get_incoming_friendship(self):
         """
-        Returns a list of IDs for every user who has a pending request to
+        Return a list of IDs for every user who has a pending request to
         follow the authenticating user.
         """
         raise NotImplementedError
 
     def get_outgoing_friendship(self):
         """
-        Returns a list of IDs for every protected user for whom the 
+        Return a list of IDs for every protected user for whom the 
         authenticating user has a pending request.
         """
         raise NotImplementedError
 
     def get_friendship(self, a_user, another_user):
         """
-        Returns detailed information about the friendship between `a_user`
+        Return detailed information about the friendship between `a_user`
         and `another_user`.
         """
         raise NotImplementedError
@@ -280,7 +280,7 @@ class TwitterApi(object):
 
     def lookup_friendship(self, users):
         """
-        Returns the relationship of the authenticating user to the specified 
+        Return the relationship of the authenticating user to the specified 
         list of users.
         """
         raise NotImplementedError
@@ -294,7 +294,7 @@ class TwitterApi(object):
 
     def get_no_retweets_ids(self):
         """
-        Returns an array of user_IDs that the currently authenticated user does 
+        Return an array of user_IDs that the currently authenticated user does 
         not want to see retweets from.
         """
         raise NotImplementedError
@@ -322,27 +322,27 @@ class TwitterApi(object):
 
     def get_user(self, username):
         """
-        Returns information about the user with the given `username` and the
+        Return information about the user with the given `username` and the
         user's most recent status.
         """
         raise NotImplementedError
 
     def get_user_contributees(self, username):
         """
-        Returns an array of users that the specified user can contribute to.
+        Return an array of users that the specified user can contribute to.
         """
         raise NotImplementedError
 
     def get_user_contributors(self, username):
         """
-        Returns an array of users who can contribute to the specified user.
+        Return an array of users who can contribute to the specified user.
         """
         raise NotImplementedError
 
     # Suggested users
 
     def get_user_category_suggestions(self):
-        """Returns a list of suggested user categories."""
+        """Return a list of suggested user categories."""
         raise NotImplementedError
 
     def get_user_suggestions(self, category):
@@ -363,7 +363,7 @@ class TwitterApi(object):
 
     def get_favorites(self, user_id):
         """
-        Returns the 20 most recent favorite statuses for the authenticating user 
+        Return the 20 most recent favorite statuses for the authenticating user 
         or user specified by the ID parameter.
         """
         raise NotImplementedError
@@ -384,19 +384,19 @@ class TwitterApi(object):
 
     def get_own_subscribed_lists(self):
         """
-        Returns all lists the authenticating subscribes to, including their own.
+        Return all lists the authenticating subscribes to, including their own.
         """
         raise NotImplementedError
 
     def get_subscribed_lists(self, user):
         """
-        Returns all lists the specified user subscribes to, including their own.
+        Return all lists the specified user subscribes to, including their own.
         """
         raise NotImplementedError
 
     def get_list_statuses(self, list):
         """
-        Returns tweet timeline for members of the specified list.
+        Return tweet timeline for members of the specified list.
         """
         raise NotImplementedError
 
@@ -409,19 +409,19 @@ class TwitterApi(object):
 
     def get_list_memberships(self, user):
         """
-        Returns the lists the specified user has been added to.
+        Return the lists the specified user has been added to.
         """
         raise NotImplementedError
 
     def get_own_list_memberships(self):
         """
-        Returns the lists the authenticating user has been added to.
+        Return the lists the authenticating user has been added to.
         """
         raise NotImplementedError
 
     def get_list_subscribers(self, list):
         """
-        Returns the subscribers of the specified list. Private list subscribers 
+        Return the subscribers of the specified list. Private list subscribers 
         will only be shown if the authenticated user owns the specified list.
         """
         raise NotImplementedError
@@ -459,7 +459,7 @@ class TwitterApi(object):
 
     def get_list_members(self, list):
         """
-        Returns the members of the specified `list`. Private list members will 
+        Return the members of the specified `list`. Private list members will 
         only be shown if the authenticated user owns the specified list.
         """
         raise NotImplementedError
@@ -493,7 +493,7 @@ class TwitterApi(object):
 
     def get_lists(self, user):
         """
-        Returns the lists of the specified `user`. Private lists will be included 
+        Return the lists of the specified `user`. Private lists will be included 
         if the authenticated user is the same as the user whose lists are 
         being returned.
         """
@@ -501,13 +501,13 @@ class TwitterApi(object):
 
     def get_own_lists(self):
         """
-        Returns the lists of the authenticated user.
+        Return the lists of the authenticated user.
         """
         raise NotImplementedError
 
     def get_list(self, list):
         """
-        Returns the specified `list`. Private lists will only be shown if 
+        Return the specified `list`. Private lists will only be shown if 
         the authenticated user owns the specified list.
         """
         raise NotImplementedError
@@ -523,14 +523,14 @@ class TwitterApi(object):
 
     def get_rate_limit_status(self):
         """
-        Returns the remaining number of API requests available to the requesting 
+        Return the remaining number of API requests available to the requesting 
         user before the API limit is reached for the current hour. 
         """
         raise NotImplementedError
 
     def verify_credential(self):
         """
-        Returns a representation of the requesting user if authentication 
+        Return a representation of the requesting user if authentication 
         was successful.
         """
         raise NotImplementedError
@@ -568,14 +568,14 @@ class TwitterApi(object):
 
     def get_totals(self):
         """
-        Returns the current count of friends, followers, updates (statuses) and 
+        Return the current count of friends, followers, updates (statuses) and 
         favorites of the authenticating user.
         """
         raise NotImplementedError
 
     def get_settings(self):
         """
-        Returns settings (including current trend, geo and sleep time information) 
+        Return settings (including current trend, geo and sleep time information) 
         for the authenticating user.
         """
         raise NotImplementedError
@@ -600,7 +600,7 @@ class TwitterApi(object):
     # Saved Searches
 
     def get_saved_searches(self):
-        """Returns the authenticated user's saved search queries."""
+        """Return the authenticated user's saved search queries."""
         raise NotImplementedError
 
     def get_saved_search_by_id(self, id):
@@ -624,7 +624,7 @@ class TwitterApi(object):
     # Places & Geo
 
     def get_place(self, id):
-        """Returns all the information about a known place."""
+        """Return all the information about a known place."""
         raise NotImplementedError
 
     def reverse_geocode(self, latitude, longitude):
@@ -1079,7 +1079,11 @@ class PythonTwitterApi(BaseApi, TwitterApi):
     def create_favorite(self, status, *args, **kwargs):
         _status = BaseStatus()
         _status.id = status.id
-        self.CreateFavorite(_status)
+        try:
+            self.CreateFavorite(_status)
+        except TwitterError:
+            # TODO: stop using `python-twitter`
+            pass
 
     def destroy_favorite(self, status, *args, **kwargs):
         _status = BaseStatus()
@@ -1174,12 +1178,16 @@ class AsyncApi(ApiWrapper):
 
     @wrap_exceptions
     def create_favorite(self, status):
+        if is_DM(status) or status.is_favorite:
+            raise Exception
         args = status,
         favorite_thread = Thread(target=self._api.create_favorite, args=args)
         favorite_thread.start()
 
     @wrap_exceptions
     def destroy_favorite(self, status):
+        if is_DM(status) or not status.is_favorite:
+            raise Exception
         args = status,
         unfavorite_thread = Thread(target=self._api.destroy_favorite, args=args)
         unfavorite_thread.start()

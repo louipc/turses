@@ -1,7 +1,7 @@
 ###############################################################################
 #                               coding=utf-8                                  #
-#           Copyright (c) 2012 Nicolas Paris and Alejandro Gómez.             #
-#       Licensed under the GPL License. See LICENSE.txt for full details.     #
+#            Copyright (c) 2012 turses contributors. See AUTHORS.             #
+#         Licensed under the GPL License. See LICENSE for full details.       #
 ###############################################################################
 
 import re
@@ -38,7 +38,7 @@ def is_DM(status):
     return status.__class__ == DirectMessage
 
 def get_authors_username(status):
-    """Returns the original author's username of the given status."""
+    """Return the original author's username of the given status."""
     if is_DM(status):
         username = status.sender_screen_name
     elif status.is_retweet:
@@ -120,12 +120,7 @@ class Status(object):
         self.author = author
 
     def get_relative_created_at(self):
-        """
-        Get a human redable string representing the posting time
-
-        Returns:
-          A human readable string representing the posting time
-        """
+        """Return a human readable string representing the posting time."""
         # This code is borrowed from `python-twitter` library
         fudge = 1.25
         delta  = long(time.time()) - long(self.created_at_in_seconds)
@@ -322,7 +317,7 @@ class Timeline(ActiveList):
         self.statuses = []
 
     def get_newer_than(self, datetime):
-        """Returns the statuses that are more recent than `datetime`."""
+        """Return the statuses that are more recent than `datetime`."""
         timestamp = timestamp_from_datetime(datetime)
         newer = lambda status : status.created_at_in_seconds > timestamp
         return filter(newer, self.statuses)

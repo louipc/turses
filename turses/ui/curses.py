@@ -1,9 +1,8 @@
 ###############################################################################
 #                               coding=utf-8                                  #
-#           Copyright (c) 2012 Nicolas Paris and Alejandro Gómez.             #
-#       Licensed under the GPL License. See LICENSE.txt for full details.     #
+#            Copyright (c) 2012 turses contributors. See AUTHORS.             #
+#         Licensed under the GPL License. See LICENSE for full details.       #
 ###############################################################################
-
 
 from gettext import gettext as _
 
@@ -409,27 +408,6 @@ class StatusBar(WidgetWrap):
         self._w.set_text('')
 
 
-class ScrollableListBoxWrapper(WidgetWrap):
-    """
-    A `WidgetWrap` subclass intented to wrap `ScrollableListBox`
-    elements, provides an interface for the scrolling capabilities.
-    """
-    def __init__(self, contents):
-        WidgetWrap.__init__(self, contents)
-
-    def scroll_up(self):
-        self._w.focus_previous()
-
-    def scroll_down(self):
-        self._w.focus_next()
-
-    def scroll_top(self):
-        self._w.focus_first()
-
-    def scroll_bottom(self):
-        self._w.focus_last()
-
-
 class ScrollableListBox(ListBox):
     """
     A `ListBox` subclass with additional methods for scrolling the
@@ -470,16 +448,31 @@ class ShiftScrollableListBox(ScrollableListBox):
     on top or bottom.
     """
     def focus_previous(self):
-        """Sets the focus in the first non-visible widget of the top of
-        the list (if any)."""
-        # TODO
-        pass
+        self.focus_first()
 
     def focus_next(self):
-        """Sets the focus in the first non-visible widget of the botto of
-        the list (if any)."""
-        # TODO
-        pass
+        self.focus_last()
+
+
+class ScrollableListBoxWrapper(WidgetWrap):
+    """
+    A `WidgetWrap` subclass intented to wrap `ScrollableListBox`
+    elements, provides an interface for the scrolling capabilities.
+    """
+    def __init__(self, contents):
+        WidgetWrap.__init__(self, contents)
+
+    def scroll_up(self):
+        self._w.focus_previous()
+
+    def scroll_down(self):
+        self._w.focus_next()
+
+    def scroll_top(self):
+        self._w.focus_first()
+
+    def scroll_bottom(self):
+        self._w.focus_last()
 
 
 class HelpBuffer(ScrollableListBoxWrapper):
@@ -492,8 +485,15 @@ class HelpBuffer(ScrollableListBoxWrapper):
     def __init__ (self, configuration):
         self.configuration = configuration
         self.items = []
-        w = AttrWrap(self.create_help_buffer(), 'body')
-        self.__super.__init__(w)
+        self.create_help_buffer()
+
+        # TODO
+        for widget in self.items:
+            def selectable(*arg, **kwarg):
+                return True
+            widget.selectable = selectable
+
+        ScrollableListBoxWrapper.__init__(self, ScrollableListBox(self.items))
 
     def create_help_buffer(self):
         self.insert_header()
@@ -553,26 +553,26 @@ class HelpBuffer(ScrollableListBoxWrapper):
         self.insert_help_item('open_image', _('Open image'))
         self.insert_help_item('redraw', _('Redraw the screen'))
 
-        return ShiftScrollableListBox(self.items)
-
     def insert_division(self, title):
         self.items.append(Divider(' '))
         self.items.append(Padding(AttrWrap(Text(title), 'focus'), left=4))
         self.items.append(Divider(' '))
 
     def insert_header(self):
-        self.items.append( Columns([
+        widgets = [
             ('fixed', self.col[0], Text('  Name')),
             ('fixed', self.col[1], Text('Key')),
-            Text('Description')
-        ]))
+            Text('Description') 
+        ]
+        self.items.append(Columns(widgets, 2))
 
     def insert_help_item(self, key, description):
-        self.items.append( Columns([
-            ('fixed', self.col[0], Text('  ' + key)),
+        widgets = [
+            ('fixed', self.col[0], Text('  ' + key)), 
             ('fixed', self.col[1], Text(self.configuration.keys[key])),
-            Text(description)
-        ]))
+            Text(description) 
+        ]
+        self.items.append(Columns(widgets))
 
 
 class TimelineBuffer(ScrollableListBoxWrapper):
@@ -628,7 +628,7 @@ class StatusWidget(WidgetWrap):
         return key
 
     def _create_header(self, status):
-        """Returns the header text for the status associated with this widget."""
+        """Return the header text for the status associated with this widget."""
         if is_DM(status):
             return self._dm_header(status)
 
@@ -676,27 +676,6 @@ class StatusWidget(WidgetWrap):
         )
 
         return encode(header)
-
-    def get_time(self, status):
-        """
-        Convert the time format given by the API to something more
-        readable.
-
-        Args:
-          date: full iso time format.
-
-        Returns string: human readable time.
-        """
-        #if hasattr(status, 'GetRelativeCreatedAt'):
-            #return status.GetRelativeCreatedAt()
-
-        # TODO
-        #hour = gmtime(status.GetCreatedAtInSeconds() - altzone)
-        #result = strftime('%H:%M', hour)
-        #if strftime('%d %b', hour) != strftime("%d %b", gmtime()):
-            #result += strftime(' - %d %b', hour)
-
-        return 'TODO'
 
 
 class BoxDecoration(WidgetDecoration, WidgetWrap):
