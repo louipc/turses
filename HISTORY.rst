@@ -1,3 +1,7 @@
+0.0.7
+-----
+- fix critical bug, missing dependency urwid
+
 0.0.6
 -----
 - fix bug with mouse events
