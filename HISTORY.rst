@@ -2,6 +2,7 @@
 -----
 - fix bug: self follow/unfollow
 - fix bug: editor signals
+- direct messages :)
 
 0.0.6
 -----

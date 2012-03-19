@@ -126,15 +126,33 @@ class CursesInterface(Frame, UserInterface):
         self.header.set_active_tab(index)
         self.set_header(self.header)
 
+    # -- Help mode ------------------------------------------------------------
+
+    def focus_next(self):
+        self.body.scroll_up()
+
+    def focus_previous(self):
+        self.body.scroll_down()
+
+    def focus_first(self):
+        self.body.scroll_top()
+
+    def focus_last(self):
+        self.body.scroll_bottom()
+
     # -- Editors --------------------------------------------------------------
 
     def _show_editor(self,
                      editor_cls,
                      prompt,
                      content,
-                     done_signal_handler):
+                     done_signal_handler,
+                     **kwargs):
         self._editor_mode = True
-        self.footer = editor_cls(prompt, content, done_signal_handler)
+        self.footer = editor_cls(prompt=prompt,
+                                 content=content,
+                                 done_signal_handler=done_signal_handler,
+                                 **kwargs)
         self.set_footer(self.footer)
         self.set_focus('footer')
 
@@ -159,11 +177,13 @@ class CursesInterface(Frame, UserInterface):
     def show_dm_editor(self, 
                        prompt='', 
                        content='',
+                       recipient='',
                        done_signal_handler=None):
         self._show_editor(DmEditor,
                           prompt,
                           content,
-                          done_signal_handler,)
+                          done_signal_handler,
+                          recipient=recipient,)
 
     def remove_editor(self, done_signal_handler):
         disconnect_signal(self.footer, 'done', done_signal_handler)
@@ -303,7 +323,7 @@ class DmEditor(TweetEditor):
                              content='',
                              done_signal_handler=done_signal_handler)
     
-    def emit_done_signal(self, content):
+    def emit_done_signal(self, content=None):
         emit_signal(self, 'done', self.recipient, content)
 
 

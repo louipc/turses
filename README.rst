@@ -35,6 +35,7 @@ Features
 - Tweet, Reply, Retweet, Delete tweet
 - Follow/Unfollow
 - Favorite/Unfavorite
+- Direct Messages
 - Search
 - View any user's tweets
 - Fully customizable
@@ -46,7 +47,6 @@ Roadmap
 -------
 
 - Documentation
-- DM
 - Thread view
 - Lists
 - Geo

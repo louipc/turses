@@ -1063,7 +1063,12 @@ class PythonTwitterApi(BaseApi, TwitterApi):
             return res
 
     def direct_message(self, username, text, *args, **kwargs):
-        self.PostDirectMessage(username, text)
+        try:
+            self.PostDirectMessage(username, text)
+        except TwitterError:
+            # It raises the "Status is a duplicate" Twitter error
+            # all the time even when sending the messages...
+            pass
 
     def create_friendship(self, screen_name, *args, **kwargs):
         self.CreateFriendship(screen_name)

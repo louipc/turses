@@ -127,7 +127,8 @@ class Turses(object):
 
     def append_home_timeline(self):
         self._append_timeline(name='Tweets',     
-                              update_function=self.api.get_home_timeline)
+                              update_function=self.api.get_home_timeline,)
+                              
 
     def append_own_tweets_timeline(self):
         user = self.api.verify_credentials()
@@ -243,7 +244,6 @@ class Turses(object):
     # -- UI -------------------------------------------------------------------
 
     def redraw_screen(self):
-        # FIXME the position of the cursor is lost when redrawing screen
         if hasattr(self, "loop"):
             self.loop.draw_screen()
 
@@ -276,21 +276,13 @@ class Turses(object):
                                   content=' '.join(mentioned),
                                   done_signal_handler=self.tweet_handler)
 
-    def dm(self):
-        # TODO
-        pass
-
-    #def show_dm_editor(self, prompt='', content=''):
-        #"""Shows the DM editor and connects the 'done' signal."""
-        #status = self.timelines.get_focused_status()
-        #recipient = get_authors_username(status)
-        #if prompt == '':
-            #prompt = _('DM to %s' % recipient) 
-        #self.show_editor(DmEditor, 
-                         #self.dm_handler, 
-                         #prompt=prompt, 
-                         #content=content,
-                         #recipient=recipient,)
+    def direct_message(self):
+        status = self.timelines.get_focused_status()
+        recipient = get_authors_username(status)
+        self.ui.show_dm_editor(prompt=_('DM to %s' % recipient), 
+                               content='',
+                               recipient=recipient,
+                               done_signal_handler=self.direct_message_handler)
 
 
     # -- Event handling -------------------------------------------------------
@@ -302,6 +294,7 @@ class Turses(object):
         if not isinstance(input, str):
             # TODO: handle mouse input
             return
+
         ch = ''.join(input)
 
         # Global commands
@@ -468,8 +461,7 @@ class Turses(object):
             self.unfollow_selected()
         # Send Direct Message
         elif input == self.configuration.keys['sendDM']:
-            #self.show_dm_editor()
-            self.info_message('Still to implement!')
+            self.direct_message()
         # Create favorite
         elif input == self.configuration.keys['fav']:
             self.favorite()
@@ -513,35 +505,45 @@ class Turses(object):
 
     def tweet_handler(self, text):
         """Handles the post as a tweet of the given `text`."""
-        # disconnect signal
         self.ui.remove_editor(self.tweet_handler)
-        # status message
         self.ui.set_focus('body')
-        self.info_message('sending tweet')
+
+        self.info_message(_('Sending tweet'))
+
         if not is_valid_status_text(text):
             # <Esc> was pressed
-            self.info_message('Tweet canceled')
+            self.info_message(_('Tweet canceled'))
             return
-        # API call
+
         tweet_sent = partial(self.info_message, _('Tweet sent'))
         tweet_not_sent = partial(self.error_message, _('Tweet not sent'))
+
+        # API call
         self.api.update(text=text, 
                         on_success=tweet_sent,
                         on_error=tweet_not_sent,)
 
-    def dm_handler(self, username, text):
-        """Handles the post as a DM of the given `text`."""
-        # disconnect signal
-        self.ui.remove_editor(self.dm_handler)
-        # remove editor
+    def direct_message_handler(self, username, text):
+        """Handles the post as a DM of the given `text` to `username`."""
+        self.ui.remove_editor(self.direct_message_handler)
         self.ui.set_focus('body')
-        self.info_message('Sending DM')
+
+        self.info_message(_('Sending DM'))
+
         if not is_valid_status_text(text):
             # <Esc> was pressed
-            self.info_message('DM canceled')
+            self.info_message(_('DM canceled'))
             return
+
+        dm_info = _('Direct Message to @%s sent' % username) 
+        dm_sent = partial(self.info_message, dm_info)
+        dm_error =_('Failed to send message to @%s' % username) 
+        dm_not_sent = partial(self.error_message, dm_error) 
+
         self.api.direct_message(screen_name=username, 
-                                text=text)
+                                text=text,
+                                on_success=dm_sent,
+                                on_error=dm_not_sent,)
 
     def search_handler(self, text):
         """
