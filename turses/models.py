@@ -208,6 +208,7 @@ class Timeline(ActiveList):
                  statuses=None,
                  update_function=None,
                  update_function_args=None):
+        ActiveList.__init__(self)
         self.name = name
         # key for sorting
         self._key = lambda status: status.created_at_in_seconds
@@ -215,6 +216,7 @@ class Timeline(ActiveList):
             self.statuses = sorted(statuses,
                                    key=self._key,
                                    reverse=True)
+            self.active_index = 0
         else:
             self.statuses = []
         self.update_function = update_function
@@ -253,6 +255,8 @@ class Timeline(ActiveList):
         not already in it.
         """
         if new_status not in self.statuses:
+            if self.active_index == self.NULL:
+                self.active_index = 0
             self.statuses.append(new_status)
             self.statuses.sort(key=self._key, reverse=True)
 
@@ -268,6 +272,7 @@ class Timeline(ActiveList):
 
     def clear(self):
         """Clears the Timeline."""
+        self.active_index = self.NULL
         self.statuses = []
 
     def get_newer_than(self, datetime):

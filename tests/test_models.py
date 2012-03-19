@@ -18,6 +18,7 @@ class TimelineTest(unittest.TestCase):
         self.timeline = Timeline()
         self.timeline.clear()
         self.assertEqual(len(self.timeline), 0)
+        self.assertEqual(self.timeline.active_index, -1)
 
     def _create_status(self, id, datetime):
         from calendar import timegm
@@ -36,6 +37,14 @@ class TimelineTest(unittest.TestCase):
         # check that adding more than once does not duplicate element
         self.timeline.add_status(status)
         self.assertEqual(len(self.timeline), 1)
+
+    def test_active_index_becomes_0_when_adding_first_status(self):
+        status = self._create_status(1, datetime.now())
+        self.timeline.add_status(status)
+        self.assertEqual(self.timeline.active_index, 0)
+        # check that adding than once does not move the active
+        self.timeline.add_status(status)
+        self.assertEqual(self.timeline.active_index, 0)
 
     def test_insert_different_statuses(self):
         old_status = self._create_status(1, datetime(1988, 12, 19))
