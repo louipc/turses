@@ -8,7 +8,7 @@ import re
 from datetime import datetime
 import time
 
-from .util import html_unescape
+from .util import html_unescape, timestamp_from_datetime
 
 
 retweet_re = re.compile('^RT @\w+:')
@@ -128,6 +128,9 @@ class Status(object):
         else:
           return "about %d days ago" % (delta / (60 * 60 * 24))
 
+    def __eq__(self, other):
+        return self.id == other.id
+
 
 class DirectMessage(object):
     def __init__(self,
@@ -207,7 +210,7 @@ class Timeline(ActiveList):
                  update_function_args=None):
         self.name = name
         # key for sorting
-        self._key = lambda status: datetime_from_status(status)
+        self._key = lambda status: status.created_at_in_seconds
         if statuses:
             self.statuses = sorted(statuses,
                                    key=self._key,
@@ -269,8 +272,9 @@ class Timeline(ActiveList):
 
     def get_newer_than(self, datetime):
         """Returns the statuses that are more recent than `datetime`."""
-        return filter(lambda status : is_more_recent(status, datetime),
-                      self.statuses)
+        timestamp = timestamp_from_datetime(datetime)
+        newer = lambda status : status.created_at_in_seconds > timestamp
+        return filter(newer, self.statuses)
 
     def update(self):
         if not self.update_function:

@@ -9,6 +9,7 @@ import argparse
 import re
 from htmlentitydefs import entitydefs
 from time import strftime, gmtime
+from calendar import timegm
 
 from . import __version__
 
@@ -56,3 +57,6 @@ def encode(string):
         return string.encode(sys.stdout.encoding, 'replace')
     except AttributeError:
         return string
+
+def timestamp_from_datetime(datetime):
+    return timegm(datetime.utctimetuple())
