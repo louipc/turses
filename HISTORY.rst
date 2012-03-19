@@ -1,6 +1,7 @@
 0.0.7
 -----
-- fix bug with self follow/unfollow
+- fix bug: self follow/unfollow
+- fix bug: editor signals
 
 0.0.6
 -----

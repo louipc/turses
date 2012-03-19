@@ -43,6 +43,7 @@ class CursesInterface(Frame, UserInterface):
                        WelcomeBuffer(),
                        header=TabsWidget(),
                        footer=StatusBar(''))
+        self._editor_mode = False
 
 
     # -- Modes ----------------------------------------------------------------
@@ -73,6 +74,9 @@ class CursesInterface(Frame, UserInterface):
 
     def is_in_help_mode(self):
         return self.body.__class__ == HelpBuffer
+
+    def is_in_editor_mode(self):
+        return self._editor_mode
 
     # -- Header ---------------------------------------------------------------
 
@@ -110,7 +114,7 @@ class CursesInterface(Frame, UserInterface):
         self.body.render_timeline(timeline)
         self.set_body(self.body)
 
-    def set_focus(self, index):
+    def focus_status(self, index):
         if self.is_in_timeline_mode():
             self.body.set_focus(index)
 
@@ -129,10 +133,10 @@ class CursesInterface(Frame, UserInterface):
                      prompt,
                      content,
                      done_signal_handler):
-        self.footer = editor_cls(prompt, content)
+        self._editor_mode = True
+        self.footer = editor_cls(prompt, content, done_signal_handler)
         self.set_footer(self.footer)
         self.set_focus('footer')
-        connect_signal(self.footer, 'done', done_signal_handler)
 
     def show_text_editor(self, 
                          prompt='', 
@@ -162,11 +166,15 @@ class CursesInterface(Frame, UserInterface):
                           done_signal_handler,)
 
     def remove_editor(self, done_signal_handler):
-        disconnect_signal(self, self.footer, 'done', done_signal_handler)
+        disconnect_signal(self.footer, 'done', done_signal_handler)
+        self._editor_mode = False
         self.clear_status()
 
-    def disconnect_editor_done_signal(self, done_signal_handler):
-        disconnect_signal(self, self.footer, 'done', done_signal_handler)
+    def keypress(self, size, key):
+        if self.is_in_editor_mode():
+            return self.footer.keypress(size, key)
+        else:
+            return key
 
 
 class WelcomeBuffer(WidgetWrap):
@@ -198,16 +206,32 @@ class TextEditor(WidgetWrap):
     __metaclass__ = signals.MetaSignals
     signals = ['done']
 
-    def __init__(self, prompt='', content=''):
+    def __init__(self, 
+                 prompt, 
+                 content, 
+                 done_signal_handler):
         if content:
             content += ' '
-        self.editor = Editor(u'%s (twice enter key to validate or esc) \n>> ' % prompt, content)
-
-        connect_signal(self.editor, 'done', self.emit_done_signal)
+        self.editor = Edit(u'%s (twice enter key to validate or esc) \n>> ' % prompt, content)
+        self.last_key = ''
+        
+        connect_signal(self, 'done', done_signal_handler)
 
         self.__super.__init__(self.editor)
 
-    def emit_done_signal(self, content):
+    def keypress(self, size, key):
+        if key == 'enter' and self.last_key == 'enter':
+            self.emit_done_signal(self.editor.get_edit_text())
+            return
+        elif key == 'esc':
+            self.emit_done_signal()
+            return
+
+        self.last_key = key
+        size = size,
+        self.editor.keypress(size, key)
+
+    def emit_done_signal(self, content=None):
         emit_signal(self, 'done', content)
 
 
@@ -217,30 +241,49 @@ class TweetEditor(WidgetWrap):
     __metaclass__ = signals.MetaSignals
     signals = ['done']
 
-    def __init__(self, prompt='', content=''):
+    def __init__(self, 
+                 prompt, 
+                 content, 
+                 done_signal_handler):
         if content:
             content += ' '
-        self.editor = Editor(u'%s (twice enter key to validate or esc) \n>> ' % prompt, content)
+        self.editor = Edit(u'%s (twice enter key to validate or esc) \n>> ' % prompt, content)
+
         self.counter = len(content)
         self.counter_widget = Text(str(self.counter))
-        w = Columns([('fixed', 4, self.counter_widget), self.editor])
 
-        connect_signal(self.editor, 'done', self.emit_done_signal)
+        widgets = [('fixed', 4, self.counter_widget), self.editor]
+        w = Columns(widget_list=widgets,
+                    # `Column` passes keypresses to the focused widget,
+                    # in this case the editor
+                    focus_column=1)
+
+        connect_signal(self, 'done', done_signal_handler)
         connect_signal(self.editor, 'change', self.update_counter)
 
         self.__super.__init__(w)
-    
-    def emit_done_signal(self, content):
-        emit_signal(self, 'done', content)
 
     def update_counter(self, edit, new_edit_text):
         self.counter = len(new_edit_text)
         self.counter_widget.set_text(str(self.counter))
 
     def keypress(self, size, key):
-        if self.counter > TWEET_MAX_CHARS and key == 'enter' and self.editor.last_key == 'enter':
+        if key == 'enter' and self.last_key == 'enter':
+            if self.counter > TWEET_MAX_CHARS:
                 return
-        Editor.keypress(self.editor, size, key)
+            else:
+                self.emit_done_signal(self.editor.get_edit_text())
+        elif key == 'esc':
+            self.emit_done_signal()
+            return
+
+        self.last_key = key
+        size = size,
+        editor = self._w.get_focus()
+        editor.keypress(size, key)
+
+    def emit_done_signal(self, content=None):
+        emit_signal(self, 'done', content)
 
 
 class DmEditor(TweetEditor):
@@ -249,36 +292,19 @@ class DmEditor(TweetEditor):
     __metaclass__ = signals.MetaSignals
     signals = ['done']
 
-    def __init__(self, recipient, prompt='', content=''):
+    def __init__(self, 
+                 recipient, 
+                 prompt, 
+                 content, 
+                 done_signal_handler):
         self.recipient = recipient
-        TweetEditor.__init__(self, prompt, content)
+        TweetEditor.__init__(self, 
+                             prompt='DM to %s' % recipient, 
+                             content='',
+                             done_signal_handler=done_signal_handler)
     
     def emit_done_signal(self, content):
         emit_signal(self, 'done', self.recipient, content)
-
-
-class Editor(Edit):
-    """
-    Basic editor widget.
-    
-    The editing action is confirmed pressing <CR> twice in a row and cancelled
-    pressing <Esc>.
-    """
-
-    __metaclass__ = signals.MetaSignals
-    signals = ['done']
-    last_key = ''
-
-    def keypress(self, size, key):
-        if key == 'enter' and self.last_key == 'enter':
-            emit_signal(self, 'done', self.get_edit_text())
-            return
-        elif key == 'esc':
-            emit_signal(self, 'done', None)
-            return
-
-        self.last_key = key
-        Edit.keypress(self, size, key)
 
 
 class TabsWidget(WidgetWrap):

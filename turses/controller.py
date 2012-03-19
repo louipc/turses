@@ -12,7 +12,7 @@ from functools import partial
 import urwid
 
 from .constant import palette
-from .api import AsyncApi
+from .api import AsyncApi, RateLimitExceededException
 from .models import Timeline, TimelineList
 from .models import get_authors_username, get_mentioned_usernames
 from .models import is_valid_status_text, is_valid_search_text, is_valid_username
@@ -41,11 +41,16 @@ class Turses(object):
         # start main loop
         try:
             self.main_loop()
+        except RateLimitExceededException:
+            # TODO
+            #  how much time before being able to use the API 
+            self.error_message(_('Twitter rate limit exceeded'))
+            self.main_loop()
         except:
             self.main_loop()
         else:
-            # clear screen
-            pass
+            # TODO clear screen
+            exit(0)
 
     def main_loop(self):
         if not hasattr(self, 'loop'):
@@ -169,9 +174,7 @@ class Turses(object):
         # draw active timeline
         active_timeline = self.timelines.get_active_timeline()
         self.ui.draw_timeline(active_timeline)
-        self.ui.set_focus(active_timeline.active_index)
-        ## redraw screen
-        #self.redraw_screen()
+        self.ui.focus_status(active_timeline.active_index)
 
     # TODO decorator `timeline_mode` for checking `has_timelines` and drawing
 
@@ -257,6 +260,7 @@ class Turses(object):
 
     def tweet(self):
         self.ui.show_tweet_editor(prompt=_('Tweet'), 
+                                  content='',
                                   done_signal_handler=self.tweet_handler)
 
     def reply(self):
@@ -571,6 +575,7 @@ class Turses(object):
         self.ui.remove_editor(self.search_user_handler)
         # remove editor
         self.ui.set_focus('body')
+        # TODO make sure that the user EXISTS and THEN fetch its tweets
         if not is_valid_username(username):
             # TODO error message editor and continue editing
             self.info_message(_('Invalid username'))
