@@ -1,8 +1,12 @@
-0.0.7
+0.0.8
 -----
 - fix bug: self follow/unfollow
 - fix bug: editor signals
 - direct messages :)
+
+0.0.7
+-----
+- fix critical bug, missing dependency urwid
 
 0.0.6
 -----
