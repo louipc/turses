@@ -16,6 +16,7 @@ requirements = [
     "oauth2",
     "python-twitter",
     "simplejson",
+    "urwid",
 ]
 test_requirements = list(requirements)
 test_requirements.extend(["mock"])
