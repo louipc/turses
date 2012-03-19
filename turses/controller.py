@@ -261,7 +261,7 @@ class Turses(object):
 
     def reply(self):
         status = self.timelines.get_focused_status()
-        author = get_authors_username(status)
+        author = '@%s' % get_authors_username(status)
         mentioned = get_mentioned_usernames(status)
         mentioned.insert(0, author)
         try:
@@ -618,8 +618,7 @@ class Turses(object):
 
     def follow_selected(self):
         status = self.timelines.get_focused_status()
-        # remove the '@'
-        username = get_authors_username(status)[1:]
+        username = get_authors_username(status)
         if username == self.user.screen_name:
             self.error_message(_('You can\'t follow yourself'))
             return
@@ -633,8 +632,7 @@ class Turses(object):
 
     def unfollow_selected(self):
         status = self.timelines.get_focused_status()
-        # remove the '@'
-        username = get_authors_username(status)[1:]
+        username = get_authors_username(status)
         if username == self.user.screen_name:
             self.error_message(_('That doesn\'t make any sense'))
             return

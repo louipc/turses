@@ -41,10 +41,12 @@ def get_authors_username(status):
     """Returns the original author's username of the given status."""
     if is_DM(status):
         username = status.sender_screen_name
+    elif status.is_retweet:
+        username = status.author
     else:
         username = status.user
 
-    return ''.join(['@', username])
+    return username
 
 def is_username(string):
     return string.startswith('@')
@@ -76,13 +78,23 @@ def is_valid_username(username):
 
 
 class User(object):
+    """
+    Programs representation of a Twitter user. Api adapters must convert
+    their representations to instances of this class.
+    """
+
     def __init__(self,
                  screen_name):
         self.screen_name = screen_name
 
 
 class Status(object):
+    """
+    Programs representation of a Twitter status. Api adapters must convert
+    their representations to instances of this class.
+    """
 
+    # TODO make all arguments mandatory
     def __init__(self, 
                  created_at_in_seconds,
                  id,
@@ -90,7 +102,12 @@ class Status(object):
                  text,
                  is_reply=False,
                  is_retweet=False,
-                 is_favorite=False,):
+                 is_favorite=False,
+                 # for replies
+                 in_reply_to_user='',
+                 # for retweets
+                 retweet_count=0,
+                 author='',):
                  
         self.created_at_in_seconds = created_at_in_seconds
         self.user = user
@@ -99,6 +116,8 @@ class Status(object):
         self.is_reply = is_reply
         self.is_retweet = is_retweet
         self.is_favorite = is_favorite
+        self.retweet_count = retweet_count
+        self.author = author
 
     def get_relative_created_at(self):
         """
@@ -133,6 +152,11 @@ class Status(object):
 
 
 class DirectMessage(Status):
+    """
+    Programs representation of a Twitter direct message. Api adapters must 
+    convert their representations to instances of this class.
+    """
+
     def __init__(self,
                  id,
                  created_at_in_seconds,
@@ -146,9 +170,16 @@ class DirectMessage(Status):
         self.text = html_unescape(text)
 
 
+class List(object):
+    # TODO
+    pass
+
+
 class ActiveList(object):
     """
-    A list that contains an 'active' element.
+    A list that contains an 'active' element. This class implements some
+    functions but the subclasses must define `get_active`, `is_valid_index` 
+    and `activate_last` methods.
     """
     NULL = -1
 
@@ -184,6 +215,13 @@ class ActiveList(object):
 
 
 class UnsortedActiveList(ActiveList):
+    """
+    An `ActiveList` in which the 'active' element can be shifted position by
+    position, to the begging and to the end. 
+    
+    The subclass must implement all the provided methods.
+    """
+
     def shift_active_previous(self):
         """Shifts the active timeline one position to the left."""
         raise NotImplementedError
@@ -205,6 +243,8 @@ class Timeline(ActiveList):
     """
     List of Twitter statuses ordered reversely by date. Optionally with
     a name, a function that updates the current timeline and its arguments.
+
+    One of the elements of the timeline is the 'active'.
     """
 
     # TODO make possible to pass dicts as **kwargs in `update_function_args`
@@ -262,6 +302,7 @@ class Timeline(ActiveList):
         if new_status not in self.statuses:
             if self.active_index == self.NULL:
                 self.active_index = 0
+            # TODO: keep cursor in same tweet when inserting statuses (?)
             self.statuses.append(new_status)
             self.statuses.sort(key=self._key, reverse=True)
 

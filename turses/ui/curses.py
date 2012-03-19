@@ -14,7 +14,7 @@ from urwid import signals, emit_signal, connect_signal, disconnect_signal
 from urwid import __version__ as urwid_version
 
 from .. import __version__
-from ..models import is_DM
+from ..models import is_DM, get_authors_username
 from ..util import encode 
 from .base import UserInterface
  
@@ -121,10 +121,6 @@ class CursesInterface(Frame, UserInterface):
     def activate_tab(self, index):
         self.header.set_active_tab(index)
         self.set_header(self.header)
-
-    def focused_status(self):
-        if self.is_in_timeline_mode():
-            return self.body.get_focused_status()
 
     # -- Editors --------------------------------------------------------------
 
@@ -562,17 +558,7 @@ class TimelineWidget(ScrollableListBox):
         status_widgets = [StatusWidget(status) for status in statuses]
         ScrollableListBox.__init__(self, status_widgets)
 
-    def get_focused_widget(self):
-        """Returns the currently focused `StatusWidget` (if any)."""
-        _, pos = self.get_focus()
-        if pos is not None:
-            widget = self.body[pos]
-            return widget
 
-
-# TODO:
-#  all the knowledge must be about the `Status` and `DirectMessage` classes
-#  in `models.py`
 class StatusWidget(WidgetWrap):
     """Widget containing a Twitter status."""
 
@@ -597,30 +583,30 @@ class StatusWidget(WidgetWrap):
 
     def _create_header(self, status):
         """Returns the header text for the status associated with this widget."""
-        # dm
         if is_DM(status):
             return self._dm_header(status)
 
-        retweeted = ''
+        # tweet or retweet
         reply = ''
+        retweeted = ''
         retweet_count = ''
         retweeter = ''
         username = status.user
         relative_created_at = status.get_relative_created_at()
 
-        #if status.is_reply:
-            #reply = u' \u2709'
-        #elif status.is_retweet:
-            #retweeted = u" \u267b "
-            #retweeter = username
-            ##username = self.origin_of_retweet(status)
+        # reply
+        if status.is_reply:
+            reply = u' \u2709'
 
-        #if self.get_retweet_count(status):
-            #retweet_count = str(self.get_retweet_count(status))
+        # retweet
+        if status.is_retweet:
+            retweeted = u" \u267b "
+            retweeter = username
+            author = get_authors_username(status)
+            username = author 
+            retweet_count = str(status.retweet_count)
             
-        # TODO 
-        #  - take template from configuration
-        #  - {favorite} template variable
+        # create header
         header_template = ' {username}{retweeted}{retweeter} - {time}{reply} {retweet_count} '
         header = unicode(header_template).format(
             username= username,
@@ -634,9 +620,16 @@ class StatusWidget(WidgetWrap):
         return encode(header)
 
     def _dm_header(self, dm):
-        # TODO
-        #  sender => receiver
-        return dm.sender_screen_name + " => " + dm.recipient_screen_name
+        # TODO: make DM template configurable
+        dm_template = ' {sender_screen_name} -> {recipient_screen_name} - {time} '
+        relative_created_at = dm.get_relative_created_at()
+        header = unicode(dm_template).format(
+            sender_screen_name=dm.sender_screen_name,
+            recipient_screen_name=dm.recipient_screen_name,
+            time = relative_created_at,
+        )
+
+        return encode(header)
 
     def get_time(self, status):
         """

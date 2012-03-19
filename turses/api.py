@@ -977,11 +977,25 @@ class PythonTwitterApi(BaseApi, TwitterApi):
 
     def _to_statuses(self, statuses):
         def to_status(status):
-            # TODO: check if reply, retweet or favorite
-            return Status(id=status.id, 
-                          created_at_in_seconds=status.created_at_in_seconds,
-                          user=status.user.screen_name,
-                          text=status.text,)
+            kwargs = {
+                'id': status.id, 
+                'created_at_in_seconds': status.created_at_in_seconds,
+                'user': status.user.screen_name,
+                'text': status.text,
+            }
+
+            if (status.favorited):
+                kwargs['is_favorite'] = True
+            elif (status.retweeted):
+                kwargs['is_retweet'] = True
+                kwargs['retweet_count'] = int(status.retweet_count)
+                kwargs['author'] = status.retweeted_status.user.screen_name
+
+            if (status.in_reply_to_screen_name):
+                kwargs['is_reply'] = True 
+                kwargs['in_reply_to_user'] = status.in_reply_to_screen_name
+
+            return Status(**kwargs)
 
         return [to_status(s) for s in statuses]
 
