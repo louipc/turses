@@ -186,12 +186,12 @@ class Turses(object):
 
     def shift_buffer_left(self):
         if self.timelines.has_timelines():
-            self.timelines.shift_active_left()
+            self.timelines.shift_active_previous()
             self.draw_timelines()
 
     def shift_buffer_right(self):
         if self.timelines.has_timelines():
-            self.timelines.shift_active_right()
+            self.timelines.shift_active_next()
             self.draw_timelines()
 
     def shift_buffer_beggining(self):
