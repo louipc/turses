@@ -263,6 +263,10 @@ class Turses(object):
         author = get_authors_username(status)
         mentioned = get_mentioned_usernames(status)
         mentioned.insert(0, author)
+        try:
+            mentioned.remove('@%s' % self.user.screen_name)
+        except ValueError:
+            pass
         self.ui.show_tweet_editor(prompt=_('Reply to %s' % author),
                                   content=' '.join(mentioned),
                                   done_signal_handler=self.tweet_handler)
