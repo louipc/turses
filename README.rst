@@ -62,8 +62,10 @@ the TODO file. Eventually every task will reside in the repository's
 
 .. _`issue tracker`: http://github.com/alejandrogomez/turses/issues
 
-Feel free to open issues with bugs, enhancements and features you will like
-to see in **turses**; or hack them yourselves and send a pull request!
+The branch in which I do most of the development is `develop`, I merge to `master`
+when the code is ready for a release and I use extra branches for working in particular 
+tasks. If you want to hack with turses, branch-off `develop` or work there and
+send a pull request.
 
 Code
 ----
