@@ -1005,6 +1005,7 @@ class PythonTwitterApi(BaseApi, TwitterApi):
         dms = self.GetDirectMessages()
         def convert_to_dm(dm):
             return DirectMessage(id=dm.id,
+                                 created_at_in_seconds=dm.created_at_in_seconds,
                                  sender_screen_name=dm.sender_screen_name,
                                  recipient_screen_name=dm.recipient_screen_name,
                                  text=dm.text)

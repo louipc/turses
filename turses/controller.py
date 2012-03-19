@@ -169,6 +169,7 @@ class Turses(object):
         # draw active timeline
         active_timeline = self.timelines.get_active_timeline()
         self.ui.draw_timeline(active_timeline)
+        self.ui.set_focus(active_timeline.active_index)
         ## redraw screen
         #self.redraw_screen()
 
@@ -259,7 +260,7 @@ class Turses(object):
                                   done_signal_handler=self.tweet_handler)
 
     def reply(self):
-        status = self.ui.focused_status()
+        status = self.timelines.get_focused_status()
         author = get_authors_username(status)
         mentioned = get_mentioned_usernames(status)
         mentioned.insert(0, author)
@@ -277,7 +278,7 @@ class Turses(object):
 
     #def show_dm_editor(self, prompt='', content=''):
         #"""Shows the DM editor and connects the 'done' signal."""
-        #status = self.ui.focused_status()
+        #status = self.timelines.get_focused_status()
         #recipient = get_authors_username(status)
         #if prompt == '':
             #prompt = _('DM to %s' % recipient) 
@@ -351,19 +352,26 @@ class Turses(object):
                 self.help_mode()
 
     def _motion_key_handler(self, input):
-        # TODO move handling of motion commands to the Widgets
         # Up
-        if input == self.configuration.keys['up']:
-            self.ui.body.scroll_up()
+        if input == self.configuration.keys['up'] and self.ui.is_in_timeline_mode():
+            active_timeline = self.timelines.get_active_timeline()
+            active_timeline.activate_previous()
+            self.draw_timelines()
         # Down
-        elif input == self.configuration.keys['down']:
-            self.ui.body.scroll_down()
+        elif input == self.configuration.keys['down'] and self.ui.is_in_timeline_mode():
+            active_timeline = self.timelines.get_active_timeline()
+            active_timeline.activate_next()
+            self.draw_timelines()
         # Scroll to Top
-        elif input == self.configuration.keys['scroll_to_top']:
-            self.ui.body.scroll_top()
+        elif input == self.configuration.keys['scroll_to_top'] and self.ui.is_in_timeline_mode():
+            active_timeline = self.timelines.get_active_timeline()
+            active_timeline.activate_first()
+            self.draw_timelines()
         # Scroll to Bottom
-        elif input == self.configuration.keys['scroll_to_bottom']:
-            self.ui.body.scroll_bottom()
+        elif input == self.configuration.keys['scroll_to_bottom'] and self.ui.is_in_timeline_mode():
+            active_timeline = self.timelines.get_active_timeline()
+            active_timeline.activate_last()
+            self.draw_timelines()
 
     def _buffer_key_handler(self, input):
         # Right
@@ -581,7 +589,7 @@ class Turses(object):
     # -- API ------------------------------------------------------------------
 
     def retweet(self):
-        status = self.ui.focused_status()
+        status = self.timelines.get_focused_status()
         retweet_posted = partial(self.info_message, 
                                  _('Retweet posted'))
         retweet_post_failed = partial(self.error_message, 
@@ -591,7 +599,7 @@ class Turses(object):
                          status=status,)
 
     def manual_retweet(self):
-        status = self.ui.focused_status()
+        status = self.timelines.get_focused_status()
         rt_text = 'RT ' + status.text
         if is_valid_status_text(' ' + rt_text):
             self.tweet(content=rt_text)
@@ -599,7 +607,7 @@ class Turses(object):
             self.error_message(_('Tweet too long for manual retweet'))
 
     def delete_tweet(self):
-        status = self.ui.focused_status()
+        status = self.timelines.get_focused_status()
         status_deleted = partial(self.info_message, 
                                  _('Tweet deleted'))
         status_not_deleted = partial(self.error_message, 
@@ -609,7 +617,7 @@ class Turses(object):
                          on_success=status_deleted)
 
     def follow_selected(self):
-        status = self.ui.focused_status()
+        status = self.timelines.get_focused_status()
         # remove the '@'
         username = get_authors_username(status)[1:]
         if username == self.user.screen_name:
@@ -624,7 +632,7 @@ class Turses(object):
                                    on_success=follow_done)
 
     def unfollow_selected(self):
-        status = self.ui.focused_status()
+        status = self.timelines.get_focused_status()
         # remove the '@'
         username = get_authors_username(status)[1:]
         if username == self.user.screen_name:
@@ -639,7 +647,7 @@ class Turses(object):
                                     on_success=unfollow_done)
 
     def favorite(self):
-        status = self.ui.focused_status()
+        status = self.timelines.get_focused_status()
         favorite_error = partial(self.error_message,
                                  _('Failed to mark tweet as favorite'))
         favorite_done = partial(self.info_message,
@@ -649,7 +657,7 @@ class Turses(object):
                                  status=status,)
 
     def unfavorite(self):
-        status = self.ui.focused_status()
+        status = self.timelines.get_focused_status()
         unfavorite_error = partial(self.error_message,
                                    _('Failed to remove tweet from favorites'))
         unfavorite_done = partial(self.info_message,

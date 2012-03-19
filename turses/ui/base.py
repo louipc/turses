@@ -60,6 +60,9 @@ class UserInterface(object):
     def draw_timeline(self, timeline):
         raise NotImplementedError
 
+    def set_focus(self, index):
+        raise NotImplementedError
+
     def set_tab_names(self, names):
         raise NotImplementedError
 

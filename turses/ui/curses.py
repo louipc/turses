@@ -110,6 +110,10 @@ class CursesInterface(Frame, UserInterface):
         self.body.render_timeline(timeline)
         self.set_body(self.body)
 
+    def set_focus(self, index):
+        if self.is_in_timeline_mode():
+            self.body.set_focus(index)
+
     def set_tab_names(self, names):
         self.header.set_tabs(names)
         self.set_header(self.header)
@@ -543,11 +547,8 @@ class TimelineBuffer(ScrollableListBoxWrapper):
         """Renders the given statuses."""
         self._w = TimelineWidget(timeline)
 
-    def get_focused_status(self):
-        widget = self._w.get_focused_widget()
-        # XXX: move it to the model!
-        if widget:
-            return widget.status
+    def set_focus(self, index):
+        self._w.set_focus(index)
 
 
 class TimelineWidget(ScrollableListBox):

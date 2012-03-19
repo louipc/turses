@@ -132,13 +132,15 @@ class Status(object):
         return self.id == other.id
 
 
-class DirectMessage(object):
+class DirectMessage(Status):
     def __init__(self,
                  id,
+                 created_at_in_seconds,
                  sender_screen_name,
                  recipient_screen_name,
                  text):
         self.id = id
+        self.created_at_in_seconds = created_at_in_seconds
         self.sender_screen_name = sender_screen_name
         self.recipient_screen_name = recipient_screen_name
         self.text = html_unescape(text)
@@ -152,6 +154,9 @@ class ActiveList(object):
 
     def __init__(self):
         self.active_index = self.NULL
+
+    def get_active(self):
+        raise NotImplementedError
 
     def is_valid_index(self, index):
         raise NotImplementedError
@@ -311,9 +316,13 @@ class Timeline(ActiveList):
 
     # from `ActiveList`
 
+    def get_active(self):
+        if self.statuses and self.is_valid_index(self.active_index):
+            return self.statuses[self.active_index]
+
     def is_valid_index(self, index):
         if self.statuses:
-            return index > 0 and index < len(self.statuses)
+            return index >= 0 and index < len(self.statuses)
         else:
             self.active_index = self.NULL
         return False
@@ -351,6 +360,11 @@ class TimelineList(UnsortedActiveList):
             return timeline
         else:
             raise Exception("There are no timelines in the list")
+
+    def get_focused_status(self):
+        if self.has_timelines():
+            active_timeline = self.get_active_timeline()
+            return active_timeline.get_active()
 
     def append_timeline(self, timeline):
         """Appends a new `Timeline` to the end of the list."""
@@ -398,6 +412,9 @@ class TimelineList(UnsortedActiveList):
         return self.timelines.__len__()
 
     # from `UnsortedActiveList`
+    
+    def get_active(self):
+        return self.get_active_timeline()
 
     def is_valid_index(self, index):
         return index >= 0 and index < len(self.timelines)
