@@ -5,7 +5,6 @@
 ###############################################################################
 
 
-from time import gmtime, strftime
 from gettext import gettext as _
 
 from urwid import AttrWrap, WidgetWrap, Padding, WidgetDecoration
@@ -14,8 +13,8 @@ from urwid import ListBox, SimpleListWalker
 from urwid import signals, emit_signal, connect_signal, disconnect_signal
 from urwid import __version__ as urwid_version
 
-from ..models import is_retweet 
-from ..util import encode, html_unescape
+from ..models import is_DM
+from ..util import encode 
 from ..constant import banner
 from .base import UserInterface
 
@@ -535,6 +534,7 @@ class TimelineBuffer(ScrollableListBoxWrapper):
 
     def get_focused_status(self):
         widget = self._w.get_focused_widget()
+        # XXX: move it to the model!
         if widget:
             return widget.status
 
@@ -567,16 +567,13 @@ class StatusWidget(WidgetWrap):
     def __init__ (self, status):
         self.status = status
         text = status.text
-        status_content = Padding(
-            AttrWrap(Text(text), 'body'), 
-            left=1, 
-            right=1)
-        header = self.create_header(status)
+        status_content = Padding(AttrWrap(Text(text), 'body'), left=1, right=1)
+        header = self._create_header(status)
         box = BoxDecoration(status_content, title=header)
-        if self.is_favorite(status):
-            widget = AttrWrap(box, 'favorited', 'focus')
-        else:
-            widget = AttrWrap(box, 'line', 'focus')
+        #if status.is_favorite:
+            #widget = AttrWrap(box, 'favorited', 'focus')
+        #else:
+        widget = AttrWrap(box, 'line', 'focus')
         self.__super.__init__(widget)
 
     def selectable(self):
@@ -586,55 +583,49 @@ class StatusWidget(WidgetWrap):
         #TODO! modify widget attributes in response to certain actions
         return key
 
-    def create_header(self, status):
+    def _create_header(self, status):
         """Returns the header text for the status associated with this widget."""
+        # dm
+        if is_DM(status):
+            return self._dm_header(status)
+
         retweeted = ''
         reply = ''
         retweet_count = ''
         retweeter = ''
-        source = self.get_source(status)
-        username = self.get_username(status)
-        time = self.get_time(status)
+        username = status.user
+        time = 'TODO'
+        #time = status.time
 
-        if self.is_reply(status):
-            reply = u' \u2709'
-        if is_retweet(status):
-            retweeted = u" \u267b "
-            retweeter = username
-            username = self.origin_of_retweet(status)
+        #if status.is_reply:
+            #reply = u' \u2709'
+        #elif status.is_retweet:
+            #retweeted = u" \u267b "
+            #retweeter = username
+            ##username = self.origin_of_retweet(status)
 
-        if self.get_retweet_count(status):
-            retweet_count = str(self.get_retweet_count(status))
+        #if self.get_retweet_count(status):
+            #retweet_count = str(self.get_retweet_count(status))
             
         # TODO 
         #  - take template from configuration
         #  - {favorite} template variable
         header_template = ' {username}{retweeted}{retweeter} - {time}{reply} {retweet_count} '
         header = unicode(header_template).format(
-            time = time,
             username= username,
-            reply = reply,
             retweeted = retweeted,
-            source = source,
+            retweeter = retweeter,
+            time = time,
+            reply = reply,
             retweet_count = retweet_count,
-            retweeter = retweeter
         )
 
         return encode(header)
 
-    def get_source(self, status):
-        source = ''
-        if hasattr(status, 'source'):
-            source = status.source
-        return source
-
-    def get_username(self, status):
-        if hasattr(status, 'user'):
-            nick = status.user.screen_name
-        else:
-            # Used for direct messages
-            nick = status.sender_screen_name
-        return nick
+    def _dm_header(self, dm):
+        # TODO
+        #  sender => receiver
+        return dm.sender_screen_name + " => " + dm.recipient_screen_name
 
     def get_time(self, status):
         """
@@ -646,8 +637,8 @@ class StatusWidget(WidgetWrap):
 
         Returns string: human readable time.
         """
-        if hasattr(status, 'GetRelativeCreatedAt'):
-            return status.GetRelativeCreatedAt()
+        #if hasattr(status, 'GetRelativeCreatedAt'):
+            #return status.GetRelativeCreatedAt()
 
         # TODO
         #hour = gmtime(status.GetCreatedAtInSeconds() - altzone)
@@ -656,31 +647,6 @@ class StatusWidget(WidgetWrap):
             #result += strftime(' - %d %b', hour)
 
         return 'TODO'
-
-    def is_reply(self, status):
-        if hasattr(status, 'in_reply_to_screen_name'):
-            reply = status.in_reply_to_screen_name
-            if reply:
-                return True
-        return False
-
-    def origin_of_retweet(self, status):
-        """
-        Returns the original author of the tweet being retweeted.
-        """
-        origin = status.text
-        origin = origin[4:]
-        origin = origin.split(':')[0]
-        origin = str(origin)
-        return origin
-
-    def get_retweet_count(self, status):
-        if hasattr(status, 'retweet_count'):
-            return status.retweet_count
-
-    def is_favorite(self, status):
-        if hasattr(status, 'favorited'):
-            return status.favorited
 
 
 class BoxDecoration(WidgetDecoration, WidgetWrap):

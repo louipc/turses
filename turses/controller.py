@@ -640,9 +640,9 @@ class Turses(object):
                                  _('Failed to mark tweet as favorite'))
         favorite_done = partial(self.info_message,
                                 _('Tweet marked as favorite'))
-        self.api.create_favorite(status=status, 
-                                 on_error=favorite_error,
-                                 on_success=favorite_done)
+        self.api.create_favorite(on_error=favorite_error,
+                                 on_success=favorite_done,
+                                 status=status,)
 
     def unfavorite(self):
         status = self.ui.focused_status()
@@ -650,6 +650,6 @@ class Turses(object):
                                    _('Failed to remove tweet from favorites'))
         unfavorite_done = partial(self.info_message,
                                   _('Tweet removed from favorites'))
-        self.api.destroy_favorite(status=status, 
-                                  on_error=unfavorite_error,
-                                  on_success=unfavorite_done)
+        self.api.destroy_favorite(on_error=unfavorite_error,
+                                  on_success=unfavorite_done,
+                                  status=status,)

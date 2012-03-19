@@ -11,9 +11,10 @@ import oauth2 as oauth
 from threading import Thread
 
 from twitter import Api as BaseApi 
-from twitter import TwitterError, Status, _FileCache
+from twitter import Status as BaseStatus
+from twitter import TwitterError, _FileCache
 
-from .models import User, DirectMessage, is_DM
+from .models import User, Status, DirectMessage, is_DM
 from .decorators import wrap_exceptions
 
 try:
@@ -947,7 +948,7 @@ class PythonTwitterApi(BaseApi, TwitterApi):
         json_data = self._FetchUrl(url, post_data={'dummy': None})
         data = json.loads(json_data)
         self._CheckForTwitterError(data)
-        return Status.NewFromJsonDict(data)
+        return BaseStatus.NewFromJsonDict(data)
 
     def GetCachedTime(self,key):
         path = self._GetPath(key)
@@ -974,27 +975,42 @@ class PythonTwitterApi(BaseApi, TwitterApi):
         user = self.VerifyCredentials()
         return User(user.screen_name)
 
+    def _to_statuses(self, statuses):
+        def to_status(status):
+            return Status(id=status.id, 
+                          user=status.user.screen_name,
+                          text=status.text,)
+
+        return [to_status(s) for s in statuses]
+
     def get_home_timeline(self, *args, **kwargs):
-        return self.GetFriendsTimeline(*args, **kwargs)
+        statuses = self.GetFriendsTimeline(*args, **kwargs)
+        return self._to_statuses(statuses)
 
     def get_user_timeline(self, *args, **kwargs):
-        return self.GetUserTimeline(include_rts=True, *args, **kwargs)
+        statuses = self.GetUserTimeline(include_rts=True, *args, **kwargs)
+        return self._to_statuses(statuses)
 
     def get_mentions(self, *args, **kwargs):
-        return self.GetMentions(*args, **kwargs)
+        statuses = self.GetMentions(*args, **kwargs)
+        return self._to_statuses(statuses)
 
     def get_favorites(self, *args, **kwargs):
-        return self.GetFavorites()
+        statuses = self.GetFavorites()
+        return self._to_statuses(statuses)
 
     def get_direct_messages(self, *args, **kwargs):
-        direct_messages = self.GetDirectMessages()
-        convert = lambda d: DirectMessage(id=d.id,
-                                          sender_screen_name=d.sender_screen_name,
-                                          text=d.text)
-        return [convert(dm) for dm in direct_messages]
+        dms = self.GetDirectMessages()
+        def convert_to_dm(dm):
+            return DirectMessage(id=dm.id,
+                                 sender_screen_name=dm.sender_screen_name,
+                                 recipient_screen_name=dm.recipient_screen_name,
+                                 text=dm.text)
+
+        return [convert_to_dm(dm) for dm in dms]
 
     def get_search(self, text, *args, **kwargs):
-        return self.GetSearch(text)
+        return self._to_statuses(self.GetSearch(text))
 
     def update(self, text, *args, **kwargs):
         try:
@@ -1032,9 +1048,13 @@ class PythonTwitterApi(BaseApi, TwitterApi):
         self.DestroyFriendship(screen_name)
 
     def create_favorite(self, status, *args, **kwargs):
-        self.CreateFavorite(status)
+        _status = BaseStatus()
+        _status.id = status.id
+        self.CreateFavorite(_status)
 
-    def destory_favorite(self, status, *args, **kwargs):
+    def destroy_favorite(self, status, *args, **kwargs):
+        _status = BaseStatus()
+        _status.id = status.id
         self.DestroyFavorite(status)
 
 

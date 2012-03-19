@@ -41,7 +41,8 @@ def get_authors_username(status):
     if is_DM(status):
         username = status.sender_screen_name
     else:
-        username = status.user.screen_name
+        username = status.user
+
     return ''.join(['@', username])
 
 def is_username(string):
@@ -82,24 +83,90 @@ class User(object):
 class Status(object):
 
     def __init__(self, 
+                 id,
                  user,
-                 text):
+                 text,
+                 time='TODO',
+                 source='TODO',
+                 is_reply=False,
+                 is_retweet=False,
+                 is_favorite=False,):
+                 
         self.user = user
+        self.id = id
         self.text = html_unescape(text)
+        self.time = time
+        self.source = source
+        self.is_reply = is_reply
+        self.is_retweet = is_retweet
+        self.is_favorite = is_favorite
 
 
 class DirectMessage(object):
-
     def __init__(self,
                  id,
                  sender_screen_name,
+                 recipient_screen_name,
                  text):
         self.id = id
         self.sender_screen_name = sender_screen_name
+        self.recipient_screen_name = recipient_screen_name
         self.text = html_unescape(text)
 
 
-class Timeline(object):
+class ActiveList(object):
+    """
+    A list that contains an 'active' element.
+    """
+    NULL = -1
+
+    def __init__(self):
+        self.active_index = self.NULL
+
+    def is_valid_index(self, index):
+        raise NotImplementedError
+
+    def activate_previous(self):
+        """Marks as active the previous `Timeline` if it exists."""
+        new_index = self.active_index - 1
+        if self.is_valid_index(new_index):
+            self.active_index = new_index
+    
+    def activate_next(self):
+        """Marks as active the next `Timeline` if it exists."""
+        new_index = self.active_index + 1
+        if self.is_valid_index(new_index):
+            self.active_index = new_index
+
+    def activate_first(self):
+        if self.is_valid_index(0):
+            self.active_index = 0
+        else:
+            self.active_index = self.NULL
+
+    def activate_last(self):
+        raise NotImplementedError
+
+
+class UnsortedActiveList(ActiveList):
+    def shift_active_previous(self):
+        """Shifts the active timeline one position to the left."""
+        raise NotImplementedError
+
+    def shift_active_next(self):
+        """Shifts the active timeline one position to the right."""
+        raise NotImplementedError
+
+    def shift_active_beggining(self):
+        """Shifts the active timeline (if any) to the begginning of the list."""
+        raise NotImplementedError
+
+    def shift_active_end(self):
+        """Shifts the active timeline (if any) to the begginning of the list."""
+        raise NotImplementedError
+
+
+class Timeline(ActiveList):
     """
     List of Twitter statuses ordered reversely by date. Optionally with
     a name, a function that updates the current timeline and its arguments.
@@ -206,19 +273,31 @@ class Timeline(object):
     def __getitem__(self, i):
         return self.statuses[i]
 
+    # from `ActiveList`
 
-class TimelineList(object):
+    def is_valid_index(self, index):
+        if self.statuses:
+            return index > 0 and index < len(self.statuses)
+        else:
+            self.active_index = self.NULL
+        return False
+
+    def activate_last(self):
+        if self.statuses:
+            self.active_index = len(self.statuses) - 1
+        else:
+            self.active_index = self.NULL
+
+
+class TimelineList(UnsortedActiveList):
     """
     A list of `Timeline` objects in which only one is the 'active'
     timeline.
     """
 
     def __init__(self):
+        UnsortedActiveList.__init__(self)
         self.timelines = []
-        self.active_index = -1
-
-    def _is_valid_index(self, index):
-        return index >= 0 and index < len(self.timelines)
 
     def has_timelines(self):
         return self.active_index != -1 and self.timelines
@@ -243,67 +322,6 @@ class TimelineList(object):
             self.active_index = 0
         self.timelines.append(timeline)
 
-    def activate_previous(self):
-        """Marks as active the previous `Timeline` if it exists."""
-        new_index = self.active_index - 1
-        if self._is_valid_index(new_index):
-            self.active_index = new_index
-    
-    def activate_next(self):
-        """Marks as active the next `Timeline` if it exists."""
-        new_index = self.active_index + 1
-        if self._is_valid_index(new_index):
-            self.active_index = new_index
-
-    def activate_first(self):
-        if self.has_timelines():
-            self.active_index = 0
-
-    def activate_last(self):
-        if self.has_timelines():
-            self.active_index = len(self.timelines) - 1
-
-    def _swap_timelines(self, one, other):
-        """
-        Given the indexes of two timelines `one` and `other`, it swaps the 
-        `Timeline` objects contained in those positions.
-        """
-        if self._is_valid_index(one) and self._is_valid_index(other):
-            self.timelines[one], self.timelines[other] = \
-                    self.timelines[other], self.timelines[one]
-
-    def shift_active_left(self):
-        """Shifts the active timeline one position to the left."""
-        active_index = self.active_index
-        previous_index = active_index - 1
-        if self._is_valid_index(previous_index):
-            self._swap_timelines(previous_index, active_index)
-            self.active_index = previous_index
-
-    def shift_active_right(self):
-        """Shifts the active timeline one position to the right."""
-        active_index = self.active_index
-        next_index = active_index + 1
-        if self._is_valid_index(next_index):
-            self._swap_timelines(active_index, next_index)
-            self.active_index = next_index
-
-    def shift_active_beggining(self):
-        """Shifts the active timeline (if any) to the begginning of the list."""
-        if self.has_timelines():
-            first_index = 0
-            self.timelines.insert(first_index, self.timelines[self.active_index])
-            del self.timelines[self.active_index + 1]
-            self.active_index = first_index
-
-    def shift_active_end(self):
-        """Shifts the active timeline (if any) to the begginning of the list."""
-        if self.has_timelines():
-            last_index = len(self.timelines)
-            self.timelines.insert(last_index, self.timelines[self.active_index])
-            self.delete_active_timeline()
-            self.active_index = last_index - 1
-
     def delete_active_timeline(self):
         """
         Deletes the active timeline (if any) and shifts the active index 
@@ -311,7 +329,7 @@ class TimelineList(object):
         """
         if self.has_timelines():
             del self.timelines[self.active_index]
-            if self._is_valid_index(self.active_index):
+            if self.is_valid_index(self.active_index):
                 pass
             else:
                 self.active_index -= 1
@@ -342,3 +360,49 @@ class TimelineList(object):
 
     def __len__(self):
         return self.timelines.__len__()
+
+    # from `UnsortedActiveList`
+
+    def is_valid_index(self, index):
+        return index >= 0 and index < len(self.timelines)
+
+    def activate_last(self):
+        if self.has_timelines():
+            self.active_index = len(self.timelines) - 1
+
+    def _swap_timelines(self, one, other):
+        """
+        Given the indexes of two timelines `one` and `other`, it swaps the 
+        `Timeline` objects contained in those positions.
+        """
+        if self.is_valid_index(one) and self.is_valid_index(other):
+            self.timelines[one], self.timelines[other] = \
+                    self.timelines[other], self.timelines[one]
+
+    def shift_active_previous(self):
+        active_index = self.active_index
+        previous_index = active_index - 1
+        if self.is_valid_index(previous_index):
+            self._swap_timelines(previous_index, active_index)
+            self.active_index = previous_index
+
+    def shift_active_next(self):
+        active_index = self.active_index
+        next_index = active_index + 1
+        if self.is_valid_index(next_index):
+            self._swap_timelines(active_index, next_index)
+            self.active_index = next_index
+
+    def shift_active_beggining(self):
+        if self.has_timelines():
+            first_index = 0
+            self.timelines.insert(first_index, self.timelines[self.active_index])
+            del self.timelines[self.active_index + 1]
+            self.active_index = first_index
+
+    def shift_active_end(self):
+        if self.has_timelines():
+            last_index = len(self.timelines)
+            self.timelines.insert(last_index, self.timelines[self.active_index])
+            self.delete_active_timeline()
+            self.active_index = last_index - 1
