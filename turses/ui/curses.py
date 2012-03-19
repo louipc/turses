@@ -581,10 +581,10 @@ class StatusWidget(WidgetWrap):
         status_content = Padding(AttrWrap(Text(text), 'body'), left=1, right=1)
         header = self._create_header(status)
         box = BoxDecoration(status_content, title=header)
-        #if status.is_favorite:
-            #widget = AttrWrap(box, 'favorited', 'focus')
-        #else:
-        widget = AttrWrap(box, 'line', 'focus')
+        if not is_DM(status) and status.is_favorite:
+            widget = AttrWrap(box, 'favorited', 'focus')
+        else:
+            widget = AttrWrap(box, 'line', 'focus')
         self.__super.__init__(widget)
 
     def selectable(self):
@@ -605,8 +605,7 @@ class StatusWidget(WidgetWrap):
         retweet_count = ''
         retweeter = ''
         username = status.user
-        time = 'TODO'
-        #time = status.time
+        relative_created_at = status.get_relative_created_at()
 
         #if status.is_reply:
             #reply = u' \u2709'
@@ -626,7 +625,7 @@ class StatusWidget(WidgetWrap):
             username= username,
             retweeted = retweeted,
             retweeter = retweeter,
-            time = time,
+            time = relative_created_at,
             reply = reply,
             retweet_count = retweet_count,
         )

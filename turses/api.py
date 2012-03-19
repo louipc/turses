@@ -977,7 +977,9 @@ class PythonTwitterApi(BaseApi, TwitterApi):
 
     def _to_statuses(self, statuses):
         def to_status(status):
+            # TODO: check if reply, retweet or favorite
             return Status(id=status.id, 
+                          created_at_in_seconds=status.created_at_in_seconds,
                           user=status.user.screen_name,
                           text=status.text,)
 

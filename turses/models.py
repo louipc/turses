@@ -6,6 +6,7 @@
 
 import re
 from datetime import datetime
+import time
 
 from .util import html_unescape
 
@@ -83,23 +84,49 @@ class User(object):
 class Status(object):
 
     def __init__(self, 
+                 created_at_in_seconds,
                  id,
                  user,
                  text,
-                 time='TODO',
-                 source='TODO',
                  is_reply=False,
                  is_retweet=False,
                  is_favorite=False,):
                  
+        self.created_at_in_seconds = created_at_in_seconds
         self.user = user
         self.id = id
         self.text = html_unescape(text)
-        self.time = time
-        self.source = source
         self.is_reply = is_reply
         self.is_retweet = is_retweet
         self.is_favorite = is_favorite
+
+    def get_relative_created_at(self):
+        """
+        Get a human redable string representing the posting time
+
+        Returns:
+          A human readable string representing the posting time
+        """
+        # This code is borrowed from `python-twitter` library
+        fudge = 1.25
+        delta  = long(time.time()) - long(self.created_at_in_seconds)
+
+        if delta < (1 * fudge):
+          return "about a second ago"
+        elif delta < (60 * (1/fudge)):
+          return "about %d seconds ago" % (delta)
+        elif delta < (60 * fudge):
+          return "about a minute ago"
+        elif delta < (60 * 60 * (1/fudge)):
+          return "about %d minutes ago" % (delta / 60)
+        elif delta < (60 * 60 * fudge) or delta / (60 * 60) == 1:
+          return "about an hour ago"
+        elif delta < (60 * 60 * 24 * (1/fudge)):
+          return "about %d hours ago" % (delta / (60 * 60))
+        elif delta < (60 * 60 * 24 * fudge) or delta / (60 * 60 * 24) == 1:
+          return "about a day ago"
+        else:
+          return "about %d days ago" % (delta / (60 * 60 * 24))
 
 
 class DirectMessage(object):
