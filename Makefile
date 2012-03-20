@@ -9,6 +9,7 @@ PIPFLAGS=--ignore-installed --no-deps
 
 TESTRUNNER=nosetests
 TESTFLAGS=--with-progressive --logging-clear-handlers --with-coverage --cover-package=turses
+WATCHTESTFLAGS=--verbosity=0
 
 
 all: turses
@@ -38,3 +39,6 @@ master:
 	
 upload:
 	$(PY) setup.py sdist upload
+
+watch:
+	tdaemon . $(TESTRUNNER) --custom-args="$(WATCHTESTFLAGS)"

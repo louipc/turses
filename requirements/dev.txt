@@ -1,0 +1,7 @@
+-r base.txt
+
+mock
+nose
+coverage
+nose-progressive
+tdaemon
