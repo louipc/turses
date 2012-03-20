@@ -19,7 +19,7 @@ requirements = [
     "urwid",
 ]
 test_requirements = list(requirements)
-test_requirements.extend(["mock"])
+test_requirements.extend(["mock", "nose", "coverage", "nose-progressive"])
 
 try:
     long_description = open("README.rst").read() + "\n\n" + open("HISTORY.rst").read()

@@ -39,8 +39,6 @@ Features
 - Search
 - View any user's tweets
 - Fully customizable
-- Pluggable UI
-- Pluggable API
 - Multiple accounts
 
 Roadmap

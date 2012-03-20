@@ -3,6 +3,7 @@
 - fix bug: self follow/unfollow
 - fix bug: editor signals
 - direct messages :)
+- persistent timeline cursor
 
 0.0.7
 -----
