@@ -12,7 +12,7 @@ from functools import partial
 import urwid
 
 from .constant import palette
-from .api import AsyncApi, RateLimitExceededException
+from .api import AsyncApi
 from .models import Timeline, TimelineList
 from .models import get_authors_username, get_mentioned_usernames
 from .models import is_valid_status_text, is_valid_search_text, is_valid_username
@@ -40,11 +40,6 @@ class Turses(object):
                           on_success=self.init_timelines,)
         # start main loop
         try:
-            self.main_loop()
-        except RateLimitExceededException:
-            # TODO
-            #  how much time before being able to use the API 
-            self.error_message(_('Twitter rate limit exceeded'))
             self.main_loop()
         except:
             self.main_loop()
