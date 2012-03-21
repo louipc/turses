@@ -1,3 +1,8 @@
+0.0.9
+-----
+- compose tweet with same hashtags as the focused status
+- create search timeline with hashtags from focused status
+
 0.0.8
 -----
 - fix bug: self follow/unfollow

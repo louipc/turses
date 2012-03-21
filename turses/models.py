@@ -51,6 +51,9 @@ def get_authors_username(status):
 def is_username(string):
     return string.startswith('@')
 
+def is_hashtag(string):
+    return string.startswith('#')
+
 def sanitize_username(username):
     is_legal_username_char = lambda char: char.isalnum()
     sanitized = filter(is_legal_username_char, username[1:])
@@ -59,6 +62,9 @@ def sanitize_username(username):
 def get_mentioned_usernames(status):
     usernames = filter(is_username, status.text.split())
     return map(sanitize_username, usernames)
+
+def get_hashtags(status):
+    return filter(is_hashtag, status.text.split())
 
 def is_valid_status_text(text):
     """Checks the validity of a status text."""

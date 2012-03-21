@@ -533,6 +533,7 @@ class HelpBuffer(ScrollableListBoxWrapper):
         self.insert_help_item('retweet_and_edit', _('Retweet selected tweet editing it first'))
         self.insert_help_item('sendDM', _('Send direct message'))
         self.insert_help_item('update', _('Refresh current timeline'))
+        self.insert_help_item('tweet_hashtag', _('Compose a tweet with the same hashtags as the focused'))
 
         self.insert_division(_('Friendship'))
         self.insert_help_item('follow_selected', _('Follow selected tweet\'s author'))
@@ -550,6 +551,7 @@ class HelpBuffer(ScrollableListBoxWrapper):
         self.insert_help_item('search', _('Search for term and show resulting timeline'))
         self.insert_help_item('search_user', _('Show somebody\'s public timeline'))
         self.insert_help_item('search_myself', _('Show your public timeline'))
+        self.insert_help_item('hashtags', _('Search the hashtags of the focused status'))
         self.insert_help_item('thread', _('Open selected thread'))
         self.insert_help_item('user_info', _('Show user information '))
         self.insert_help_item('help', _('Show help buffer'))

@@ -14,7 +14,7 @@ import urwid
 from .constant import palette
 from .api import AsyncApi
 from .models import Timeline, TimelineList
-from .models import get_authors_username, get_mentioned_usernames
+from .models import get_authors_username, get_mentioned_usernames, get_hashtags
 from .models import is_valid_status_text, is_valid_search_text, is_valid_username
 
 
@@ -436,6 +436,11 @@ class Turses(object):
         # Search Myself
         elif input == self.configuration.keys['search_myself']:
             self.info_message('Still to implement!')
+        # Follow hashtags
+        elif input == self.configuration.keys['hashtags']:
+            status = self.timelines.get_focused_status()
+            hashtags = ' '.join(get_hashtags(status))
+            self.search_handler(text=hashtags)
 
     def _twitter_key_handler(self, input):
         # Update timeline
@@ -471,6 +476,15 @@ class Turses(object):
         # Destroy favorite
         elif input == self.configuration.keys['delete_fav']:
             self.unfavorite()
+        # Tweet with hashtags
+        elif input == self.configuration.keys['tweet_hashtag']:
+            status = self.timelines.get_focused_status()
+            hashtags = ' '.join(get_hashtags(status))
+            if hashtags:
+                # TODO cursor in the begginig
+                self.ui.show_tweet_editor(prompt=_('%s' % hashtags),
+                                          content=hashtags,
+                                          done_signal_handler=self.tweet_handler)
         # Search Current User
         elif input == self.configuration.keys['search_current_user']:
             self.info_message('Still to implement!')
@@ -557,9 +571,12 @@ class Turses(object):
         self.ui.remove_editor(self.search_handler)
         # remove editor
         self.ui.set_focus('body')
-        if not is_valid_search_text(text):
-            # TODO error message editor and continue editing
+        text = text.strip()
+        if text is None:
             self.info_message(_('Search cancelled'))
+            return
+        elif not is_valid_search_text(text):
+            self.error_message(_('Invalid search'))
             return
         else:
             self.info_message(_('Creating search timeline for "%s"' % text))

@@ -45,6 +45,7 @@ key = {
     'right':                  'l',
     'scroll_to_top':          'g',
     'scroll_to_bottom':       'G',
+
     # Buffers
     'shift_buffer_left':      '<',
     'shift_buffer_right':     '>',
@@ -54,6 +55,7 @@ key = {
     'activate_last_buffer':   'e',
     'delete_buffer':          'd',
     'clear':                  'c',
+
     # Tweets
     'tweet':                  't',
     'delete_tweet':           'X',
@@ -62,12 +64,16 @@ key = {
     'retweet_and_edit':       'E',
     'sendDM':                 'D',
     'update':                 'u',
+    'tweet_hashtag':          'H',
+
     # Friendship
     'follow_selected':        'f',
     'unfollow_selected':      'U',
+
     # Favorites
     'fav':                    'b',
     'delete_fav':             'ctrl b',
+
     # Timelines
     'home':                   '.',
     'own_tweets':             '_',
@@ -79,8 +85,12 @@ key = {
     'search_myself':          'ctrl u',
     'search_current_user':    'ctrl f',
     'thread':                 'T',
+    'hashtags':               'L',
+
+    # Meta
     'user_info':              'i',
     'help':                   '?',
+
     # Misc
     'quit':                   'q',
     'openurl':                'o',
