@@ -248,7 +248,6 @@ class Timeline(ActiveList):
     One of the elements of the timeline is the 'active'.
     """
 
-    # TODO make possible to pass dicts as **kwargs in `update_function_args`
     def __init__(self, 
                  name='',
                  statuses=None,
@@ -329,6 +328,7 @@ class Timeline(ActiveList):
         return filter(newer, self.statuses)
 
     def update(self):
+        # TODO: use a generator (?)
         if not self.update_function:
             return
         if self.update_function_args and self.update_function_kargs:
@@ -346,6 +346,15 @@ class Timeline(ActiveList):
         else:
             new_statuses = self.update_function()
         self.add_statuses(new_statuses)
+
+    def get_unread_count(self):
+        def one_if_unread(tweet):
+            readed = lambda tweet: getattr(tweet, 'read', False)
+            return 0 if readed(tweet) else 1
+
+        return sum([one_if_unread(tweet) for tweet in self.statuses])
+
+    # magic
 
     def __len__(self):
         return len(self.statuses)
@@ -369,11 +378,32 @@ class Timeline(ActiveList):
             self.active_index = self.NULL
         return False
 
+    def activate_previous(self):
+        ActiveList.activate_previous(self)
+        self.mark_active_as_read()
+    
+    def activate_next(self):
+        ActiveList.activate_next(self)
+        self.mark_active_as_read()
+
+    def activate_first(self):
+        ActiveList.activate_first(self)
+        self.mark_active_as_read()
+
     def activate_last(self):
         if self.statuses:
             self.active_index = len(self.statuses) - 1
+            self.mark_active_as_read()
         else:
             self.active_index = self.NULL
+
+    # utils
+
+    def mark_active_as_read(self):
+        """Set active status' `read` attribute to `True`."""
+        active_status = self.get_active()
+        if active_status:
+            active_status.read = True
 
 
 class TimelineList(UnsortedActiveList):
@@ -403,7 +433,7 @@ class TimelineList(UnsortedActiveList):
         else:
             raise Exception("There are no timelines in the list")
 
-    def get_focused_status(self):
+    def get_active_status(self):
         if self.has_timelines():
             active_timeline = self.get_active_timeline()
             return active_timeline.get_active()
@@ -412,8 +442,12 @@ class TimelineList(UnsortedActiveList):
         """Appends a new `Timeline` to the end of the list."""
         if self.active_index == -1:
             self.active_index = 0
+            # `timeline` becomes the active
+            self.timelines.append(timeline)
+            self._mark_read()
+            return
         self.timelines.append(timeline)
-
+        
     def delete_active_timeline(self):
         """
         Deletes the active timeline (if any) and shifts the active index 
@@ -447,6 +481,11 @@ class TimelineList(UnsortedActiveList):
     def get_timeline_names(self):
         return [timeline.name for timeline in self.timelines]
 
+    def get_unread_counts(self):
+        return [timeline.get_unread_count() for timeline in self.timelines]
+
+    # magic
+
     def __iter__(self):
         return self.timelines.__iter__()
 
@@ -461,9 +500,22 @@ class TimelineList(UnsortedActiveList):
     def is_valid_index(self, index):
         return index >= 0 and index < len(self.timelines)
 
+    def activate_previous(self):
+        UnsortedActiveList.activate_previous(self)
+        self._mark_read()
+    
+    def activate_next(self):
+        UnsortedActiveList.activate_next(self)
+        self._mark_read()
+
+    def activate_first(self):
+        UnsortedActiveList.activate_first(self)
+        self._mark_read()
+
     def activate_last(self):
         if self.has_timelines():
             self.active_index = len(self.timelines) - 1
+        self._mark_read()
 
     def _swap_timelines(self, one, other):
         """
@@ -473,6 +525,10 @@ class TimelineList(UnsortedActiveList):
         if self.is_valid_index(one) and self.is_valid_index(other):
             self.timelines[one], self.timelines[other] = \
                     self.timelines[other], self.timelines[one]
+
+    def _mark_read(self):
+        active_timeline = self.get_active_timeline()
+        active_timeline.mark_active_as_read()
 
     def shift_active_previous(self):
         active_index = self.active_index

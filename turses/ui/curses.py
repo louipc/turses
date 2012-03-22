@@ -82,10 +82,6 @@ class CursesInterface(Frame, UserInterface):
     def clear_header(self):
         self.header.clear()
 
-    def update_header(self, timelines):
-        self.header.set_tabs(timelines.get_timeline_names())
-        self.header.set_active_tab(timelines.active_index)
-
     # -- Footer ---------------------------------------------------------------
         
     def status_message(self, text):
