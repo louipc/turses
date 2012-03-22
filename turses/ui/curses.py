@@ -44,38 +44,23 @@ class CursesInterface(Frame, UserInterface):
                        footer=StatusBar(''))
         self._editor_mode = False
 
-
     # -- Modes ----------------------------------------------------------------
 
-    def timeline_mode(self, timelines):
-        """Activates the Timeline mode."""
-        if timelines.has_timelines():
-            self.draw_timelines(timelines)
+    def draw_timeline(self, timeline):
+        self.body = TimelineBuffer()
+        self.body.render_timeline(timeline)
+        self.set_body(self.body)
 
-    def is_in_timeline_mode(self):
-        return self.body.__class__ == TimelineBuffer
-
-    def info_mode(self):
-        """Shows program info."""
+    def show_info(self):
         self.header.clear()
         self.body = WelcomeBuffer()
         self.set_body(self.body)
 
-    def is_in_info_mode(self):
-        return self.body.__class__ == WelcomeBuffer
-
-    def help_mode(self, configuration):
-        """Activates help mode."""
+    def show_help(self, configuration):
         self.clear_header()
         self.status_info_message('Type <Esc> to leave the help page.')
         self.body = HelpBuffer(configuration)
         self.set_body(self.body)
-
-    def is_in_help_mode(self):
-        return self.body.__class__ == HelpBuffer
-
-    def is_in_editor_mode(self):
-        return self._editor_mode
 
     # -- Header ---------------------------------------------------------------
 
@@ -85,32 +70,29 @@ class CursesInterface(Frame, UserInterface):
     # -- Footer ---------------------------------------------------------------
         
     def status_message(self, text):
-        """Sets `text` as a status message on the footer."""
         if self.footer.__class__ is not StatusBar:
-            self.footer = StatusBar()
+            return
         self.footer.message(text)
         self.set_footer(self.footer)
 
     def status_error_message(self, message):
-        self.status_message("[error] " + message)
+        if self.footer.__class__ is not StatusBar:
+            return
+        self.footer.error_message(message)
 
     def status_info_message(self, message):
-        self.status_message("[info] " + message)
+        if self.footer.__class__ is not StatusBar:
+            return
+        self.footer.info_message(message)
 
     def clear_status(self):
-        """Clears the status bar."""
         self.footer = StatusBar()
         self.set_footer(self.footer)
 
     # -- Timeline mode --------------------------------------------------------
 
-    def draw_timeline(self, timeline):
-        self.body = TimelineBuffer()
-        self.body.render_timeline(timeline)
-        self.set_body(self.body)
-
     def focus_status(self, index):
-        if self.is_in_timeline_mode():
+        if callable(getattr(self.body, 'set_focus', None)):
             self.body.set_focus(index)
 
     def set_tab_names(self, names):
@@ -143,11 +125,11 @@ class CursesInterface(Frame, UserInterface):
                      content,
                      done_signal_handler,
                      **kwargs):
-        self._editor_mode = True
-        self.footer = editor_cls(prompt=prompt,
+        self.editor = editor_cls(prompt=prompt,
                                  content=content,
                                  done_signal_handler=done_signal_handler,
-                                 **kwargs)
+                                 **kwargs) 
+        self.footer = self.editor
         self.set_footer(self.footer)
         self.set_focus('footer')
 
@@ -181,15 +163,9 @@ class CursesInterface(Frame, UserInterface):
                           recipient=recipient,)
 
     def remove_editor(self, done_signal_handler):
-        disconnect_signal(self.footer, 'done', done_signal_handler)
-        self._editor_mode = False
+        disconnect_signal(self.editor, 'done', done_signal_handler)
+        self.editor = None
         self.clear_status()
-
-    def keypress(self, size, key):
-        if self.is_in_editor_mode():
-            return self.footer.keypress(size, key)
-        else:
-            return key
 
 
 class WelcomeBuffer(WidgetWrap):

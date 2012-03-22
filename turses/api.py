@@ -419,7 +419,6 @@ class AsyncApi(Api):
     def verify_credentials(self):
         return self._api.verify_credentials()
 
-    @wrap_exceptions
     def get_home_timeline(self):
         return self._api.get_home_timeline()
 

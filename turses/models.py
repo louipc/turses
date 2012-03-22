@@ -37,6 +37,12 @@ def is_retweet(status):
 def is_DM(status):
     return status.__class__ == DirectMessage
 
+def get_mentioned_for_reply(status):
+    author = '@%s' % get_authors_username(status)
+    mentioned = get_mentioned_usernames(status)
+    mentioned.insert(0, author)
+    return mentioned
+
 def get_authors_username(status):
     """Return the original author's username of the given status."""
     if is_DM(status):
