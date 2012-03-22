@@ -5,6 +5,7 @@
 ###############################################################################
 
 from functools import wraps
+from threading import Thread
 
 
 def wrap_exceptions(func):
@@ -31,3 +32,16 @@ def wrap_exceptions(func):
             return result
 
     return wrapper
+
+
+def async(func):
+    """
+    """
+    @wraps(func)
+    def wrapper(self=None, *args, **kwargs):
+        args = args, kwargs
+        thread = Thread(target=func,
+                        args=args)
+        thread.run()
+
+    return wrap_exceptions(wrapper)

@@ -10,25 +10,16 @@ class UserInterface(object):
 
     # -- Modes ----------------------------------------------------------------
 
-    def timeline_mode(self, timelines):
-        """Activates the Timeline mode."""
+    def draw_timeline(self, timeline):
+        """Draw the given `timeline`."""
         raise NotImplementedError
 
-    def is_in_timeline_mode(self):
+    def show_program_info(self):
+        """Show program info."""
         raise NotImplementedError
 
-    def info_mode(self):
-        """Shows program info."""
-        raise NotImplementedError
-
-    def is_in_info_mode(self):
-        raise NotImplementedError
-
-    def help_mode(self, configuration):
-        """Activates help mode."""
-        raise NotImplementedError
-
-    def is_in_help_mode(self):
+    def show_help(self, configuration):
+        """Show help based on `configuration`."""
         raise NotImplementedError
 
     # -- Header ---------------------------------------------------------------
@@ -42,7 +33,7 @@ class UserInterface(object):
     # -- Footer ---------------------------------------------------------------
         
     def status_message(self, text):
-        """Sets `text` as a status message on the footer."""
+        """Set `text` as a status message on the footer."""
         raise NotImplementedError
 
     def status_error_message(self, message):
@@ -52,13 +43,10 @@ class UserInterface(object):
         raise NotImplementedError
 
     def clear_status(self):
-        """Clears the status bar."""
+        """Clear the status bar."""
         raise NotImplementedError
 
     # -- Timeline mode --------------------------------------------------------
-
-    def draw_timeline(self, timeline):
-        raise NotImplementedError
 
     def set_focus(self, index):
         raise NotImplementedError
@@ -67,9 +55,6 @@ class UserInterface(object):
         raise NotImplementedError
 
     def activate_tab(self, index):
-        raise NotImplementedError
-
-    def focused_status(self):
         raise NotImplementedError
 
     # -- Editors --------------------------------------------------------------
@@ -93,9 +78,6 @@ class UserInterface(object):
         raise NotImplementedError
 
     def remove_editor(self, done_signal_handler):
-        raise NotImplementedError
-
-    def disconnect_editor_done_signal(self, done_signal_handler):
         raise NotImplementedError
 
 

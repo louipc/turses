@@ -11,21 +11,240 @@ from functools import partial
 
 import urwid
 
+from .decorators import wrap_exceptions
 from .constant import palette
 from .api import AsyncApi
 from .models import Timeline, TimelineList
-from .models import get_authors_username, get_mentioned_usernames, get_hashtags
+from .models import get_authors_username, get_mentioned_for_reply, get_hashtags
 from .models import is_valid_status_text, is_valid_search_text, is_valid_username
+
+
+class KeyHandler(object):
+    """
+    Maps actions from configuration to calls to controllers' functions.
+    """
+
+    def __init__(self, 
+                 configuration, 
+                 controller):
+        self.configuration = configuration
+        self.controller = controller
+        self.editor = False
+
+    def is_bound(self, key, name):
+        """
+        Return True if `key` corresponds to the action specified by `name`.
+        """
+        return key == self.configuration.keys[name]
+
+    def set_editor(self, editor):
+        """Set an editor and forward all the input to it."""
+        self.editor = editor
+
+    def unset_editor(self):
+        """Stop forwarding input to the editor."""
+        self.editor = False
+
+    def handle(self, input, raw):
+        """
+        Handle the keyboard input.
+        """
+
+        if isinstance(input, tuple):
+            ## TODO: handle mouse input
+            return
+
+        key = ''.join(input)
+
+        # Editor mode goes first
+        if self.editor:
+            size = 20,
+            self.editor.keypress(size, key)
+            return
+
+        # Global commands
+        self._turses_key_handler(key)
+
+        # Timeline commands
+        self._timeline_key_handler(key)
+
+        if self.controller.is_in_info_mode():
+            return
+
+        # Motion commands
+        self._motion_key_handler(key)
+        
+        # Help mode commands
+        #  only accepts motion commands, timeline commands and <Esc>
+        if self.controller.is_in_help_mode() and key == 'esc':
+            self.controller.timeline_mode()
+            self.controller.clear_status()
+            return
+
+        # Timeline mode commands
+
+        # Buffer commands
+        self._buffer_key_handler(key)
+
+        # Twitter commands
+        self._twitter_key_handler(key)
+
+    def _turses_key_handler(self, key):
+        # quit
+        if self.is_bound(key, 'quit'):
+            raise urwid.ExitMainLoop()
+        # redraw screen
+        elif self.is_bound(key, 'redraw'): 
+            self.controller.redraw_screen()
+        # help
+        elif self.is_bound(key, 'help'):
+            self.controller.help_mode()
+
+    def _motion_key_handler(self, key):
+        ## up
+        if self.is_bound(key, 'up') or key == 'up':
+            self.controller.scroll_up()
+        # down
+        elif self.is_bound(key, 'down') or key == 'down':
+            self.controller.scroll_down()
+        # scroll to top
+        elif self.is_bound(key, 'scroll_to_top'):
+            self.controller.scroll_top()
+        # scroll to bottom
+        elif self.is_bound(key, 'scroll_to_bottom'):
+            self.controller.scroll_bottom()
+
+    def _buffer_key_handler(self, key):
+        # Right
+        if self.is_bound(key, 'right') or key == 'right':
+            self.controller.next_timeline()
+        # Left
+        elif self.is_bound(key, 'left') or key == 'left': 
+            self.controller.previous_timeline()
+        # Shift active buffer left
+        elif self.is_bound(key, 'shift_buffer_left'):
+            self.controller.shift_buffer_left()
+        # Shift active buffer right
+        elif self.is_bound(key, 'shift_buffer_right'):
+            self.controller.shift_buffer_right()
+        # Shift active buffer beggining
+        elif self.is_bound(key, 'shift_buffer_beggining'):
+            self.controller.shift_buffer_beggining()
+        # Shift active buffer end
+        elif self.is_bound(key, 'shift_buffer_end'):
+            self.controller.shift_buffer_end()
+        # Activate first buffer
+        elif self.is_bound(key, 'activate_first_buffer'):
+            self.controller.activate_first_buffer()
+        # Activate last buffer
+        elif self.is_bound(key, 'activate_last_buffer'):
+            self.controller.activate_last_buffer()
+        # Delete buffer
+        elif self.is_bound(key, 'delete_buffer'):
+            self.controller.delete_buffer()
+        # Clear buffer
+        elif self.is_bound(key, 'clear'):
+            self.controller.clear_body()
+
+    def _timeline_key_handler(self, key):
+        # Show home Timeline
+        if self.is_bound(key, 'home'):
+            self.controller.append_home_timeline()
+        # Own tweets
+        elif self.is_bound(key, 'own_tweets'):
+            self.controller.append_own_tweets_timeline()
+        # Favorites timeline
+        elif self.is_bound(key, 'favorites'):
+            self.controller.append_favorites_timeline()
+        # Mention timeline
+        elif self.is_bound(key, 'mentions'):
+            self.controller.append_mentions_timeline()
+        # Direct Message timeline
+        elif self.is_bound(key, 'DMs'):
+            self.controller.append_direct_messages_timeline()
+        # Search
+        elif self.is_bound(key, 'search'):
+            self.controller.search()
+        # Search User
+        elif self.is_bound(key, 'search_user'):
+            self.controller.search_user()
+        # Search Myself
+        elif self.is_bound(key, 'search_myself'):
+            self.controller.info_message('Still to implement!')
+        # Follow hashtags
+        elif self.is_bound(key, 'hashtags'):
+            self.controller.search_hashtags()
+
+    def _twitter_key_handler(self, key):
+        # Update timeline
+        if self.is_bound(key, 'update'):
+            self.controller.update_active_timeline()
+        # Tweet
+        elif self.is_bound(key, 'tweet'): 
+            self.controller.tweet()
+        # Reply
+        elif self.is_bound(key, 'reply'): 
+            self.controller.reply()
+        # Retweet
+        elif self.is_bound(key, 'retweet'): 
+            self.controller.retweet()
+        # Retweet and Edit
+        elif self.is_bound(key, 'retweet_and_edit'): 
+            self.controller.manual_retweet()
+        # Delete (own) tweet
+        elif self.is_bound(key, 'delete_tweet'): 
+            self.controller.delete_tweet()
+        # Follow Selected
+        elif self.is_bound(key, 'follow_selected'): 
+            self.controller.follow_selected()
+        # Unfollow Selected
+        elif self.is_bound(key, 'unfollow_selected'): 
+            self.controller.unfollow_selected()
+        # Send Direct Message
+        elif self.is_bound(key, 'sendDM'): 
+            self.controller.direct_message()
+        # Create favorite
+        elif self.is_bound(key, 'fav'): 
+            self.controller.favorite()
+        # Destroy favorite
+        elif self.is_bound(key, 'delete_fav'): 
+            self.controller.unfavorite()
+        # Tweet with hashtags
+        elif self.is_bound(key, 'tweet_hashtag'): 
+            self.controller.tweet_with_hashtags()
+        # Search Current User
+        elif self.is_bound(key, 'search_current_user'): 
+            self.controller.info_message('Still to implement!')
+        # Thread
+        elif self.is_bound(key, 'thread'): 
+            self.controller.info_message('Still to implement!')
+        # User info
+        elif self.is_bound(key, 'user_info'): 
+            self.controller.info_message('Still to implement!')
+
+    def _external_controller_handler(self, key):
+        # Open URL
+        if key == self.configuration.keys['openurl']:
+            self.controller.info_message('Still to implement!')
+        # Open image
+        elif key == self.configuration.keys['open_image']:
+            self.controller.info_message('Still to implement!')
 
 
 class Turses(object):
     """Controller of the program."""
+
+    INFO_MODE = 0
+    TIMELINE_MODE = 1
+    HELP_MODE = 2
+    EDITOR_MODE = 3
 
     # -- Initialization -------------------------------------------------------
 
     def __init__(self, configuration, ui):
         self.configuration = configuration
         self.ui = ui
+        self.mode = self.INFO_MODE
         # init API
         self.info_message(_('Initializing API'))
         consumer_key = self.configuration.token[self.configuration.service]['consumer_key'] 
@@ -49,9 +268,10 @@ class Turses(object):
 
     def main_loop(self):
         if not hasattr(self, 'loop'):
+            self.key_handler = KeyHandler(self.configuration, self)
             self.loop = urwid.MainLoop(self.ui,
                                        palette, 
-                                       unhandled_input=self.key_handler,)
+                                       input_filter=self.key_handler.handle,)
         self.loop.run()
 
     def init_timelines(self):
@@ -67,9 +287,6 @@ class Turses(object):
         self.timelines = TimelineList()
         # TODO make default timeline list configurable
         self.append_default_timelines()
-        self.update_all_timelines()
-        self.info_message(_('Timelines loaded'))
-        self.timeline_mode()
 
     # -- Callbacks ------------------------------------------------------------
 
@@ -85,73 +302,149 @@ class Turses(object):
         
         If not, shows program info.
         """
-        if self.timelines.has_timelines():
+        if self.is_in_timeline_mode():
+            return
+        elif self.timelines.has_timelines():
+            self.mode = self.TIMELINE_MODE
             self.draw_timelines()
         else:
-            self.ui.info_mode()
+            self.mode = self.INFO_MODE
+            self.ui.show_info()
         self.clear_status()
         self.redraw_screen()
 
+    def is_in_timeline_mode(self):
+        return self.mode == self.TIMELINE_MODE
+
     def info_mode(self):
-        self.ui.info_mode()
+        self.mode = self.INFO_MODE
+        self.ui.show_info()
         self.redraw_screen()
 
+    def is_in_info_mode(self):
+        return self.mode == self.INFO_MODE
+
     def help_mode(self):
-        """Activates help mode."""
-        self.ui.help_mode(self.configuration)
+        """Activate help mode."""
+        if self.is_in_help_mode():
+            return
+        self.mode = self.HELP_MODE
+        self.ui.show_help(self.configuration)
         self.redraw_screen()
+
+    def is_in_help_mode(self):
+        return self.mode == self.HELP_MODE
+
+    def editor_mode(self):
+        """Activate editor mode."""
+        self.mode = self.EDITOR_MODE
+        self.key_handler.set_editor(self.ui.editor)
+
+    def is_in_editor_mode(self):
+        return self.mode == self.EDITOR_MODE
+
 
     # -- Timelines ------------------------------------------------------------
 
-    def append_timeline(self, name, update_function, update_args=None):
+    @wrap_exceptions
+    def append_timeline(self, 
+                        name, 
+                        update_function, 
+                        update_args=None):
         """
         Given a name, function to update a timeline and optionally
         arguments to the update function, it creates the timeline and
         appends it to `timelines` asynchronously.
         """
-        args = (name, update_function, update_args)
-        thread = Thread(target=self._append_timeline, args=args)
-        thread.start()
+        args = name, update_function, update_args
+        thread = Thread(target=self._append_timeline,
+                        args=args)
+        thread.run()
+
+    def _append_timeline(self,
+                         name, 
+                         update_function, 
+                         update_args):
+        timeline = Timeline(name=name,
+                            update_function=update_function,
+                            update_function_args=update_args) 
+        timeline.update()
+        self.timelines.append_timeline(timeline)
+        self.draw_timelines()
 
     def append_default_timelines(self):
+        thread = Thread(target=self._append_default_timelines)
+        thread.run()
+
+    def _append_default_timelines(self):
         self.append_home_timeline()
+        self.timeline_mode()
         self.append_mentions_timeline()
         self.append_favorites_timeline()
         self.append_direct_messages_timeline()
         self.append_own_tweets_timeline()
+        self.info_message(_('Timelines loaded'))
 
     def append_home_timeline(self):
-        self._append_timeline(name='Tweets',     
-                              update_function=self.api.get_home_timeline,)
-                              
+        timeline_fetched = partial(self.info_message, 
+                                    _('Home timeline fetched'))
+        timeline_not_fetched = partial(self.error_message, 
+                                        _('Failed to fetch home timeline'))
 
+        self.append_timeline(name=_('tweets'),     
+                             update_function=self.api.get_home_timeline,
+                             on_error=timeline_not_fetched,
+                             on_success=timeline_fetched,)
+                              
     def append_own_tweets_timeline(self):
+        timeline_fetched = partial(self.info_message, 
+                                    _('Your tweets fetched'))
+        timeline_not_fetched = partial(self.error_message, 
+                                        _('Failed to fetch your tweets'))
+
         user = self.api.verify_credentials()
-        self._append_timeline(name='@%s' % user.screen_name,     
-                              update_function=self.api.get_own_timeline)
+        self.append_timeline(name='@%s' % user.screen_name,     
+                             update_function=self.api.get_own_timeline,
+                             on_error=timeline_not_fetched,
+                             on_success=timeline_fetched,)
 
     def append_mentions_timeline(self):
-        self._append_timeline(name='Mentions',     
-                              update_function=self.api.get_mentions)
+        timeline_fetched = partial(self.info_message, 
+                                    _('Mentions fetched'))
+        timeline_not_fetched = partial(self.error_message, 
+                                        _('Failed to fetch mentions'))
+
+        self.append_timeline(name=_('mentions'),     
+                             update_function=self.api.get_mentions,
+                             on_error=timeline_not_fetched,
+                             on_success=timeline_fetched,)
 
     def append_favorites_timeline(self):
-        self._append_timeline(name='Favorites',     
-                              update_function=self.api.get_favorites)
+        timeline_fetched = partial(self.info_message, 
+                                    _('Favorites fetched'))
+        timeline_not_fetched = partial(self.error_message, 
+                                        _('Failed to fetch favorites'))
+
+        self.append_timeline(name=_('favorites'),     
+                             update_function=self.api.get_favorites,
+                             on_error=timeline_not_fetched,
+                             on_success=timeline_fetched,)
 
     def append_direct_messages_timeline(self):
-        self._append_timeline(name='DMs',
-                              update_function=self.api.get_direct_messages)
+        timeline_fetched = partial(self.info_message, 
+                                    _('Messages fetched'))
+        timeline_not_fetched = partial(self.error_message, 
+                                        _('Failed to fetch messages'))
 
-    def _append_timeline(self, name, update_function, update_args=None):
-        timeline = Timeline(name=name,
-                            update_function=update_function,
-                            update_function_args=update_args) 
-        self.timelines.append_timeline(timeline)
+        self.append_timeline(name=_('messages'),
+                             update_function=self.api.get_direct_messages,
+                             on_error=timeline_not_fetched,
+                             on_success=timeline_fetched,)
 
     def update_all_timelines(self):
         for timeline in self.timelines:
             timeline.update()
-        self.info_message(_('%s updated' % timeline.name))
+            self.info_message(_('%s updated' % timeline.name))
 
     # -- Timeline mode --------------------------------------------------------
 
@@ -221,18 +514,52 @@ class Turses(object):
         else:
             self.info_mode()
 
+    # -- Motion --------------------------------------------------------------- 
+
+    def scroll_up(self):
+        self.ui.focus_previous()
+        if self.is_in_timeline_mode():
+            active_timeline = self.timelines.get_active_timeline()
+            active_timeline.activate_previous()
+            self.draw_timelines()
+
+    def scroll_down(self):
+        self.ui.focus_next()
+        if self.is_in_timeline_mode():
+            active_timeline = self.timelines.get_active_timeline()
+            active_timeline.activate_next()
+            self.draw_timelines()
+
+    def scroll_top(self):
+        self.ui.focus_first()
+        if self.is_in_timeline_mode():
+            active_timeline = self.timelines.get_active_timeline()
+            active_timeline.activate_first()
+            self.draw_timelines()
+
+    def scroll_bottom(self):
+        self.ui.focus_last()
+        if self.is_in_timeline_mode():
+            active_timeline = self.timelines.get_active_timeline()
+            active_timeline.activate_last()
+            self.draw_timelines()
+
     # -- Footer ---------------------------------------------------------------
         
     def error_message(self, message):
-        self.ui.footer.error_message(message)
+        self.ui.status_error_message(message)
         self.redraw_screen()
 
     def info_message(self, message):
-        self.ui.footer.info_message(message)
+        self.ui.status_info_message(message)
         self.redraw_screen()
 
+    def clear_body(self):
+        """Clear body."""
+        self.ui.body.clear()
+
     def clear_status(self):
-        """Clears the status bar."""
+        """Clear the status bar."""
         self.ui.clear_status()
         self.redraw_screen()
 
@@ -240,36 +567,49 @@ class Turses(object):
 
     def redraw_screen(self):
         if hasattr(self, "loop"):
-            self.loop.draw_screen()
+            try:
+                self.loop.draw_screen()
+            except AssertionError:
+                pass
 
     # -- Twitter -------------------------------------------------------------- 
 
-    def search(self):
+    def search(self, text=None):
         self.ui.show_text_editor(prompt='Search', 
                                  done_signal_handler=self.search_handler)
+        self.editor_mode()
 
     def search_user(self):
         self.ui.show_text_editor(prompt=_('Search user (no need to prepend it with "@")'),
                                  content='',
                                  done_signal_handler=self.search_user_handler)
+        self.editor_mode()
+
+    def search_hashtags(self):
+        status = self.timelines.get_focused_status()
+        hashtags = ' '.join(get_hashtags(status))
+        self.search_handler(text=hashtags)
 
     def tweet(self):
         self.ui.show_tweet_editor(prompt=_('Tweet'), 
                                   content='',
                                   done_signal_handler=self.tweet_handler)
+        self.editor_mode()
 
     def reply(self):
         status = self.timelines.get_focused_status()
-        author = '@%s' % get_authors_username(status)
-        mentioned = get_mentioned_usernames(status)
-        mentioned.insert(0, author)
+
+        author = get_authors_username(status)
+        mentioned = get_mentioned_for_reply(status)
         try:
             mentioned.remove('@%s' % self.user.screen_name)
         except ValueError:
             pass
+
         self.ui.show_tweet_editor(prompt=_('Reply to %s' % author),
                                   content=' '.join(mentioned),
                                   done_signal_handler=self.tweet_handler)
+        self.editor_mode()
 
     def direct_message(self):
         status = self.timelines.get_focused_status()
@@ -278,230 +618,18 @@ class Turses(object):
                                content='',
                                recipient=recipient,
                                done_signal_handler=self.direct_message_handler)
+        self.editor_mode()
 
+    def tweet_with_hashtags(self):
+        status = self.timelines.get_focused_status()
+        hashtags = ' '.join(get_hashtags(status))
+        if hashtags:
+            # TODO cursor in the begginig
+            self.ui.show_tweet_editor(prompt=_('%s' % hashtags),
+                                      content=hashtags,
+                                      done_signal_handler=self.tweet_handler)
+        self.editor_mode()
 
-    # -- Event handling -------------------------------------------------------
-
-    def key_handler(self, input):
-        """
-        Handles the keyboard input that is not handled by the widgets.
-        """
-        if not isinstance(input, str):
-            # TODO: handle mouse input
-            return
-
-        ch = ''.join(input)
-
-        # Global commands
-        turses_action = self._turses_key_handler(ch)
-        # while in welcome buffer we can only view help, quit or redraw screen
-        if turses_action:
-            return
-
-        # Timeline commands
-        timeline_action = self._timeline_key_handler(ch)
-        if timeline_action or self.ui.is_in_info_mode():
-            return
-        
-        # Motion commands
-        motion_action = self._motion_key_handler(ch)
-        if motion_action:
-            return
-
-        # Help mode commands
-        if self.ui.is_in_help_mode():
-            # help only accepts motion commands and <Esc>
-            if ch == 'esc':
-                self.timeline_mode()
-                self.clear_status()
-
-        # Timeline mode commands
-        if self.ui.is_in_timeline_mode():
-            # Buffer commands
-            buffer_action = self._buffer_key_handler(ch)
-            if buffer_action:
-                return
-
-            # Twitter commands
-            twitter_action = self._twitter_key_handler(ch)
-            if twitter_action:
-                return
-            else:
-                return input
-
-    def _turses_key_handler(self, input):
-        # Quit
-        if input == self.configuration.keys['quit']:
-            raise urwid.ExitMainLoop()
-        # Redraw screen
-        elif input == self.configuration.keys['redraw']:
-            self.redraw_screen()
-        # Help
-        elif input == self.configuration.keys['help']:
-            if self.ui.is_in_help_mode():
-                pass
-            else:
-                self.help_mode()
-
-    def _motion_key_handler(self, input):
-        # Up
-        if input == self.configuration.keys['up']:
-            self.ui.focus_previous()
-            if self.ui.is_in_timeline_mode():
-                active_timeline = self.timelines.get_active_timeline()
-                active_timeline.activate_previous()
-                self.draw_timelines()
-        # Down
-        elif input == self.configuration.keys['down']:
-            self.ui.focus_next()
-            if self.ui.is_in_timeline_mode():
-                active_timeline = self.timelines.get_active_timeline()
-                active_timeline.activate_next()
-                self.draw_timelines()
-        # Scroll to Top
-        elif input == self.configuration.keys['scroll_to_top']:
-            self.ui.focus_first()
-            if self.ui.is_in_timeline_mode():
-                active_timeline = self.timelines.get_active_timeline()
-                active_timeline.activate_first()
-                self.draw_timelines()
-        # Scroll to Bottom
-        elif input == self.configuration.keys['scroll_to_bottom']:
-            self.ui.focus_last()
-            if self.ui.is_in_timeline_mode():
-                active_timeline = self.timelines.get_active_timeline()
-                active_timeline.activate_last()
-                self.draw_timelines()
-
-    def _buffer_key_handler(self, input):
-        # Right
-        if input == self.configuration.keys['right'] or input == 'right':
-            self.next_timeline()
-        # Left
-        elif input == self.configuration.keys['left'] or input == 'left':
-            self.previous_timeline()
-        # Shift active buffer left
-        elif input == self.configuration.keys['shift_buffer_left']:
-            self.shift_buffer_left()
-        # Shift active buffer right
-        elif input == self.configuration.keys['shift_buffer_right']:
-            self.shift_buffer_right()
-        # Shift active buffer beggining
-        elif input == self.configuration.keys['shift_buffer_beggining']:
-            self.shift_buffer_beggining()
-        # Shift active buffer end
-        elif input == self.configuration.keys['shift_buffer_end']:
-            self.shift_buffer_end()
-        # Activate first buffer
-        elif input == self.configuration.keys['activate_first_buffer']:
-            self.activate_first_buffer()
-        # Activate last buffer
-        elif input == self.configuration.keys['activate_last_buffer']:
-            self.activate_last_buffer()
-        # Delete buffer
-        elif input == self.configuration.keys['delete_buffer']:
-            self.delete_buffer()
-        # Clear buffer
-        elif input == self.configuration.keys['clear']:
-            self.ui.body.clear()
-
-    def _timeline_key_handler(self, input):
-        # Show home Timeline
-        if input == self.configuration.keys['home']:
-            home_thread = Thread(target=self.append_home_timeline)
-            home_thread.start()
-        # Own tweets
-        elif input == self.configuration.keys['own_tweets']:
-            own_tweets_thread = Thread(target=self.append_own_tweets_timeline)
-            own_tweets_thread.start()
-        # Favorites timeline
-        elif input == self.configuration.keys['favorites']:
-            favorites_thread = Thread(target=self.append_favorites_timeline)
-            favorites_thread.start()
-        # Mention timeline
-        elif input == self.configuration.keys['mentions']:
-            mentions_thread = Thread(target=self.append_mentions_timeline)
-            mentions_thread.start()
-        # Direct Message timeline
-        elif input == self.configuration.keys['DMs']:
-            direct_messages_thread = Thread(target=self.append_direct_messages_timeline)
-            direct_messages_thread.start()
-        # Search
-        elif input == self.configuration.keys['search']:
-            self.search()
-        # Ssearch User
-        elif input == self.configuration.keys['search_user']:
-            #self.info_message('Still to implement!')
-            self.search_user()
-        # Search Myself
-        elif input == self.configuration.keys['search_myself']:
-            self.info_message('Still to implement!')
-        # Follow hashtags
-        elif input == self.configuration.keys['hashtags']:
-            status = self.timelines.get_focused_status()
-            hashtags = ' '.join(get_hashtags(status))
-            self.search_handler(text=hashtags)
-
-    def _twitter_key_handler(self, input):
-        # Update timeline
-        if input == self.configuration.keys['update']:
-            self.update_active_timeline()
-        # Tweet
-        elif input == self.configuration.keys['tweet']:
-            self.tweet()
-        # Reply
-        elif input == self.configuration.keys['reply']:
-            self.reply()
-        # Retweet
-        elif input == self.configuration.keys['retweet']:
-            self.retweet()
-        # Retweet and Edit
-        elif input == self.configuration.keys['retweet_and_edit']:
-            self.manual_retweet()
-        # Delete (own) tweet
-        elif input == self.configuration.keys['delete_tweet']:
-            self.delete_tweet()
-        # Follow Selected
-        elif input == self.configuration.keys['follow_selected']:
-            self.follow_selected()
-        # Unfollow Selected
-        elif input == self.configuration.keys['unfollow_selected']:
-            self.unfollow_selected()
-        # Send Direct Message
-        elif input == self.configuration.keys['sendDM']:
-            self.direct_message()
-        # Create favorite
-        elif input == self.configuration.keys['fav']:
-            self.favorite()
-        # Destroy favorite
-        elif input == self.configuration.keys['delete_fav']:
-            self.unfavorite()
-        # Tweet with hashtags
-        elif input == self.configuration.keys['tweet_hashtag']:
-            status = self.timelines.get_focused_status()
-            hashtags = ' '.join(get_hashtags(status))
-            if hashtags:
-                # TODO cursor in the begginig
-                self.ui.show_tweet_editor(prompt=_('%s' % hashtags),
-                                          content=hashtags,
-                                          done_signal_handler=self.tweet_handler)
-        # Search Current User
-        elif input == self.configuration.keys['search_current_user']:
-            self.info_message('Still to implement!')
-        # Thread
-        elif input == self.configuration.keys['thread']:
-            self.info_message('Still to implement!')
-        # User info
-        elif input == self.configuration.keys['user_info']:
-            self.info_message('Still to implement!')
-
-    def _external_program_handler(self, input):
-        # Open URL
-        if input == self.configuration.keys['openurl']:
-            self.info_message('Still to implement!')
-        # Open image
-        elif input == self.configuration.keys['open_image']:
-            self.info_message('Still to implement!')
 
     # -- Twitter --------------------------------------------------------------
 
@@ -514,14 +642,15 @@ class Turses(object):
         if self.timelines.has_timelines():
             active_timeline = self.timelines.get_active_timeline()
             active_timeline.update()
-            if self.ui.is_in_timeline_mode():
+            if self.is_in_timeline_mode():
                 self.draw_timelines()
             self.info_message('%s updated' % active_timeline.name)
 
     # Editor event handlers
 
     def tweet_handler(self, text):
-        """Handles the post as a tweet of the given `text`."""
+        """Handle the post as a tweet of the given `text`."""
+        self.key_handler.unset_editor()
         self.ui.remove_editor(self.tweet_handler)
         self.ui.set_focus('body')
 
@@ -541,7 +670,8 @@ class Turses(object):
                         on_error=tweet_not_sent,)
 
     def direct_message_handler(self, username, text):
-        """Handles the post as a DM of the given `text` to `username`."""
+        """Handle the post as a DM of the given `text` to `username`."""
+        self.key_handler.unset_editor()
         self.ui.remove_editor(self.direct_message_handler)
         self.ui.set_focus('body')
 
@@ -567,10 +697,11 @@ class Turses(object):
         Handles creating a timeline tracking the search term given in 
         `text`.
         """
-        # disconnect signal
-        self.ui.remove_editor(self.search_handler)
-        # remove editor
-        self.ui.set_focus('body')
+        if self.is_in_editor_mode():
+            self.key_handler.unset_editor()
+            self.ui.remove_editor(self.search_handler)
+            self.ui.set_focus('body')
+
         text = text.strip()
         if text is None:
             self.info_message(_('Search cancelled'))
@@ -580,38 +711,40 @@ class Turses(object):
             return
         else:
             self.info_message(_('Creating search timeline for "%s"' % text))
-        # append timeline
-        timeline = Timeline(name='Search: %s' % text,
+
+        timeline_created =  partial(self.info_message,
+                                    _('Search timeline for "%s" created' % text))
+
+        self.append_timeline(name='Search: %s' % text,
                             update_function=self.api.search, 
-                            update_function_args=text)
-        timeline.update()
-        self.timelines.append_timeline(timeline)
-        self.draw_timelines()
-        self.info_message(_('Search timeline for "%s" created' % text))
+                            update_args=text,
+                            on_success=timeline_created)
 
     def search_user_handler(self, username):
         """
         Handles creating a timeline tracking the searched user's tweets.
         """
-        # disconnect signal
+        self.key_handler.unset_editor()
         self.ui.remove_editor(self.search_user_handler)
-        # remove editor
         self.ui.set_focus('body')
+
         # TODO make sure that the user EXISTS and THEN fetch its tweets
         if not is_valid_username(username):
-            # TODO error message editor and continue editing
             self.info_message(_('Invalid username'))
             return
         else:
             self.info_message(_('Fetching latest tweets from @%s' % username))
-        # append timeline
-        timeline = Timeline(name='@%s' % username,
-                            update_function=self.api.get_user_timeline, 
-                            update_function_args=username,)
-        timeline.update()
-        self.timelines.append_timeline(timeline)
-        self.draw_timelines()
-        self.info_message(_('@%s timeline created' % username))
+
+        timeline_created = partial(self.info_message,
+                                  _('@%s\'s timeline created' % username))
+        timeline_not_created = partial(self.error_message,
+                                       _('Unable to create @%s\'s timeline' % username))
+
+        self.append_timeline(name='@%s' % username,
+                             update_function=self.api.get_user_timeline, 
+                             update_function_args=username,
+                             on_success=timeline_created,
+                             on_error=timeline_not_created)
 
     # -- API ------------------------------------------------------------------
 
