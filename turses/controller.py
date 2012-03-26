@@ -708,11 +708,12 @@ class Turses(object):
             self.ui.remove_editor(self.search_handler)
             self.ui.set_focus('body')
 
-        text = text.strip()
         if text is None:
             self.info_message(_('Search cancelled'))
             return
-        elif not is_valid_search_text(text):
+
+        text = text.strip()
+        if not is_valid_search_text(text):
             self.error_message(_('Invalid search'))
             return
         else:
@@ -748,7 +749,7 @@ class Turses(object):
 
         self.append_timeline(name='@%s' % username,
                              update_function=self.api.get_user_timeline, 
-                             update_function_args=username,
+                             update_args=username,
                              on_success=timeline_created,
                              on_error=timeline_not_created)
 

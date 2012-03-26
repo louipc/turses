@@ -27,6 +27,11 @@ banner = [
      "  \___|\____|_| |____/\___||___/ ",
      "  ······························ ",
      "%s" % __version__,
+     "",
+     "",
+     _("Press '?' for help"),
+     _("Press 'q' to quit turses"),
+     "",
 ]
 
 TWEET_MAX_CHARS = 140
