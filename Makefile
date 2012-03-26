@@ -23,7 +23,6 @@ install: dist $(DISTPKG)
 	$(PIPI) $(PIPFLAGS) $(DISTPKG)
 
 clean: pyc
-	rm ~/.config/turses/turses.cfg
 	rm -rf dist/
 
 test: pyc
