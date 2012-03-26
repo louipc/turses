@@ -2,6 +2,7 @@
 -----
 - unread count
 - mark all tweets in active timeline as read
+- fix (again) a bug with mouse events
 
 0.0.9
 -----

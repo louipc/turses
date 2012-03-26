@@ -45,16 +45,21 @@ class KeyHandler(object):
         """Stop forwarding input to the editor."""
         self.editor = False
 
+    def is_keyboard_event(self, input):
+        is_string = lambda s : isinstance(s, str)
+        _and = lambda a, b: a and b 
+        return reduce(_and, map(is_string, input))
+
     def handle(self, input, raw):
         """
         Handle the keyboard input.
         """
 
-        if isinstance(input, tuple):
-            ## TODO: handle mouse input
+        if self.is_keyboard_event(input):
+            key = ''.join(input)
+        else:
+            # TODO mouse support
             return
-
-        key = ''.join(input)
 
         # Editor mode goes first
         if self.editor:
