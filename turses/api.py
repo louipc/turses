@@ -405,7 +405,7 @@ class AsyncApi(Api):
 
     @wrap_exceptions
     def init_api(self):
-        init_thread = Thread(target=self._init_api,)
+        init_thread = Thread(target=self._init_api)
         init_thread.start()
 
     def _init_api(self):
