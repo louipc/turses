@@ -500,6 +500,7 @@ class HelpBuffer(ScrollableListBoxWrapper):
         self.insert_help_item('activate_last_buffer', _('Activate last buffer'))
         self.insert_help_item('delete_buffer', _('Delete active buffer'))
         self.insert_help_item('clear', _('Clear active buffer'))
+        self.insert_help_item('mark_all_as_read', _('Mark all tweets in timeline as read'))
 
         # Twitter
         self.insert_division(_('Tweets'))

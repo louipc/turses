@@ -1,3 +1,8 @@
+0.0.10
+-----
+- unread count
+- mark all tweets in active timeline as read
+
 0.0.9
 -----
 - compose tweet with same hashtags as the focused status

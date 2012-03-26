@@ -145,6 +145,9 @@ class KeyHandler(object):
         # Clear buffer
         elif self.is_bound(key, 'clear'):
             self.controller.clear_body()
+        # Mark all as read
+        elif self.is_bound(key, 'mark_all_as_read'):
+            self.controller.mark_all_as_read()
 
     def _timeline_key_handler(self, key):
         # Show home Timeline
@@ -564,6 +567,13 @@ class Turses(object):
     def clear_body(self):
         """Clear body."""
         self.ui.body.clear()
+
+    def mark_all_as_read(self):
+        """Mark all statuses in active timeline as read."""
+        active_timeline = self.timelines.get_active_timeline()
+        for tweet in active_timeline:
+            tweet.read = True
+        self.draw_timelines()
 
     def clear_status(self):
         """Clear the status bar."""

@@ -55,6 +55,7 @@ key = {
     'activate_last_buffer':   'e',
     'delete_buffer':          'd',
     'clear':                  'c',
+    'mark_all_as_read':       'A',
 
     # Tweets
     'tweet':                  't',
