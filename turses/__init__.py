@@ -4,4 +4,5 @@
 #         Licensed under the GPL License. See LICENSE for full details.       #
 ###############################################################################
 
-__version__ = "0.0.8"
+__version__ = "0.0.9"
+__author__ = "Alejandro Gómez"
