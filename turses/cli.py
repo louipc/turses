@@ -1,8 +1,11 @@
-###############################################################################
-#                               coding=utf-8                                  #
-#            Copyright (c) 2012 turses contributors. See AUTHORS.             #
-#         Licensed under the GPL License. See LICENSE for full details.       #
-###############################################################################
+# -*- coding: utf-8 -*-
+
+"""
+turses.cli
+~~~~~~~~~~
+
+This module contains the logic to launch `turses` with a curses interface.
+"""
 
 from .util import parse_arguments
 from .config import Configuration

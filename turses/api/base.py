@@ -4,6 +4,10 @@
 turses.api.base
 ~~~~~~~~~~~~~~~
 
+This module contains an interface to the Twitter API that acts as a mediator
+for different implementations.
+
+It also contains an asynchronous wrapper to `Api`.
 """
 
 from threading import Thread

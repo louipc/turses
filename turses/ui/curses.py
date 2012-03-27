@@ -1,8 +1,12 @@
-###############################################################################
-#                               coding=utf-8                                  #
-#            Copyright (c) 2012 turses contributors. See AUTHORS.             #
-#         Licensed under the GPL License. See LICENSE for full details.       #
-###############################################################################
+# -*- coding: utf-8 -*-
+
+"""
+turses.ui.curses
+~~~~~~~~~~~~~~~~
+
+This module contains the curses implementation of the UI widgets contained
+in `turses.ui.base`.
+"""
 
 from gettext import gettext as _
 

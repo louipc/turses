@@ -1,8 +1,11 @@
-###############################################################################
-#                               coding=utf-8                                  #
-#            Copyright (c) 2012 turses contributors. See AUTHORS.             #
-#         Licensed under the GPL License. See LICENSE for full details.       #
-###############################################################################
+# -*- coding: utf-8 -*-
+
+"""
+turses.decorators
+~~~~~~~~~~~~~~~~~
+
+This module contains handy decorators.
+"""
 
 from functools import wraps
 from threading import Thread

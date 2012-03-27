@@ -1,8 +1,11 @@
-###############################################################################
-#                               coding=utf-8                                  #
-#            Copyright (c) 2012 turses contributors. See AUTHORS.             #
-#         Licensed under the GPL License. See LICENSE for full details.       #
-###############################################################################
+# -*- coding: utf-8 -*-
+
+"""
+turses.controller
+~~~~~~~~~~~~~~~~~
+
+This module contains the controller logic of turses.
+"""
 
 
 from gettext import gettext as _
@@ -13,7 +16,8 @@ import urwid
 
 from .decorators import wrap_exceptions
 from .constant import palette
-from .api import AsyncApi
+from .api.base import AsyncApi
+from .api.backends import PythonTwitterApi
 from .models import Timeline, TimelineList
 from .models import get_authors_username, get_mentioned_for_reply, get_hashtags
 from .models import is_valid_status_text, is_valid_search_text, is_valid_username
@@ -259,7 +263,8 @@ class Turses(object):
         consumer_secret = self.configuration.token[self.configuration.service]['consumer_secret']
         oauth_token = self.configuration.oauth_token 
         oauth_token_secret = self.configuration.oauth_token_secret
-        self.api = AsyncApi(consumer_key=consumer_key,
+        self.api = AsyncApi(PythonTwitterApi,
+                            consumer_key=consumer_key,
                             consumer_secret=consumer_secret,
                             access_token_key=oauth_token,
                             access_token_secret=oauth_token_secret,)

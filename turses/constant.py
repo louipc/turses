@@ -1,9 +1,11 @@
-###############################################################################
-#                               coding=utf-8                                  #
-#            Copyright (c) 2012 turses contributors. See AUTHORS.             #
-#         Licensed under the GPL License. See LICENSE for full details.       #
-###############################################################################
+# -*- coding: utf-8 -*-
 
+"""
+turses.constant
+~~~~~~~~~~~~~~~
+
+This module contains the programs defaults.
+"""
 
 # palette for the curses interface created with `urwid`
 palette = [

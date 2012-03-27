@@ -1,8 +1,11 @@
-###############################################################################
-#                               coding=utf-8                                  #
-#            Copyright (c) 2012 turses contributors. See AUTHORS.             #
-#         Licensed under the GPL License. See LICENSE for full details.       #
-###############################################################################
+# -*- coding: utf-8 -*-
+
+"""
+turses.models
+~~~~~~~~~~~~~
+
+This module contains the Twitter entities represented in `turses`.
+"""
 
 import re
 from datetime import datetime
