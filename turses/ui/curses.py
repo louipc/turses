@@ -21,6 +21,7 @@ from ..models import is_DM, get_authors_username
 from ..util import encode 
 from .base import UserInterface
  
+TWEET_MAX_CHARS = 140
 
 banner = [ 
      "   _                             ",
@@ -37,8 +38,6 @@ banner = [
      _("Press 'q' to quit turses"),
      "",
 ]
-
-TWEET_MAX_CHARS = 140
 
 class CursesInterface(Frame, UserInterface):
     """

@@ -15,7 +15,6 @@ from functools import partial
 import urwid
 
 from .decorators import wrap_exceptions
-from .constant import palette
 from .api.base import AsyncApi
 from .api.backends import PythonTwitterApi
 from .models import Timeline, TimelineList
@@ -243,7 +242,7 @@ class KeyHandler(object):
             self.controller.info_message('Still to implement!')
 
 
-class Turses(object):
+class Controller(object):
     """Controller of the program."""
 
     INFO_MODE = 0
@@ -280,12 +279,11 @@ class Turses(object):
             exit(0)
 
     def main_loop(self):
-        if not hasattr(self, 'loop'):
-            self.key_handler = KeyHandler(self.configuration, self)
-            self.loop = urwid.MainLoop(self.ui,
-                                       palette, 
-                                       input_filter=self.key_handler.handle,)
-        self.loop.run()
+        """
+        Main loop of the program, `Controller` subclasses must override this 
+        method.
+        """
+        raise NotImplementedError
 
     def init_timelines(self):
         timelines_thread = Thread(target=self._init_timelines)
@@ -593,11 +591,7 @@ class Turses(object):
     # -- UI -------------------------------------------------------------------
 
     def redraw_screen(self):
-        if hasattr(self, "loop"):
-            try:
-                self.loop.draw_screen()
-            except AssertionError:
-                pass
+        raise NotImplementedError
 
     # -- Twitter -------------------------------------------------------------- 
 
@@ -850,3 +844,26 @@ class Turses(object):
         self.api.destroy_favorite(on_error=unfavorite_error,
                                   on_success=unfavorite_done,
                                   status=status,)
+
+
+class CursesController(Controller):
+    """Controller of the for the curses implementation."""
+
+    def __init__(self, palette, *args, **kwargs):
+        self.palette = palette
+        Controller.__init__(self, *args, **kwargs)
+
+    def main_loop(self):
+        if not hasattr(self, 'loop'):
+            self.key_handler = KeyHandler(self.configuration, self)
+            self.loop = urwid.MainLoop(self.ui,
+                                       self.palette, 
+                                       input_filter=self.key_handler.handle,)
+        self.loop.run()
+
+    def redraw_screen(self):
+        if hasattr(self, "loop"):
+            try:
+                self.loop.draw_screen()
+            except AssertionError:
+                pass

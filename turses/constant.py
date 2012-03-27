@@ -7,7 +7,6 @@ turses.constant
 This module contains the programs defaults.
 """
 
-# palette for the curses interface created with `urwid`
 palette = [
     ['body', 'default', '', 'standout'],
     ['focus','dark red', '', 'standout'],
