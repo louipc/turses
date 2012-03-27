@@ -50,7 +50,7 @@ class KeyHandler(object):
         _and = lambda a, b: a and b 
         return reduce(_and, map(is_string, input))
 
-    def handle(self, input, raw):
+    def handle(self, input, _):
         """
         Handle the keyboard input.
         """

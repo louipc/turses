@@ -533,8 +533,10 @@ class TimelineList(UnsortedActiveList):
                     self.timelines[other], self.timelines[one]
 
     def _mark_read(self):
-        active_timeline = self.get_active_timeline()
-        active_timeline.mark_active_as_read()
+        if self.has_timelines():
+            active_timeline = self.get_active_timeline()
+            active_timeline.mark_active_as_read()
+
 
     def shift_active_previous(self):
         active_index = self.active_index
