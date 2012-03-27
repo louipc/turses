@@ -1,8 +1,12 @@
-###############################################################################
-#                               coding=utf-8                                  #
-#            Copyright (c) 2012 turses contributors. See AUTHORS.             #
-#         Licensed under the GPL License. See LICENSE for full details.       #
-###############################################################################
+# -*- coding: utf-8 -*-
+
+"""
+turses.ui.curses
+~~~~~~~~~~~~~~~~
+
+This module contains the curses implementation of the UI widgets contained
+in `turses.ui.base`.
+"""
 
 from gettext import gettext as _
 
@@ -17,6 +21,7 @@ from ..models import is_DM, get_authors_username
 from ..util import encode 
 from .base import UserInterface
  
+TWEET_MAX_CHARS = 140
 
 banner = [ 
      "   _                             ",
@@ -33,8 +38,6 @@ banner = [
      _("Press 'q' to quit turses"),
      "",
 ]
-
-TWEET_MAX_CHARS = 140
 
 class CursesInterface(Frame, UserInterface):
     """
@@ -71,10 +74,6 @@ class CursesInterface(Frame, UserInterface):
 
     def clear_header(self):
         self.header.clear()
-
-    def update_header(self, timelines):
-        self.header.set_tabs(timelines.get_timeline_names())
-        self.header.set_active_tab(timelines.active_index)
 
     # -- Footer ---------------------------------------------------------------
         
@@ -504,6 +503,7 @@ class HelpBuffer(ScrollableListBoxWrapper):
         self.insert_help_item('activate_last_buffer', _('Activate last buffer'))
         self.insert_help_item('delete_buffer', _('Delete active buffer'))
         self.insert_help_item('clear', _('Clear active buffer'))
+        self.insert_help_item('mark_all_as_read', _('Mark all tweets in timeline as read'))
 
         # Twitter
         self.insert_division(_('Tweets'))

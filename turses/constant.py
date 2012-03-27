@@ -1,11 +1,12 @@
-###############################################################################
-#                               coding=utf-8                                  #
-#            Copyright (c) 2012 turses contributors. See AUTHORS.             #
-#         Licensed under the GPL License. See LICENSE for full details.       #
-###############################################################################
+# -*- coding: utf-8 -*-
 
+"""
+turses.constant
+~~~~~~~~~~~~~~~
 
-# palette for the curses interface created with `urwid`
+This module contains the programs defaults.
+"""
+
 palette = [
     ['body', 'default', '', 'standout'],
     ['focus','dark red', '', 'standout'],
@@ -55,6 +56,7 @@ key = {
     'activate_last_buffer':   'e',
     'delete_buffer':          'd',
     'clear':                  'c',
+    'mark_all_as_read':       'A',
 
     # Tweets
     'tweet':                  't',

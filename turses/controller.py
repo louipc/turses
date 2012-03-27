@@ -1,8 +1,11 @@
-###############################################################################
-#                               coding=utf-8                                  #
-#            Copyright (c) 2012 turses contributors. See AUTHORS.             #
-#         Licensed under the GPL License. See LICENSE for full details.       #
-###############################################################################
+# -*- coding: utf-8 -*-
+
+"""
+turses.controller
+~~~~~~~~~~~~~~~~~
+
+This module contains the controller logic of turses.
+"""
 
 
 from gettext import gettext as _
@@ -12,8 +15,8 @@ from functools import partial
 import urwid
 
 from .decorators import wrap_exceptions
-from .constant import palette
-from .api import AsyncApi
+from .api.base import AsyncApi
+from .api.backends import PythonTwitterApi
 from .models import Timeline, TimelineList
 from .models import get_authors_username, get_mentioned_for_reply, get_hashtags
 from .models import is_valid_status_text, is_valid_search_text, is_valid_username
@@ -45,16 +48,21 @@ class KeyHandler(object):
         """Stop forwarding input to the editor."""
         self.editor = False
 
-    def handle(self, input, raw):
+    def is_keyboard_event(self, input):
+        is_string = lambda s : isinstance(s, str)
+        _and = lambda a, b: a and b 
+        return reduce(_and, map(is_string, input))
+
+    def handle(self, input, _):
         """
         Handle the keyboard input.
         """
 
-        if isinstance(input, tuple):
-            ## TODO: handle mouse input
+        if self.is_keyboard_event(input):
+            key = ''.join(input)
+        else:
+            # TODO mouse support
             return
-
-        key = ''.join(input)
 
         # Editor mode goes first
         if self.editor:
@@ -145,6 +153,9 @@ class KeyHandler(object):
         # Clear buffer
         elif self.is_bound(key, 'clear'):
             self.controller.clear_body()
+        # Mark all as read
+        elif self.is_bound(key, 'mark_all_as_read'):
+            self.controller.mark_all_as_read()
 
     def _timeline_key_handler(self, key):
         # Show home Timeline
@@ -231,7 +242,7 @@ class KeyHandler(object):
             self.controller.info_message('Still to implement!')
 
 
-class Turses(object):
+class Controller(object):
     """Controller of the program."""
 
     INFO_MODE = 0
@@ -251,7 +262,8 @@ class Turses(object):
         consumer_secret = self.configuration.token[self.configuration.service]['consumer_secret']
         oauth_token = self.configuration.oauth_token 
         oauth_token_secret = self.configuration.oauth_token_secret
-        self.api = AsyncApi(consumer_key=consumer_key,
+        self.api = AsyncApi(PythonTwitterApi,
+                            consumer_key=consumer_key,
                             consumer_secret=consumer_secret,
                             access_token_key=oauth_token,
                             access_token_secret=oauth_token_secret,)
@@ -267,12 +279,11 @@ class Turses(object):
             exit(0)
 
     def main_loop(self):
-        if not hasattr(self, 'loop'):
-            self.key_handler = KeyHandler(self.configuration, self)
-            self.loop = urwid.MainLoop(self.ui,
-                                       palette, 
-                                       input_filter=self.key_handler.handle,)
-        self.loop.run()
+        """
+        Main loop of the program, `Controller` subclasses must override this 
+        method.
+        """
+        raise NotImplementedError
 
     def init_timelines(self):
         timelines_thread = Thread(target=self._init_timelines)
@@ -453,11 +464,18 @@ class Turses(object):
         self.draw_timeline_buffer()
 
     def update_header(self):
-        self.ui.update_header(self.timelines)
-        # update tabs with buffer names, highlighting the active
+        # update tabs with buffer names and unread count
         timeline_names = self.timelines.get_timeline_names()
-        self.ui.set_tab_names(timeline_names)
-        self.ui.activate_tab(self.timelines.active_index)
+        unread_tweets = self.timelines.get_unread_counts()
+
+        name_and_unread = zip(timeline_names, map(str, unread_tweets))
+
+        tabs = ["%s [%s]" % (name, unread) for name, unread in name_and_unread]
+        self.ui.set_tab_names(tabs)
+
+        # highlight the active
+        active_index = self.timelines.active_index
+        self.ui.activate_tab(active_index)
 
     def draw_timeline_buffer(self):
         # draw active timeline
@@ -558,6 +576,13 @@ class Turses(object):
         """Clear body."""
         self.ui.body.clear()
 
+    def mark_all_as_read(self):
+        """Mark all statuses in active timeline as read."""
+        active_timeline = self.timelines.get_active_timeline()
+        for tweet in active_timeline:
+            tweet.read = True
+        self.draw_timelines()
+
     def clear_status(self):
         """Clear the status bar."""
         self.ui.clear_status()
@@ -566,11 +591,7 @@ class Turses(object):
     # -- UI -------------------------------------------------------------------
 
     def redraw_screen(self):
-        if hasattr(self, "loop"):
-            try:
-                self.loop.draw_screen()
-            except AssertionError:
-                pass
+        raise NotImplementedError
 
     # -- Twitter -------------------------------------------------------------- 
 
@@ -612,7 +633,7 @@ class Turses(object):
         self.editor_mode()
 
     def direct_message(self):
-        status = self.timelines.get_focused_status()
+        status = self.timelines.get_active_status()
         recipient = get_authors_username(status)
         self.ui.show_dm_editor(prompt=_('DM to %s' % recipient), 
                                content='',
@@ -629,7 +650,6 @@ class Turses(object):
                                       content=hashtags,
                                       done_signal_handler=self.tweet_handler)
         self.editor_mode()
-
 
     # -- Twitter --------------------------------------------------------------
 
@@ -750,7 +770,7 @@ class Turses(object):
     # -- API ------------------------------------------------------------------
 
     def retweet(self):
-        status = self.timelines.get_focused_status()
+        status = self.timelines.get_active_status()
         retweet_posted = partial(self.info_message, 
                                  _('Retweet posted'))
         retweet_post_failed = partial(self.error_message, 
@@ -760,7 +780,7 @@ class Turses(object):
                          status=status,)
 
     def manual_retweet(self):
-        status = self.timelines.get_focused_status()
+        status = self.timelines.get_active_status()
         rt_text = 'RT ' + status.text
         if is_valid_status_text(' ' + rt_text):
             self.tweet(content=rt_text)
@@ -768,7 +788,7 @@ class Turses(object):
             self.error_message(_('Tweet too long for manual retweet'))
 
     def delete_tweet(self):
-        status = self.timelines.get_focused_status()
+        status = self.timelines.get_active_status()
         status_deleted = partial(self.info_message, 
                                  _('Tweet deleted'))
         status_not_deleted = partial(self.error_message, 
@@ -778,7 +798,7 @@ class Turses(object):
                          on_success=status_deleted)
 
     def follow_selected(self):
-        status = self.timelines.get_focused_status()
+        status = self.timelines.get_active_status()
         username = get_authors_username(status)
         if username == self.user.screen_name:
             self.error_message(_('You can\'t follow yourself'))
@@ -792,7 +812,7 @@ class Turses(object):
                                    on_success=follow_done)
 
     def unfollow_selected(self):
-        status = self.timelines.get_focused_status()
+        status = self.timelines.get_active_status()
         username = get_authors_username(status)
         if username == self.user.screen_name:
             self.error_message(_('That doesn\'t make any sense'))
@@ -806,7 +826,7 @@ class Turses(object):
                                     on_success=unfollow_done)
 
     def favorite(self):
-        status = self.timelines.get_focused_status()
+        status = self.timelines.get_active_status()
         favorite_error = partial(self.error_message,
                                  _('Failed to mark tweet as favorite'))
         favorite_done = partial(self.info_message,
@@ -816,7 +836,7 @@ class Turses(object):
                                  status=status,)
 
     def unfavorite(self):
-        status = self.timelines.get_focused_status()
+        status = self.timelines.get_active_status()
         unfavorite_error = partial(self.error_message,
                                    _('Failed to remove tweet from favorites'))
         unfavorite_done = partial(self.info_message,
@@ -824,3 +844,26 @@ class Turses(object):
         self.api.destroy_favorite(on_error=unfavorite_error,
                                   on_success=unfavorite_done,
                                   status=status,)
+
+
+class CursesController(Controller):
+    """Controller of the for the curses implementation."""
+
+    def __init__(self, palette, *args, **kwargs):
+        self.palette = palette
+        Controller.__init__(self, *args, **kwargs)
+
+    def main_loop(self):
+        if not hasattr(self, 'loop'):
+            self.key_handler = KeyHandler(self.configuration, self)
+            self.loop = urwid.MainLoop(self.ui,
+                                       self.palette, 
+                                       input_filter=self.key_handler.handle,)
+        self.loop.run()
+
+    def redraw_screen(self):
+        if hasattr(self, "loop"):
+            try:
+                self.loop.draw_screen()
+            except AssertionError:
+                pass

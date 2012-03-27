@@ -1,8 +1,4 @@
-###############################################################################
-#                               coding=utf-8                                  #
-#            Copyright (c) 2012 turses contributors. See AUTHORS.             #
-#         Licensed under the GPL License. See LICENSE for full details.       #
-###############################################################################
+# -*- coding: utf-8 -*-
 
 from distutils.core import setup
 
@@ -36,7 +32,8 @@ setup(name="turses",
       keywords="twitter client curses",
       packages=[
           "turses", 
-          "turses.ui"
+          "turses.ui",
+          "turses.api",
       ],
       package_data={'': ['LICENSE']},
       include_package_data=True,

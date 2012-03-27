@@ -1,8 +1,11 @@
-###############################################################################
-#                               coding=utf-8                                  #
-#            Copyright (c) 2012 turses contributors. See AUTHORS.             #
-#         Licensed under the GPL License. See LICENSE for full details.       #
-###############################################################################
+# -*- coding: utf-8 -*-
+
+"""
+turses.ui.base
+~~~~~~~~~~~~~~
+
+This module contains the interfaces that different UI widgets must implement.
+"""
 
 
 class UserInterface(object):

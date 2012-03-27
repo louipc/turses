@@ -40,6 +40,7 @@ Features
 - View any user's tweets
 - Fully customizable
 - Multiple accounts
+- Unread count
 
 Roadmap
 -------
