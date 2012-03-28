@@ -14,7 +14,7 @@ WATCHTESTFLAGS=--verbosity=0
 
 all: turses
 
-turses: clean test dist install
+turses: clean test dist install 
 
 dist: clean
 	$(DIST)
