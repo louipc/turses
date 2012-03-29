@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-turses.constant
+turses.defaults
 ~~~~~~~~~~~~~~~
 
 This module contains the programs defaults.
