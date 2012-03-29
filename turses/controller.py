@@ -424,8 +424,9 @@ class Controller(object):
         timeline_not_fetched = partial(self.error_message, 
                                         _('Failed to fetch your tweets'))
 
-        user = self.api.verify_credentials()
-        self.append_timeline(name='@%s' % user.screen_name,     
+        if not hasattr(self, 'user'):
+            self.user = self.api.verify_credentials()
+        self.append_timeline(name='@%s' % self.user.screen_name,     
                              update_function=self.api.get_own_timeline,
                              on_error=timeline_not_fetched,
                              on_success=timeline_fetched,)
