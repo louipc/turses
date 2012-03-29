@@ -21,7 +21,7 @@ except ImportError:
     pass
     #from cgi import parse_qsl
 
-from . import constant
+from . import defaults
 from .util import encode
 
 
@@ -52,14 +52,19 @@ class Configuration(object):
     """Class responsible for managing the configuration."""
 
     def __init__(self, args):
+        # read defaults
         self.init_config()
+
+        # read environment variables
         self.home = os.environ['HOME']
         self.get_xdg_config()
         self.get_browser()
+
         # generate the config file
         if args.generate_config != None:
             self.generate_config_file(args.generate_config)
             sys.exit(0)
+
 
         self.set_path(args)
         self.check_for_default_config()
@@ -73,11 +78,11 @@ class Configuration(object):
         self.parse_config()
 
     def init_config(self):
-        self.token     = constant.token
-        self.keys      = constant.key
-        self.params    = constant.params
-        self.filter    = constant.filter
-        self.palette   = constant.palette
+        self.token   = defaults.token
+        self.keys    = defaults.key
+        self.params  = defaults.params
+        self.filter  = defaults.filter
+        self.palette = defaults.palette
 
     def get_xdg_config(self):
         try:
@@ -101,37 +106,6 @@ class Configuration(object):
                 except:
                     print encode(_('Couldn\'t create the directory in %s/turses')) % self.xdg_config
             self.generate_config_file(self.xdg_config + default_file)
-
-    def generate_config_file(self, config_file):
-        conf = ConfigParser.RawConfigParser()
-        conf.read(config_file)
-
-        # COLOR
-        conf.add_section('colors')
-        for c in self.palette:
-            conf.set('colors', c[0], c[1])
-        # KEYS
-        conf.add_section('keys')
-        for k in self.keys:
-            conf.set('keys', k, self.keys[k])
-        # PARAMS
-        conf.add_section('params')
-        for p in self.params:
-            if self.params[p] == True:
-                value = 1
-            elif self.params[p] == False:
-                value = 0
-            elif self.params[p] == None:
-                continue
-            else:
-                value = self.params[p]
-
-            conf.set('params', p, value)
-
-        with open(config_file, 'wb') as config:
-            conf.write(config)
-
-        print encode(_('Generating configuration file in %s')) % config_file
 
     def set_path(self, args):
         # Default config path set
@@ -444,3 +418,93 @@ class Configuration(object):
 
         with open(self.token_file, 'wb') as tokens:
             conf.write(tokens)
+
+
+CONFIG_DIR = '.turses'
+
+
+class TursesConfiguration(object):
+    """
+    `Configuration` class creates and parses configuration files.
+
+    There are two configuration files per account in `turses`: 
+
+        `<username>.config`
+            contains user preferences: colors, bindings, etc.
+
+        `<username>.token`
+            contains the oauth tokens
+
+    The standar location is under $HOME directory, in a folder called `.turses`.
+
+        ~
+        |+.turses/
+        | |-username.config
+        | `-username.token
+        |+...
+        |-...
+        `
+    """
+    def __init__(self, cli_args):
+        """
+        Create a `Configuration` object taking into account the arguments
+        provided in the command line interface.
+        """
+        self.load_defaults()
+
+        # generate config file and exit
+        if cli_args.generate_config:
+            self.generate_config_file(cli_args.generate_config)
+            sys.exit(0)
+
+        # environment
+        self.home = os.environ['HOME']
+
+        # check if there is any configuration to load
+
+    def load_defaults(self):
+        """Load default values into configuration."""
+        self.token   = defaults.token
+        self.keys    = defaults.key
+        self.params  = defaults.params
+        self.filter  = defaults.filter
+        self.palette = defaults.palette
+
+    def generate_config_file(self, config_file):
+        conf = ConfigParser.RawConfigParser()
+        conf.read(config_file)
+
+        # COLOR
+        conf.add_section('colors')
+        for c in self.palette:
+            conf.set('colors', c[0], c[1])
+        # KEYS
+        conf.add_section('keys')
+        for k in self.keys:
+            conf.set('keys', k, self.keys[k])
+        # PARAMS
+        conf.add_section('params')
+        for p in self.params:
+            if self.params[p] == True:
+                value = 1
+            elif self.params[p] == False:
+                value = 0
+            elif self.params[p] == None:
+                continue
+            else:
+                value = self.params[p]
+
+            conf.set('params', p, value)
+
+        with open(config_file, 'wb') as config:
+            conf.write(config)
+
+        print encode(_('Generated configuration file in %s')) % config_file
+
+    def get_config_files(self):
+        """
+        Return a dictionary, the key being the username and the value a tuple
+        of (config, token) file paths for each configuration file pair found
+        in $HOME/.turses.
+        """
+        # TODO
