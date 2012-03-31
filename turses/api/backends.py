@@ -248,7 +248,7 @@ class PythonTwitterApi(BasePythonTwitterApi, Api):
         return [to_status(s) for s in statuses]
 
     def get_home_timeline(self):
-        statuses = self.GetFriendsTimeline()
+        statuses = self.GetFriendsTimeline(retweets=True)
         return self._to_statuses(statuses)
 
     def get_user_timeline(self, screen_name):

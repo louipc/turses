@@ -104,10 +104,6 @@ class AsyncApi(Api):
 
     @wrap_exceptions
     def init_api(self):
-        init_thread = Thread(target=self._init_api)
-        init_thread.start()
-
-    def _init_api(self):
         self._api = self._api_cls(consumer_key=self._consumer_key,
                                   consumer_secret=self._consumer_secret,
                                   access_token_key=self._access_token_key,
@@ -118,9 +114,11 @@ class AsyncApi(Api):
     def verify_credentials(self):
         return self._api.verify_credentials()
 
+    @wrap_exceptions
     def get_home_timeline(self):
         return self._api.get_home_timeline()
 
+    @wrap_exceptions
     def get_user_timeline(self, screen_name):
         return self._api.get_user_timeline(screen_name=screen_name)
 
@@ -140,6 +138,7 @@ class AsyncApi(Api):
     def get_direct_messages(self):
         return self._api.get_direct_messages()
 
+    @wrap_exceptions
     def search(self, text):
         return self._api.get_search(text)
 

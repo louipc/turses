@@ -1,5 +1,10 @@
+0.0.11
+------
+- include retweets in home timeline
+- fix bug with non-existent method
+
 0.0.10
------
+------
 - unread count
 - mark all tweets in active timeline as read
 - fix (again) a bug with mouse events

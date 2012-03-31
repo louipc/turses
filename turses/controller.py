@@ -34,36 +34,33 @@ class KeyHandler(object):
         self.controller = controller
         self.editor = False
 
+    def handle(self, input, _):
+        """Handle any input."""
+
+        if self.is_keyboard_input(input):
+            key = ''.join(input)
+            self.handle_keyboard_input(key)
+        else:
+            # TODO mouse support
+            return
+
+    # -- Keyboard input --------------------------------------------------------
+
+    def is_keyboard_input(self, input):
+        """Return True if `input` is keyboard input."""
+        if input:
+            is_string = lambda s : isinstance(s, str)
+            _and = lambda a, b: a and b 
+            return reduce(_and, map(is_string, input))
+
     def is_bound(self, key, name):
         """
         Return True if `key` corresponds to the action specified by `name`.
         """
         return key == self.configuration.keys[name]
 
-    def set_editor(self, editor):
-        """Set an editor and forward all the input to it."""
-        self.editor = editor
-
-    def unset_editor(self):
-        """Stop forwarding input to the editor."""
-        self.editor = False
-
-    def is_keyboard_event(self, input):
-        is_string = lambda s : isinstance(s, str)
-        _and = lambda a, b: a and b 
-        return reduce(_and, map(is_string, input))
-
-    def handle(self, input, _):
-        """
-        Handle the keyboard input.
-        """
-
-        if self.is_keyboard_event(input):
-            key = ''.join(input)
-        else:
-            # TODO mouse support
-            return
-
+    def handle_keyboard_input(self, key):
+        """Handle a keyboard input."""
         # Editor mode goes first
         if self.editor:
             size = 20,
@@ -100,7 +97,7 @@ class KeyHandler(object):
     def _turses_key_handler(self, key):
         # quit
         if self.is_bound(key, 'quit'):
-            raise urwid.ExitMainLoop()
+            self.controller.exit()
         # redraw screen
         elif self.is_bound(key, 'redraw'): 
             self.controller.redraw_screen()
@@ -241,6 +238,16 @@ class KeyHandler(object):
         elif key == self.configuration.keys['open_image']:
             self.controller.info_message('Still to implement!')
 
+    # -- Editor ----------------------------------------------------------------
+
+    def set_editor(self, editor):
+        """Set an editor and forward all the input to it."""
+        self.editor = editor
+
+    def unset_editor(self):
+        """Stop forwarding input to the editor."""
+        self.editor = False
+
 
 class Controller(object):
     """Controller of the program."""
@@ -283,6 +290,10 @@ class Controller(object):
         Main loop of the program, `Controller` subclasses must override this 
         method.
         """
+        raise NotImplementedError
+
+    def exit(self):
+        """Exit the program."""
         raise NotImplementedError
 
     def init_timelines(self):
@@ -413,8 +424,9 @@ class Controller(object):
         timeline_not_fetched = partial(self.error_message, 
                                         _('Failed to fetch your tweets'))
 
-        user = self.api.verify_credentials()
-        self.append_timeline(name='@%s' % user.screen_name,     
+        if not hasattr(self, 'user'):
+            self.user = self.api.verify_credentials()
+        self.append_timeline(name='@%s' % self.user.screen_name,     
                              update_function=self.api.get_own_timeline,
                              on_error=timeline_not_fetched,
                              on_success=timeline_fetched,)
@@ -860,6 +872,9 @@ class CursesController(Controller):
                                        self.palette, 
                                        input_filter=self.key_handler.handle,)
         self.loop.run()
+
+    def exit(self):
+        raise urwid.ExitMainLoop()
 
     def redraw_screen(self):
         if hasattr(self, "loop"):
