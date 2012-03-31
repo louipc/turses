@@ -540,6 +540,9 @@ class TimelineList(UnsortedActiveList):
             active_timeline = self.get_active_timeline()
             active_timeline.mark_active_as_read()
 
+    def get_focused_status(self):
+        active_timeline = self.get_active_timeline()
+        return active_timeline.get_active()
 
     def shift_active_previous(self):
         active_index = self.active_index

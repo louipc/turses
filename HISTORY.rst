@@ -1,6 +1,7 @@
 0.0.11
 ------
 - include retweets in home timeline
+- fix bug with non-existent method
 
 0.0.10
 ------
