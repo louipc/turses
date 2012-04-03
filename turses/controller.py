@@ -94,6 +94,9 @@ class KeyHandler(object):
         # Twitter commands
         self._twitter_key_handler(key)
 
+        # External programs
+        self._external_program_handler(key)
+
     def _turses_key_handler(self, key):
         # quit
         if self.is_bound(key, 'quit'):
@@ -230,7 +233,7 @@ class KeyHandler(object):
         elif self.is_bound(key, 'user_info'): 
             self.controller.info_message('Still to implement!')
 
-    def _external_controller_handler(self, key):
+    def _external_program_handler(self, key):
         # Open URL
         if key == self.configuration.keys['openurl']:
             self.controller.info_message('Still to implement!')
@@ -859,8 +862,7 @@ class Controller(object):
 
 
 class CursesController(Controller):
-    """Controller of the for the curses implementation."""
-
+    """Controller of the for the curses implementation.""" 
     def __init__(self, palette, *args, **kwargs):
         self.palette = palette
         Controller.__init__(self, *args, **kwargs)
