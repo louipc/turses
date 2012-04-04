@@ -17,6 +17,7 @@ import urwid
 from .decorators import wrap_exceptions
 from .api.base import AsyncApi
 from .api.backends import PythonTwitterApi
+from .util import get_urls, spawn_process
 from .models import Timeline, TimelineList
 from .models import get_authors_username, get_mentioned_for_reply, get_hashtags
 from .models import is_valid_status_text, is_valid_search_text, is_valid_username
@@ -236,7 +237,7 @@ class KeyHandler(object):
     def _external_program_handler(self, key):
         # Open URL
         if key == self.configuration.keys['openurl']:
-            self.controller.info_message('Still to implement!')
+            self.controller.open_urls()
         # Open image
         elif key == self.configuration.keys['open_image']:
             self.controller.info_message('Still to implement!')
@@ -860,6 +861,27 @@ class Controller(object):
                                   on_success=unfavorite_done,
                                   status=status,)
 
+    def open_urls(self):
+        """
+        Open the URLs contained on the focused tweets in a browser.
+        """
+        status = self.timelines.get_active_status()
+        urls = get_urls(status.text)
+
+        if urls:
+            # TODO: delegate this to BROWSER environment variable (?)
+            args = ' '.join(urls)
+            command = self.configuration.params['openurl_command']
+            # remove %s from legacy configuration
+            command.strip('%s')
+        else:
+            self.info_message(_('No URLs found on this tweet'))
+            return
+
+        try:
+            spawn_process(command, args)
+        except:
+            self.error_message(_('Unable to open URLs'))
 
 class CursesController(Controller):
     """Controller of the for the curses implementation.""" 
