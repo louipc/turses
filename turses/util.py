@@ -13,6 +13,7 @@ import re
 from htmlentitydefs import entitydefs
 from time import strftime, gmtime
 from calendar import timegm
+from subprocess import call
 
 from . import __version__
 
@@ -63,3 +64,21 @@ def encode(string):
 
 def timestamp_from_datetime(datetime):
     return timegm(datetime.utctimetuple())
+
+def spawn_process(command, *args):
+    """
+    Spawn the process `command` with `*args` as arguments in the background.
+    """
+    process = list(args)
+    process.insert(0, command)
+    process.append('&')
+
+    from os import devnull
+    null = open(devnull, 'w')
+
+    call(' '.join(process),
+         shell=True,
+         stdout=null,
+         stderr=null,)
+
+    null.close()
