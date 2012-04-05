@@ -13,6 +13,7 @@ palette = [
     ['header', 'light blue', ''],
     ['line', 'dark blue', ''],
     ['active_tab', 'white', ''],
+    ['visible_tab', 'light cyan', ''],
     ['inactive_tab', 'dark blue', ''],
     ['read', 'dark blue', ''],
     ['error', 'white', 'dark red'],
@@ -57,6 +58,10 @@ key = {
     'delete_buffer':          'd',
     'clear':                  'c',
     'mark_all_as_read':       'A',
+    'expand_visible_left':    'p',
+    'expand_visible_right':   'n',
+    'shrink_visible_left':    'P',
+    'shrink_visible_right':   'N',
 
     # Tweets
     'tweet':                  't',
