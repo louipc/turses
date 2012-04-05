@@ -18,7 +18,7 @@ from .decorators import wrap_exceptions
 from .api.base import AsyncApi
 from .api.backends import PythonTwitterApi
 from .util import get_urls, spawn_process
-from .models import Timeline, TimelineList
+from .models import Timeline, VisibleTimelineList
 from .models import get_authors_username, get_mentioned_for_reply, get_hashtags
 from .models import is_valid_status_text, is_valid_search_text, is_valid_username
 
@@ -142,6 +142,18 @@ class KeyHandler(object):
         # Shift active buffer end
         elif self.is_bound(key, 'shift_buffer_end'):
             self.controller.shift_buffer_end()
+        # Expand visible buffer left
+        elif self.is_bound(key, 'expand_visible_left'):
+            self.controller.expand_buffer_left()
+        # Expand visible buffer right
+        elif self.is_bound(key, 'expand_visible_right'):
+            self.controller.expand_buffer_right()
+        # Shrink visible buffer left
+        elif self.is_bound(key, 'shrink_visible_left'):
+            self.controller.shrink_buffer_left()
+        # Shrink visible buffer right
+        elif self.is_bound(key, 'shrink_visible_right'):
+            self.controller.shrink_buffer_right()
         # Activate first buffer
         elif self.is_bound(key, 'activate_first_buffer'):
             self.controller.activate_first_buffer()
@@ -310,7 +322,7 @@ class Controller(object):
             pass
         self.user = self.api.verify_credentials()
         self.info_message(_('Initializing timelines'))
-        self.timelines = TimelineList()
+        self.timelines = VisibleTimelineList()
         # TODO make default timeline list configurable
         self.append_default_timelines()
 
@@ -493,10 +505,19 @@ class Controller(object):
         active_index = self.timelines.active_index
         self.ui.activate_tab(active_index)
 
+        # colorize the visible tabs 
+        visible_indexes = self.timelines.get_visible_indexes()
+        self.ui.header.set_visible_tabs(visible_indexes)
+
     def draw_timeline_buffer(self):
-        # draw active timeline
+        # draw visible timelines
+        visible_timelines = self.timelines.get_visible_timelines()
+        self.ui.draw_timelines(visible_timelines)
+        # focus active timeline
         active_timeline = self.timelines.get_active_timeline()
-        self.ui.draw_timeline(active_timeline)
+        active_pos = self.timelines.get_visible_timeline_relative_index()
+        # focus active status
+        self.ui.focus_timeline(active_pos)
         self.ui.focus_status(active_timeline.active_index)
 
     # TODO decorator `timeline_mode` for checking `has_timelines` and drawing
@@ -529,6 +550,26 @@ class Controller(object):
     def shift_buffer_end(self):
         if self.timelines.has_timelines():
             self.timelines.shift_active_end()
+            self.draw_timelines()
+
+    def expand_buffer_left(self):
+        if self.timelines.has_timelines():
+            self.timelines.expand_visible_previous()
+            self.draw_timelines()
+
+    def expand_buffer_right(self):
+        if self.timelines.has_timelines():
+            self.timelines.expand_visible_next()
+            self.draw_timelines()
+
+    def shrink_buffer_left(self):
+        if self.timelines.has_timelines():
+            self.timelines.shrink_visible_beggining()
+            self.draw_timelines()
+
+    def shrink_buffer_right(self):
+        if self.timelines.has_timelines():
+            self.timelines.shrink_visible_end()
             self.draw_timelines()
 
     def activate_first_buffer(self):

@@ -54,9 +54,8 @@ class CursesInterface(Frame, UserInterface):
 
     # -- Modes ----------------------------------------------------------------
 
-    def draw_timeline(self, timeline):
-        self.body = TimelineBuffer()
-        self.body.render_timeline(timeline)
+    def draw_timelines(self, timelines):
+        self.body = TimelinesBuffer(timelines)
         self.set_body(self.body)
 
     def show_info(self):
@@ -66,7 +65,7 @@ class CursesInterface(Frame, UserInterface):
 
     def show_help(self, configuration):
         self.clear_header()
-        self.status_info_message('Type <Esc> to leave the help page.')
+        self.status_info_message(_('Type <Esc> to leave the help page.'))
         self.body = HelpBuffer(configuration)
         self.set_body(self.body)
 
@@ -98,6 +97,10 @@ class CursesInterface(Frame, UserInterface):
         self.set_footer(self.footer)
 
     # -- Timeline mode --------------------------------------------------------
+
+    def focus_timeline(self, index):
+        """Give focus to the `index`-th visible timeline."""
+        self.body.focus_timeline(index)
 
     def focus_status(self, index):
         if callable(getattr(self.body, 'set_focus', None)):
@@ -318,8 +321,10 @@ class TabsWidget(WidgetWrap):
         self.tabs = tabs
         if tabs:
             self.active_index = 0
+            self.visible_indexes = [0]
         else:
             self.active_index = -1
+            self.visible_indexes = []
         created_text = self._create_text()
         text = created_text if created_text else ''
         WidgetWrap.__init__(self, Text(text))
@@ -333,6 +338,8 @@ class TabsWidget(WidgetWrap):
         for i, tab in enumerate(self.tabs):
             if i == self.active_index:
                 text.append(('active_tab', u'│' + tab + u' '))
+            elif i in self.visible_indexes:
+                text.append(('visible_tab', u'│' + tab + u' '))
             else:
                 text.append(('inactive_tab', u'│' + tab + u' '))
         return text
@@ -351,6 +358,10 @@ class TabsWidget(WidgetWrap):
 
     def set_active_tab(self, pos):
         self.active_index = pos
+        self._update_text()
+
+    def set_visible_tabs(self, indexes):
+        self.visible_indexes = list(indexes)
         self._update_text()
 
     def set_tabs(self, tabs):
@@ -446,11 +457,10 @@ class ScrollableListBox(ListBox):
 
 class ScrollableListBoxWrapper(WidgetWrap):
     """
-    A `WidgetWrap` subclass intented to wrap `ScrollableListBox`
-    elements, provides an interface for the scrolling capabilities.
     """
-    def __init__(self, contents):
-        WidgetWrap.__init__(self, contents)
+    def __init__(self, contents=None):
+        columns = [] if contents is None else contents
+        WidgetWrap.__init__(self, columns)
 
     def scroll_up(self):
         self._w.focus_previous()
@@ -484,6 +494,8 @@ class HelpBuffer(ScrollableListBoxWrapper):
                                                             offset=offset,))
 
     def create_help_buffer(self):
+        # TODO: remove the descriptions from the code. Store the keybindings
+        #       in `turses/constant.py`. 
         self.insert_header()
         # Motion
         self.insert_division(_('Motion'))
@@ -501,6 +513,12 @@ class HelpBuffer(ScrollableListBoxWrapper):
         self.insert_help_item('shift_buffer_end', _('Shift active buffer to the end'))
         self.insert_help_item('activate_first_buffer', _('Activate first buffer'))
         self.insert_help_item('activate_last_buffer', _('Activate last buffer'))
+        self.insert_help_item('shift_buffer_beggining', _('Shift active buffer to the beggining'))
+        self.insert_help_item('shift_buffer_end', _('Shift active buffer to the end'))
+        self.insert_help_item('expand_visible_left', _('Expand visible timelines one column to the left'))
+        self.insert_help_item('expand_visible_right', _('Expand visible timelines one column to the right'))
+        self.insert_help_item('shrink_visible_left', _('Shrink visible timelines one column from the left'))
+        self.insert_help_item('shrink_visible_right', _('Shrink visible timelines one column from the left'))
         self.insert_help_item('delete_buffer', _('Delete active buffer'))
         self.insert_help_item('clear', _('Clear active buffer'))
         self.insert_help_item('mark_all_as_read', _('Mark all tweets in timeline as read'))
@@ -577,22 +595,47 @@ class HelpBuffer(ScrollableListBoxWrapper):
         self._w.focus_first()
 
 
-class TimelineBuffer(ScrollableListBoxWrapper):
-    """A widget that displays a `Timeline` object."""
+class TimelinesBuffer(WidgetWrap):
+    """A widget that displays one or more `Timeline` objects."""
 
-    def __init__(self, timeline=None):
-        WidgetWrap.__init__(self, TimelineWidget(timeline))
+    def __init__(self, timelines=None):
+        if timelines:
+            timeline_widgets = [TimelineWidget(timeline) for timeline in timelines]
+        else:
+            timeline_widgets = []
+        WidgetWrap.__init__(self, Columns(timeline_widgets))
+
+    def scroll_up(self):
+        active_widget = self._w.get_focus()
+        active_widget.focus_previous()
+
+    def scroll_down(self):
+        active_widget = self._w.get_focus()
+        active_widget.focus_next()
+
+    def scroll_top(self):
+        active_widget = self._w.get_focus()
+        active_widget.focus_first()
+
+    def scroll_bottom(self):
+        active_widget = self._w.get_focus()
+        active_widget.focus_last()
 
     def clear(self):
         """Clears the buffer."""
         return self.render_timeline([])
 
-    def render_timeline(self, timeline):
+    def render_timelines(self, timelines):
         """Renders the given statuses."""
-        self._w = TimelineWidget(timeline)
+        timeline_widgets = [TimelineWidget(timeline) for timeline in timelines]
+        self._w = Columns(timeline_widgets) 
 
     def set_focus(self, index):
-        self._w.set_focus(index)
+        active_widget = self._w.get_focus()
+        active_widget.set_focus(index)
+
+    def focus_timeline(self, index):
+        self._w.set_focus_column(index)
 
 
 class TimelineWidget(ScrollableListBox):

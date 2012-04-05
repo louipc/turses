@@ -571,3 +571,122 @@ class TimelineList(UnsortedActiveList):
             self.timelines.insert(last_index, self.timelines[self.active_index])
             self.delete_active_timeline()
             self.active_index = last_index - 1
+
+
+class VisibleTimelineList(TimelineList):
+    """
+    A `TimelineList` that tracks a number of `visible` timelines.
+    """
+
+    def __init__(self, *args, **kwargs):
+        TimelineList.__init__(self, *args, **kwargs)
+        self.visible = []
+
+    def expand_visible_previous(self):
+        self.visible.sort()
+        if self.visible:
+            lowest = self.visible[0]
+        previous = lowest - 1
+        if self.is_valid_index(previous):
+            self.visible.insert(0, previous)
+
+    def expand_visible_next(self):
+        self.visible.sort()
+        if self.visible:
+            highest = self.visible[-1]
+        next = highest + 1
+        if self.is_valid_index(next):
+            self.visible.append(next)
+
+    def shrink_visible_beggining(self):
+        self.visible.sort()
+        try:
+            first = self.visible.pop(0)
+            # if the active is the first one does not change
+            if first == self.active_index:
+                self.visible.insert(0, first)
+        except IndexError:
+            pass
+
+    def shrink_visible_end(self):
+        self.visible.sort()
+        try:
+            last = self.visible.pop()
+            # if the active is the last one does not change
+            if last == self.active_index:
+                self.visible.append(last)
+        except IndexError:
+            pass
+
+    def get_visible_indexes(self):
+        return self.visible
+
+    # TODO: rename this
+    def get_visible_timeline_relative_index(self):
+        return self.visible.index(self.active_index)
+
+    # from `TimelineList`
+
+    def append_timeline(self, timeline):
+        if self.active_index == -1:
+            self.visible = [0]
+        TimelineList.append_timeline(self, timeline)
+
+    def delete_active_timeline(self):
+        try:
+            self.visible.remove(self.active_index)
+        except ValueError:
+            pass
+        TimelineList.delete_active_timeline(self)
+
+    def get_visible_timelines(self):
+        if self.has_timelines():
+            return [self.timelines[i] for i in self.visible]
+        else:
+            raise Exception("There are no timelines in the list")
+
+    def _set_active_as_visible(self):
+        if self.active_index >= 0:
+            self.visible = [self.active_index]
+        else:
+            self.visible = []
+
+    def activate_previous(self):
+        TimelineList.activate_previous(self)
+        if self.active_index not in self.visible:
+            self._set_active_as_visible()
+    
+    def activate_next(self):
+        TimelineList.activate_next(self)
+        if self.active_index not in self.visible:
+            self._set_active_as_visible()
+
+    def activate_first(self):
+        TimelineList.activate_first(self)
+        if self.active_index not in self.visible:
+            self._set_active_as_visible()
+
+    def activate_last(self):
+        TimelineList.activate_last(self)
+        if self.active_index not in self.visible:
+            self._set_active_as_visible()
+
+    def shift_active_previous(self):
+        TimelineList.shift_active_previous(self)
+        if self.active_index not in self.visible:
+            self._set_active_as_visible()
+
+    def shift_active_next(self):
+        TimelineList.shift_active_next(self)
+        if self.active_index not in self.visible:
+            self._set_active_as_visible()
+
+    def shift_active_beggining(self):
+        TimelineList.shift_active_beggining(self)
+        if self.active_index not in self.visible:
+            self._set_active_as_visible()
+
+    def shift_active_end(self):
+        TimelineList.shift_active_end(self)
+        if self.active_index not in self.visible:
+            self._set_active_as_visible()
