@@ -44,7 +44,7 @@ class KeyHandler(object):
         self.controller = controller
         self.editor = False
 
-    def handle(self, input, _):
+    def handle(self, input, *args, **kwargs):
         """Handle any input."""
 
         if self.is_keyboard_input(input):
@@ -265,10 +265,6 @@ class KeyHandler(object):
 
     # -- Editor ----------------------------------------------------------------
 
-    def set_editor(self, editor):
-        """Set an editor and forward all the input to it."""
-        self.editor = editor
-
     def unset_editor(self):
         """Stop forwarding input to the editor."""
         self.editor = False
@@ -388,7 +384,7 @@ class Controller(object):
     def editor_mode(self):
         """Activate editor mode."""
         self.mode = self.EDITOR_MODE
-        self.key_handler.set_editor(self.ui.editor)
+        self.key_handler.editor = self.ui.editor
 
     def is_in_editor_mode(self):
         return self.mode == self.EDITOR_MODE
@@ -957,6 +953,7 @@ class Controller(object):
 
 class CursesController(Controller):
     """Controller for the curses implementation.""" 
+
     def __init__(self, palette, *args, **kwargs):
         self.palette = palette
         Controller.__init__(self, *args, **kwargs)
