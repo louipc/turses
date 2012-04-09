@@ -4,9 +4,10 @@
 #         Licensed under the GPL License. See LICENSE for full details.       #
 ###############################################################################
 
-import sys
-sys.path.append('../')
+from sys import path
+path.append('../')
 import unittest
+
 
 class UtilTest(unittest.TestCase):
     """Tests for the functions contained in `turses.util`."""
