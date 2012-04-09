@@ -16,7 +16,6 @@ import urwid
 
 from .decorators import wrap_exceptions
 from .api.base import AsyncApi
-from .api.backends import PythonTwitterApi
 from .util import get_urls, spawn_process
 from .models import (
         Timeline, 
@@ -285,30 +284,33 @@ class Controller(object):
 
     # -- Initialization -------------------------------------------------------
 
-    def __init__(self, configuration, ui):
+    def __init__(self, configuration, ui, api_backend):
         self.configuration = configuration
         self.ui = ui
+
+        # Mode
         self.mode = self.INFO_MODE
-        # init API
+
+        # API
         self.info_message(_('Initializing API'))
         consumer_key = self.configuration.token[self.configuration.service]['consumer_key'] 
         consumer_secret = self.configuration.token[self.configuration.service]['consumer_secret']
         oauth_token = self.configuration.oauth_token 
         oauth_token_secret = self.configuration.oauth_token_secret
-        self.api = AsyncApi(PythonTwitterApi,
+        self.api = AsyncApi(api_backend,
                             consumer_key=consumer_key,
                             consumer_secret=consumer_secret,
                             access_token_key=oauth_token,
                             access_token_secret=oauth_token_secret,)
         self.api.init_api(on_error=self.api_init_error,
                           on_success=self.init_timelines,)
+
         # start main loop
         try:
             self.main_loop()
         except:
             self.main_loop()
         else:
-            # TODO clear screen
             exit(0)
 
     def main_loop(self):
@@ -952,8 +954,9 @@ class Controller(object):
         except:
             self.error_message(_('Unable to open URLs'))
 
+
 class CursesController(Controller):
-    """Controller of the for the curses implementation.""" 
+    """Controller for the curses implementation.""" 
     def __init__(self, palette, *args, **kwargs):
         self.palette = palette
         Controller.__init__(self, *args, **kwargs)

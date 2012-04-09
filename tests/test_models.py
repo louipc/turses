@@ -11,7 +11,7 @@ from datetime import datetime
 
 from mock import MagicMock
 
-from turses.models import Status, Timeline, TimelineList
+from turses.models import Status, Timeline, TimelineList, ActiveList
 
 
 # TODO
@@ -36,11 +36,6 @@ class DirectMessageTest(unittest.TestCase):
 
 # TODO
 class ListTest(unittest.TestCase):
-    pass
-
-
-# TODO
-class ActiveListTest(unittest.TestCase):
     pass
 
 
@@ -309,7 +304,7 @@ class TimelineListTest(unittest.TestCase):
         self.assertEqual(self.timeline_list.active_index, 2)
         self.timeline_list.shift_active_next()
         self.assertEqual(self.timeline_list.active_index, 2)
-    # TODO test update functions with mocks
+
     # TODO get_*
 
 

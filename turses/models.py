@@ -7,13 +7,9 @@ turses.models
 This module contains the Twitter entities represented in `turses`.
 """
 
-import re
 import time
 
 from .util import html_unescape, timestamp_from_datetime
-
-
-retweet_re = re.compile('^RT @\w+:')
 
 ##
 #  Helper functions
@@ -72,7 +68,6 @@ def is_valid_username(username):
 ##
 #  Classes
 ##
-
 
 class User(object):
     """
@@ -557,7 +552,8 @@ class TimelineList(UnsortedActiveList):
 
 class VisibleTimelineList(TimelineList):
     """
-    A `TimelineList` that tracks a number of `visible` timelines.
+    A `TimelineList` that tracks a number of `visible` timelines. It also has
+    an `active` timeline, which has to be within the visible ones.
     """
 
     def __init__(self, *args, **kwargs):
@@ -610,7 +606,8 @@ class VisibleTimelineList(TimelineList):
     # from `TimelineList`
 
     def append_timeline(self, timeline):
-        if self.active_index == -1:
+        # when appending a timeline is visible only if the `TimelineList` was empty
+        if self.active_index == ActiveList.NULL:
             self.visible = [0]
         TimelineList.append_timeline(self, timeline)
 
@@ -619,56 +616,45 @@ class VisibleTimelineList(TimelineList):
             self.visible.remove(self.active_index)
         except ValueError:
             pass
-        TimelineList.delete_active_timeline(self)
+        finally:
+            TimelineList.delete_active_timeline(self)
+        self._set_active_as_visible()
 
     def get_visible_timelines(self):
-        if self.has_timelines():
-            return [self.timelines[i] for i in self.visible]
-        else:
-            raise Exception("There are no timelines in the list")
+        return [self.timelines[i] for i in self.visible]
 
     def _set_active_as_visible(self):
-        if self.active_index >= 0:
+        if self.active_index not in self.visible:
             self.visible = [self.active_index]
-        else:
-            self.visible = []
 
     def activate_previous(self):
         TimelineList.activate_previous(self)
-        if self.active_index not in self.visible:
-            self._set_active_as_visible()
+        self._set_active_as_visible()
     
     def activate_next(self):
         TimelineList.activate_next(self)
-        if self.active_index not in self.visible:
-            self._set_active_as_visible()
+        self._set_active_as_visible()
 
     def activate_first(self):
         TimelineList.activate_first(self)
-        if self.active_index not in self.visible:
-            self._set_active_as_visible()
+        self._set_active_as_visible()
 
     def activate_last(self):
         TimelineList.activate_last(self)
-        if self.active_index not in self.visible:
-            self._set_active_as_visible()
+        self._set_active_as_visible()
 
     def shift_active_previous(self):
         TimelineList.shift_active_previous(self)
-        if self.active_index not in self.visible:
-            self._set_active_as_visible()
+        self._set_active_as_visible()
 
     def shift_active_next(self):
         TimelineList.shift_active_next(self)
-        if self.active_index not in self.visible:
-            self._set_active_as_visible()
+        self._set_active_as_visible()
 
     def shift_active_beggining(self):
         TimelineList.shift_active_beggining(self)
-        if self.active_index not in self.visible:
-            self._set_active_as_visible()
+        self._set_active_as_visible()
 
     def shift_active_end(self):
         TimelineList.shift_active_end(self)
-        if self.active_index not in self.visible:
-            self._set_active_as_visible()
+        self._set_active_as_visible()
