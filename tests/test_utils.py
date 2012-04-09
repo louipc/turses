@@ -9,8 +9,8 @@ path.append('../')
 import unittest
 
 
-class UtilTest(unittest.TestCase):
-    """Tests for the functions contained in `turses.util`."""
+class UtilsTest(unittest.TestCase):
+    """Tests for the functions contained in `turses.utils`."""
     pass
 
 

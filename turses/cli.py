@@ -7,7 +7,7 @@ turses.cli
 This module contains the logic to launch `turses` with a curses interface.
 """
 
-from .util import parse_arguments
+from .utils import parse_arguments
 from .config import Configuration
 from .controller import CursesController
 from .constant import palette

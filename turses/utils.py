@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 """
-turses.util
-~~~~~~~~~~~
+turses.utils
+~~~~~~~~~~~~
 
 This module contains functions used across different modules.
 """

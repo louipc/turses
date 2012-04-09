@@ -21,7 +21,7 @@ except ImportError:
     #from cgi import parse_qsl
 
 from . import constant
-from .util import encode
+from .utils import encode
 
 
 def print_ask_service(token_file):
