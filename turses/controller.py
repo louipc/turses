@@ -18,9 +18,19 @@ from .decorators import wrap_exceptions
 from .api.base import AsyncApi
 from .api.backends import PythonTwitterApi
 from .util import get_urls, spawn_process
-from .models import Timeline, VisibleTimelineList
-from .models import get_authors_username, get_mentioned_for_reply, get_hashtags
-from .models import is_valid_status_text, is_valid_search_text, is_valid_username
+from .models import (
+        Timeline, 
+        VisibleTimelineList,
+
+        get_authors_username, 
+        get_mentioned_for_reply, 
+        get_hashtags, 
+        get_mentioned_usernames,
+
+        is_valid_status_text, 
+        is_valid_search_text, 
+        is_valid_username
+        )
 
 
 class KeyHandler(object):
@@ -192,6 +202,12 @@ class KeyHandler(object):
         # Search User
         elif self.is_bound(key, 'search_user'):
             self.controller.search_user()
+        # Thread
+        elif self.is_bound(key, 'thread'): 
+            self.controller.append_thread_timeline()
+        # User info
+        elif self.is_bound(key, 'user_info'): 
+            self.controller.info_message('Still to implement!')
         # Search Myself
         elif self.is_bound(key, 'search_myself'):
             self.controller.info_message('Still to implement!')
@@ -238,12 +254,6 @@ class KeyHandler(object):
             self.controller.tweet_with_hashtags()
         # Search Current User
         elif self.is_bound(key, 'search_current_user'): 
-            self.controller.info_message('Still to implement!')
-        # Thread
-        elif self.is_bound(key, 'thread'): 
-            self.controller.info_message('Still to implement!')
-        # User info
-        elif self.is_bound(key, 'user_info'): 
             self.controller.info_message('Still to implement!')
 
     def _external_program_handler(self, key):
@@ -479,6 +489,24 @@ class Controller(object):
                              update_function=self.api.get_direct_messages,
                              on_error=timeline_not_fetched,
                              on_success=timeline_fetched,)
+
+    def append_thread_timeline(self):
+        status = self.timelines.get_focused_status()
+        timeline_fetched = partial(self.info_message, 
+                                    _('Thread fetched'))
+        timeline_not_fetched = partial(self.error_message, 
+                                        _('Failed to fetch thread'))
+
+        participants = ' '.join(get_mentioned_usernames(status))
+        name = _('conversation with %s') % participants,
+        if status.is_retweet or not participants:
+            self.error_message(_('Doesn\'t look like a conversation'))
+        else:
+            self.append_timeline(name=name,
+                                 update_function=self.api.get_thread,
+                                 udpate_args=status,
+                                 on_error=timeline_not_fetched,
+                                 on_success=timeline_fetched,)
 
     def update_all_timelines(self):
         for timeline in self.timelines:
