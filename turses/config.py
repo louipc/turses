@@ -22,29 +22,7 @@ except ImportError:
 
 from . import constant
 from .utils import encode
-
-
-def print_ask_service(token_file):
-    print ''
-    print encode(_('Couldn\'t find any profile.'))
-    print ''
-    print encode(_('It should reside in: %s')) % token_file
-    print encode(_('If you want to setup a new account, then follow these steps'))
-    print encode(_('If you want to skip this, just press return or ctrl-C.'))
-    print ''
-
-    print ''
-    print encode(_('Which service do you want to use?'))
-    print ''
-    print '1. Twitter'
-    print '2. Identi.ca'
-    print ''
-
-def print_ask_root_url():
-    print ''
-    print ''
-    print encode(_('Which root url do you want? (leave blank for default, https://identi.ca/api)'))
-    print ''
+from .api.base import twitter_consumer_key, twitter_consumer_secret
 
 
 class Configuration(object):
@@ -72,11 +50,10 @@ class Configuration(object):
         self.parse_config()
 
     def init_config(self):
-        self.token     = constant.token
-        self.keys      = constant.key
-        self.params    = constant.params
-        self.filter    = constant.filter
-        self.palette   = constant.palette
+        self.keys    = constant.key
+        self.params  = constant.params
+        self.filter  = constant.filter
+        self.palette = constant.palette
 
     def get_xdg_config(self):
         try:
@@ -148,45 +125,12 @@ class Configuration(object):
             self.config_file += '.' + args.config
 
     def new_account(self):
-        choice = self.ask_service()
-        if choice == '2':
-            # XXX remove identi.ca support claim
-            raise NotImplementedError
-            self.ask_root_url()
-
         self.authorization()
         self.createTokenFile()
-
-    def ask_service(self):
-        print_ask_service(self.token_file)
-        choice = raw_input(encode(_('Your choice? > ')))
-
-        if choice == '1':
-            self.service = 'twitter'
-        elif choice == '2':
-            self.service = 'identica'
-        else:
-            exit(1)
-        return choice
-
-    def ask_root_url(self):
-        print_ask_root_url()
-        url = raw_input(encode(_('Your choice? > ')))
-        if url == '':
-            self.base_url = 'https://identi.ca/api'
-        else:
-            self.base_url = url
 
     def parse_token(self):
         token = RawConfigParser()
         token.read(self.token_file)
-        if token.has_option('token', 'service'):
-            self.service = token.get('token', 'service')
-        else:
-            self.service = 'twitter'
-
-        if token.has_option('token', 'base_url'):
-            self.base_url = token.get('token', 'base_url')
 
         self.oauth_token = token.get('token', 'oauth_token')
         self.oauth_token_secret = token.get('token', 'oauth_token_secret')
@@ -277,12 +221,6 @@ class Configuration(object):
             if int(self.conf.get('params', 'old_skool_border')) == 1:
                 self.params['old_skool_border'] = True
 
-        if self.conf.has_option('params', 'consumer_key'):
-            self.token['identica']['consumer_key'] = self.conf.get('params', 'consumer_key')
-
-        if self.conf.has_option('params', 'consumer_secret'):
-            self.token['identica']['consumer_secret'] = self.conf.get('params', 'consumer_secret')
-
         if self.conf.has_option('params', 'logging_level'):
             self.params['logging_level'] = self.conf.get('params', 'logging_level')
 
@@ -349,39 +287,30 @@ class Configuration(object):
         # See the License for the specific language governing permissions and
         # limitations under the License.
 
-        if self.service == 'twitter':
-            base_url = 'https://api.twitter.com'
-            self.base_url = base_url
-        else:
-            base_url = self.base_url
+        base_url = 'https://api.twitter.com'
 
         print 'base_url:{0}'.format(base_url)
 
 
-        REQUEST_TOKEN_URL          = base_url + '/oauth/request_token'
-        if self.service == 'identica':
-            if base_url != 'https://identi.ca/api':
-                self.parse_config()
-            REQUEST_TOKEN_URL += '?oauth_callback=oob'
+        REQUEST_TOKEN_URL = base_url + '/oauth/request_token'
+        ACCESS_TOKEN_URL  = base_url + '/oauth/access_token'
+        AUTHORIZATION_URL = base_url + '/oauth/authorize'
+        consumer_key      = twitter_consumer_key
+        consumer_secret   = twitter_consumer_secret
+        oauth_consumer    = oauth.Consumer(key=consumer_key, secret=consumer_secret)
+        oauth_client      = oauth.Client(oauth_consumer)
 
-        ACCESS_TOKEN_URL           = base_url + '/oauth/access_token'
-        AUTHORIZATION_URL          = base_url + '/oauth/authorize'
-        consumer_key               = self.token[self.service]['consumer_key']
-        consumer_secret            = self.token[self.service]['consumer_secret']
-        oauth_consumer             = oauth.Consumer(key=consumer_key, secret=consumer_secret)
-        oauth_client               = oauth.Client(oauth_consumer)
-
-        print encode(_('Requesting temp token from ')) + self.service.capitalize()
+        print encode(_('Requesting temp token from Twitter'))
 
         resp, content = oauth_client.request(REQUEST_TOKEN_URL, 'GET')
 
         if resp['status'] != '200':
-            print encode(_('Invalid respond from ')) +self.service.capitalize() + encode(_(' requesting temp token: %s')) % str(resp['status'])
+            print encode(_('Invalid respond, requesting temp token: %s')) % str(resp['status'])
         else:
             request_token = dict(parse_qsl(content))
 
             print ''
-            print encode(_('Please visit the following page to retrieve pin code needed'))
+            print encode(_('Please visit the following page to retrieve needed pin code'))
             print encode(_('to obtain an Authentication Token:'))
             print ''
             print '%s?oauth_token=%s' % (AUTHORIZATION_URL, request_token['oauth_token'])
@@ -418,8 +347,6 @@ class Configuration(object):
 
         conf = RawConfigParser()
         conf.add_section('token')
-        conf.set('token', 'service', self.service)
-        conf.set('token', 'base_url', self.base_url)
         conf.set('token', 'oauth_token', self.oauth_token)
         conf.set('token', 'oauth_token_secret', self.oauth_token_secret)
 
