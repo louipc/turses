@@ -9,7 +9,7 @@ This module contains the Twitter entities represented in `turses`.
 
 import time
 
-from .util import html_unescape, timestamp_from_datetime
+from .utils import html_unescape, timestamp_from_datetime
 
 ##
 #  Helper functions

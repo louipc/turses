@@ -16,7 +16,7 @@ import urwid
 
 from .decorators import wrap_exceptions
 from .api.base import AsyncApi
-from .util import get_urls, spawn_process
+from .utils import get_urls, spawn_process
 from .models import (
         Timeline, 
         VisibleTimelineList,

@@ -37,7 +37,7 @@ from urwid import __version__ as urwid_version
 
 from .. import __version__
 from ..models import is_DM, get_authors_username
-from ..util import encode 
+from ..utils import encode 
 from .base import UserInterface
  
 TWEET_MAX_CHARS = 140
