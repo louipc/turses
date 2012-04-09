@@ -7,12 +7,11 @@ turses.config
 This module contains a class for managing the configuration.
 """
 
-import os
-import sys
 import logging
-import ConfigParser
 import oauth2 as oauth
 from curses import ascii
+from ConfigParser import RawConfigParser
+from os import environ, path, makedirs, mkdir
 from gettext import gettext as _
 
 try:
@@ -53,19 +52,19 @@ class Configuration(object):
 
     def __init__(self, args):
         self.init_config()
-        self.home = os.environ['HOME']
+        self.home = environ['HOME']
         self.get_xdg_config()
         self.get_browser()
         # generate the config file
         if args.generate_config != None:
             self.generate_config_file(args.generate_config)
-            sys.exit(0)
+            exit(0)
 
         self.set_path(args)
         self.check_for_default_config()
-        self.conf = ConfigParser.RawConfigParser()
+        self.conf = RawConfigParser()
         self.conf.read(self.config_file)
-        if not os.path.isfile(self.token_file):
+        if not path.isfile(self.token_file):
             self.new_account()
         else:
             self.parse_token()
@@ -81,29 +80,29 @@ class Configuration(object):
 
     def get_xdg_config(self):
         try:
-            self.xdg_config = os.environ['XDG_CONFIG_HOME']
+            self.xdg_config = environ['XDG_CONFIG_HOME']
         except:
             self.xdg_config = self.home+'/.config'
 
     def get_browser(self):
         try:
-            self.browser    = os.environ['BROWSER']
+            self.browser    = environ['BROWSER']
         except:
             self.browser    = ''
 
     def check_for_default_config(self):
         default_dir = '/turses'
         default_file = '/turses/turses.cfg'
-        if not os.path.isfile(self.xdg_config + default_file):
-            if not os.path.exists(self.xdg_config + default_dir):
+        if not path.isfile(self.xdg_config + default_file):
+            if not path.exists(self.xdg_config + default_dir):
                 try:
-                    os.makedirs(self.xdg_config + default_dir)
+                    makedirs(self.xdg_config + default_dir)
                 except:
                     print encode(_('Couldn\'t create the directory in %s/turses')) % self.xdg_config
             self.generate_config_file(self.xdg_config + default_file)
 
     def generate_config_file(self, config_file):
-        conf = ConfigParser.RawConfigParser()
+        conf = RawConfigParser()
         conf.read(config_file)
 
         # COLOR
@@ -167,7 +166,7 @@ class Configuration(object):
         elif choice == '2':
             self.service = 'identica'
         else:
-            sys.exit(1)
+            exit(1)
         return choice
 
     def ask_root_url(self):
@@ -179,7 +178,7 @@ class Configuration(object):
             self.base_url = url
 
     def parse_token(self):
-        token = ConfigParser.RawConfigParser()
+        token = RawConfigParser()
         token.read(self.token_file)
         if token.has_option('token', 'service'):
             self.service = token.get('token', 'service')
@@ -405,19 +404,19 @@ class Configuration(object):
                 print 'response:{0}'.format(resp['status'])
                 print encode(_('Request for access token failed: %s')) % resp['status']
                 print access_token
-                sys.exit()
+                exit()
             else:
                 self.oauth_token = access_token['oauth_token']
                 self.oauth_token_secret = access_token['oauth_token_secret']
 
     def createTokenFile(self):
-        if not os.path.isdir(self.turses_path):
+        if not path.isdir(self.turses_path):
             try:
-                os.mkdir(self.turses_path)
+                mkdir(self.turses_path)
             except:
                 print encode(_('Error creating directory .config/turses'))
 
-        conf = ConfigParser.RawConfigParser()
+        conf = RawConfigParser()
         conf.add_section('token')
         conf.set('token', 'service', self.service)
         conf.set('token', 'base_url', self.base_url)
@@ -431,14 +430,14 @@ class Configuration(object):
 
     def load_last_read(self):
         try:
-            conf = ConfigParser.RawConfigParser()
+            conf = RawConfigParser()
             conf.read(self.token_file)
             return conf.get('token', 'last_read')
         except:
             return False
 
     def save_last_read(self, last_read):
-        conf = ConfigParser.RawConfigParser()
+        conf = RawConfigParser()
         conf.read(self.token_file)
         conf.set('token', 'last_read', last_read)
 

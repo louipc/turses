@@ -7,21 +7,20 @@ turses.util
 This module contains functions used across different modules.
 """
 
-import sys
-import argparse
-import re
+from argparse import ArgumentParser
 from htmlentitydefs import entitydefs
 from time import strftime, gmtime
 from calendar import timegm
+from re import sub, findall
 from subprocess import call
+from sys import stdout
 
 from . import __version__
 
 def parse_arguments():
     """Parse all arguments from the command line."""
 
-    parser = argparse.ArgumentParser(
-            "turses: a ncurses Twitter client written in Python.")
+    parser = ArgumentParser("turses: Twitter client with a sexy curses interface.")
 
     parser.add_argument("-a", "--account",
             help="Use another account, store in a different file.")
@@ -51,14 +50,14 @@ def html_unescape(str):
         else:
             return m.group(0)
 
-    return re.sub(r'&([^;]+);', entity_replacer, str)
+    return sub(r'&([^;]+);', entity_replacer, str)
 
 def get_urls(text):
-    return re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', text)
+    return findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', text)
 
 def encode(string):
     try:
-        return string.encode(sys.stdout.encoding, 'replace')
+        return string.encode(stdout.encoding, 'replace')
     except AttributeError:
         return string
 
