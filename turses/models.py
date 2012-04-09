@@ -8,7 +8,6 @@ This module contains the Twitter entities represented in `turses`.
 """
 
 import re
-from datetime import datetime
 import time
 
 from .util import html_unescape, timestamp_from_datetime
@@ -19,23 +18,6 @@ retweet_re = re.compile('^RT @\w+:')
 ##
 #  Helper functions
 ##
-
-def datetime_from_status(status):
-    """Converts a date on a Twitter status to a `datetime` object."""
-    # TODO
-    #seconds = status.GetCreatedAtInSeconds()
-    return datetime.utcfromtimestamp(0)
-
-def is_more_recent(status, datetime):
-    """Checks wether `status.created_at` is newer than `datetime`."""
-    created_at = datetime_from_status(status)
-    return created_at > datetime
-
-def is_tweet(status):
-    return status.__class__ == Status
-
-def is_retweet(status):
-    return bool(retweet_re.match(status.text))
 
 def is_DM(status):
     return status.__class__ == DirectMessage

@@ -57,6 +57,9 @@ class Api(object):
     def get_direct_messages(self):
         raise NotImplementedError
 
+    def get_thread(self, status):
+        raise NotImplementedError
+
     def search(self, text):
         raise NotImplementedError
 
@@ -114,31 +117,27 @@ class AsyncApi(Api):
     def verify_credentials(self):
         return self._api.verify_credentials()
 
-    @wrap_exceptions
     def get_home_timeline(self):
         return self._api.get_home_timeline()
 
-    @wrap_exceptions
     def get_user_timeline(self, screen_name):
         return self._api.get_user_timeline(screen_name=screen_name)
 
-    @wrap_exceptions
     def get_own_timeline(self):
         return self._api.get_user_timeline(screen_name=self.user.screen_name)
 
-    @wrap_exceptions
     def get_mentions(self):
         return self._api.get_mentions()
 
-    @wrap_exceptions
     def get_favorites(self):
         return self._api.get_favorites()
 
-    @wrap_exceptions
     def get_direct_messages(self):
         return self._api.get_direct_messages()
 
-    @wrap_exceptions
+    def get_thread(self, status):
+        return self._api.get_own_timeline()
+
     def search(self, text):
         return self._api.get_search(text)
 
