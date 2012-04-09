@@ -10,10 +10,29 @@ in `turses.ui.base`.
 
 from gettext import gettext as _
 
-from urwid import AttrWrap, WidgetWrap, Padding, WidgetDecoration
-from urwid import Text, Edit, Frame, Columns, Pile, Divider, SolidFill
-from urwid import ListBox, SimpleListWalker
-from urwid import signals, emit_signal, connect_signal, disconnect_signal
+from urwid import (
+        AttrWrap, 
+        WidgetWrap, 
+        Padding, 
+        WidgetDecoration,
+        Divider, 
+        SolidFill,
+
+        # widgets
+        Text, 
+        Edit, 
+        Frame, 
+        Columns, 
+        Pile, 
+        ListBox, 
+        SimpleListWalker,
+
+        # signals
+        signals, 
+        emit_signal, 
+        connect_signal, 
+        disconnect_signal
+        )
 from urwid import __version__ as urwid_version
 
 from .. import __version__
@@ -38,6 +57,7 @@ banner = [
      _("Press 'q' to quit turses"),
      "",
 ]
+
 
 class CursesInterface(Frame, UserInterface):
     """
@@ -789,20 +809,3 @@ class BoxDecoration(WidgetDecoration, WidgetWrap):
 
         WidgetDecoration.__init__(self, original_widget)
         WidgetWrap.__init__(self, pile)
-
-
-class UserBuffer(object):
-    """
-    A buffer that shows information for a certain user and its associated
-    timelines.
-    """
-    # TODO
-    pass
-
-
-class UserWidget(object):
-    """
-    A widget with a user's information.
-    """
-    # TODO
-    pass

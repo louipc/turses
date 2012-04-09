@@ -8,16 +8,17 @@ This module contains implementations of `turses.api.base.Api` using multiple
 API backends.
 """
 
-import os
-import sys
 import urllib2
-import oauth2 as oauth
+from oauth2 import Request as OauthRequest
+from os import path
+from sys import stderr
 try:
     import json
 except ImportError:
     import simplejson as json
 
 
+# `python-twitter`
 from twitter import Api as BasePythonTwitterApi
 from twitter import Status as BaseStatus
 from twitter import TwitterError, _FileCache
@@ -30,7 +31,6 @@ from ..models import is_DM
 DEFAULT_CACHE = object()
 
 
-# using python-twitter library
 class PythonTwitterApi(BasePythonTwitterApi, Api):
     """
     A `Api` implementation using `python-twitter` library.
@@ -78,9 +78,9 @@ class PythonTwitterApi(BasePythonTwitterApi, Api):
 
         if consumer_key is not None and (access_token_key is None or
                                          access_token_secret is None):
-            print >> sys.stderr, 'Twitter now requires an oAuth Access Token for API calls.'
-            print >> sys.stderr, 'If your using this library from a command line utility, please'
-            print >> sys.stderr, 'run the the included get_access_token.py tool to generate one.'
+            print >> stderr, 'Twitter now requires an oAuth Access Token for API calls.'
+            print >> stderr, 'If your using this library from a command line utility, please'
+            print >> stderr, 'run the the included get_access_token.py tool to generate one.'
 
             raise TwitterError('Twitter requires oAuth Access Token for all API access')
 
@@ -138,7 +138,7 @@ class PythonTwitterApi(BasePythonTwitterApi, Api):
             if post_data and http_method == "POST":
                 parameters = post_data.copy()
 
-            req = oauth.Request.from_consumer_and_token(self._oauth_consumer,
+            req = OauthRequest.from_consumer_and_token(self._oauth_consumer,
                                                   token=self._oauth_token,
                                                   http_method=http_method,
                                                   http_url=url, parameters=parameters)
@@ -200,9 +200,9 @@ class PythonTwitterApi(BasePythonTwitterApi, Api):
         return BaseStatus.NewFromJsonDict(data)
 
     def GetCachedTime(self, key):
-        path = self._GetPath(key)
-        if os.path.exists(path):
-            return os.path.getmtime(path)
+        key_path = self._GetPath(key)
+        if path.exists(key_path):
+            return path.getmtime(path)
         else:
             return None
 
