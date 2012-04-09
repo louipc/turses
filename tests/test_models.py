@@ -11,7 +11,7 @@ from datetime import datetime
 
 from mock import MagicMock
 
-from turses.models import Status, Timeline, TimelineList
+from turses.models import Status, ActiveList, Timeline, TimelineList
 
 
 # TODO
@@ -44,14 +44,12 @@ class UnsortedActiveListTest(unittest.TestCase):
     pass
 
 
-# TODO
-#  subsitute -1 for `NULL_INDEX` constant
 class TimelineTest(unittest.TestCase):
     def setUp(self):
         self.timeline = Timeline()
         self.timeline.clear()
         self.assertEqual(len(self.timeline), 0)
-        self.assertEqual(self.timeline.active_index, -1)
+        self.assertEqual(self.timeline.active_index, ActiveList.NULL_INDEX)
 
     def _create_status(self, id, datetime):
         from calendar import timegm
@@ -199,17 +197,17 @@ class TimelineListTest(unittest.TestCase):
         self.append_timeline()
         self.failUnless(self.timeline_list.has_timelines())
 
-    def test_active_index_minus_1_with_no_timelines(self):
-        self.assertEqual(self.timeline_list.active_index, -1)
+    def test_null_index_with_no_timelines(self):
+        self.assertEqual(self.timeline_list.active_index, ActiveList.NULL_INDEX)
 
     def test_active_index_0_when_appending_first_timeline(self):
         self.append_timeline()
         self.assertEqual(self.timeline_list.active_index, 0)
 
     def test_activate_previous(self):
-        # -1 when there are no timelines
+        # null index when there are no timelines
         self.timeline_list.activate_previous()
-        self.assertEqual(self.timeline_list.active_index, -1)
+        self.assertEqual(self.timeline_list.active_index, ActiveList.NULL_INDEX)
         # does not change if its the first
         self.append_timeline()
         self.assertEqual(self.timeline_list.active_index, 0)
@@ -217,9 +215,9 @@ class TimelineListTest(unittest.TestCase):
         self.assertEqual(self.timeline_list.active_index, 0)
 
     def test_activate_next(self):
-        # -1 when there are no timelines
+        # null index when there are no timelines
         self.timeline_list.activate_next()
-        self.assertEqual(self.timeline_list.active_index, -1)
+        self.assertEqual(self.timeline_list.active_index, ActiveList.NULL_INDEX)
         # does not change if its the last
         self.append_timeline()
         self.assertEqual(self.timeline_list.active_index, 0)
@@ -273,9 +271,9 @@ class TimelineListTest(unittest.TestCase):
         self.assertEqual(len(self.timeline_list), 2)
 
     def test_activate_first(self):
-        # -1 when there are no timelines
+        # null index when there are no timelines
         self.timeline_list.activate_first()
-        self.assertEqual(self.timeline_list.active_index, -1)
+        self.assertEqual(self.timeline_list.active_index, ActiveList.NULL_INDEX)
         # does not change if its the first
         self.append_timeline()
         self.assertEqual(self.timeline_list.active_index, 0)
@@ -290,9 +288,9 @@ class TimelineListTest(unittest.TestCase):
         self.assertEqual(self.timeline_list.active_index, 0)
 
     def test_activate_last(self):
-        # -1 when there are no timelines
+        # null index when there are no timelines
         self.timeline_list.activate_last()
-        self.assertEqual(self.timeline_list.active_index, -1)
+        self.assertEqual(self.timeline_list.active_index, ActiveList.NULL_INDEX)
         # does not change if its the last
         self.append_timeline()
         self.assertEqual(self.timeline_list.active_index, 0)
@@ -305,18 +303,18 @@ class TimelineListTest(unittest.TestCase):
         self.assertEqual(self.timeline_list.active_index, 2)
 
     def test_shift_active_previous(self):
-        # -1 when there are no timelines
+        # null index when there are no timelines
         self.timeline_list.shift_active_previous()
-        self.assertEqual(self.timeline_list.active_index, -1)
+        self.assertEqual(self.timeline_list.active_index, ActiveList.NULL_INDEX)
         # does not change if its the first
         self.append_timeline()
         self.timeline_list.shift_active_previous()
         self.assertEqual(self.timeline_list.active_index, 0)
 
     def test_shift_active_next(self):
-        # -1 when there are no timelines
+        # null index when there are no timelines
         self.timeline_list.shift_active_next()
-        self.assertEqual(self.timeline_list.active_index, -1)
+        self.assertEqual(self.timeline_list.active_index, ActiveList.NULL_INDEX)
         # does not change if its the last
         self.append_timeline()
         self.timeline_list.shift_active_next()
