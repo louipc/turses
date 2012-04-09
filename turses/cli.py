@@ -12,14 +12,20 @@ from .config import Configuration
 from .controller import CursesController
 from .constant import palette
 from .ui.curses import CursesInterface
+from .api.backends import PythonTwitterApi
 
 
 def main():
     try:
-        configuration = Configuration(parse_arguments())
+        args = parse_arguments()
+
+        configuration = Configuration(args)
         ui = CursesInterface()
-        CursesController(palette, 
-                         configuration, 
-                         ui)
+
+        # start `turses`
+        CursesController(palette=palette, 
+                         configuration=configuration, 
+                         ui=ui,
+                         api_backend=PythonTwitterApi)
     except KeyboardInterrupt:
         exit(0)
