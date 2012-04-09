@@ -16,6 +16,10 @@ from ..decorators import wrap_exceptions
 from ..models import is_DM
 
 
+twitter_consumer_key = 'OEn4hrNGknVz9ozQytoR0A'
+twitter_consumer_secret = 'viud49uVgdVO9dnOGxSQJRo7jphTioIlEn3OdpkZI'
+
+
 class Api(object):
     """
     A simplified version of the API to use as a mediator for a real
@@ -23,10 +27,10 @@ class Api(object):
     """
 
     def __init__(self,
-                 consumer_key,
-                 consumer_secret,
                  access_token_key,
-                 access_token_secret,):
+                 access_token_secret,
+                 consumer_key=twitter_consumer_key,
+                 consumer_secret=twitter_consumer_secret,):
         self._consumer_key = consumer_key
         self._consumer_secret = consumer_secret
         self._access_token_key = access_token_key

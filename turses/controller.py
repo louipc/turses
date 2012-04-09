@@ -289,13 +289,9 @@ class Controller(object):
 
         # API
         self.info_message(_('Initializing API'))
-        consumer_key = self.configuration.token[self.configuration.service]['consumer_key'] 
-        consumer_secret = self.configuration.token[self.configuration.service]['consumer_secret']
         oauth_token = self.configuration.oauth_token 
         oauth_token_secret = self.configuration.oauth_token_secret
         self.api = AsyncApi(api_backend,
-                            consumer_key=consumer_key,
-                            consumer_secret=consumer_secret,
                             access_token_key=oauth_token,
                             access_token_secret=oauth_token_secret,)
         self.api.init_api(on_error=self.api_init_error,
@@ -664,7 +660,7 @@ class Controller(object):
         active_timeline = self.timelines.get_active_timeline()
         for tweet in active_timeline:
             tweet.read = True
-        self.draw_timelines()
+        self.update_header()
 
     def clear_status(self):
         """Clear the status bar."""
