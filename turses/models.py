@@ -82,8 +82,9 @@ class User(object):
 
 class Status(object):
     """
-    Programs representation of a Twitter status. Api adapters must convert
-    their representations to instances of this class.
+    A Twitter status. 
+    
+    Api adapters must convert their representations to instances of this class.
     """
 
     # TODO make all arguments mandatory
@@ -110,6 +111,9 @@ class Status(object):
         self.is_favorite = is_favorite
         self.retweet_count = retweet_count
         self.author = author
+
+    # TODO: `datetime.datetime` object as `created_at` attributte and get
+    #        rid off `created_at_in_seconds` attribute
 
     def get_relative_created_at(self):
         """Return a human readable string representing the posting time."""
@@ -140,8 +144,9 @@ class Status(object):
 
 class DirectMessage(Status):
     """
-    Programs representation of a Twitter direct message. Api adapters must 
-    convert their representations to instances of this class.
+    A Twitter direct message. 
+    
+    Api adapters must convert their representations to instances of this class.
     """
 
     def __init__(self,
@@ -164,14 +169,15 @@ class List(object):
 
 class ActiveList(object):
     """
-    A list that contains an 'active' element. This class implements some
-    functions but the subclasses must define `get_active`, `is_valid_index` 
-    and `activate_last` methods.
+    A list that contains an 'active' element. 
+    
+    This class implements some functions but the subclasses must define 
+    `get_active`, `is_valid_index` and `activate_last` methods.
     """
-    NULL = -1
+    NULL_INDEX = -1
 
     def __init__(self):
-        self.active_index = self.NULL
+        self.active_index = self.NULL_INDEX
 
     def get_active(self):
         raise NotImplementedError
@@ -195,7 +201,7 @@ class ActiveList(object):
         if self.is_valid_index(0):
             self.active_index = 0
         else:
-            self.active_index = self.NULL
+            self.active_index = self.NULL_INDEX
 
     def activate_last(self):
         raise NotImplementedError
@@ -206,7 +212,7 @@ class UnsortedActiveList(ActiveList):
     An `ActiveList` in which the 'active' element can be shifted position by
     position, to the begging and to the end. 
     
-    The subclass must implement all the provided methods.
+    Subclasses must implement all the provided methods.
     """
 
     def shift_active_previous(self):
@@ -231,7 +237,8 @@ class Timeline(ActiveList):
     List of Twitter statuses ordered reversely by date. Optionally with
     a name, a function that updates the current timeline and its arguments.
 
-    One of the elements of the timeline is the 'active'.
+    One of the elements of the timeline is the 'active' since `Timeline`
+    extends `ActiveList`.
     """
 
     def __init__(self, 
@@ -241,13 +248,16 @@ class Timeline(ActiveList):
                  update_function_args=None):
         ActiveList.__init__(self)
         self.name = name
+
         # key for sorting
         self._key = lambda status: status.created_at_in_seconds
+
         if statuses:
             self.statuses = sorted(statuses,
                                    key=self._key,
                                    reverse=True)
             self.active_index = 0
+            self._mark_read()
         else:
             self.statuses = []
         self.update_function = update_function
@@ -285,12 +295,21 @@ class Timeline(ActiveList):
         Adds the given status to the status list of the Timeline if it's
         not already in it.
         """
-        if new_status not in self.statuses:
-            if self.active_index == self.NULL:
-                self.active_index = 0
-            # TODO: keep cursor in same tweet when inserting statuses (?)
-            self.statuses.append(new_status)
-            self.statuses.sort(key=self._key, reverse=True)
+        if new_status in self.statuses:
+            return
+
+        if self.active_index == self.NULL_INDEX:
+            self.active_index = 0
+
+        # keep the same tweet as the active when inserting statuses
+        active = self.get_active()
+        more_recent_status = lambda a, b: a.created_at_in_seconds < b.created_at_in_seconds
+
+        if active and more_recent_status(active, new_status):
+            self.activate_next()
+
+        self.statuses.append(new_status)
+        self.statuses.sort(key=self._key, reverse=True)
 
     def add_statuses(self, new_statuses):
         """
@@ -299,12 +318,13 @@ class Timeline(ActiveList):
         """
         if not new_statuses:
             return
+
         for status in new_statuses:
             self.add_status(status)
 
     def clear(self):
         """Clears the Timeline."""
-        self.active_index = self.NULL
+        self.active_index = self.NULL_INDEX
         self.statuses = []
 
     def get_newer_than(self, datetime):
@@ -361,7 +381,7 @@ class Timeline(ActiveList):
         if self.statuses:
             return index >= 0 and index < len(self.statuses)
         else:
-            self.active_index = self.NULL
+            self.active_index = self.NULL_INDEX
         return False
 
     def activate_previous(self):
@@ -381,7 +401,7 @@ class Timeline(ActiveList):
             self.active_index = len(self.statuses) - 1
             self.mark_active_as_read()
         else:
-            self.active_index = self.NULL
+            self.active_index = self.NULL_INDEX
 
     # utils
 
@@ -403,7 +423,7 @@ class TimelineList(UnsortedActiveList):
         self.timelines = []
 
     def has_timelines(self):
-        return self.active_index != -1 and self.timelines
+        return self.active_index !=  self.NULL_INDEX and self.timelines
 
     def get_active_timeline_name(self):
         if self.has_timelines():
@@ -607,7 +627,7 @@ class VisibleTimelineList(TimelineList):
 
     def append_timeline(self, timeline):
         # when appending a timeline is visible only if the `TimelineList` was empty
-        if self.active_index == ActiveList.NULL:
+        if self.active_index == self.NULL_INDEX:
             self.visible = [0]
         TimelineList.append_timeline(self, timeline)
 

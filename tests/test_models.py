@@ -4,14 +4,14 @@
 #         Licensed under the GPL License. See LICENSE for full details.       #
 ###############################################################################
 
-import sys
-sys.path.append('../')
+from sys import path
+path.append('../')
 import unittest
 from datetime import datetime
 
 from mock import MagicMock
 
-from turses.models import Status, Timeline, TimelineList, ActiveList
+from turses.models import Status, Timeline, TimelineList
 
 
 # TODO
@@ -44,6 +44,8 @@ class UnsortedActiveListTest(unittest.TestCase):
     pass
 
 
+# TODO
+#  subsitute -1 for `NULL_INDEX` constant
 class TimelineTest(unittest.TestCase):
     def setUp(self):
         self.timeline = Timeline()
@@ -82,6 +84,30 @@ class TimelineTest(unittest.TestCase):
         new_status = self._create_status(2, datetime.now())
         self.timeline.add_statuses([old_status, new_status])
         self.assertEqual(len(self.timeline), 2)
+
+    def assert_active(self, status):
+        active_status = self.timeline.get_active()
+        if active_status:
+            self.assertEqual(status, active_status)
+        else:
+            raise Exception("There is no active status")
+
+    def test_active_is_the_same_when_inserting_statuses(self):
+        """
+        Test that when inserting new statuses the active doesn't change.
+        """
+        active_status = self._create_status(1, datetime(1988, 12, 19))
+        self.timeline.add_status(active_status)
+        self.assert_active(active_status)
+        
+        older_status = self._create_status(2, datetime(1978, 12, 19))
+        self.timeline.add_status(older_status)
+        self.assert_active(active_status)
+
+        newer_status = self._create_status(2, datetime.now())
+        self.timeline.add_status(newer_status)
+        self.assert_active(active_status)
+
 
     def test_insert_different_statuses_individually(self):
         old_status = self._create_status(1, datetime(1988, 12, 19))
@@ -304,8 +330,6 @@ class TimelineListTest(unittest.TestCase):
         self.assertEqual(self.timeline_list.active_index, 2)
         self.timeline_list.shift_active_next()
         self.assertEqual(self.timeline_list.active_index, 2)
-
-    # TODO get_*
 
 
 if __name__ == '__main__':
