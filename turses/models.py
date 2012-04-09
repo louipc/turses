@@ -581,17 +581,21 @@ class VisibleTimelineList(TimelineList):
         self.visible = []
 
     def expand_visible_previous(self):
+        if not self.visible:
+            return
+
         self.visible.sort()
-        if self.visible:
-            lowest = self.visible[0]
+        lowest = self.visible[0]
         previous = lowest - 1
         if self.is_valid_index(previous):
             self.visible.insert(0, previous)
 
     def expand_visible_next(self):
+        if not self.visible:
+            return 
+
         self.visible.sort()
-        if self.visible:
-            highest = self.visible[-1]
+        highest = self.visible[-1]
         next = highest + 1
         if self.is_valid_index(next):
             self.visible.append(next)

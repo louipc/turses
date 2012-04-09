@@ -11,7 +11,13 @@ from datetime import datetime
 
 from mock import MagicMock
 
-from turses.models import Status, ActiveList, Timeline, TimelineList
+from turses.models import (
+        ActiveList,
+        Status, 
+        Timeline, 
+        TimelineList,
+        VisibleTimelineList
+        )
 
 
 # TODO
@@ -187,11 +193,11 @@ class TimelineListTest(unittest.TestCase):
     def setUp(self):
         self.timeline_list = TimelineList()
 
-    def test_has_timelines_false_if_empty(self):
-        self.failIf(self.timeline_list.has_timelines())
-
     def append_timeline(self):
         self.timeline_list.append_timeline(Timeline('Timeline'))
+
+    def test_has_timelines_false_if_empty(self):
+        self.failIf(self.timeline_list.has_timelines())
 
     def test_has_timelines_true_otherwise(self):
         self.append_timeline()
@@ -330,5 +336,104 @@ class TimelineListTest(unittest.TestCase):
         self.assertEqual(self.timeline_list.active_index, 2)
 
 
-if __name__ == '__main__':
+class VisibleTimelineListTest(TimelineListTest):
+    def setUp(self):
+        self.timeline_list = VisibleTimelineList()
+
+    def assert_visible(self, visible_list):
+        self.assertEqual(self.timeline_list.visible, visible_list)        
+
+    def test_no_visible_when_newly_created(self):
+        self.assert_visible([])
+        self.timeline_list.expand_visible_previous()
+
+    def test_only_visible_is_index_0_when_appending_first_timeline(self):
+        self.append_timeline()
+        self.assert_visible([0])
+
+    def test_expand_visible_previous(self):
+        self.append_timeline()
+        self.append_timeline()
+        self.append_timeline()
+        self.assert_visible([0])
+        self.timeline_list.activate_last()
+        self.assert_visible([2])
+
+        self.timeline_list.expand_visible_previous()
+        self.assert_visible([1, 2])
+        self.timeline_list.expand_visible_previous()
+        self.assert_visible([0, 1, 2])
+
+        # there are no more timelines
+        self.timeline_list.expand_visible_previous()
+        self.assert_visible([0, 1, 2])
+
+    def test_expand_visible_next(self):
+        self.append_timeline()
+        self.append_timeline()
+        self.append_timeline()
+        self.assert_visible([0])
+
+        self.timeline_list.expand_visible_next()
+        self.assert_visible([0, 1])
+        self.timeline_list.expand_visible_next()
+        self.assert_visible([0, 1, 2])
+
+        # there are no more timelines
+        self.timeline_list.expand_visible_next()
+        self.assert_visible([0, 1, 2])
+
+    def test_shrink_visible_beggining(self):
+        self.append_timeline()
+        self.append_timeline()
+        self.append_timeline()
+        self.timeline_list.activate_last()
+        self.timeline_list.expand_visible_previous()
+        self.timeline_list.expand_visible_previous()
+        self.assert_visible([0, 1, 2])
+
+        self.timeline_list.shrink_visible_beggining()
+        self.assert_visible([1, 2])
+        self.timeline_list.shrink_visible_beggining()
+        self.assert_visible([2])
+
+        # at least the active timeline has to be visible
+        self.timeline_list.shrink_visible_beggining()
+        self.assert_visible([2])
+
+    def test_shrink_visible_end(self):
+        self.append_timeline()
+        self.append_timeline()
+        self.append_timeline()
+        self.timeline_list.expand_visible_next()
+        self.timeline_list.expand_visible_next()
+        self.assert_visible([0, 1, 2])
+
+        self.timeline_list.shrink_visible_end()
+        self.assert_visible([0, 1])
+        self.timeline_list.shrink_visible_end()
+        self.assert_visible([0])
+
+        # at least the active timeline has to be visible
+        self.timeline_list.shrink_visible_end()
+        self.assert_visible([0])
+
+    def test_visible_active_only_when_activating_invisible_timeline(self):
+        self.append_timeline()
+        self.append_timeline()
+        self.append_timeline()
+        self.timeline_list.expand_visible_next()
+        self.assert_visible([0, 1])
+
+        self.timeline_list.activate_last()
+        self.assert_visible([2])
+
+        self.timeline_list.expand_visible_previous()
+        self.assert_visible([1, 2])
+
+        self.timeline_list.activate_first()
+        self.assert_visible([0])
+
+
+if __name__ == '__main__':                 
     unittest.main()
