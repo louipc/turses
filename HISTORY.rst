@@ -1,3 +1,9 @@
+0.0.12
+------
+- multiple visible timelines in columns
+- fix bug with unicode input
+- open URLs in browser
+
 0.0.11
 ------
 - include retweets in home timeline
