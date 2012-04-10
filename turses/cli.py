@@ -12,7 +12,7 @@ from .config import Configuration
 from .controller import CursesController
 from .constant import palette
 from .ui.curses import CursesInterface
-from .api.backends import PythonTwitterApi, TweepyApi
+from .api.backends import TweepyApi
 
 
 def main():

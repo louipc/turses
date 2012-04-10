@@ -77,10 +77,19 @@ class Api(object):
     def retweet(self, status): 
         raise NotImplementedError
 
-    def destroy(self, status):
+    def destroy_status(self, status):
+        """
+        Destroy the given `status` (must belong to authenticating user).
+        """
         raise NotImplementedError
 
     def direct_message(self, screen_name, text):
+        raise NotImplementedError
+
+    def destroy_direct_message(self, dm):
+        """
+        Destroy the given `dm` (must be written by the authenticating user).
+        """
         raise NotImplementedError
 
     def create_friendship(self, screen_name): 
@@ -160,9 +169,15 @@ class AsyncApi(Api):
         retweet_thread.start()
 
     @wrap_exceptions
-    def destroy(self, status):
+    def destroy_status(self, status):
         args = status,
-        destroy_thread = Thread(target=self._api.destroy, args=args)
+        destroy_thread = Thread(target=self._api.destroy_status, args=args)
+        destroy_thread.start()
+
+    @wrap_exceptions
+    def destroy_direct_message(self, status):
+        args = status,
+        destroy_thread = Thread(target=self._api.destroy_direct_message, args=args)
         destroy_thread.start()
 
     @wrap_exceptions
@@ -193,8 +208,6 @@ class AsyncApi(Api):
 
     @wrap_exceptions
     def destroy_favorite(self, status):
-        if is_DM(status) or not status.is_favorite:
-            raise Exception
         args = status,
         unfavorite_thread = Thread(target=self._api.destroy_favorite, args=args)
         unfavorite_thread.start()
