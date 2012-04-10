@@ -65,17 +65,20 @@ class CursesInterface(Frame, UserInterface):
     all the components of the UI.
     """
 
-    def __init__(self):
+    def __init__(self,
+                 configuration):
         Frame.__init__(self,
                        WelcomeBuffer(),
                        header=TabsWidget(),
                        footer=StatusBar(''))
+        self._configuration = configuration
         self._editor_mode = False
 
     # -- Modes ----------------------------------------------------------------
 
     def draw_timelines(self, timelines):
-        self.body = TimelinesBuffer(timelines)
+        self.body = TimelinesBuffer(timelines, 
+                                    configuration=self._configuration)
         self.set_body(self.body)
 
     def show_info(self):
@@ -618,9 +621,9 @@ class HelpBuffer(ScrollableListBoxWrapper):
 class TimelinesBuffer(WidgetWrap):
     """A widget that displays one or more `Timeline` objects."""
 
-    def __init__(self, timelines=None):
+    def __init__(self, timelines=None, **kwargs):
         if timelines:
-            timeline_widgets = [TimelineWidget(timeline) for timeline in timelines]
+            timeline_widgets = [TimelineWidget(timeline, **kwargs) for timeline in timelines]
         else:
             timeline_widgets = []
         WidgetWrap.__init__(self, Columns(timeline_widgets))
@@ -665,21 +668,24 @@ class TimelineWidget(ScrollableListBox):
     rendered as a `StatusWidget`.
     """
 
-    def __init__(self, timeline=None):
+    def __init__(self, timeline=None, configuration=None):
         statuses = timeline if timeline else []
-        status_widgets = [StatusWidget(status) for status in statuses]
+        status_widgets = [StatusWidget(status, configuration) for status in statuses]
         ScrollableListBox.__init__(self, status_widgets)
 
 
 class StatusWidget(WidgetWrap):
     """Widget containing a Twitter status."""
 
-    def __init__ (self, status):
+    def __init__ (self, status, configuration):
         self.status = status
+        self.configuration = configuration
+
         text = status.text
         status_content = Padding(AttrWrap(Text(text), 'body'), left=1, right=1)
         header = self._create_header(status)
         box = BoxDecoration(status_content, title=header)
+
         if not is_DM(status) and status.is_favorite:
             widget = AttrWrap(box, 'favorited', 'focus')
         else:
@@ -719,7 +725,7 @@ class StatusWidget(WidgetWrap):
             retweet_count = str(status.retweet_count)
             
         # create header
-        header_template = ' {username}{retweeted}{retweeter} - {time}{reply} {retweet_count} '
+        header_template = ' ' + self.configuration.params['header_template'] + ' '
         header = unicode(header_template).format(
             username= username,
             retweeted = retweeted,
@@ -732,8 +738,11 @@ class StatusWidget(WidgetWrap):
         return encode(header)
 
     def _dm_header(self, dm):
-        # TODO: make DM template configurable
-        dm_template = ' {sender_screen_name} -> {recipient_screen_name} - {time} '
+        try:
+            dm_template = ' ' + self.configuration.params['dm_template'] + ' '
+        except AttributeError:
+            # legacy configuration support
+            dm_template = ' {sender_screen_name} -> {recipient_screen_name} - {time} '
         relative_created_at = dm.get_relative_created_at()
         header = unicode(dm_template).format(
             sender_screen_name=dm.sender_screen_name,

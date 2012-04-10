@@ -227,6 +227,9 @@ class Configuration(object):
         if self.conf.has_option('params', 'header_template'):
             self.params['header_template'] = self.conf.get('params', 'header_template')
 
+        if self.conf.has_option('params', 'dm_template'):
+            self.params['dm_template'] = self.conf.get('params', 'dm_template')
+
         if self.conf.has_option('params', 'proxy'):
             self.params['proxy'] = self.conf.get('params', 'proxy')
 

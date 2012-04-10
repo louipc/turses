@@ -15,7 +15,4 @@ and for cancelling (maybe 'cancelled' ?)
     - User profile 
 * multiple account support
 * update timelines periodically on a separate thread
-* use signals to notify UI components that have to be updated
-* check for URLError exceptions and fail gracefully
-* check for TwitterError when using the API
 * keep references to threads and wait for them before quitting

@@ -20,7 +20,7 @@ def main():
         args = parse_arguments()
 
         configuration = Configuration(args)
-        ui = CursesInterface()
+        ui = CursesInterface(configuration)
 
         # start `turses`
         CursesController(palette=palette, 
