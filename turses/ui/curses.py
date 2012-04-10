@@ -643,7 +643,8 @@ class TimelinesBuffer(WidgetWrap):
 
     def clear(self):
         """Clears the buffer."""
-        return self.render_timeline([])
+        # FIXME
+        pass
 
     def render_timelines(self, timelines):
         """Renders the given statuses."""

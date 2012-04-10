@@ -28,7 +28,8 @@ from .models import (
 
         is_valid_status_text, 
         is_valid_search_text, 
-        is_valid_username
+        is_valid_username,
+        is_DM
         )
 
 
@@ -701,6 +702,10 @@ class Controller(object):
     def reply(self):
         status = self.timelines.get_focused_status()
 
+        if is_DM(status):
+            self.direct_message()
+            return
+
         author = get_authors_username(status)
         mentioned = get_mentioned_for_reply(status)
         try:
@@ -855,6 +860,10 @@ class Controller(object):
 
     def retweet(self):
         status = self.timelines.get_active_status()
+        if is_DM(status):
+            self.error_message(_('You can\'t retweet direct messages'))
+            return
+
         retweet_posted = partial(self.info_message, 
                                  _('Retweet posted'))
         retweet_post_failed = partial(self.error_message, 
@@ -873,13 +882,41 @@ class Controller(object):
 
     def delete_tweet(self):
         status = self.timelines.get_active_status()
+        if is_DM(status): 
+            self.delete_dm()
+            return
+
+        author = get_authors_username(status)
+        if author != self.user.screen_name:
+            self.error_message(_('You can only delete your own tweets'))
+            return
+
+        # TODO: check if DM and delete DM if is
+
         status_deleted = partial(self.info_message, 
                                  _('Tweet deleted'))
         status_not_deleted = partial(self.error_message, 
                                      _('Failed to delete tweet'))
-        self.api.destroy(status=status, 
-                         on_error=status_not_deleted,
-                         on_success=status_deleted)
+
+        self.api.destroy_status(status=status, 
+                                on_error=status_not_deleted,
+                                on_success=status_deleted)
+
+    def delete_dm(self):
+        dm = self.timelines.get_active_status()
+
+        if dm.sender_screen_name != self.user.screen_name:
+            self.error_message(_('You can only delete messages sent by you'))
+            return
+
+        dm_deleted = partial(self.info_message, 
+                             _('Message deleted'))
+        dm_not_deleted = partial(self.error_message, 
+                                 _('Failed to delete message'))
+
+        self.api.destroy_direct_message(status=dm, 
+                                        on_error=dm_not_deleted,
+                                        on_success=dm_deleted)
 
     def follow_selected(self):
         status = self.timelines.get_active_status()

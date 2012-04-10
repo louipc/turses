@@ -8,11 +8,9 @@ import turses
 name = "turses"
 
 requirements = [
-    "httplib2",
     "oauth2",
-    "python-twitter",
-    "simplejson",
     "urwid",
+    "tweepy",
 ]
 test_requirements = list(requirements)
 test_requirements.extend(["mock", "nose", "coverage", "nose-progressive"])
