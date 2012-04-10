@@ -675,7 +675,9 @@ class Controller(object):
     # -- Twitter -------------------------------------------------------------- 
 
     def search(self, text=None):
+        text = '' if text is None else text
         self.ui.show_text_editor(prompt='Search', 
+                                 content=text,
                                  done_signal_handler=self.search_handler)
         self.editor_mode()
 
