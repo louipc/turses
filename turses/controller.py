@@ -59,7 +59,7 @@ class KeyHandler(object):
     def is_keyboard_input(self, input):
         """Return True if `input` is keyboard input."""
         if input:
-            is_string = lambda s : isinstance(s, str)
+            is_string = lambda s : isinstance(s, str) or isinstance(s, unicode)
             _and = lambda a, b: a and b 
             return reduce(_and, map(is_string, input))
 
