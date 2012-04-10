@@ -750,6 +750,7 @@ class Controller(object):
     def tweet_handler(self, text):
         """Handle the post as a tweet of the given `text`."""
         self.key_handler.unset_editor()
+        self.timeline_mode()
         self.ui.remove_editor(self.tweet_handler)
         self.ui.set_focus('body')
 
@@ -771,6 +772,7 @@ class Controller(object):
     def direct_message_handler(self, username, text):
         """Handle the post as a DM of the given `text` to `username`."""
         self.key_handler.unset_editor()
+        self.timeline_mode()
         self.ui.remove_editor(self.direct_message_handler)
         self.ui.set_focus('body')
 
@@ -798,6 +800,7 @@ class Controller(object):
         """
         if self.is_in_editor_mode():
             self.key_handler.unset_editor()
+            self.timeline_mode()
             self.ui.remove_editor(self.search_handler)
             self.ui.set_focus('body')
 
