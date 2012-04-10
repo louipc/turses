@@ -258,11 +258,8 @@ class KeyHandler(object):
 
     def _external_program_handler(self, key):
         # Open URL
-        if key == self.configuration.keys['openurl']:
+        if self.is_bound(key, 'openurl'):
             self.controller.open_urls()
-        # Open image
-        elif key == self.configuration.keys['open_image']:
-            self.controller.info_message('Still to implement!')
 
     # -- Editor ----------------------------------------------------------------
 
@@ -973,20 +970,20 @@ class Controller(object):
         status = self.timelines.get_active_status()
         urls = get_urls(status.text)
 
-        if urls:
-            # TODO: delegate this to BROWSER environment variable (?)
-            args = ' '.join(urls)
-            command = self.configuration.params['openurl_command']
-            # remove %s from legacy configuration
-            command.strip('%s')
-        else:
+        if not urls:
             self.info_message(_('No URLs found on this tweet'))
             return
+
+        args = ' '.join(urls)
+        # TODO: delegate this to BROWSER environment variable (?)
+        command = self.configuration.params['openurl_command']
+        # remove %s from legacy configuration
+        command.strip('%s')
 
         try:
             spawn_process(command, args)
         except:
-            self.error_message(_('Unable to open URLs'))
+            self.error_message(_('Unable to launch the browser'))
 
 
 class CursesController(Controller):
