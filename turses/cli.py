@@ -12,7 +12,7 @@ from .config import Configuration
 from .controller import CursesController
 from .constant import palette
 from .ui.curses import CursesInterface
-from .api.backends import PythonTwitterApi
+from .api.backends import PythonTwitterApi, TweepyApi
 
 
 def main():
@@ -26,6 +26,6 @@ def main():
         CursesController(palette=palette, 
                          configuration=configuration, 
                          ui=ui,
-                         api_backend=PythonTwitterApi)
+                         api_backend=TweepyApi)
     except KeyboardInterrupt:
         exit(0)
