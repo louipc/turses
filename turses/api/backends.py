@@ -140,14 +140,14 @@ class PythonTwitterApi(BasePythonTwitterApi, Api):
 
     def get_direct_messages(self):
         dms = self.GetDirectMessages()
-        def convert_to_dm(dm):
+        def to_direct_message(dm):
             return DirectMessage(id=dm.id,
                                  created_at_in_seconds=dm.created_at_in_seconds,
                                  sender_screen_name=dm.sender_screen_name,
                                  recipient_screen_name=dm.recipient_screen_name,
                                  text=dm.text)
 
-        return [convert_to_dm(dm) for dm in dms]
+        return [to_direct_message(dm) for dm in dms]
 
     def get_search(self, text):
         return self._to_statuses(self.GetSearch(text))
@@ -352,7 +352,6 @@ class TweepyApi(BaseTweepyApi, Api):
         oauth_handler.set_access_token(self._access_token_key,
                                        self._access_token_secret)
         self._api = BaseTweepyApi(oauth_handler)
-        #self._api.me()
 
     def verify_credentials(self):
         def to_user(user):
@@ -378,28 +377,38 @@ class TweepyApi(BaseTweepyApi, Api):
         return self._to_statuses(self._api.home_timeline())
 
     def get_user_timeline(self, screen_name):
-        return []
+        return self._to_statuses(self._api.user_timeline(screen_name))
 
     def get_mentions(self):
-        return []
+        return self._to_statuses(self._api.mentions())
 
     def get_favorites(self):
-        return []
+        return self._to_statuses(self._api.favorites())
 
     def get_direct_messages(self):
-        return []
+        def to_direct_message(dm):
+            return DirectMessage(id=dm.id,
+                                 created_at_in_seconds=timestamp_from_datetime(dm.created_at),
+                                 sender_screen_name=dm.sender_screen_name,
+                                 recipient_screen_name=dm.recipient_screen_name,
+                                 text=dm.text)
+
+        dms = self._api.direct_messages()
+        dms.extend(self._api.sent_direct_messages())
+        
+        return [to_direct_message(dm) for dm in dms]
 
     def get_search(self, text):
-        raise NotImplementedError
+        return self._to_statuses(self._api.search(text))
 
     def update(self, text):
-        raise NotImplementedError
+        return self._api.update_status(text)
 
     def retweet(self, status):
-        raise NotImplementedError
+        return self._api.retweet(status.id)
 
     def destroy(self, status):
-        raise NotImplementedError
+        return self._api.destroy_status(status.id)
 
     def direct_message(self, username, text):
         raise NotImplementedError

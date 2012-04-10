@@ -34,9 +34,3 @@ def wrap_exceptions(func):
             return result
 
     return wrapper
-
-# TODO:
-#  `filter` decorator for aplying transformations to lists that a function
-#   returns
-def filter(func):
-    pass
