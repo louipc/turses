@@ -12,10 +12,10 @@ import urllib2
 from oauth2 import Request as OauthRequest
 from os import path
 from sys import stderr
-try:
-    import json
-except ImportError:
-    import simplejson as json
+#try:
+import json
+#except ImportError:
+    #import simplejson as json
 
 
 # `python-twitter`
@@ -23,9 +23,14 @@ from twitter import Api as BasePythonTwitterApi
 from twitter import Status as BaseStatus
 from twitter import TwitterError, _FileCache
 
-from .base import Api
+# `tweepy`
+from tweepy import API as BaseTweepyApi
+from tweepy import OAuthHandler as TweepyOAuthHandler
+
+from .base import Api, twitter_consumer_key, twitter_consumer_secret
 from ..models import User, Status, DirectMessage
 from ..models import is_DM
+from ..utils import timestamp_from_datetime
 
 
 DEFAULT_CACHE = object()
@@ -39,8 +44,6 @@ class PythonTwitterApi(BasePythonTwitterApi, Api):
     """
 
     def __init__(self,
-                 consumer_key=None,
-                 consumer_secret=None,
                  access_token_key=None,
                  access_token_secret=None,
                  input_encoding=None,
@@ -50,10 +53,10 @@ class PythonTwitterApi(BasePythonTwitterApi, Api):
                  base_url=None,
                  use_gzip_compression=False,
                  debugHTTP=False,
-                 proxy={}):
+                 proxy={},
+                 consumer_key=twitter_consumer_key,
+                 consumer_secret=twitter_consumer_secret,):
         Api.__init__(self,
-                     consumer_key,
-                     consumer_secret,
                      access_token_key,
                      access_token_secret,)
 
@@ -84,12 +87,125 @@ class PythonTwitterApi(BasePythonTwitterApi, Api):
 
             raise TwitterError('Twitter requires oAuth Access Token for all API access')
 
-        self.SetCredentials(consumer_key, 
-                            consumer_secret, 
-                            access_token_key, 
-                            access_token_secret)
-        self.is_authenticated = True
 
+    def init_api(self):
+        self.SetCredentials(self._consumer_key, 
+                            self._consumer_secret, 
+                            self._access_token_key, 
+                            self._access_token_secret)
+
+    def verify_credentials(self):
+        user = self.VerifyCredentials()
+        return User(user.screen_name)
+
+    def _to_statuses(self, statuses):
+        def to_status(status):
+            kwargs = {
+                'id': status.id, 
+                'created_at_in_seconds': status.created_at_in_seconds,
+                'user': status.user.screen_name,
+                'text': status.text,
+            }
+
+            if (status.favorited):
+                kwargs['is_favorite'] = True
+            elif (status.retweeted):
+                kwargs['is_retweet'] = True
+                kwargs['retweet_count'] = int(status.retweet_count)
+                kwargs['author'] = status.retweeted_status.user.screen_name
+
+            if (status.in_reply_to_screen_name):
+                kwargs['is_reply'] = True 
+                kwargs['in_reply_to_user'] = status.in_reply_to_screen_name
+
+            return Status(**kwargs)
+
+        return [to_status(s) for s in statuses]
+
+    def get_home_timeline(self):
+        statuses = self.GetFriendsTimeline(retweets=True)
+        return self._to_statuses(statuses)
+
+    def get_user_timeline(self, screen_name):
+        statuses = self.GetUserTimeline(screen_name, include_rts=True,)
+        return self._to_statuses(statuses)
+
+    def get_mentions(self):
+        statuses = self.GetMentions()
+        return self._to_statuses(statuses)
+
+    def get_favorites(self):
+        statuses = self.GetFavorites()
+        return self._to_statuses(statuses)
+
+    def get_direct_messages(self):
+        dms = self.GetDirectMessages()
+        def convert_to_dm(dm):
+            return DirectMessage(id=dm.id,
+                                 created_at_in_seconds=dm.created_at_in_seconds,
+                                 sender_screen_name=dm.sender_screen_name,
+                                 recipient_screen_name=dm.recipient_screen_name,
+                                 text=dm.text)
+
+        return [convert_to_dm(dm) for dm in dms]
+
+    def get_search(self, text):
+        return self._to_statuses(self.GetSearch(text))
+
+    def update(self, text):
+        try:
+            res = self.PostUpdate(text)
+        except TwitterError:
+            # Frequently while using `python-twitter` to update the state
+            # it raises the "Status is a duplicate" Twitter error
+            pass
+        else:
+            return res
+
+    def retweet(self, status):
+        self.PostRetweet(status.id)
+
+    def destroy(self, status):
+        if is_DM(status):
+            destroy = self.DestroyDirectMessage
+        else:
+            destroy = self.DestroyStatus
+
+        try:
+            res = destroy(status.id)
+        except TwitterError:
+            pass
+        else:
+            return res
+
+    def direct_message(self, username, text):
+        try:
+            self.PostDirectMessage(username, text)
+        except TwitterError:
+            # It raises the "Status is a duplicate" Twitter error
+            # all the time even when sending the messages...
+            pass
+
+    def create_friendship(self, screen_name):
+        self.CreateFriendship(screen_name)
+
+    def destroy_friendship(self, screen_name):
+        self.DestroyFriendship(screen_name)
+
+    def create_favorite(self, status):
+        _status = BaseStatus()
+        _status.id = status.id
+        try:
+            self.CreateFavorite(_status)
+        except TwitterError:
+            pass
+
+    def destroy_favorite(self, status):
+        _status = BaseStatus()
+        _status.id = status.id
+        self.DestroyFavorite(status)
+
+    # patching
 
     def _FetchUrl(self,
                   url,
@@ -219,113 +335,83 @@ class PythonTwitterApi(BasePythonTwitterApi, Api):
         else:
             self._cache = cache
 
+
+class TweepyApi(BaseTweepyApi, Api):
+    """
+    A `Api` implementation using `tweepy` library.
+    
+        http://github.com/tweepy/tweepy/ 
+    """
+
+    def __init__(self, *args, **kwargs):
+        Api.__init__(self, *args, **kwargs)
+
+    def init_api(self):
+        oauth_handler = TweepyOAuthHandler(self._consumer_key,
+                                           self._consumer_secret)
+        oauth_handler.set_access_token(self._access_token_key,
+                                       self._access_token_secret)
+        self._api = BaseTweepyApi(oauth_handler)
+        #self._api.me()
+
     def verify_credentials(self):
-        user = self.VerifyCredentials()
-        return User(user.screen_name)
+        def to_user(user):
+            kwargs = {
+                'screen_name': user.screen_name, 
+            }
+            return User(**kwargs)
+        return to_user(self._api.me())
 
     def _to_statuses(self, statuses):
         def to_status(status):
             kwargs = {
-                'id': status.id, 
-                'created_at_in_seconds': status.created_at_in_seconds,
+                'id': status.id,
+                'created_at_in_seconds': timestamp_from_datetime(status.created_at),
                 'user': status.user.screen_name,
                 'text': status.text,
             }
-
-            if (status.favorited):
-                kwargs['is_favorite'] = True
-            elif (status.retweeted):
-                kwargs['is_retweet'] = True
-                kwargs['retweet_count'] = int(status.retweet_count)
-                kwargs['author'] = status.retweeted_status.user.screen_name
-
-            if (status.in_reply_to_screen_name):
-                kwargs['is_reply'] = True 
-                kwargs['in_reply_to_user'] = status.in_reply_to_screen_name
-
             return Status(**kwargs)
 
-        return [to_status(s) for s in statuses]
+        return [to_status(status) for status in statuses]
 
     def get_home_timeline(self):
-        statuses = self.GetFriendsTimeline(retweets=True)
-        return self._to_statuses(statuses)
+        return self._to_statuses(self._api.home_timeline())
 
     def get_user_timeline(self, screen_name):
-        statuses = self.GetUserTimeline(screen_name, include_rts=True,)
-        return self._to_statuses(statuses)
+        return []
 
     def get_mentions(self):
-        statuses = self.GetMentions()
-        return self._to_statuses(statuses)
+        return []
 
     def get_favorites(self):
-        statuses = self.GetFavorites()
-        return self._to_statuses(statuses)
+        return []
 
     def get_direct_messages(self):
-        dms = self.GetDirectMessages()
-        def convert_to_dm(dm):
-            return DirectMessage(id=dm.id,
-                                 created_at_in_seconds=dm.created_at_in_seconds,
-                                 sender_screen_name=dm.sender_screen_name,
-                                 recipient_screen_name=dm.recipient_screen_name,
-                                 text=dm.text)
-
-        return [convert_to_dm(dm) for dm in dms]
+        return []
 
     def get_search(self, text):
-        return self._to_statuses(self.GetSearch(text))
+        raise NotImplementedError
 
     def update(self, text):
-        try:
-            res = self.PostUpdate(text)
-        except TwitterError:
-            # Frequently while using `python-twitter` to update the state
-            # it raises the "Status is a duplicate" Twitter error
-            pass
-        else:
-            return res
+        raise NotImplementedError
 
     def retweet(self, status):
-        self.PostRetweet(status.id)
+        raise NotImplementedError
 
     def destroy(self, status):
-        if is_DM(status):
-            destroy = self.DestroyDirectMessage
-        else:
-            destroy = self.DestroyStatus
-
-        try:
-            res = destroy(status.id)
-        except TwitterError:
-            pass
-        else:
-            return res
+        raise NotImplementedError
 
     def direct_message(self, username, text):
-        try:
-            self.PostDirectMessage(username, text)
-        except TwitterError:
-            # It raises the "Status is a duplicate" Twitter error
-            # all the time even when sending the messages...
-            pass
+        raise NotImplementedError
 
     def create_friendship(self, screen_name):
-        self.CreateFriendship(screen_name)
+        raise NotImplementedError
 
     def destroy_friendship(self, screen_name):
-        self.DestroyFriendship(screen_name)
+        raise NotImplementedError
 
     def create_favorite(self, status):
-        _status = BaseStatus()
-        _status.id = status.id
-        try:
-            self.CreateFavorite(_status)
-        except TwitterError:
-            pass
+        raise NotImplementedError
 
     def destroy_favorite(self, status):
-        _status = BaseStatus()
-        _status.id = status.id
-        self.DestroyFavorite(status)
+        raise NotImplementedError

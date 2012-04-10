@@ -41,6 +41,10 @@ class Api(object):
         raise NotImplementedError
 
     def verify_credentials(self):
+        """
+        Return a `turses.models.User` with the authenticating user if the given 
+        credentials are valid.
+        """
         raise NotImplementedError
 
     def get_home_timeline(self): 
@@ -107,14 +111,12 @@ class AsyncApi(Api):
         it must implement the methods in `Api`.
         """
         Api.__init__(self, *args, **kwargs)
-        self._api_cls = api_cls
+        self._api = api_cls(access_token_key=self._access_token_key,
+                            access_token_secret=self._access_token_secret,)
 
     @wrap_exceptions
     def init_api(self):
-        self._api = self._api_cls(consumer_key=self._consumer_key,
-                                  consumer_secret=self._consumer_secret,
-                                  access_token_key=self._access_token_key,
-                                  access_token_secret=self._access_token_secret,)
+        self._api.init_api()
         self.is_authenticated = True
         self.user = self.verify_credentials()
 
