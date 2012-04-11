@@ -14,7 +14,6 @@ from tweepy import OAuthHandler as TweepyOAuthHandler
 
 from .base import Api
 from ..models import User, Status, DirectMessage
-from ..utils import timestamp_from_datetime
 
 
 class TweepyApi(BaseTweepyApi, Api):
@@ -33,7 +32,7 @@ class TweepyApi(BaseTweepyApi, Api):
         def to_status(status):
             kwargs = {
                 'id': status.id,
-                'created_at_in_seconds': timestamp_from_datetime(status.created_at),
+                'created_at': status.created_at,
                 'user': status.user.screen_name,
                 'text': status.text,
             }
@@ -47,7 +46,7 @@ class TweepyApi(BaseTweepyApi, Api):
     def _to_direct_message(self, dms):
         def to_direct_message(dm):
             return DirectMessage(id=dm.id,
-                                 created_at_in_seconds=timestamp_from_datetime(dm.created_at),
+                                 created_at=dm.created_at,
                                  sender_screen_name=dm.sender_screen_name,
                                  recipient_screen_name=dm.recipient_screen_name,
                                  text=dm.text)
@@ -97,7 +96,7 @@ class TweepyApi(BaseTweepyApi, Api):
         def to_status(status):
             kwargs = {
                 'id': status.id,
-                'created_at_in_seconds': timestamp_from_datetime(status.created_at),
+                'created_at': status.created_at,
                 'user': status.from_user,
                 'text': status.text,
             }

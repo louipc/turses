@@ -19,6 +19,15 @@ from turses.models import (
         VisibleTimelineList
         )
 
+#
+# Helpers
+# 
+def create_status(id, datetime):
+    return Status(id=id,
+                  created_at=datetime,
+                  user='test',
+                  text='Test',)
+
 
 # TODO
 class HelperFunctionTest(unittest.TestCase):
@@ -57,18 +66,10 @@ class TimelineTest(unittest.TestCase):
         self.assertEqual(len(self.timeline), 0)
         self.assertEqual(self.timeline.active_index, ActiveList.NULL_INDEX)
 
-    def _create_status(self, id, datetime):
-        from calendar import timegm
-        created_at_in_seconds = timegm(datetime.utctimetuple())
-        return Status(id=id,
-                      created_at_in_seconds=created_at_in_seconds,
-                      user='test',
-                      text='Test',)
-
     def test_unique_statuses_in_timeline(self):
         self.assertEqual(len(self.timeline), 0)
         # create and add the status
-        status = self._create_status(1, datetime.now())
+        status = create_status(1, datetime.now())
         self.timeline.add_status(status)
         self.assertEqual(len(self.timeline), 1)
         # check that adding more than once does not duplicate element
@@ -76,7 +77,7 @@ class TimelineTest(unittest.TestCase):
         self.assertEqual(len(self.timeline), 1)
 
     def test_active_index_becomes_0_when_adding_first_status(self):
-        status = self._create_status(1, datetime.now())
+        status = create_status(1, datetime.now())
         self.timeline.add_status(status)
         self.assertEqual(self.timeline.active_index, 0)
         # check that adding than once does not move the active
@@ -84,8 +85,8 @@ class TimelineTest(unittest.TestCase):
         self.assertEqual(self.timeline.active_index, 0)
 
     def test_insert_different_statuses(self):
-        old_status = self._create_status(1, datetime(1988, 12, 19))
-        new_status = self._create_status(2, datetime.now())
+        old_status = create_status(1, datetime(1988, 12, 19))
+        new_status = create_status(2, datetime.now())
         self.timeline.add_statuses([old_status, new_status])
         self.assertEqual(len(self.timeline), 2)
 
@@ -100,39 +101,38 @@ class TimelineTest(unittest.TestCase):
         """
         Test that when inserting new statuses the active doesn't change.
         """
-        active_status = self._create_status(1, datetime(1988, 12, 19))
+        active_status = create_status(1, datetime(1988, 12, 19))
         self.timeline.add_status(active_status)
         self.assert_active(active_status)
         
-        older_status = self._create_status(2, datetime(1978, 12, 19))
+        older_status = create_status(2, datetime(1978, 12, 19))
         self.timeline.add_status(older_status)
         self.assert_active(active_status)
 
-        newer_status = self._create_status(2, datetime.now())
+        newer_status = create_status(2, datetime.now())
         self.timeline.add_status(newer_status)
         self.assert_active(active_status)
 
-
     def test_insert_different_statuses_individually(self):
-        old_status = self._create_status(1, datetime(1988, 12, 19))
-        new_status = self._create_status(2, datetime.now())
+        old_status = create_status(1, datetime(1988, 12, 19))
+        new_status = create_status(2, datetime.now())
         self.timeline.add_status(old_status)
         self.assertEqual(len(self.timeline), 1)
         self.timeline.add_status(new_status)
         self.assertEqual(len(self.timeline), 2)
 
     def test_statuses_ordered_reversely_by_date(self):
-        old_status = self._create_status(1, datetime(1988, 12, 19))
-        new_status = self._create_status(2, datetime.now())
+        old_status = create_status(1, datetime(1988, 12, 19))
+        new_status = create_status(2, datetime.now())
         self.timeline.add_statuses([old_status, new_status])
         self.assertEqual(self.timeline[0], new_status)
         self.assertEqual(self.timeline[1], old_status)
 
     def test_get_newer_than(self):
         old_created_at = datetime(1988, 12, 19)
-        old_status = self._create_status(1, old_created_at)
+        old_status = create_status(1, old_created_at)
         new_created_at = datetime.now()
-        new_status = self._create_status(2, new_created_at)
+        new_status = create_status(2, new_created_at)
         self.timeline.add_statuses([old_status, new_status])
         # get newers than `old_status`
         newers = self.timeline.get_newer_than(old_created_at)
@@ -144,9 +144,9 @@ class TimelineTest(unittest.TestCase):
 
     def test_clear(self):
         old_created_at = datetime(1988, 12, 19)
-        old_status = self._create_status(1, old_created_at)
+        old_status = create_status(1, old_created_at)
         new_created_at = datetime.now()
-        new_status = self._create_status(2, new_created_at)
+        new_status = create_status(2, new_created_at)
         self.timeline.add_statuses([old_status, new_status])
         self.timeline.clear()
         self.assertEqual(len(self.timeline), 0)
