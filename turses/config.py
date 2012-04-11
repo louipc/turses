@@ -63,9 +63,9 @@ class Configuration(object):
 
     def get_browser(self):
         try:
-            self.browser    = environ['BROWSER']
+            self.browser = environ['BROWSER']
         except:
-            self.browser    = ''
+            self.browser = ''
 
     def check_for_default_config(self):
         default_dir = '/turses'
@@ -189,7 +189,7 @@ class Configuration(object):
             self.params['openurl_command'] = self.conf.get('params',
                 'openurl_command')
         elif self.browser != '':
-            self.params['openurl_command'] = self.browser + ' %s'
+            self.params['openurl_command'] = self.browser
 
         if self.conf.has_option('params', 'open_image_command'):
             self.params['open_image_command'] = self.conf.get('params',
@@ -264,7 +264,12 @@ class Configuration(object):
         logging.info('turses starting...')
 
     def init_logger_level(self):
-        lvl = int(self.params['logging_level'])
+        try:
+            lvl = int(self.params['logging_level'])
+        except:
+            # INFO is the default logging level
+            return logging.INFO
+
         if lvl == 1:
             return logging.DEBUG
         elif lvl == 2:

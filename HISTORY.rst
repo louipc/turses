@@ -1,3 +1,7 @@
+0.0.14
+------
+- bugfix: logging
+
 0.0.13
 ------
 - thread view
