@@ -1,3 +1,7 @@
+0.0.13
+------
+- thread view
+
 0.0.12
 ------
 - multiple visible timelines in columns
