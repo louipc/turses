@@ -47,6 +47,8 @@ class Api(object):
         """
         raise NotImplementedError
 
+    # timelines
+
     def get_home_timeline(self): 
         raise NotImplementedError
 
@@ -71,6 +73,8 @@ class Api(object):
     def search(self, text):
         raise NotImplementedError
 
+    # statuses
+
     def update(self, text): 
         raise NotImplementedError
 
@@ -92,16 +96,52 @@ class Api(object):
         """
         raise NotImplementedError
 
+    # friendship
+
     def create_friendship(self, screen_name): 
         raise NotImplementedError
 
     def destroy_friendship(self, screen_name):
         raise NotImplementedError
 
+    # favorite methods
+
     def create_favorite(self, status):
         raise NotImplementedError
 
     def destroy_favorite(self, status): 
+        raise NotImplementedError
+
+    # list methods
+
+    def get_lists(self, screen_name):
+        raise NotImplementedError
+
+    def get_own_lists(self):
+        raise NotImplementedError
+
+    def get_list_memberships(self):
+        raise NotImplementedError
+
+    def get_list_subscriptions(self):
+        raise NotImplementedError
+
+    def get_list_timeline(self, list):
+        raise NotImplementedError
+
+    def get_list_members(self, list):
+        raise NotImplementedError
+
+    def is_list_member(self, user, list):
+        raise NotImplementedError
+
+    def subscribe_to_list(self, list):
+        raise NotImplementedError
+
+    def get_list_subscribers(self, list):
+        raise NotImplementedError
+
+    def is_list_subscriber(self, user, list):
         raise NotImplementedError
 
 
@@ -151,9 +191,9 @@ class AsyncApi(Api):
         return self._api.get_direct_messages()
 
     def get_thread(self, status):
-        return self._api.get_own_timeline()
+        return self._api.get_thread(status)
 
-    def search(self, text):
+    def get_search(self, text):
         return self._api.get_search(text)
 
     @wrap_exceptions

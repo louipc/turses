@@ -8,6 +8,8 @@ This module contains the Twitter entities represented in `turses`.
 """
 
 import time
+from functools import total_ordering
+from bisect import insort
 
 from .utils import html_unescape, timestamp_from_datetime
 
@@ -19,10 +21,12 @@ def is_DM(status):
     return status.__class__ == DirectMessage
 
 def get_mentioned_for_reply(status):
-    author = '@%s' % get_authors_username(status)
+    author = get_authors_username(status)
     mentioned = get_mentioned_usernames(status)
     mentioned.insert(0, author)
-    return mentioned
+
+    prepend_at = lambda username: '@%s' % username
+    return map(prepend_at, mentioned)
 
 def get_authors_username(status):
     """Return the original author's username of the given status."""
@@ -36,15 +40,15 @@ def get_authors_username(status):
     return username
 
 def is_username(string):
-    return string.startswith('@')
+    return string.startswith('@') and len(string) > 1
 
 def is_hashtag(string):
-    return string.startswith('#')
+    return string.startswith('#') and len(string) > 1
 
 def sanitize_username(username):
     is_legal_username_char = lambda char: char.isalnum()
     sanitized = filter(is_legal_username_char, username[1:])
-    return ''.join(['@', sanitized])
+    return sanitized
 
 def get_mentioned_usernames(status):
     usernames = filter(is_username, status.text.split())
@@ -80,6 +84,7 @@ class User(object):
         self.screen_name = screen_name
 
 
+@total_ordering
 class Status(object):
     """
     A Twitter status. 
@@ -89,8 +94,8 @@ class Status(object):
 
     # TODO make all arguments mandatory
     def __init__(self, 
-                 created_at_in_seconds,
                  id,
+                 created_at,
                  user,
                  text,
                  is_reply=False,
@@ -102,9 +107,9 @@ class Status(object):
                  retweet_count=0,
                  author='',):
                  
-        self.created_at_in_seconds = created_at_in_seconds
-        self.user = user
         self.id = id
+        self.created_at = created_at
+        self.user = user
         self.text = html_unescape(text)
         self.is_reply = is_reply
         self.is_retweet = is_retweet
@@ -119,7 +124,7 @@ class Status(object):
         """Return a human readable string representing the posting time."""
         # This code is borrowed from `python-twitter` library
         fudge = 1.25
-        delta  = long(time.time()) - long(self.created_at_in_seconds)
+        delta  = long(time.time()) - timestamp_from_datetime(self.created_at)
 
         if delta < (1 * fudge):
           return "about a second ago"
@@ -138,8 +143,14 @@ class Status(object):
         else:
           return "about %d days ago" % (delta / (60 * 60 * 24))
 
+    # magic
+
     def __eq__(self, other):
         return self.id == other.id
+
+    def __lt__(self, other):
+        # statuses are ordered reversely by date
+        return self.created_at > other.created_at
 
 
 class DirectMessage(Status):
@@ -151,21 +162,42 @@ class DirectMessage(Status):
 
     def __init__(self,
                  id,
-                 created_at_in_seconds,
+                 created_at,
                  sender_screen_name,
                  recipient_screen_name,
                  text):
         self.id = id
-        self.created_at_in_seconds = created_at_in_seconds
+        self.created_at= created_at
         self.sender_screen_name = sender_screen_name
         self.recipient_screen_name = recipient_screen_name
         self.text = html_unescape(text)
 
 
 class List(object):
-    # TODO
-    pass
-
+    """
+    A Twitter list. 
+    
+    Api adapters must convert their representations to instances of this class.
+    """
+    
+    def __init__(self,
+                 id,
+                 owner,
+                 created_at,
+                 name,
+                 description,
+                 member_count,
+                 subscriber_count,
+                 private=False,):
+        self.id = id
+        self.owner = owner
+        self.created_at = created_at
+        self.name = name
+        self.description = description
+        self.member_count = member_count
+        self.subscriber_count = subscriber_count
+        self.private = private
+                 
 
 class ActiveList(object):
     """
@@ -249,12 +281,11 @@ class Timeline(ActiveList):
         ActiveList.__init__(self)
         self.name = name
 
-        # key for sorting
-        self._key = lambda status: status.created_at_in_seconds
-
         if statuses:
+            # sort when first inserting statuses
+            key = lambda status: status.created_at
             self.statuses = sorted(statuses,
-                                   key=self._key,
+                                   key=key,
                                    reverse=True)
             self.active_index = 0
             self._mark_read()
@@ -303,13 +334,12 @@ class Timeline(ActiveList):
 
         # keep the same tweet as the active when inserting statuses
         active = self.get_active()
-        more_recent_status = lambda a, b: a.created_at_in_seconds < b.created_at_in_seconds
+        is_more_recent_status = lambda a, b: a.created_at < b.created_at
 
-        if active and more_recent_status(active, new_status):
+        if active and is_more_recent_status(active, new_status):
             self.activate_next()
 
-        self.statuses.append(new_status)
-        self.statuses.sort(key=self._key, reverse=True)
+        insort(self.statuses, new_status)
 
     def add_statuses(self, new_statuses):
         """
@@ -329,8 +359,7 @@ class Timeline(ActiveList):
 
     def get_newer_than(self, datetime):
         """Return the statuses that are more recent than `datetime`."""
-        timestamp = timestamp_from_datetime(datetime)
-        newer = lambda status : status.created_at_in_seconds > timestamp
+        newer = lambda status : status.created_at > datetime
         return filter(newer, self.statuses)
 
     def update(self):
