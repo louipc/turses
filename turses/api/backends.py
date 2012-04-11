@@ -18,6 +18,9 @@ from ..models import (
         Status, 
         DirectMessage, 
         List, 
+
+        get_authors_username,
+        get_mentioned_usernames,
 )
 from ..utils import datetime_from_twitter_datestring
 
@@ -127,6 +130,23 @@ class TweepyApi(BaseTweepyApi, Api):
         dms.extend(self._api.sent_direct_messages())
         return self._to_direct_message(dms)
         
+    def get_thread(self, status):
+        author = get_authors_username(status)
+        mentioned = get_mentioned_usernames(status)
+        if author not in mentioned:
+            mentioned.append(author)
+        
+        tweets = []
+        for username in mentioned:
+            tweets.extend(self.get_user_timeline(username))
+
+        def belongs_to_conversation(status):
+            for username in mentioned:
+                if username in status.text:
+                    return True
+
+        return filter(belongs_to_conversation, tweets)
+
     def get_search(self, text):
         # `tweepy.API.search` returns `tweepy.models.SearchResult` objects instead
         # `tweepy.models.Status` so we have to convert them differently
