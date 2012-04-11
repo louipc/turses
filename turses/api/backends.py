@@ -13,7 +13,12 @@ from tweepy import API as BaseTweepyApi
 from tweepy import OAuthHandler as TweepyOAuthHandler
 
 from .base import Api
-from ..models import User, Status, DirectMessage, List
+from ..models import (
+        User, 
+        Status, 
+        DirectMessage, 
+        List, 
+)
 from ..utils import datetime_from_twitter_datestring
 
 
@@ -102,9 +107,12 @@ class TweepyApi(BaseTweepyApi, Api):
             return User(**kwargs)
         return to_user(self._api.me())
 
+    # timelines
+
     def get_home_timeline(self):
         return self._to_status(self._api.home_timeline())
 
+    # TODO: `get_own_timeline`
     def get_user_timeline(self, screen_name):
         return self._to_status(self._api.user_timeline(screen_name))
 
@@ -194,4 +202,3 @@ class TweepyApi(BaseTweepyApi, Api):
 
     def is_list_subscriber(self, user, list):
         raise NotImplementedError
-

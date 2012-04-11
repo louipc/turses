@@ -47,6 +47,8 @@ class Api(object):
         """
         raise NotImplementedError
 
+    # timelines
+
     def get_home_timeline(self): 
         raise NotImplementedError
 
@@ -71,6 +73,8 @@ class Api(object):
     def search(self, text):
         raise NotImplementedError
 
+    # statuses
+
     def update(self, text): 
         raise NotImplementedError
 
@@ -91,6 +95,8 @@ class Api(object):
         Destroy the given `dm` (must be written by the authenticating user).
         """
         raise NotImplementedError
+
+    # friendship
 
     def create_friendship(self, screen_name): 
         raise NotImplementedError
@@ -185,9 +191,9 @@ class AsyncApi(Api):
         return self._api.get_direct_messages()
 
     def get_thread(self, status):
-        return self._api.get_own_timeline()
+        return self._api.get_thread(status)
 
-    def search(self, text):
+    def get_search(self, text):
         return self._api.get_search(text)
 
     @wrap_exceptions

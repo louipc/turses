@@ -21,10 +21,12 @@ def is_DM(status):
     return status.__class__ == DirectMessage
 
 def get_mentioned_for_reply(status):
-    author = '@%s' % get_authors_username(status)
+    author = get_authors_username(status)
     mentioned = get_mentioned_usernames(status)
     mentioned.insert(0, author)
-    return mentioned
+
+    prepend_at = lambda username: '@%s' % username
+    return map(prepend_at, mentioned)
 
 def get_authors_username(status):
     """Return the original author's username of the given status."""
@@ -38,15 +40,15 @@ def get_authors_username(status):
     return username
 
 def is_username(string):
-    return string.startswith('@')
+    return string.startswith('@') and len(string) > 1
 
 def is_hashtag(string):
-    return string.startswith('#')
+    return string.startswith('#') and len(string) > 1
 
 def sanitize_username(username):
     is_legal_username_char = lambda char: char.isalnum()
     sanitized = filter(is_legal_username_char, username[1:])
-    return ''.join(['@', sanitized])
+    return sanitized
 
 def get_mentioned_usernames(status):
     usernames = filter(is_username, status.text.split())

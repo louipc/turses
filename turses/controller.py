@@ -24,7 +24,6 @@ from .models import (
         get_authors_username, 
         get_mentioned_for_reply, 
         get_hashtags, 
-        get_mentioned_usernames,
 
         is_valid_status_text, 
         is_valid_search_text, 
@@ -404,7 +403,7 @@ class Controller(object):
     def _append_timeline(self,
                          name, 
                          update_function, 
-                         update_args):
+                         update_args=None):
         timeline = Timeline(name=name,
                             update_function=update_function,
                             update_function_args=update_args) 
@@ -485,17 +484,16 @@ class Controller(object):
 
     def append_thread_timeline(self):
         status = self.timelines.get_focused_status()
+
         timeline_fetched = partial(self.info_message, 
                                     _('Thread fetched'))
         timeline_not_fetched = partial(self.error_message, 
-                                        _('Failed to fetch thread'))
+                                       _('Failed to fetch thread'))
 
-        participants = ' '.join(get_mentioned_usernames(status))
-        name = _('conversation with %s') % participants,
-        if status.is_retweet or not participants:
-            self.error_message(_('Doesn\'t look like a conversation'))
+        if is_DM(status):
+            self.error_message(_('Doesn\'t look like a public conversation'))
         else:
-            self.append_timeline(name=name,
+            self.append_timeline(name='Thread',
                                  update_function=self.api.get_thread,
                                  udpate_args=status,
                                  on_error=timeline_not_fetched,
@@ -824,7 +822,7 @@ class Controller(object):
                                     _('Search timeline for "%s" created' % text))
 
         self.append_timeline(name='Search: %s' % text,
-                            update_function=self.api.search, 
+                            update_function=self.api.get_search, 
                             update_args=text,
                             on_success=timeline_created)
 
