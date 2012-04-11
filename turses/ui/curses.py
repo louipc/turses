@@ -99,24 +99,33 @@ class CursesInterface(Frame, UserInterface):
 
     # -- Footer ---------------------------------------------------------------
         
+    def _visible_status_bar(self):
+        return self.footer.__class__ is StatusBar
+
+    def _can_write_status(self):
+        if self.footer is None:
+            self.footer = StatusBar()
+        elif self._visible_status_bar():
+            pass
+        else:
+            return False
+        return True
+
     def status_message(self, text):
-        if self.footer.__class__ is not StatusBar:
-            return
-        self.footer.message(text)
-        self.set_footer(self.footer)
+        if self._can_write_status():
+            self.footer.message(text)
+            self.set_footer(self.footer)
 
     def status_error_message(self, message):
-        if self.footer.__class__ is not StatusBar:
-            return
-        self.footer.error_message(message)
+        if self._can_write_status():
+            self.footer.error_message(message)
 
     def status_info_message(self, message):
-        if self.footer.__class__ is not StatusBar:
-            return
-        self.footer.info_message(message)
+        if self._can_write_status():
+            self.footer.info_message(message)
 
     def clear_status(self):
-        self.footer = StatusBar()
+        self.footer = None
         self.set_footer(self.footer)
 
     # -- Timeline mode --------------------------------------------------------

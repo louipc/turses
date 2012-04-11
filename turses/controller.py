@@ -173,9 +173,11 @@ class KeyHandler(object):
         # Delete buffer
         elif self.is_bound(key, 'delete_buffer'):
             self.controller.delete_buffer()
-        # Clear buffer
+        # Clear status
         elif self.is_bound(key, 'clear'):
-            self.controller.clear_body()
+            # TODO: clear active buffer
+            #self.controller.clear_body()
+            self.controller.clear_status()
         # Mark all as read
         elif self.is_bound(key, 'mark_all_as_read'):
             self.controller.mark_all_as_read()
