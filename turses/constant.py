@@ -110,7 +110,7 @@ params = {
     #'old_skool_border':     False,
     #'box_position':         1,
     #'url_shorter':          'ur1ca',
-    #'logging_level':        3,
+    'logging_level':        3,
     'header_template':      ' {username}{retweeted}{retweeter} - {time}{reply} {retweet_count} ',
     'dm_template':          ' {sender_screen_name} => {recipient_screen_name} - {time} ',
     #'proxy':                None,
