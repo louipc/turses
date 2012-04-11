@@ -98,10 +98,44 @@ class Api(object):
     def destroy_friendship(self, screen_name):
         raise NotImplementedError
 
+    # favorite methods
+
     def create_favorite(self, status):
         raise NotImplementedError
 
     def destroy_favorite(self, status): 
+        raise NotImplementedError
+
+    # list methods
+
+    def get_lists(self, screen_name):
+        raise NotImplementedError
+
+    def get_own_lists(self):
+        raise NotImplementedError
+
+    def get_list_memberships(self):
+        raise NotImplementedError
+
+    def get_list_subscriptions(self):
+        raise NotImplementedError
+
+    def get_list_timeline(self, list):
+        raise NotImplementedError
+
+    def get_list_members(self, list):
+        raise NotImplementedError
+
+    def is_list_member(self, user, list):
+        raise NotImplementedError
+
+    def subscribe_to_list(self, list):
+        raise NotImplementedError
+
+    def get_list_subscribers(self, list):
+        raise NotImplementedError
+
+    def is_list_subscriber(self, user, list):
         raise NotImplementedError
 
 

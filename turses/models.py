@@ -92,8 +92,8 @@ class Status(object):
 
     # TODO make all arguments mandatory
     def __init__(self, 
-                 created_at,
                  id,
+                 created_at,
                  user,
                  text,
                  is_reply=False,
@@ -105,9 +105,9 @@ class Status(object):
                  retweet_count=0,
                  author='',):
                  
+        self.id = id
         self.created_at = created_at
         self.user = user
-        self.id = id
         self.text = html_unescape(text)
         self.is_reply = is_reply
         self.is_retweet = is_retweet
@@ -169,9 +169,30 @@ class DirectMessage(Status):
 
 
 class List(object):
-    # TODO
-    pass
-
+    """
+    A Twitter list. 
+    
+    Api adapters must convert their representations to instances of this class.
+    """
+    
+    def __init__(self,
+                 id,
+                 owner,
+                 created_at,
+                 name,
+                 description,
+                 member_count,
+                 subscriber_count,
+                 private=False,):
+        self.id = id
+        self.owner = owner
+        self.created_at = created_at
+        self.name = name
+        self.description = description
+        self.member_count = member_count
+        self.subscriber_count = subscriber_count
+        self.private = private
+                 
 
 class ActiveList(object):
     """

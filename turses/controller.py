@@ -409,6 +409,7 @@ class Controller(object):
                             update_function=update_function,
                             update_function_args=update_args) 
         timeline.update()
+        timeline.activate_first()
         self.timelines.append_timeline(timeline)
         self.draw_timelines()
 

@@ -8,6 +8,8 @@ This module contains functions used across different modules.
 """
 
 from argparse import ArgumentParser
+from datetime import datetime, timedelta
+from email.utils import parsedate_tz
 from htmlentitydefs import entitydefs
 from time import strftime, gmtime
 from calendar import timegm
@@ -64,6 +66,18 @@ def encode(string):
 
 def timestamp_from_datetime(datetime):
     return timegm(datetime.utctimetuple())
+
+def datetime_from_twitter_datestring(datestring):
+    """
+    Return a datetime object that corresponds to the given `datestring`.
+
+    Twitter API returns date strings with the format: %a %b %d %H:%M:%S %z %Y
+    """
+    # this code is borrowed from a StackOverflow answer: 
+    #   http://stackoverflow.com/a/7704266
+    time_tuple = parsedate_tz(datestring.strip())
+    dt = datetime(*time_tuple[:6])
+    return dt - timedelta(seconds=time_tuple[-1])
 
 def spawn_process(command, args):
     """
