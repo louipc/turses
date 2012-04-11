@@ -13,7 +13,11 @@ The goal of the project is to build a full-featured and flexible Twitter client.
 Installation
 ------------
 
-``turses`` is installed simply by:  ::
+If you downloaded the source code ::
+
+    $ python setup.py install
+
+With ``pip`` ::
 
     $ pip install turses
 
