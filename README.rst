@@ -31,6 +31,7 @@ Features
  - Favorite/Unfavorite
  - Direct Messages
  - Open URLs in browser
+ - Thread view
  - Unread count
  - Search
  - View any user's tweets
@@ -61,7 +62,6 @@ Roadmap
 -------
 
  - Documentation
- - Thread view
  - Lists
  - Geo
  - Blocking
