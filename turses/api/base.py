@@ -179,8 +179,7 @@ class AsyncApi(Api):
         return self._api.get_user_timeline(screen_name=screen_name, **kwargs)
 
     def get_own_timeline(self, **kwargs):
-        return self._api.get_user_timeline(screen_name=self.user.screen_name,
-                                           **kwargs)
+        return self._api.get_own_timeline(**kwargs)
 
     def get_mentions(self, **kwargs):
         return self._api.get_mentions()

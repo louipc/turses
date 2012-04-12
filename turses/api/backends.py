@@ -113,12 +113,22 @@ class TweepyApi(BaseTweepyApi, Api):
     # timelines
 
     def get_home_timeline(self, **kwargs):
-        return self._to_status(self._api.home_timeline(**kwargs))
+        tweets = self._api.home_timeline(**kwargs) 
+        retweets = self._api.retweeted_to_me(**kwargs)
+        tweets.extend(retweets)
+        return self._to_status(tweets)
 
-    # TODO: `get_own_timeline`
     def get_user_timeline(self, screen_name, **kwargs):
         return self._to_status(self._api.user_timeline(screen_name,
                                                        **kwargs))
+
+    def get_own_timeline(self, **kwargs):
+        me = self.verify_credentials()
+        tweets = self._api.user_timeline(screen_name=me.screen_name,
+                                         **kwargs)
+        retweets = self._api.retweeted_by_me(**kwargs)
+        tweets.extend(retweets)
+        return self._to_status(tweets)
 
     def get_mentions(self, **kwargs):
         return self._to_status(self._api.mentions(**kwargs))
@@ -128,7 +138,8 @@ class TweepyApi(BaseTweepyApi, Api):
 
     def get_direct_messages(self, **kwargs):
         dms = self._api.direct_messages(**kwargs)
-        dms.extend(self._api.sent_direct_messages(**kwargs))
+        sent = self._api.sent_direct_messages(**kwargs) 
+        dms.extend(sent)
         return self._to_direct_message(dms)
         
     def get_thread(self, status, **kwargs):
