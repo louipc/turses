@@ -172,29 +172,29 @@ class AsyncApi(Api):
     def verify_credentials(self):
         return self._api.verify_credentials()
 
-    def get_home_timeline(self):
-        return self._api.get_home_timeline()
+    def get_home_timeline(self, **kwargs):
+        return self._api.get_home_timeline(**kwargs)
 
-    def get_user_timeline(self, screen_name):
-        return self._api.get_user_timeline(screen_name=screen_name)
+    def get_user_timeline(self, screen_name, **kwargs):
+        return self._api.get_user_timeline(screen_name=screen_name, **kwargs)
 
-    def get_own_timeline(self):
-        return self._api.get_user_timeline(screen_name=self.user.screen_name)
+    def get_own_timeline(self, **kwargs):
+        return self._api.get_own_timeline(**kwargs)
 
-    def get_mentions(self):
+    def get_mentions(self, **kwargs):
         return self._api.get_mentions()
 
-    def get_favorites(self):
+    def get_favorites(self, **kwargs):
         return self._api.get_favorites()
 
-    def get_direct_messages(self):
-        return self._api.get_direct_messages()
+    def get_direct_messages(self, **kwargs):
+        return self._api.get_direct_messages(**kwargs)
 
-    def get_thread(self, status):
-        return self._api.get_thread(status)
+    def get_thread(self, status, **kwargs):
+        return self._api.get_thread(status, **kwargs)
 
-    def get_search(self, text):
-        return self._api.get_search(text)
+    def get_search(self, text, **kwargs):
+        return self._api.get_search(text, **kwargs)
 
     @wrap_exceptions
     def update(self, text):

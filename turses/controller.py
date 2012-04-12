@@ -23,6 +23,7 @@ from .models import (
 
         get_authors_username, 
         get_mentioned_for_reply, 
+        get_dm_recipients_username,
         get_mentioned_usernames,
         get_hashtags, 
 
@@ -173,9 +174,11 @@ class KeyHandler(object):
         # Delete buffer
         elif self.is_bound(key, 'delete_buffer'):
             self.controller.delete_buffer()
-        # Clear buffer
+        # Clear status
         elif self.is_bound(key, 'clear'):
-            self.controller.clear_body()
+            # TODO: clear active buffer
+            #self.controller.clear_body()
+            self.controller.clear_status()
         # Mark all as read
         elif self.is_bound(key, 'mark_all_as_read'):
             self.controller.mark_all_as_read()
@@ -207,9 +210,6 @@ class KeyHandler(object):
             self.controller.append_thread_timeline()
         # User info
         elif self.is_bound(key, 'user_info'): 
-            self.controller.info_message('Still to implement!')
-        # Search Myself
-        elif self.is_bound(key, 'search_myself'):
             self.controller.info_message('Still to implement!')
         # Follow hashtags
         elif self.is_bound(key, 'hashtags'):
@@ -252,9 +252,6 @@ class KeyHandler(object):
         # Tweet with hashtags
         elif self.is_bound(key, 'tweet_hashtag'): 
             self.controller.tweet_with_hashtags()
-        # Search Current User
-        elif self.is_bound(key, 'search_current_user'): 
-            self.controller.info_message('Still to implement!')
 
     def _external_program_handler(self, key):
         # Open URL
@@ -299,9 +296,7 @@ class Controller(object):
         try:
             self.main_loop()
         except:
-            self.main_loop()
-        else:
-            exit(0)
+            exit(1)
 
     def main_loop(self):
         """
@@ -544,7 +539,53 @@ class Controller(object):
         self.ui.focus_timeline(active_pos)
         self.ui.focus_status(active_timeline.active_index)
 
-    # TODO decorator `timeline_mode` for checking `has_timelines` and drawing
+    def mark_all_as_read(self):
+        """Mark all statuses in active timeline as read."""
+        active_timeline = self.timelines.get_active_timeline()
+        for tweet in active_timeline:
+            tweet.read = True
+        self.update_header()
+
+    def update_active_timeline(self):
+        update_thread = Thread(target=self._update_active_timeline)
+        update_thread.start()
+
+    def _update_active_timeline(self):
+        """Updates the timeline and renders the active timeline."""
+        if self.timelines.has_timelines():
+            active_timeline = self.timelines.get_active_timeline()
+            try:
+                newest = active_timeline[0]
+            except IndexError:
+                return
+            active_timeline.update_with_extra_kwargs(since_id=newest.id)
+            if self.is_in_timeline_mode():
+                self.draw_timelines()
+            self.info_message('%s updated' % active_timeline.name)
+
+    def update_active_timeline_with_newer_statuses(self):
+        update_thread = Thread(target=self._update_with_newer_statuses)
+        update_thread.run()
+
+    def update_active_timeline_with_older_statuses(self):
+        update_thread = Thread(target=self._update_with_older_statuses)
+        update_thread.run()
+
+    def _update_with_newer_statuses(self):
+        """
+        Updates the active timeline with newer tweets than the active.
+        """
+        active_timeline = self.timelines.get_active_timeline()
+        active_status = active_timeline.get_active()
+        active_timeline.update_with_extra_kwargs(since_id=active_status.id)
+
+    def _update_with_older_statuses(self):
+        """
+        Updates the active timeline with older tweets than the active.
+        """
+        active_timeline = self.timelines.get_active_timeline()
+        active_status = active_timeline.get_active()
+        active_timeline.update_with_extra_kwargs(max_id=active_status.id)
 
     def previous_timeline(self):
         if self.timelines.has_timelines():
@@ -619,6 +660,9 @@ class Controller(object):
         self.ui.focus_previous()
         if self.is_in_timeline_mode():
             active_timeline = self.timelines.get_active_timeline()
+            # update with newer tweets when scrolling down being at the bottom
+            if active_timeline.active_index == 0:
+               self.update_active_timeline_with_newer_statuses()
             active_timeline.activate_previous()
             self.draw_timelines()
 
@@ -626,6 +670,9 @@ class Controller(object):
         self.ui.focus_next()
         if self.is_in_timeline_mode():
             active_timeline = self.timelines.get_active_timeline()
+            # update with older tweets when scrolling down being at the bottom
+            if active_timeline.active_index == len(active_timeline) - 1:
+               self.update_active_timeline_with_older_statuses()
             active_timeline.activate_next()
             self.draw_timelines()
 
@@ -657,13 +704,6 @@ class Controller(object):
         """Clear body."""
         self.ui.body.clear()
 
-    def mark_all_as_read(self):
-        """Mark all statuses in active timeline as read."""
-        active_timeline = self.timelines.get_active_timeline()
-        for tweet in active_timeline:
-            tweet.read = True
-        self.update_header()
-
     def clear_status(self):
         """Clear the status bar."""
         self.ui.clear_status()
@@ -674,86 +714,7 @@ class Controller(object):
     def redraw_screen(self):
         raise NotImplementedError
 
-    # -- Twitter -------------------------------------------------------------- 
-
-    def search(self, text=None):
-        text = '' if text is None else text
-        self.ui.show_text_editor(prompt='Search', 
-                                 content=text,
-                                 done_signal_handler=self.search_handler)
-        self.editor_mode()
-
-    def search_user(self):
-        self.ui.show_text_editor(prompt=_('Search user (no need to prepend it with "@")'),
-                                 content='',
-                                 done_signal_handler=self.search_user_handler)
-        self.editor_mode()
-
-    def search_hashtags(self):
-        status = self.timelines.get_focused_status()
-        hashtags = ' '.join(get_hashtags(status))
-        self.search_handler(text=hashtags)
-
-    def tweet(self):
-        self.ui.show_tweet_editor(prompt=_('Tweet'), 
-                                  content='',
-                                  done_signal_handler=self.tweet_handler)
-        self.editor_mode()
-
-    def reply(self):
-        status = self.timelines.get_focused_status()
-
-        if is_DM(status):
-            self.direct_message()
-            return
-
-        author = get_authors_username(status)
-        mentioned = get_mentioned_for_reply(status)
-        try:
-            mentioned.remove('@%s' % self.user.screen_name)
-        except ValueError:
-            pass
-
-        self.ui.show_tweet_editor(prompt=_('Reply to %s' % author),
-                                  content=' '.join(mentioned),
-                                  done_signal_handler=self.tweet_handler)
-        self.editor_mode()
-
-    def direct_message(self):
-        status = self.timelines.get_active_status()
-        recipient = get_authors_username(status)
-        self.ui.show_dm_editor(prompt=_('DM to %s' % recipient), 
-                               content='',
-                               recipient=recipient,
-                               done_signal_handler=self.direct_message_handler)
-        self.editor_mode()
-
-    def tweet_with_hashtags(self):
-        status = self.timelines.get_focused_status()
-        hashtags = ' '.join(get_hashtags(status))
-        if hashtags:
-            # TODO cursor in the begginig
-            self.ui.show_tweet_editor(prompt=_('%s' % hashtags),
-                                      content=hashtags,
-                                      done_signal_handler=self.tweet_handler)
-        self.editor_mode()
-
-    # -- Twitter --------------------------------------------------------------
-
-    def update_active_timeline(self):
-        update_thread = Thread(target=self._update_active_timeline)
-        update_thread.start()
-
-    def _update_active_timeline(self):
-        """Updates the timeline and renders the active timeline."""
-        if self.timelines.has_timelines():
-            active_timeline = self.timelines.get_active_timeline()
-            active_timeline.update()
-            if self.is_in_timeline_mode():
-                self.draw_timelines()
-            self.info_message('%s updated' % active_timeline.name)
-
-    # Editor event handlers
+    # -- Editor event handlers ------------------------------------------------
 
     def tweet_handler(self, text):
         """Handle the post as a tweet of the given `text`."""
@@ -860,7 +821,31 @@ class Controller(object):
                              on_success=timeline_created,
                              on_error=timeline_not_created)
 
-    # -- API ------------------------------------------------------------------
+    # -- Twitter -------------------------------------------------------------- 
+
+    def search(self, text=None):
+        text = '' if text is None else text
+        self.ui.show_text_editor(prompt='Search', 
+                                 content=text,
+                                 done_signal_handler=self.search_handler)
+        self.editor_mode()
+
+    def search_user(self):
+        self.ui.show_text_editor(prompt=_('Search user (no need to prepend it with "@")'),
+                                 content='',
+                                 done_signal_handler=self.search_user_handler)
+        self.editor_mode()
+
+    def search_hashtags(self):
+        status = self.timelines.get_focused_status()
+        hashtags = ' '.join(get_hashtags(status))
+        self.search_handler(text=hashtags)
+
+    def tweet(self):
+        self.ui.show_tweet_editor(prompt=_('Tweet'), 
+                                  content='',
+                                  done_signal_handler=self.tweet_handler)
+        self.editor_mode()
 
     def retweet(self):
         status = self.timelines.get_active_status()
@@ -883,6 +868,47 @@ class Controller(object):
             self.tweet(content=rt_text)
         else:
             self.error_message(_('Tweet too long for manual retweet'))
+
+    def reply(self):
+        status = self.timelines.get_focused_status()
+
+        if is_DM(status):
+            self.direct_message()
+            return
+
+        author = get_authors_username(status)
+        mentioned = get_mentioned_for_reply(status)
+        try:
+            mentioned.remove('@%s' % self.user.screen_name)
+        except ValueError:
+            pass
+
+        self.ui.show_tweet_editor(prompt=_('Reply to %s' % author),
+                                  content=' '.join(mentioned),
+                                  done_signal_handler=self.tweet_handler)
+        self.editor_mode()
+
+    def direct_message(self):
+        status = self.timelines.get_active_status()
+        recipient = get_dm_recipients_username(self.user.screen_name, status)
+        if recipient:
+            self.ui.show_dm_editor(prompt=_('DM to %s' % recipient), 
+                                   content='',
+                                   recipient=recipient,
+                                   done_signal_handler=self.direct_message_handler)
+            self.editor_mode()
+        else:
+            self.error_message(_('What do you mean?'))
+
+    def tweet_with_hashtags(self):
+        status = self.timelines.get_focused_status()
+        hashtags = ' '.join(get_hashtags(status))
+        if hashtags:
+            # TODO cursor in the begginig
+            self.ui.show_tweet_editor(prompt=_('%s' % hashtags),
+                                      content=hashtags,
+                                      done_signal_handler=self.tweet_handler)
+        self.editor_mode()
 
     def delete_tweet(self):
         status = self.timelines.get_active_status()
@@ -969,6 +995,8 @@ class Controller(object):
         self.api.destroy_favorite(on_error=unfavorite_error,
                                   on_success=unfavorite_done,
                                   status=status,)
+
+    # -------------------------------------------------------------------------
 
     def open_urls(self):
         """

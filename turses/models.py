@@ -8,6 +8,7 @@ This module contains the Twitter entities represented in `turses`.
 """
 
 import time
+import re
 from functools import total_ordering
 from bisect import insort
 
@@ -39,11 +40,23 @@ def get_authors_username(status):
 
     return username
 
+def get_dm_recipients_username(sender, status):
+    if is_DM(status):
+        users = [status.sender_screen_name,
+                 status.recipient_screen_name,]
+        if sender in users:
+            users.pop(sender)
+            username = users.pop()
+    else:
+        # status
+        username = status.user
+    return username
+
 def is_username(string):
-    return string.startswith('@') and len(string) > 1
+    return len(string) > 1 and string.startswith('@')
 
 def is_hashtag(string):
-    return string.startswith('#') and len(string) > 1
+    return len(string) > 1 and string.startswith('#')
 
 def sanitize_username(username):
     is_legal_username_char = lambda char: char.isalnum()
@@ -66,7 +79,8 @@ def is_valid_search_text(text):
     return bool(text)
 
 def is_valid_username(username):
-    return username.isalnum()
+    username_regex = re.compile(r'[A-Za-z0-9_]+')
+    return bool(username_regex.match(username))
 
 
 ##
@@ -277,7 +291,8 @@ class Timeline(ActiveList):
                  name='',
                  statuses=None,
                  update_function=None,
-                 update_function_args=None):
+                 update_function_args=None,
+                 update_function_kwargs=None):
         ActiveList.__init__(self)
         self.name = name
 
@@ -292,34 +307,30 @@ class Timeline(ActiveList):
         else:
             self.statuses = []
         self.update_function = update_function
-        if update_function_args:
-            self._extract_args_and_kargs(update_function_args)
-        else:
-            self.update_function_args = None
-            self.update_function_kargs = None
 
-    def _extract_args_and_kargs(self, update_args):
         self.update_function_args = None
-        self.update_function_kargs = None
-        isdict = lambda d : isinstance(d, dict)
-        if isinstance(update_args, tuple):
-            # multiple arguments
+        self.update_function_kwargs = None
+
+        if update_function_args or update_function_kwargs:
+            self._extract_args_and_kwargs(update_function_args,
+                                          update_function_kwargs)
+
+    def _extract_args_and_kwargs(self, update_args, update_kwargs):
+        is_dict = lambda d : isinstance(d, dict)
+        is_tuple = lambda t: isinstance(t, tuple)
+        is_list = lambda l: isinstance(l, list)
+
+        if is_tuple(update_args):
+            # multiple arguments in a tuple
             args = list(update_args)
-            kargs = args.pop()
-            if isdict(kargs):
-                self.update_function_args = args
-                self.update_function_kargs = kargs
-            else:
-                args.append(kargs)
-                self.update_function_args =  args
-        else:
-            # one argument (possibly kargs)
-            if isinstance(update_args, dict):
-                # kargs
-                self.update_function_kargs = update_args
-            else:
-                # args
-                self.update_function_args = update_args
+            self.update_function_args = args
+        elif is_list(update_args) or update_args:
+            # list of args or one arg
+            self.update_function_args = update_args
+
+        if is_dict(update_kwargs):
+            # dict with kwargs
+            self.update_function_kwargs = update_kwargs
 
     def add_status(self, new_status):
         """
@@ -366,20 +377,51 @@ class Timeline(ActiveList):
         # TODO: use a generator (?)
         if not self.update_function:
             return
-        if self.update_function_args and self.update_function_kargs:
-            args = list(self.update_function_args)
-            args.append(self.update_function_kargs)
-            new_statuses = self.update_function(tuple(args))
-        elif self.update_function_args:
-            if isinstance(self.update_function_args, list):
-                args = tuple(self.update_function_args)
-            else:
-                args = self.update_function_args
-            new_statuses = self.update_function(args)
-        elif self.update_function_kargs:
-            new_statuses = self.update_function(self.update_function_kargs)
+
+        args = self.update_function_args
+        kwargs = self.update_function_kwargs
+
+        if args is not None and kwargs is not None:
+            if not isinstance(args, list):
+                args = [self.update_function_args]
+
+            new_statuses = self.update_function(*args, **kwargs)
+
+        elif args:
+            if not isinstance(args, list):
+                args = [self.update_function_args]
+            new_statuses = self.update_function(*args)
+        elif kwargs:
+            new_statuses = self.update_function(**kwargs)
         else:
             new_statuses = self.update_function()
+        self.add_statuses(new_statuses)
+    
+    def update_with_extra_kwargs(self, **extra_kwargs):
+        if not self.update_function:
+            return
+
+        update_args = self.update_function_args
+        update_kwargs = self.update_function_kwargs
+
+        if isinstance(update_args, list):
+            args = update_args
+        elif update_args:
+            args = [update_args]
+
+        if update_kwargs:
+            kwargs = update_kwargs.copy()
+            kwargs.update(extra_kwargs)
+        else:
+            kwargs = extra_kwargs
+
+        if update_args:
+            # both args and kwargs
+            new_statuses = self.update_function(*args, **kwargs) 
+        else:
+            # kwargs only
+            new_statuses = self.update_function(**kwargs) 
+
         self.add_statuses(new_statuses)
 
     def get_unread_count(self):

@@ -1,5 +1,6 @@
 *.egg-info
 *.pyc
+secret.py
 .env
 .coverage
 credentials.py

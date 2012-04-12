@@ -112,25 +112,37 @@ class TweepyApi(BaseTweepyApi, Api):
 
     # timelines
 
-    def get_home_timeline(self):
-        return self._to_status(self._api.home_timeline())
+    def get_home_timeline(self, **kwargs):
+        tweets = self._api.home_timeline(**kwargs) 
+        retweets = self._api.retweeted_to_me(**kwargs)
+        tweets.extend(retweets)
+        return self._to_status(tweets)
 
-    # TODO: `get_own_timeline`
-    def get_user_timeline(self, screen_name):
-        return self._to_status(self._api.user_timeline(screen_name))
+    def get_user_timeline(self, screen_name, **kwargs):
+        return self._to_status(self._api.user_timeline(screen_name,
+                                                       **kwargs))
 
-    def get_mentions(self):
-        return self._to_status(self._api.mentions())
+    def get_own_timeline(self, **kwargs):
+        me = self.verify_credentials()
+        tweets = self._api.user_timeline(screen_name=me.screen_name,
+                                         **kwargs)
+        retweets = self._api.retweeted_by_me(**kwargs)
+        tweets.extend(retweets)
+        return self._to_status(tweets)
 
-    def get_favorites(self):
-        return self._to_status(self._api.favorites())
+    def get_mentions(self, **kwargs):
+        return self._to_status(self._api.mentions(**kwargs))
 
-    def get_direct_messages(self):
-        dms = self._api.direct_messages()
-        dms.extend(self._api.sent_direct_messages())
+    def get_favorites(self, **kwargs):
+        return self._to_status(self._api.favorites(**kwargs))
+
+    def get_direct_messages(self, **kwargs):
+        dms = self._api.direct_messages(**kwargs)
+        sent = self._api.sent_direct_messages(**kwargs) 
+        dms.extend(sent)
         return self._to_direct_message(dms)
         
-    def get_thread(self, status):
+    def get_thread(self, status, **kwargs):
         author = get_authors_username(status)
         mentioned = get_mentioned_usernames(status)
         if author not in mentioned:
@@ -138,7 +150,7 @@ class TweepyApi(BaseTweepyApi, Api):
         
         tweets = []
         for username in mentioned:
-            tweets.extend(self.get_user_timeline(username))
+            tweets.extend(self.get_user_timeline(username, **kwargs))
 
         def belongs_to_conversation(status):
             for username in mentioned:
@@ -147,7 +159,7 @@ class TweepyApi(BaseTweepyApi, Api):
 
         return filter(belongs_to_conversation, tweets)
 
-    def get_search(self, text):
+    def get_search(self, text, **kwargs):
         # `tweepy.API.search` returns `tweepy.models.SearchResult` objects instead
         # `tweepy.models.Status` so we have to convert them differently
         def to_status(status):
@@ -159,7 +171,7 @@ class TweepyApi(BaseTweepyApi, Api):
             }
             return Status(**kwargs)
 
-        results = self._api.search(text)
+        results = self._api.search(text, **kwargs)
         return [to_status(result) for result in results]
 
     def update(self, text):

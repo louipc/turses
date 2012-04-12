@@ -99,24 +99,33 @@ class CursesInterface(Frame, UserInterface):
 
     # -- Footer ---------------------------------------------------------------
         
+    def _visible_status_bar(self):
+        return self.footer.__class__ is StatusBar
+
+    def _can_write_status(self):
+        if self.footer is None:
+            self.footer = StatusBar()
+        elif self._visible_status_bar():
+            pass
+        else:
+            return False
+        return True
+
     def status_message(self, text):
-        if self.footer.__class__ is not StatusBar:
-            return
-        self.footer.message(text)
-        self.set_footer(self.footer)
+        if self._can_write_status():
+            self.footer.message(text)
+            self.set_footer(self.footer)
 
     def status_error_message(self, message):
-        if self.footer.__class__ is not StatusBar:
-            return
-        self.footer.error_message(message)
+        if self._can_write_status():
+            self.footer.error_message(message)
 
     def status_info_message(self, message):
-        if self.footer.__class__ is not StatusBar:
-            return
-        self.footer.info_message(message)
+        if self._can_write_status():
+            self.footer.info_message(message)
 
     def clear_status(self):
-        self.footer = StatusBar()
+        self.footer = None
         self.set_footer(self.footer)
 
     # -- Timeline mode --------------------------------------------------------
@@ -566,23 +575,21 @@ class HelpBuffer(ScrollableListBoxWrapper):
         self.insert_help_item('delete_fav', _('Remove a tweet from favorites'))
 
         self.insert_division(_('Timelines'))
-        self.insert_help_item('home', _('Go to home timeline'))
-        self.insert_help_item('favorites', _('Go to favorites timeline'))
-        self.insert_help_item('mentions', _('Go to mentions timeline'))
-        self.insert_help_item('DMs', _('Go to direct message timeline'))
+        self.insert_help_item('home', _('Open a home timeline'))
+        self.insert_help_item('favorites', _('Open a favorites timeline'))
+        self.insert_help_item('mentions', _('Open a mentions timeline'))
+        self.insert_help_item('DMs', _('Open a direct message timeline'))
         self.insert_help_item('search', _('Search for term and show resulting timeline'))
-        self.insert_help_item('search_user', _('Show somebody\'s public timeline'))
-        self.insert_help_item('search_myself', _('Show your public timeline'))
         self.insert_help_item('hashtags', _('Search the hashtags of the focused status'))
         self.insert_help_item('thread', _('Open selected thread'))
-        self.insert_help_item('user_info', _('Show user information '))
-        self.insert_help_item('help', _('Show help buffer'))
+        
+        #self.insert_help_item('user_info', _('Show user information '))
 
         # Others
         self.insert_division(_('Others'))
         self.insert_help_item('quit', _('Leave turses'))
+        self.insert_help_item('help', _('Show help buffer'))
         self.insert_help_item('openurl', _('Open URL in browser'))
-        self.insert_help_item('open_image', _('Open image'))
         self.insert_help_item('redraw', _('Redraw the screen'))
 
     def insert_header(self):
