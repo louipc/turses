@@ -757,7 +757,11 @@ class Controller(object):
         """Updates the timeline and renders the active timeline."""
         if self.timelines.has_timelines():
             active_timeline = self.timelines.get_active_timeline()
-            active_timeline.update()
+            try:
+                newest = active_timeline[0]
+            except IndexError:
+                return
+            active_timeline.update_with_extra_kwargs(since_id=newest.id)
             if self.is_in_timeline_mode():
                 self.draw_timelines()
             self.info_message('%s updated' % active_timeline.name)
