@@ -8,6 +8,7 @@ This module contains the Twitter entities represented in `turses`.
 """
 
 import time
+import re
 from functools import total_ordering
 from bisect import insort
 
@@ -78,7 +79,8 @@ def is_valid_search_text(text):
     return bool(text)
 
 def is_valid_username(username):
-    return username.isalnum()
+    username_regex = re.compile(r'[A-Za-z0-9_]+')
+    return bool(username_regex.match(username))
 
 
 ##
