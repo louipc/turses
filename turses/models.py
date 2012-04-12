@@ -39,11 +39,23 @@ def get_authors_username(status):
 
     return username
 
+def get_dm_recipients_username(sender, status):
+    if is_DM(status):
+        users = [status.sender_screen_name,
+                 status.recipient_screen_name,]
+        if sender in users:
+            users.pop(sender)
+            username = users.pop()
+    else:
+        # status
+        username = status.user
+    return username
+
 def is_username(string):
-    return string.startswith('@') and len(string) > 1
+    return len(string) > 1 and string.startswith('@')
 
 def is_hashtag(string):
-    return string.startswith('#') and len(string) > 1
+    return len(string) > 1 and string.startswith('#')
 
 def sanitize_username(username):
     is_legal_username_char = lambda char: char.isalnum()

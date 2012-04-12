@@ -23,6 +23,7 @@ from .models import (
 
         get_authors_username, 
         get_mentioned_for_reply, 
+        get_dm_recipients_username,
         get_mentioned_usernames,
         get_hashtags, 
 
@@ -210,9 +211,6 @@ class KeyHandler(object):
         # User info
         elif self.is_bound(key, 'user_info'): 
             self.controller.info_message('Still to implement!')
-        # Search Myself
-        elif self.is_bound(key, 'search_myself'):
-            self.controller.info_message('Still to implement!')
         # Follow hashtags
         elif self.is_bound(key, 'hashtags'):
             self.controller.search_hashtags()
@@ -254,9 +252,6 @@ class KeyHandler(object):
         # Tweet with hashtags
         elif self.is_bound(key, 'tweet_hashtag'): 
             self.controller.tweet_with_hashtags()
-        # Search Current User
-        elif self.is_bound(key, 'search_current_user'): 
-            self.controller.info_message('Still to implement!')
 
     def _external_program_handler(self, key):
         # Open URL
@@ -896,12 +891,15 @@ class Controller(object):
 
     def direct_message(self):
         status = self.timelines.get_active_status()
-        recipient = get_authors_username(status)
-        self.ui.show_dm_editor(prompt=_('DM to %s' % recipient), 
-                               content='',
-                               recipient=recipient,
-                               done_signal_handler=self.direct_message_handler)
-        self.editor_mode()
+        recipient = get_dm_recipients_username(self.user.screen_name, status)
+        if recipient:
+            self.ui.show_dm_editor(prompt=_('DM to %s' % recipient), 
+                                   content='',
+                                   recipient=recipient,
+                                   done_signal_handler=self.direct_message_handler)
+            self.editor_mode()
+        else:
+            self.error_message(_('What do you mean?'))
 
     def tweet_with_hashtags(self):
         status = self.timelines.get_focused_status()
