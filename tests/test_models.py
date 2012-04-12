@@ -154,6 +154,44 @@ class TimelineTest(unittest.TestCase):
         self.timeline.add_statuses([old_status, new_status])
         self.assertEqual(len(self.timeline), 2)
 
+    # update function related
+
+    def test_extract_update_args_and_kwargs_no_args(self):
+        mock = MagicMock(name='update')
+        timeline = Timeline(update_function=mock,)
+
+        self.assertEqual(timeline.update_function_args, None)
+        self.assertEqual(timeline.update_function_kwargs, None)
+
+    def test_extract_update_args_and_kwargs_only_args(self):
+        mock = MagicMock(name='update')
+        args = 'python', 42
+        timeline = Timeline(update_function=mock,
+                            update_function_args=args,)
+
+        self.assertEqual(timeline.update_function_args, list(args))
+        self.assertEqual(timeline.update_function_kwargs, None)
+
+    def test_extract_update_args_and_kwargs_only_kwargs(self):
+        mock = MagicMock(name='update')
+        kwargs = {'python': 'rocks'}
+        timeline = Timeline(update_function=mock,
+                            update_function_kwargs=kwargs)
+
+        self.assertEqual(timeline.update_function_args, None)
+        self.assertEqual(timeline.update_function_kwargs, kwargs)
+
+    def test_extract_update_args_and_kwargs_only_kwargs(self):
+        mock = MagicMock(name='update')
+        args = 'python', 42
+        kwargs = {'python': 'rocks'}
+        timeline = Timeline(update_function=mock,
+                            update_function_args=args,
+                            update_function_kwargs=kwargs)
+
+        self.assertEqual(timeline.update_function_args, list(args))
+        self.assertEqual(timeline.update_function_kwargs, kwargs)
+
     def test_update_with_no_args(self):
         mock = MagicMock(name='update')
         timeline = Timeline(update_function=mock,)
@@ -163,30 +201,100 @@ class TimelineTest(unittest.TestCase):
     def test_update_with_one_arg(self):
         mock = MagicMock(name='update')
         arg = '#python'
-        timeline = Timeline(update_function=mock, update_function_args=arg)
+        timeline = Timeline(update_function=mock, 
+                            update_function_args=arg)
         timeline.update()
+
         mock.assert_called_once_with(arg)
 
     def test_update_with_multiple_args(self):
         mock = MagicMock(name='update')
+        args = '#python', '#mock'
+        timeline = Timeline(update_function=mock, 
+                            update_function_args=args)
+        timeline.update()
+        args = list(args)
+
+        mock.assert_called_once_with(*args)
+
+    def test_update_with_kwargs(self):
+        mock = MagicMock(name='update')
+        kwargs = {'text': '#python', 'action': 'search'}
+        timeline = Timeline(update_function=mock, 
+                            update_function_kwargs=kwargs)
+        timeline.update()
+
+        mock.assert_called_once_with(**kwargs)
+
+    def test_update_with_args_and_kwargs(self):
+        mock = MagicMock(name='update')
+        args = 'twitter', 42 
+        kwargs = {'text': '#python', 'action': 'search'}
+        update_args = list(args)
+        update_args.append(kwargs)
+        timeline = Timeline(update_function=mock, 
+                            update_function_args=args,
+                            update_function_kwargs=kwargs)
+        timeline.update()
+
+        args = list(args)
+        mock.assert_called_once_with(*args, **kwargs)
+
+    def test_update_with_no_args_extra_kwargs(self):
+        mock = MagicMock(name='update')
+        timeline = Timeline(update_function=mock,)
+        extra_kwargs = {'python': 'rocks'}
+        timeline.update_with_extra_kwargs(**extra_kwargs)
+
+        mock.assert_called_once_with(**extra_kwargs)
+
+    def test_update_with_one_arg_extra_kwargs(self):
+        mock = MagicMock(name='update')
+        arg = '#python'
+        timeline = Timeline(update_function=mock, update_function_args=arg)
+        extra_kwargs = {'python': 'rocks'}
+        timeline.update_with_extra_kwargs(**extra_kwargs)
+
+        mock.assert_called_once_with(arg, **extra_kwargs)
+
+    def test_update_with_multiple_args_extra_kwargs(self):
+        mock = MagicMock(name='update')
         args = ('#python', '#mock')
-        timeline = Timeline(update_function=mock, update_function_args=args)
-        timeline.update()
-        mock.assert_called_once_with(args)
+        timeline = Timeline(update_function=mock, 
+                            update_function_args=args)
+        extra_kwargs = {'python': 'rocks'}
+        timeline.update_with_extra_kwargs(**extra_kwargs)
 
-    def test_update_with_kargs(self):
-        mock = MagicMock(name='update')
-        args = ({'text': '#python', 'action': 'search'})
-        timeline = Timeline(update_function=mock, update_function_args=args)
-        timeline.update()
-        mock.assert_called_once_with(args)
+        args = list(args)
+        mock.assert_called_once_with(*args, **extra_kwargs)
 
-    def test_update_with_args_and_kargs(self):
+    def test_update_with_kwargs_extra_kwargs(self):
         mock = MagicMock(name='update')
-        args = ('twitter', 42, {'text': '#python', 'action': 'search'})
-        timeline = Timeline(update_function=mock, update_function_args=args)
-        timeline.update()
-        mock.assert_called_once_with(args)
+        kwargs = {'text': '#python', 'action': 'search'}
+        timeline = Timeline(update_function=mock, 
+                            update_function_kwargs=kwargs)
+        extra_kwargs = {'text': 'rocks'}
+        timeline.update_with_extra_kwargs(**extra_kwargs)
+
+        args = kwargs.copy()
+        args.update(extra_kwargs)
+        mock.assert_called_once_with(**args)
+
+    def test_update_with_args_and_kwargs_extra_kwargs(self):
+        mock = MagicMock(name='update')
+        args = 'twitter', 42
+        kwargs = {'text': '#python', 'action': 'search'}
+        timeline = Timeline(update_function=mock, 
+                            update_function_args=args,
+                            update_function_kwargs=kwargs)
+
+        extra_kwargs = {'text': 'rocks'}
+        timeline.update_with_extra_kwargs(**extra_kwargs)
+
+        args = list(args)
+        kwargs = kwargs.copy()
+        kwargs.update(extra_kwargs)
+        mock.assert_called_once_with(*args, **kwargs)
 
 
 class TimelineListTest(unittest.TestCase):

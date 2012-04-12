@@ -622,6 +622,9 @@ class Controller(object):
         self.ui.focus_previous()
         if self.is_in_timeline_mode():
             active_timeline = self.timelines.get_active_timeline()
+            # update with newer tweets when scrolling down being at the bottom
+            if active_timeline.active_index == 0:
+               self.update_active_timeline_with_newer_statuses()
             active_timeline.activate_previous()
             self.draw_timelines()
 
@@ -629,6 +632,9 @@ class Controller(object):
         self.ui.focus_next()
         if self.is_in_timeline_mode():
             active_timeline = self.timelines.get_active_timeline()
+            # update with older tweets when scrolling down being at the bottom
+            if active_timeline.active_index == len(active_timeline) - 1:
+               self.update_active_timeline_with_older_statuses()
             active_timeline.activate_next()
             self.draw_timelines()
 
@@ -755,6 +761,32 @@ class Controller(object):
             if self.is_in_timeline_mode():
                 self.draw_timelines()
             self.info_message('%s updated' % active_timeline.name)
+
+    def update_active_timeline_with_newer_statuses(self):
+        update_thread = Thread(target=self._update_with_newer_statuses)
+        update_thread.run()
+
+    def update_active_timeline_with_older_statuses(self):
+        update_thread = Thread(target=self._update_with_older_statuses)
+        update_thread.run()
+
+    def _update_with_newer_statuses(self):
+        """
+        Updates the active timeline with newer tweets than the active.
+        """
+        active_timeline = self.timelines.get_active_timeline()
+        active_status = active_timeline.get_active()
+        active_timeline.update_with_extra_kwargs(since_id=active_status.id)
+        #self.draw_timelines()
+
+    def _update_with_older_statuses(self):
+        """
+        Updates the active timeline with older tweets than the active.
+        """
+        active_timeline = self.timelines.get_active_timeline()
+        active_status = active_timeline.get_active()
+        active_timeline.update_with_extra_kwargs(max_id=active_status.id)
+        #self.draw_timelines()
 
     # Editor event handlers
 
