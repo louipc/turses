@@ -1,3 +1,9 @@
+0.0.15
+------
+- bugfix: DM recipient was not correctly resolved
+- fetch newer tweets when scrolling up from the top and viceversa
+- show retweets by default
+
 0.0.14
 ------
 - bugfix: logging

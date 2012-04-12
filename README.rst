@@ -65,12 +65,10 @@ Any feedback is very much appreciated.
 Roadmap
 -------
 
- - Documentation
  - Lists
+ - Documentation
  - Geo
  - Blocking
- - Improve settings
-
 
 Screenshots
 -----------
