@@ -13,12 +13,7 @@ from curses import ascii
 from ConfigParser import RawConfigParser
 from os import environ, path, makedirs, mkdir
 from gettext import gettext as _
-
-try:
-    from urlparse import parse_qsl
-except ImportError:
-    pass
-    #from cgi import parse_qsl
+from urlparse import parse_qsl
 
 from . import constant
 from .utils import encode
@@ -52,7 +47,6 @@ class Configuration(object):
     def init_config(self):
         self.keys    = constant.key
         self.params  = constant.params
-        self.filter  = constant.filter
         self.palette = constant.palette
 
     def get_xdg_config(self):
@@ -139,7 +133,6 @@ class Configuration(object):
         self.parse_color()
         self.parse_keys()
         self.parse_params()
-        self.parse_filter()
         self.init_logger()
 
     def parse_color(self):
@@ -185,41 +178,14 @@ class Configuration(object):
             self.params['retweet_by'] = int(self.conf.get('params', 'retweet_by'))
 
         # Openurl_command
-        if self.conf.has_option('params', 'openurl_command'):
+        #  NOTE: originally `openurl_command` configuration parameter was
+        #        prioritary but I'm deprecating this, using the BROWSER
+        #        environment variable instead.
+        if self.browser != '':
+            self.params['openurl_command'] = self.browser
+        elif self.conf.has_option('params', 'openurl_command'):
             self.params['openurl_command'] = self.conf.get('params',
                 'openurl_command')
-        elif self.browser != '':
-            self.params['openurl_command'] = self.browser
-
-        if self.conf.has_option('params', 'open_image_command'):
-            self.params['open_image_command'] = self.conf.get('params',
-                'open_image_command')
-
-        # Transparency
-        if self.conf.has_option('params', 'transparency'):
-            if int(self.conf.get('params', 'transparency')) == 0:
-                self.params['transparency'] = False
-        # Compress display
-        if self.conf.has_option('params', 'compact'):
-            if int(self.conf.get('params', 'compact')) == 1:
-                self.params['compact'] = True
-        # Help bar
-        # XXX
-        #  in `turses` the 'help' parameter associates the key binding
-        #  for showing program's help
-        #if self.conf.has_option('params', 'help'):
-            #if int(self.conf.get('params', 'help')) == 0:
-                #self.params['help'] = False
-
-        #if self.conf.has_option('params', 'margin'):
-            #self.params['margin'] = int(self.conf.get('params', 'margin'))
-
-        if self.conf.has_option('params', 'padding'):
-            self.params['padding'] = int(self.conf.get('params', 'padding'))
-
-        if self.conf.has_option('params', 'old_skool_border'):
-            if int(self.conf.get('params', 'old_skool_border')) == 1:
-                self.params['old_skool_border'] = True
 
         if self.conf.has_option('params', 'logging_level'):
             self.params['logging_level'] = self.conf.get('params', 'logging_level')
@@ -229,27 +195,6 @@ class Configuration(object):
 
         if self.conf.has_option('params', 'dm_template'):
             self.params['dm_template'] = self.conf.get('params', 'dm_template')
-
-        if self.conf.has_option('params', 'proxy'):
-            self.params['proxy'] = self.conf.get('params', 'proxy')
-
-        if self.conf.has_option('params', 'beep'):
-            self.params['beep'] = self.conf.getboolean('params', 'beep')
-
-    def parse_filter(self):
-        if self.conf.has_option('filter', 'activate'):
-            if int(self.conf.get('filter', 'activate')) == 1:
-                self.filter['activate'] = True
-
-        if self.conf.has_option('filter', 'myself'):
-            if int(self.conf.get('filter', 'myself')) == 1:
-                self.filter['myself'] = True
-
-        if self.conf.has_option('filter', 'behavior'):
-            self.filter['behavior'] = self.conf.get('filter', 'behavior')
-
-        if self.conf.has_option('filter', 'except'):
-            self.filter['except'] = self.conf.get('filter', 'except').split(' ')
 
     def init_logger(self):
         log_file = self.xdg_config + '/turses/turses.log'
@@ -279,6 +224,7 @@ class Configuration(object):
         elif lvl == 4:
             return logging.ERROR
 
+    # TODO: can `tweepy` be used for this?
     def authorization(self):
         ''' This function from python-twitter developers '''
         # Copyright 2007 The Python-Twitter Developers
@@ -363,18 +309,9 @@ class Configuration(object):
 
         print encode(_('your account has been saved'))
 
-    def load_last_read(self):
-        try:
-            conf = RawConfigParser()
-            conf.read(self.token_file)
-            return conf.get('token', 'last_read')
-        except:
-            return False
-
     def save_last_read(self, last_read):
         conf = RawConfigParser()
         conf.read(self.token_file)
-        conf.set('token', 'last_read', last_read)
 
         with open(self.token_file, 'wb') as tokens:
             conf.write(tokens)
