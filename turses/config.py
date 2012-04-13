@@ -257,6 +257,7 @@ SECTION_KEY_BINDINGS = 'bindings'
 SECTION_PALETTE = 'colors'
 SECTION_STYLES = 'styles'
 SECTION_DEBUG = 'debug'
+SECTION_TOKEN = 'token'
 
 
 class Configuration(object):
@@ -360,6 +361,23 @@ class Configuration(object):
 
         print encode(_('Generated configuration file in %s')) % config_file
 
+    def generate_token_file(self, 
+                          token_file,
+                          oauth_token,
+                          oauth_token_secret):
+        self.oauth_token = oauth_token
+        self.oauth_token_secret = oauth_token_secret
+
+        conf = RawConfigParser()
+        conf.add_section(SECTION_TOKEN)
+        conf.set(SECTION_TOKEN, 'oauth_token', oauth_token)
+        conf.set(SECTION_TOKEN, 'oauth_token_secret', oauth_token_secret)
+
+        with open(self.token_file, 'wb') as tokens:
+            conf.write(tokens)
+
+        print encode(_('your account has been saved'))
+
     def parse_config_file(self, config_file):
         self._conf = RawConfigParser()
         self._conf.read(config_file)
@@ -374,19 +392,36 @@ class Configuration(object):
             if self._conf.has_option(SECTION_KEY_BINDINGS, binding):
                 key, description = self.key_bindings[binding]
                 custom_key = self._conf.get(SECTION_KEY_BINDINGS, binding) 
-                self.key_bindings[binding] = custom_key
+                self.key_bindings[binding] = custom_key, description
 
     def _parse_palette(self):
-        pass
+        # Color
+        for label in self.palette:
+            label_name, fg, bg = label[0], label[1], label[2]
+            if self._conf.has_option(SECTION_PALETTE, label_name):
+                fg = self._conf.get(SECTION_PALETTE, label_name)
+            if self._conf.has_option(SECTION_PALETTE, label_name + '_bg'):
+                bg = self._conf.get(SECTION_PALETTE, label_name + '_bg')
+            label[1] = fg
+            label[2] = bg
 
     def _parse_styles(self):
-        pass
+        for style in self.styles:
+            if self._conf.has_option(SECTION_STYLES, style):
+                self.styles[style] = self._conf.get(SECTION_STYLES, style)
 
     def _parse_debug(self):
-        pass
+        if self._conf.has_option(SECTION_DEBUG, 'logging_level'):
+            self.logging_level = self._conf.get(SECTION_DEBUG, 'logging_level')
 
     def parse_token_file(self, token_file):
-        pass
+        self._conf = RawConfigParser()
+        self._conf.read(token_file)
+
+        if self._conf.has_option(SECTION_TOKEN, 'oauth_token'):
+            self.oauth_token = self._conf.get(SECTION_TOKEN, 'oauth_token')
+        if self._conf.has_option(SECTION_TOKEN, 'oauth_token_secret'):
+            self.oauth_token_secret = self._conf.get(SECTION_TOKEN, 'oauth_token_secret')
 
     def authorize_new_account(self):
         access_token = authorization()
@@ -398,20 +433,3 @@ class Configuration(object):
         else:
             # TODO: exit codes
             exit(2)
-
-    def create_token_file(self, 
-                          token_file,
-                          oauth_token,
-                          oauth_token_secret):
-        self.oauth_token = oauth_token
-        self.oauth_token_secret = oauth_token_secret
-
-        conf = RawConfigParser()
-        conf.add_section('token')
-        conf.set('token', 'oauth_token', oauth_token)
-        conf.set('token', 'oauth_token_secret', oauth_token_secret)
-
-        with open(self.token_file, 'wb') as tokens:
-            conf.write(tokens)
-
-        print encode(_('your account has been saved'))

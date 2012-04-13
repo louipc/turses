@@ -36,6 +36,14 @@ from urwid import (
 from urwid import __version__ as urwid_version
 
 from .. import __version__
+from ..config import (
+        MOTION_KEY_BINDINGS,
+        BUFFERS_KEY_BINDINGS,
+        TWEETS_KEY_BINDINGS,
+        TIMELINES_KEY_BINDINGS,
+        META_KEY_BINDINGS,
+        TURSES_KEY_BINDINGS,
+)
 from ..models import is_DM, get_authors_username
 from ..utils import encode 
 from .base import UserInterface
@@ -525,72 +533,37 @@ class HelpBuffer(ScrollableListBoxWrapper):
                                           ScrollableListBox(self.items,
                                                             offset=offset,))
 
+    def _insert_bindings(self, bindings):
+        for label in bindings:
+            values = self.configuration.key_bindings[label]
+            key, description = values[0], values[1]
+            widgets = [
+                ('fixed', self.col[0], Text('  ' + label)), 
+                ('fixed', self.col[1], Text(key)),
+                Text(description) 
+            ]
+            self.items.append(Columns(widgets))
+
     def create_help_buffer(self):
         self.insert_header()
-        # Motion
-        self.insert_division(_('Motion'))
-        self.insert_help_item('up', _('Scroll up one tweet'))
-        self.insert_help_item('down', _('Scroll down one tweet'))
-        self.insert_help_item('left', _('Activate the timeline on the left'))
-        self.insert_help_item('right', _('Activate the timeline on the right'))
-        self.insert_help_item('scroll_to_top', _('Scroll to first tweet'))
-        self.insert_help_item('scroll_to_bottom', _('Scroll to last tweet'))
 
-        self.insert_division(_('Buffers'))
-        self.insert_help_item('shift_buffer_left', _('Shift active buffer one position to the left'))
-        self.insert_help_item('shift_buffer_right', _('Shift active buffer one position to the right'))
-        self.insert_help_item('shift_buffer_beggining', _('Shift active buffer to the beggining'))
-        self.insert_help_item('shift_buffer_end', _('Shift active buffer to the end'))
-        self.insert_help_item('activate_first_buffer', _('Activate first buffer'))
-        self.insert_help_item('activate_last_buffer', _('Activate last buffer'))
-        self.insert_help_item('shift_buffer_beggining', _('Shift active buffer to the beggining'))
-        self.insert_help_item('shift_buffer_end', _('Shift active buffer to the end'))
-        self.insert_help_item('expand_visible_left', _('Expand visible timelines one column to the left'))
-        self.insert_help_item('expand_visible_right', _('Expand visible timelines one column to the right'))
-        self.insert_help_item('shrink_visible_left', _('Shrink visible timelines one column from the left'))
-        self.insert_help_item('shrink_visible_right', _('Shrink visible timelines one column from the left'))
-        self.insert_help_item('delete_buffer', _('Delete active buffer'))
-        self.insert_help_item('clear', _('Clear active buffer'))
-        self.insert_help_item('mark_all_as_read', _('Mark all tweets in timeline as read'))
+        self.insert_title(_('Motion'))
+        self._insert_bindings(MOTION_KEY_BINDINGS)
 
-        # Twitter
-        self.insert_division(_('Tweets'))
-        self.insert_help_item('tweet', _('Compose a tweet'))
-        self.insert_help_item('delete_tweet', _('Delete selected tweet (must be yours)'))
-        self.insert_help_item('reply', _('Reply to selected tweet'))
-        self.insert_help_item('retweet', _('Retweet selected tweet'))
-        self.insert_help_item('retweet_and_edit', _('Retweet selected tweet editing it first'))
-        self.insert_help_item('sendDM', _('Send direct message'))
-        self.insert_help_item('update', _('Refresh current timeline'))
-        self.insert_help_item('tweet_hashtag', _('Compose a tweet with the same hashtags as the focused'))
+        self.insert_title(_('Buffers'))
+        self._insert_bindings(BUFFERS_KEY_BINDINGS)
 
-        self.insert_division(_('Friendship'))
-        self.insert_help_item('follow_selected', _('Follow selected tweet\'s author'))
-        self.insert_help_item('unfollow_selected', _('Unfollow selected tweet\'s author'))
+        self.insert_title(_('Tweets'))
+        self._insert_bindings(TWEETS_KEY_BINDINGS)
 
-        self.insert_division(_('Favorites'))
-        self.insert_help_item('fav', _('Mark selected tweet as favorite'))
-        self.insert_help_item('delete_fav', _('Remove a tweet from favorites'))
+        self.insert_title(_('Timelines'))
+        self._insert_bindings(TIMELINES_KEY_BINDINGS)
 
-        self.insert_division(_('Timelines'))
-        self.insert_help_item('home', _('Open a home timeline'))
-        self.insert_help_item('favorites', _('Open a favorites timeline'))
-        self.insert_help_item('mentions', _('Open a mentions timeline'))
-        self.insert_help_item('DMs', _('Open a direct message timeline'))
-        self.insert_help_item('search', _('Search for term and show resulting timeline'))
-        self.insert_help_item('search_user', _('Open the timeline of the specified user'))
-        self.insert_help_item('hashtags', _('Search the hashtags of the focused status'))
-        self.insert_help_item('thread', _('Open selected thread'))
-        self.insert_help_item('user_timeline', _('Open focused status author\'s timeline'))
-        
-        #self.insert_help_item('user_info', _('Show user information '))
+        self.insert_title(_('Meta'))
+        self._insert_bindings(META_KEY_BINDINGS)
 
-        # Others
-        self.insert_division(_('Others'))
-        self.insert_help_item('quit', _('Leave turses'))
-        self.insert_help_item('help', _('Show help buffer'))
-        self.insert_help_item('openurl', _('Open URL in browser'))
-        self.insert_help_item('redraw', _('Redraw the screen'))
+        self.insert_title(_('Turses'))
+        self._insert_bindings(TURSES_KEY_BINDINGS)
 
     def insert_header(self):
         widgets = [
@@ -600,18 +573,9 @@ class HelpBuffer(ScrollableListBoxWrapper):
         ]
         self.items.append(Columns(widgets))
 
-    def insert_division(self, title):
+    def insert_title(self, title):
         self.items.append(Divider(' '))
         self.items.append(Padding(AttrWrap(Text(title), 'focus'), left=4))
-        self.items.append(Divider(' '))
-
-    def insert_help_item(self, key, description):
-        widgets = [
-            ('fixed', self.col[0], Text('  ' + key)), 
-            ('fixed', self.col[1], Text(self.configuration.keys[key])),
-            Text(description) 
-        ]
-        self.items.append(Columns(widgets))
 
     # from `ScrollableListBoxWrapper`
 
@@ -732,7 +696,7 @@ class StatusWidget(WidgetWrap):
             retweet_count = str(status.retweet_count)
             
         # create header
-        header_template = ' ' + self.configuration.params['header_template'] + ' '
+        header_template = ' ' + self.configuration.styles['header_template'] + ' '
         header = unicode(header_template).format(
             username= username,
             retweeted = retweeted,
@@ -746,7 +710,7 @@ class StatusWidget(WidgetWrap):
 
     def _dm_header(self, dm):
         try:
-            dm_template = ' ' + self.configuration.params['dm_template'] + ' '
+            dm_template = ' ' + self.configuration.styles['dm_template'] + ' '
         except AttributeError:
             # legacy configuration support
             dm_template = ' {sender_screen_name} -> {recipient_screen_name} - {time} '
