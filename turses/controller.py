@@ -70,7 +70,7 @@ class KeyHandler(object):
         Return True if `key` corresponds to the action specified by `name`.
         """
         try:
-            bound_key = self.configuration.keys[name]
+            bound_key, bound_key_description = self.configuration.key_bindings[name]
         except KeyError:
             return False
         else:
@@ -1054,15 +1054,11 @@ class Controller(object):
 class CursesController(Controller):
     """Controller for the curses implementation.""" 
 
-    def __init__(self, palette, *args, **kwargs):
-        self.palette = palette
-        Controller.__init__(self, *args, **kwargs)
-
     def main_loop(self):
         if not hasattr(self, 'loop'):
             self.key_handler = KeyHandler(self.configuration, self)
             self.loop = urwid.MainLoop(self.ui,
-                                       self.palette, 
+                                       self.configuration.palette, 
                                        input_filter=self.key_handler.handle,)
         self.loop.run()
 
