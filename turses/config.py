@@ -7,45 +7,17 @@ turses.config
 This module contains a class for managing the configuration.
 """
 
-import os
-import sys
 import logging
-import ConfigParser
 import oauth2 as oauth
 from curses import ascii
+from ConfigParser import RawConfigParser
+from os import environ, path, makedirs, mkdir
 from gettext import gettext as _
+from urlparse import parse_qsl
 
-try:
-    from urlparse import parse_qsl
-except ImportError:
-    pass
-    #from cgi import parse_qsl
-
-from . import defaults
-from .util import encode
-
-
-def print_ask_service(token_file):
-    print ''
-    print encode(_('Couldn\'t find any profile.'))
-    print ''
-    print encode(_('It should reside in: %s')) % token_file
-    print encode(_('If you want to setup a new account, then follow these steps'))
-    print encode(_('If you want to skip this, just press return or ctrl-C.'))
-    print ''
-
-    print ''
-    print encode(_('Which service do you want to use?'))
-    print ''
-    print '1. Twitter'
-    print '2. Identi.ca'
-    print ''
-
-def print_ask_root_url():
-    print ''
-    print ''
-    print encode(_('Which root url do you want? (leave blank for default, https://identi.ca/api)'))
-    print ''
+from . import constant
+from .utils import encode
+from .api.base import twitter_consumer_key, twitter_consumer_secret
 
 
 class Configuration(object):
@@ -54,23 +26,22 @@ class Configuration(object):
     def __init__(self, args):
         # read defaults
         self.init_config()
-
         # read environment variables
-        self.home = os.environ['HOME']
+        self.home = environ['HOME']
         self.get_xdg_config()
         self.get_browser()
 
         # generate the config file
         if args.generate_config != None:
             self.generate_config_file(args.generate_config)
-            sys.exit(0)
+            exit(0)
 
 
         self.set_path(args)
         self.check_for_default_config()
-        self.conf = ConfigParser.RawConfigParser()
+        self.conf = RawConfigParser()
         self.conf.read(self.config_file)
-        if not os.path.isfile(self.token_file):
+        if not path.isfile(self.token_file):
             self.new_account()
         else:
             self.parse_token()
@@ -78,34 +49,63 @@ class Configuration(object):
         self.parse_config()
 
     def init_config(self):
-        self.token   = defaults.token
-        self.keys    = defaults.key
-        self.params  = defaults.params
-        self.filter  = defaults.filter
-        self.palette = defaults.palette
+        self.keys    = constant.key
+        self.params  = constant.params
+        self.palette = constant.palette
 
     def get_xdg_config(self):
         try:
-            self.xdg_config = os.environ['XDG_CONFIG_HOME']
+            self.xdg_config = environ['XDG_CONFIG_HOME']
         except:
             self.xdg_config = self.home+'/.config'
 
     def get_browser(self):
         try:
-            self.browser    = os.environ['BROWSER']
+            self.browser = environ['BROWSER']
         except:
-            self.browser    = ''
+            self.browser = ''
 
     def check_for_default_config(self):
         default_dir = '/turses'
         default_file = '/turses/turses.cfg'
-        if not os.path.isfile(self.xdg_config + default_file):
-            if not os.path.exists(self.xdg_config + default_dir):
+        if not path.isfile(self.xdg_config + default_file):
+            if not path.exists(self.xdg_config + default_dir):
                 try:
-                    os.makedirs(self.xdg_config + default_dir)
+                    makedirs(self.xdg_config + default_dir)
                 except:
                     print encode(_('Couldn\'t create the directory in %s/turses')) % self.xdg_config
             self.generate_config_file(self.xdg_config + default_file)
+
+    def generate_config_file(self, config_file):
+        conf = RawConfigParser()
+        conf.read(config_file)
+
+        # COLOR
+        conf.add_section('colors')
+        for c in self.palette:
+            conf.set('colors', c[0], c[1])
+        # KEYS
+        conf.add_section('keys')
+        for k in self.keys:
+            conf.set('keys', k, self.keys[k])
+        # PARAMS
+        conf.add_section('params')
+        for p in self.params:
+            if self.params[p] == True:
+                value = 1
+            elif self.params[p] == False:
+                value = 0
+            elif self.params[p] == None:
+                continue
+            else:
+                value = self.params[p]
+
+            conf.set('params', p, value)
+
+        with open(config_file, 'wb') as config:
+            conf.write(config)
+
+        print encode(_('Generating configuration file in %s')) % config_file
 
     def set_path(self, args):
         # Default config path set
@@ -123,45 +123,12 @@ class Configuration(object):
             self.config_file += '.' + args.config
 
     def new_account(self):
-        choice = self.ask_service()
-        if choice == '2':
-            # XXX remove identi.ca support claim
-            raise NotImplementedError
-            self.ask_root_url()
-
         self.authorization()
         self.createTokenFile()
 
-    def ask_service(self):
-        print_ask_service(self.token_file)
-        choice = raw_input(encode(_('Your choice? > ')))
-
-        if choice == '1':
-            self.service = 'twitter'
-        elif choice == '2':
-            self.service = 'identica'
-        else:
-            sys.exit(1)
-        return choice
-
-    def ask_root_url(self):
-        print_ask_root_url()
-        url = raw_input(encode(_('Your choice? > ')))
-        if url == '':
-            self.base_url = 'https://identi.ca/api'
-        else:
-            self.base_url = url
-
     def parse_token(self):
-        token = ConfigParser.RawConfigParser()
+        token = RawConfigParser()
         token.read(self.token_file)
-        if token.has_option('token', 'service'):
-            self.service = token.get('token', 'service')
-        else:
-            self.service = 'twitter'
-
-        if token.has_option('token', 'base_url'):
-            self.base_url = token.get('token', 'base_url')
 
         self.oauth_token = token.get('token', 'oauth_token')
         self.oauth_token_secret = token.get('token', 'oauth_token_secret')
@@ -170,7 +137,6 @@ class Configuration(object):
         self.parse_color()
         self.parse_keys()
         self.parse_params()
-        self.parse_filter()
         self.init_logger()
 
     def parse_color(self):
@@ -216,47 +182,14 @@ class Configuration(object):
             self.params['retweet_by'] = int(self.conf.get('params', 'retweet_by'))
 
         # Openurl_command
-        if self.conf.has_option('params', 'openurl_command'):
+        #  NOTE: originally `openurl_command` configuration parameter was
+        #        prioritary but I'm deprecating this, using the BROWSER
+        #        environment variable instead.
+        if self.browser != '':
+            self.params['openurl_command'] = self.browser
+        elif self.conf.has_option('params', 'openurl_command'):
             self.params['openurl_command'] = self.conf.get('params',
                 'openurl_command')
-        elif self.browser != '':
-            self.params['openurl_command'] = self.browser + ' %s'
-
-        if self.conf.has_option('params', 'open_image_command'):
-            self.params['open_image_command'] = self.conf.get('params',
-                'open_image_command')
-
-        # Transparency
-        if self.conf.has_option('params', 'transparency'):
-            if int(self.conf.get('params', 'transparency')) == 0:
-                self.params['transparency'] = False
-        # Compress display
-        if self.conf.has_option('params', 'compact'):
-            if int(self.conf.get('params', 'compact')) == 1:
-                self.params['compact'] = True
-        # Help bar
-        # XXX
-        #  in `turses` the 'help' parameter associates the key binding
-        #  for showing program's help
-        #if self.conf.has_option('params', 'help'):
-            #if int(self.conf.get('params', 'help')) == 0:
-                #self.params['help'] = False
-
-        #if self.conf.has_option('params', 'margin'):
-            #self.params['margin'] = int(self.conf.get('params', 'margin'))
-
-        if self.conf.has_option('params', 'padding'):
-            self.params['padding'] = int(self.conf.get('params', 'padding'))
-
-        if self.conf.has_option('params', 'old_skool_border'):
-            if int(self.conf.get('params', 'old_skool_border')) == 1:
-                self.params['old_skool_border'] = True
-
-        if self.conf.has_option('params', 'consumer_key'):
-            self.token['identica']['consumer_key'] = self.conf.get('params', 'consumer_key')
-
-        if self.conf.has_option('params', 'consumer_secret'):
-            self.token['identica']['consumer_secret'] = self.conf.get('params', 'consumer_secret')
 
         if self.conf.has_option('params', 'logging_level'):
             self.params['logging_level'] = self.conf.get('params', 'logging_level')
@@ -264,26 +197,8 @@ class Configuration(object):
         if self.conf.has_option('params', 'header_template'):
             self.params['header_template'] = self.conf.get('params', 'header_template')
 
-        if self.conf.has_option('params', 'proxy'):
-            self.params['proxy'] = self.conf.get('params', 'proxy')
-
-        if self.conf.has_option('params', 'beep'):
-            self.params['beep'] = self.conf.getboolean('params', 'beep')
-
-    def parse_filter(self):
-        if self.conf.has_option('filter', 'activate'):
-            if int(self.conf.get('filter', 'activate')) == 1:
-                self.filter['activate'] = True
-
-        if self.conf.has_option('filter', 'myself'):
-            if int(self.conf.get('filter', 'myself')) == 1:
-                self.filter['myself'] = True
-
-        if self.conf.has_option('filter', 'behavior'):
-            self.filter['behavior'] = self.conf.get('filter', 'behavior')
-
-        if self.conf.has_option('filter', 'except'):
-            self.filter['except'] = self.conf.get('filter', 'except').split(' ')
+        if self.conf.has_option('params', 'dm_template'):
+            self.params['dm_template'] = self.conf.get('params', 'dm_template')
 
     def init_logger(self):
         log_file = self.xdg_config + '/turses/turses.log'
@@ -298,7 +213,12 @@ class Configuration(object):
         logging.info('turses starting...')
 
     def init_logger_level(self):
-        lvl = int(self.params['logging_level'])
+        try:
+            lvl = int(self.params['logging_level'])
+        except:
+            # INFO is the default logging level
+            return logging.INFO
+
         if lvl == 1:
             return logging.DEBUG
         elif lvl == 2:
@@ -308,6 +228,7 @@ class Configuration(object):
         elif lvl == 4:
             return logging.ERROR
 
+    # TODO: can `tweepy` be used for this?
     def authorization(self):
         ''' This function from python-twitter developers '''
         # Copyright 2007 The Python-Twitter Developers
@@ -324,39 +245,30 @@ class Configuration(object):
         # See the License for the specific language governing permissions and
         # limitations under the License.
 
-        if self.service == 'twitter':
-            base_url = 'https://api.twitter.com'
-            self.base_url = base_url
-        else:
-            base_url = self.base_url
+        base_url = 'https://api.twitter.com'
 
         print 'base_url:{0}'.format(base_url)
 
 
-        REQUEST_TOKEN_URL          = base_url + '/oauth/request_token'
-        if self.service == 'identica':
-            if base_url != 'https://identi.ca/api':
-                self.parse_config()
-            REQUEST_TOKEN_URL += '?oauth_callback=oob'
+        REQUEST_TOKEN_URL = base_url + '/oauth/request_token'
+        ACCESS_TOKEN_URL  = base_url + '/oauth/access_token'
+        AUTHORIZATION_URL = base_url + '/oauth/authorize'
+        consumer_key      = twitter_consumer_key
+        consumer_secret   = twitter_consumer_secret
+        oauth_consumer    = oauth.Consumer(key=consumer_key, secret=consumer_secret)
+        oauth_client      = oauth.Client(oauth_consumer)
 
-        ACCESS_TOKEN_URL           = base_url + '/oauth/access_token'
-        AUTHORIZATION_URL          = base_url + '/oauth/authorize'
-        consumer_key               = self.token[self.service]['consumer_key']
-        consumer_secret            = self.token[self.service]['consumer_secret']
-        oauth_consumer             = oauth.Consumer(key=consumer_key, secret=consumer_secret)
-        oauth_client               = oauth.Client(oauth_consumer)
-
-        print encode(_('Requesting temp token from ')) + self.service.capitalize()
+        print encode(_('Requesting temp token from Twitter'))
 
         resp, content = oauth_client.request(REQUEST_TOKEN_URL, 'GET')
 
         if resp['status'] != '200':
-            print encode(_('Invalid respond from ')) +self.service.capitalize() + encode(_(' requesting temp token: %s')) % str(resp['status'])
+            print encode(_('Invalid respond, requesting temp token: %s')) % str(resp['status'])
         else:
             request_token = dict(parse_qsl(content))
 
             print ''
-            print encode(_('Please visit the following page to retrieve pin code needed'))
+            print encode(_('Please visit the following page to retrieve needed pin code'))
             print encode(_('to obtain an Authentication Token:'))
             print ''
             print '%s?oauth_token=%s' % (AUTHORIZATION_URL, request_token['oauth_token'])
@@ -379,22 +291,20 @@ class Configuration(object):
                 print 'response:{0}'.format(resp['status'])
                 print encode(_('Request for access token failed: %s')) % resp['status']
                 print access_token
-                sys.exit()
+                exit()
             else:
                 self.oauth_token = access_token['oauth_token']
                 self.oauth_token_secret = access_token['oauth_token_secret']
 
     def createTokenFile(self):
-        if not os.path.isdir(self.turses_path):
+        if not path.isdir(self.turses_path):
             try:
-                os.mkdir(self.turses_path)
+                mkdir(self.turses_path)
             except:
                 print encode(_('Error creating directory .config/turses'))
 
-        conf = ConfigParser.RawConfigParser()
+        conf = RawConfigParser()
         conf.add_section('token')
-        conf.set('token', 'service', self.service)
-        conf.set('token', 'base_url', self.base_url)
         conf.set('token', 'oauth_token', self.oauth_token)
         conf.set('token', 'oauth_token_secret', self.oauth_token_secret)
 
@@ -403,18 +313,9 @@ class Configuration(object):
 
         print encode(_('your account has been saved'))
 
-    def load_last_read(self):
-        try:
-            conf = ConfigParser.RawConfigParser()
-            conf.read(self.token_file)
-            return conf.get('token', 'last_read')
-        except:
-            return False
-
     def save_last_read(self, last_read):
-        conf = ConfigParser.RawConfigParser()
+        conf = RawConfigParser()
         conf.read(self.token_file)
-        conf.set('token', 'last_read', last_read)
 
         with open(self.token_file, 'wb') as tokens:
             conf.write(tokens)
@@ -439,7 +340,7 @@ class TursesConfiguration(object):
 
         ~
         |+.turses/
-        | |-username.config
+        | |-config
         | `-username.token
         |+...
         |-...
@@ -455,10 +356,10 @@ class TursesConfiguration(object):
         # generate config file and exit
         if cli_args.generate_config:
             self.generate_config_file(cli_args.generate_config)
-            sys.exit(0)
+            exit(0)
 
         # environment
-        self.home = os.environ['HOME']
+        self.home = environ['HOME']
 
         # check if there is any configuration to load
 
@@ -471,7 +372,7 @@ class TursesConfiguration(object):
         self.palette = defaults.palette
 
     def generate_config_file(self, config_file):
-        conf = ConfigParser.RawConfigParser()
+        conf = RawConfigParser()
         conf.read(config_file)
 
         # COLOR
@@ -503,8 +404,5 @@ class TursesConfiguration(object):
 
     def get_config_files(self):
         """
-        Return a dictionary, the key being the username and the value a tuple
-        of (config, token) file paths for each configuration file pair found
-        in $HOME/.turses.
         """
         # TODO

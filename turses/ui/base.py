@@ -13,8 +13,8 @@ class UserInterface(object):
 
     # -- Modes ----------------------------------------------------------------
 
-    def draw_timeline(self, timeline):
-        """Draw the given `timeline`."""
+    def draw_timelines(self, timelines):
+        """Draw the given `timelines`."""
         raise NotImplementedError
 
     def show_program_info(self):

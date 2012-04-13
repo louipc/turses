@@ -10,15 +10,34 @@ in `turses.ui.base`.
 
 from gettext import gettext as _
 
-from urwid import AttrWrap, WidgetWrap, Padding, WidgetDecoration
-from urwid import Text, Edit, Frame, Columns, Pile, Divider, SolidFill
-from urwid import ListBox, SimpleListWalker
-from urwid import signals, emit_signal, connect_signal, disconnect_signal
+from urwid import (
+        AttrWrap, 
+        WidgetWrap, 
+        Padding, 
+        WidgetDecoration,
+        Divider, 
+        SolidFill,
+
+        # widgets
+        Text, 
+        Edit, 
+        Frame, 
+        Columns, 
+        Pile, 
+        ListBox, 
+        SimpleListWalker,
+
+        # signals
+        signals, 
+        emit_signal, 
+        connect_signal, 
+        disconnect_signal
+        )
 from urwid import __version__ as urwid_version
 
 from .. import __version__
 from ..models import is_DM, get_authors_username
-from ..util import encode 
+from ..utils import encode 
 from .base import UserInterface
  
 TWEET_MAX_CHARS = 140
@@ -39,24 +58,27 @@ banner = [
      "",
 ]
 
+
 class CursesInterface(Frame, UserInterface):
     """
     Creates a curses interface for the program, providing functions to draw 
     all the components of the UI.
     """
 
-    def __init__(self):
+    def __init__(self,
+                 configuration):
         Frame.__init__(self,
                        WelcomeBuffer(),
                        header=TabsWidget(),
                        footer=StatusBar(''))
+        self._configuration = configuration
         self._editor_mode = False
 
     # -- Modes ----------------------------------------------------------------
 
-    def draw_timeline(self, timeline):
-        self.body = TimelineBuffer()
-        self.body.render_timeline(timeline)
+    def draw_timelines(self, timelines):
+        self.body = TimelinesBuffer(timelines, 
+                                    configuration=self._configuration)
         self.set_body(self.body)
 
     def show_info(self):
@@ -66,7 +88,7 @@ class CursesInterface(Frame, UserInterface):
 
     def show_help(self, configuration):
         self.clear_header()
-        self.status_info_message('Type <Esc> to leave the help page.')
+        self.status_info_message(_('Type <Esc> to leave the help page.'))
         self.body = HelpBuffer(configuration)
         self.set_body(self.body)
 
@@ -77,27 +99,40 @@ class CursesInterface(Frame, UserInterface):
 
     # -- Footer ---------------------------------------------------------------
         
+    def _visible_status_bar(self):
+        return self.footer.__class__ is StatusBar
+
+    def _can_write_status(self):
+        if self.footer is None:
+            self.footer = StatusBar()
+        elif self._visible_status_bar():
+            pass
+        else:
+            return False
+        return True
+
     def status_message(self, text):
-        if self.footer.__class__ is not StatusBar:
-            return
-        self.footer.message(text)
-        self.set_footer(self.footer)
+        if self._can_write_status():
+            self.footer.message(text)
+            self.set_footer(self.footer)
 
     def status_error_message(self, message):
-        if self.footer.__class__ is not StatusBar:
-            return
-        self.footer.error_message(message)
+        if self._can_write_status():
+            self.footer.error_message(message)
 
     def status_info_message(self, message):
-        if self.footer.__class__ is not StatusBar:
-            return
-        self.footer.info_message(message)
+        if self._can_write_status():
+            self.footer.info_message(message)
 
     def clear_status(self):
-        self.footer = StatusBar()
+        self.footer = None
         self.set_footer(self.footer)
 
     # -- Timeline mode --------------------------------------------------------
+
+    def focus_timeline(self, index):
+        """Give focus to the `index`-th visible timeline."""
+        self.body.focus_timeline(index)
 
     def focus_status(self, index):
         if callable(getattr(self.body, 'set_focus', None)):
@@ -318,8 +353,10 @@ class TabsWidget(WidgetWrap):
         self.tabs = tabs
         if tabs:
             self.active_index = 0
+            self.visible_indexes = [0]
         else:
             self.active_index = -1
+            self.visible_indexes = []
         created_text = self._create_text()
         text = created_text if created_text else ''
         WidgetWrap.__init__(self, Text(text))
@@ -333,6 +370,8 @@ class TabsWidget(WidgetWrap):
         for i, tab in enumerate(self.tabs):
             if i == self.active_index:
                 text.append(('active_tab', u'│' + tab + u' '))
+            elif i in self.visible_indexes:
+                text.append(('visible_tab', u'│' + tab + u' '))
             else:
                 text.append(('inactive_tab', u'│' + tab + u' '))
         return text
@@ -351,6 +390,10 @@ class TabsWidget(WidgetWrap):
 
     def set_active_tab(self, pos):
         self.active_index = pos
+        self._update_text()
+
+    def set_visible_tabs(self, indexes):
+        self.visible_indexes = list(indexes)
         self._update_text()
 
     def set_tabs(self, tabs):
@@ -446,11 +489,10 @@ class ScrollableListBox(ListBox):
 
 class ScrollableListBoxWrapper(WidgetWrap):
     """
-    A `WidgetWrap` subclass intented to wrap `ScrollableListBox`
-    elements, provides an interface for the scrolling capabilities.
     """
-    def __init__(self, contents):
-        WidgetWrap.__init__(self, contents)
+    def __init__(self, contents=None):
+        columns = [] if contents is None else contents
+        WidgetWrap.__init__(self, columns)
 
     def scroll_up(self):
         self._w.focus_previous()
@@ -484,6 +526,8 @@ class HelpBuffer(ScrollableListBoxWrapper):
                                                             offset=offset,))
 
     def create_help_buffer(self):
+        # TODO: remove the descriptions from the code. Store the keybindings
+        #       in `turses/constant.py`. 
         self.insert_header()
         # Motion
         self.insert_division(_('Motion'))
@@ -501,6 +545,12 @@ class HelpBuffer(ScrollableListBoxWrapper):
         self.insert_help_item('shift_buffer_end', _('Shift active buffer to the end'))
         self.insert_help_item('activate_first_buffer', _('Activate first buffer'))
         self.insert_help_item('activate_last_buffer', _('Activate last buffer'))
+        self.insert_help_item('shift_buffer_beggining', _('Shift active buffer to the beggining'))
+        self.insert_help_item('shift_buffer_end', _('Shift active buffer to the end'))
+        self.insert_help_item('expand_visible_left', _('Expand visible timelines one column to the left'))
+        self.insert_help_item('expand_visible_right', _('Expand visible timelines one column to the right'))
+        self.insert_help_item('shrink_visible_left', _('Shrink visible timelines one column from the left'))
+        self.insert_help_item('shrink_visible_right', _('Shrink visible timelines one column from the left'))
         self.insert_help_item('delete_buffer', _('Delete active buffer'))
         self.insert_help_item('clear', _('Clear active buffer'))
         self.insert_help_item('mark_all_as_read', _('Mark all tweets in timeline as read'))
@@ -525,23 +575,23 @@ class HelpBuffer(ScrollableListBoxWrapper):
         self.insert_help_item('delete_fav', _('Remove a tweet from favorites'))
 
         self.insert_division(_('Timelines'))
-        self.insert_help_item('home', _('Go to home timeline'))
-        self.insert_help_item('favorites', _('Go to favorites timeline'))
-        self.insert_help_item('mentions', _('Go to mentions timeline'))
-        self.insert_help_item('DMs', _('Go to direct message timeline'))
+        self.insert_help_item('home', _('Open a home timeline'))
+        self.insert_help_item('favorites', _('Open a favorites timeline'))
+        self.insert_help_item('mentions', _('Open a mentions timeline'))
+        self.insert_help_item('DMs', _('Open a direct message timeline'))
         self.insert_help_item('search', _('Search for term and show resulting timeline'))
-        self.insert_help_item('search_user', _('Show somebody\'s public timeline'))
-        self.insert_help_item('search_myself', _('Show your public timeline'))
+        self.insert_help_item('search_user', _('Open the timeline of the specified user'))
         self.insert_help_item('hashtags', _('Search the hashtags of the focused status'))
         self.insert_help_item('thread', _('Open selected thread'))
-        self.insert_help_item('user_info', _('Show user information '))
-        self.insert_help_item('help', _('Show help buffer'))
+        self.insert_help_item('user_timeline', _('Open focused status author\'s timeline'))
+        
+        #self.insert_help_item('user_info', _('Show user information '))
 
         # Others
         self.insert_division(_('Others'))
         self.insert_help_item('quit', _('Leave turses'))
+        self.insert_help_item('help', _('Show help buffer'))
         self.insert_help_item('openurl', _('Open URL in browser'))
-        self.insert_help_item('open_image', _('Open image'))
         self.insert_help_item('redraw', _('Redraw the screen'))
 
     def insert_header(self):
@@ -577,22 +627,48 @@ class HelpBuffer(ScrollableListBoxWrapper):
         self._w.focus_first()
 
 
-class TimelineBuffer(ScrollableListBoxWrapper):
-    """A widget that displays a `Timeline` object."""
+class TimelinesBuffer(WidgetWrap):
+    """A widget that displays one or more `Timeline` objects."""
 
-    def __init__(self, timeline=None):
-        WidgetWrap.__init__(self, TimelineWidget(timeline))
+    def __init__(self, timelines=None, **kwargs):
+        if timelines:
+            timeline_widgets = [TimelineWidget(timeline, **kwargs) for timeline in timelines]
+        else:
+            timeline_widgets = []
+        WidgetWrap.__init__(self, Columns(timeline_widgets))
+
+    def scroll_up(self):
+        active_widget = self._w.get_focus()
+        active_widget.focus_previous()
+
+    def scroll_down(self):
+        active_widget = self._w.get_focus()
+        active_widget.focus_next()
+
+    def scroll_top(self):
+        active_widget = self._w.get_focus()
+        active_widget.focus_first()
+
+    def scroll_bottom(self):
+        active_widget = self._w.get_focus()
+        active_widget.focus_last()
 
     def clear(self):
         """Clears the buffer."""
-        return self.render_timeline([])
+        # FIXME
+        pass
 
-    def render_timeline(self, timeline):
+    def render_timelines(self, timelines):
         """Renders the given statuses."""
-        self._w = TimelineWidget(timeline)
+        timeline_widgets = [TimelineWidget(timeline) for timeline in timelines]
+        self._w = Columns(timeline_widgets) 
 
     def set_focus(self, index):
-        self._w.set_focus(index)
+        active_widget = self._w.get_focus()
+        active_widget.set_focus(index)
+
+    def focus_timeline(self, index):
+        self._w.set_focus_column(index)
 
 
 class TimelineWidget(ScrollableListBox):
@@ -601,21 +677,24 @@ class TimelineWidget(ScrollableListBox):
     rendered as a `StatusWidget`.
     """
 
-    def __init__(self, timeline=None):
+    def __init__(self, timeline=None, configuration=None):
         statuses = timeline if timeline else []
-        status_widgets = [StatusWidget(status) for status in statuses]
+        status_widgets = [StatusWidget(status, configuration) for status in statuses]
         ScrollableListBox.__init__(self, status_widgets)
 
 
 class StatusWidget(WidgetWrap):
     """Widget containing a Twitter status."""
 
-    def __init__ (self, status):
+    def __init__ (self, status, configuration):
         self.status = status
+        self.configuration = configuration
+
         text = status.text
         status_content = Padding(AttrWrap(Text(text), 'body'), left=1, right=1)
         header = self._create_header(status)
         box = BoxDecoration(status_content, title=header)
+
         if not is_DM(status) and status.is_favorite:
             widget = AttrWrap(box, 'favorited', 'focus')
         else:
@@ -655,7 +734,7 @@ class StatusWidget(WidgetWrap):
             retweet_count = str(status.retweet_count)
             
         # create header
-        header_template = ' {username}{retweeted}{retweeter} - {time}{reply} {retweet_count} '
+        header_template = ' ' + self.configuration.params['header_template'] + ' '
         header = unicode(header_template).format(
             username= username,
             retweeted = retweeted,
@@ -668,8 +747,11 @@ class StatusWidget(WidgetWrap):
         return encode(header)
 
     def _dm_header(self, dm):
-        # TODO: make DM template configurable
-        dm_template = ' {sender_screen_name} -> {recipient_screen_name} - {time} '
+        try:
+            dm_template = ' ' + self.configuration.params['dm_template'] + ' '
+        except AttributeError:
+            # legacy configuration support
+            dm_template = ' {sender_screen_name} -> {recipient_screen_name} - {time} '
         relative_created_at = dm.get_relative_created_at()
         header = unicode(dm_template).format(
             sender_screen_name=dm.sender_screen_name,
@@ -746,20 +828,3 @@ class BoxDecoration(WidgetDecoration, WidgetWrap):
 
         WidgetDecoration.__init__(self, original_widget)
         WidgetWrap.__init__(self, pile)
-
-
-class UserBuffer(object):
-    """
-    A buffer that shows information for a certain user and its associated
-    timelines.
-    """
-    # TODO
-    pass
-
-
-class UserWidget(object):
-    """
-    A widget with a user's information.
-    """
-    # TODO
-    pass

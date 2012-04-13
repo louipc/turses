@@ -16,6 +16,10 @@ from ..decorators import wrap_exceptions
 from ..models import is_DM
 
 
+twitter_consumer_key = 'OEn4hrNGknVz9ozQytoR0A'
+twitter_consumer_secret = 'viud49uVgdVO9dnOGxSQJRo7jphTioIlEn3OdpkZI'
+
+
 class Api(object):
     """
     A simplified version of the API to use as a mediator for a real
@@ -23,10 +27,10 @@ class Api(object):
     """
 
     def __init__(self,
-                 consumer_key,
-                 consumer_secret,
                  access_token_key,
-                 access_token_secret,):
+                 access_token_secret,
+                 consumer_key=twitter_consumer_key,
+                 consumer_secret=twitter_consumer_secret,):
         self._consumer_key = consumer_key
         self._consumer_secret = consumer_secret
         self._access_token_key = access_token_key
@@ -37,7 +41,13 @@ class Api(object):
         raise NotImplementedError
 
     def verify_credentials(self):
+        """
+        Return a `turses.models.User` with the authenticating user if the given 
+        credentials are valid.
+        """
         raise NotImplementedError
+
+    # timelines
 
     def get_home_timeline(self): 
         raise NotImplementedError
@@ -57,8 +67,13 @@ class Api(object):
     def get_direct_messages(self):
         raise NotImplementedError
 
+    def get_thread(self, status):
+        raise NotImplementedError
+
     def search(self, text):
         raise NotImplementedError
+
+    # statuses
 
     def update(self, text): 
         raise NotImplementedError
@@ -66,11 +81,22 @@ class Api(object):
     def retweet(self, status): 
         raise NotImplementedError
 
-    def destroy(self, status):
+    def destroy_status(self, status):
+        """
+        Destroy the given `status` (must belong to authenticating user).
+        """
         raise NotImplementedError
 
     def direct_message(self, screen_name, text):
         raise NotImplementedError
+
+    def destroy_direct_message(self, dm):
+        """
+        Destroy the given `dm` (must be written by the authenticating user).
+        """
+        raise NotImplementedError
+
+    # friendship
 
     def create_friendship(self, screen_name): 
         raise NotImplementedError
@@ -78,10 +104,44 @@ class Api(object):
     def destroy_friendship(self, screen_name):
         raise NotImplementedError
 
+    # favorite methods
+
     def create_favorite(self, status):
         raise NotImplementedError
 
     def destroy_favorite(self, status): 
+        raise NotImplementedError
+
+    # list methods
+
+    def get_lists(self, screen_name):
+        raise NotImplementedError
+
+    def get_own_lists(self):
+        raise NotImplementedError
+
+    def get_list_memberships(self):
+        raise NotImplementedError
+
+    def get_list_subscriptions(self):
+        raise NotImplementedError
+
+    def get_list_timeline(self, list):
+        raise NotImplementedError
+
+    def get_list_members(self, list):
+        raise NotImplementedError
+
+    def is_list_member(self, user, list):
+        raise NotImplementedError
+
+    def subscribe_to_list(self, list):
+        raise NotImplementedError
+
+    def get_list_subscribers(self, list):
+        raise NotImplementedError
+
+    def is_list_subscriber(self, user, list):
         raise NotImplementedError
 
 
@@ -100,47 +160,41 @@ class AsyncApi(Api):
         it must implement the methods in `Api`.
         """
         Api.__init__(self, *args, **kwargs)
-        self._api_cls = api_cls
+        self._api = api_cls(access_token_key=self._access_token_key,
+                            access_token_secret=self._access_token_secret,)
 
     @wrap_exceptions
     def init_api(self):
-        self._api = self._api_cls(consumer_key=self._consumer_key,
-                                  consumer_secret=self._consumer_secret,
-                                  access_token_key=self._access_token_key,
-                                  access_token_secret=self._access_token_secret,)
+        self._api.init_api()
         self.is_authenticated = True
         self.user = self.verify_credentials()
 
     def verify_credentials(self):
         return self._api.verify_credentials()
 
-    @wrap_exceptions
-    def get_home_timeline(self):
-        return self._api.get_home_timeline()
+    def get_home_timeline(self, **kwargs):
+        return self._api.get_home_timeline(**kwargs)
 
-    @wrap_exceptions
-    def get_user_timeline(self, screen_name):
-        return self._api.get_user_timeline(screen_name=screen_name)
+    def get_user_timeline(self, screen_name, **kwargs):
+        return self._api.get_user_timeline(screen_name=screen_name, **kwargs)
 
-    @wrap_exceptions
-    def get_own_timeline(self):
-        return self._api.get_user_timeline(screen_name=self.user.screen_name)
+    def get_own_timeline(self, **kwargs):
+        return self._api.get_own_timeline(**kwargs)
 
-    @wrap_exceptions
-    def get_mentions(self):
+    def get_mentions(self, **kwargs):
         return self._api.get_mentions()
 
-    @wrap_exceptions
-    def get_favorites(self):
+    def get_favorites(self, **kwargs):
         return self._api.get_favorites()
 
-    @wrap_exceptions
-    def get_direct_messages(self):
-        return self._api.get_direct_messages()
+    def get_direct_messages(self, **kwargs):
+        return self._api.get_direct_messages(**kwargs)
 
-    @wrap_exceptions
-    def search(self, text):
-        return self._api.get_search(text)
+    def get_thread(self, status, **kwargs):
+        return self._api.get_thread(status, **kwargs)
+
+    def get_search(self, text, **kwargs):
+        return self._api.get_search(text, **kwargs)
 
     @wrap_exceptions
     def update(self, text):
@@ -155,9 +209,15 @@ class AsyncApi(Api):
         retweet_thread.start()
 
     @wrap_exceptions
-    def destroy(self, status):
+    def destroy_status(self, status):
         args = status,
-        destroy_thread = Thread(target=self._api.destroy, args=args)
+        destroy_thread = Thread(target=self._api.destroy_status, args=args)
+        destroy_thread.start()
+
+    @wrap_exceptions
+    def destroy_direct_message(self, status):
+        args = status,
+        destroy_thread = Thread(target=self._api.destroy_direct_message, args=args)
         destroy_thread.start()
 
     @wrap_exceptions
@@ -188,8 +248,6 @@ class AsyncApi(Api):
 
     @wrap_exceptions
     def destroy_favorite(self, status):
-        if is_DM(status) or not status.is_favorite:
-            raise Exception
         args = status,
         unfavorite_thread = Thread(target=self._api.destroy_favorite, args=args)
         unfavorite_thread.start()

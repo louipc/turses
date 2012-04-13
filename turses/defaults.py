@@ -8,35 +8,30 @@ This module contains the programs defaults.
 """
 
 palette = [
+    # Tabs
+    ['active_tab',  'white', ''],
+    ['visible_tab', 'light cyan', ''],
+    ['inactive_tab', 'dark blue', ''],
+
+    # Statuses
+    ['header', 'light blue', ''],
     ['body', 'default', '', 'standout'],
     ['focus','dark red', '', 'standout'],
-    ['header', 'light blue', ''],
     ['line', 'dark blue', ''],
-    ['active_tab', 'white', ''],
-    ['inactive_tab', 'dark blue', ''],
-    ['read', 'dark blue', ''],
-    ['error', 'white', 'dark red'],
-    ['info', 'white', 'dark blue'],
-    ['favorited', 'yellow', ''],
     ['unread', 'dark red', ''],
-    ['hashtag', 'dark green', ''],
-    ['attag', 'brown', ''],
+    ['read', 'dark blue', ''],
+    ['favorited', 'yellow', ''],
+
+    # Text
     ['highlight', 'dark red', ''],
     ['highlight_nick', 'light red', ''],
-    ['help_bar', 'yellow', 'dark blue'],
-    ['help_key', 'dark red', ''],
-]
+    ['attag', 'brown', ''],
+    ['hashtag', 'dark green', ''],
 
-token = {
-    'twitter': {
-        'consumer_key':     'OEn4hrNGknVz9ozQytoR0A',
-        'consumer_secret':  'viud49uVgdVO9dnOGxSQJRo7jphTioIlEn3OdpkZI'
-    },
-    'identica': {
-        'consumer_key':     '29d5dec21c629682e10bc45f11baf3ab',
-        'consumer_secret':  '0f25e5b8e441492bdc654583e21451d4'
-    }
-}
+    # Messages
+    ['error', 'white', 'dark red'],
+    ['info', 'white', 'dark blue'],
+]
 
 key = {
     # Motion
@@ -57,6 +52,10 @@ key = {
     'delete_buffer':          'd',
     'clear':                  'c',
     'mark_all_as_read':       'A',
+    'expand_visible_left':    'p',
+    'expand_visible_right':   'n',
+    'shrink_visible_left':    'P',
+    'shrink_visible_right':   'N',
 
     # Tweets
     'tweet':                  't',
@@ -84,10 +83,9 @@ key = {
     'DMs':                    'M',
     'search':                 '/',
     'search_user':            '@',
-    'search_myself':          'ctrl u',
-    'search_current_user':    'ctrl f',
     'thread':                 'T',
     'hashtags':               'L',
+    'user_timeline':          '+',
 
     # Meta
     'user_info':              'i',
@@ -96,35 +94,23 @@ key = {
     # Misc
     'quit':                   'q',
     'openurl':                'o',
-    'open_image':             'ctrl i',
     'redraw':                 'ctrl l',
 }
 
 params = {
-    'refresh':              2,
-    'tweet_border':         1,
-    'relative_time':        1,
-    'retweet_by':           1,
-    'margin':               1,
-    'padding':              2,
-    'openurl_command':      'firefox %s',
-    'open_image_command':   'feh %s',
-    'transparency':         True,
-    'activities':           True,
-    'compact':              False,
-    'help':                 True,
-    'old_skool_border':     False,
-    'box_position':         1,
-    'url_shorter':          'ur1ca',
+    # TODO: refresh interval
+    #'refresh':              2,
+    # TODO: make time string configurable 
+    #'relative_time':        1,
+    'openurl_command':      'firefox',
     'logging_level':        3,
     'header_template':      ' {username}{retweeted}{retweeter} - {time}{reply} {retweet_count} ',
-    'proxy':                None,
-    'beep':                 False,
+    'dm_template':          ' {sender_screen_name} => {recipient_screen_name} - {time} ',
 }
 
-filter = {
-    'activate':         False,
-    'myself':           False,
-    'behavior':         'all',
-    'except':           [],
-}
+#filter = {
+    #'activate':         False,
+    #'myself':           False,
+    #'behavior':         'all',
+    #'except':           [],
+#}

@@ -1,6 +1,31 @@
+0.0.16
+------
+- binding to open focused status authors' tweets
+
+0.0.15
+------
+- bugfix: DM recipient was not correctly resolved
+- fetch newer tweets when scrolling up from the top and viceversa
+- show retweets by default
+
+0.0.14
+------
+- bugfix: logging
+
+0.0.13
+------
+- thread view
+
+0.0.12
+------
+- multiple visible timelines in columns
+- fix bug with unicode input
+- open URLs in browser
+
 0.0.11
 ------
 - include retweets in home timeline
+- fix bug with non-existent method
 
 0.0.10
 ------

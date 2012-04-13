@@ -1,5 +1,5 @@
 APPNAME=turses
-VERSION=0.0.10
+VERSION=0.0.15
 DISTPKG=dist/$(APPNAME)-$(VERSION).tar.gz
 
 PY=python

@@ -4,20 +4,181 @@
 #         Licensed under the GPL License. See LICENSE for full details.       #
 ###############################################################################
 
-import sys
-sys.path.append('../')
+from sys import path
+path.append('../')
 import unittest
 from datetime import datetime
 
 from mock import MagicMock
 
-from turses.models import Status, Timeline, TimelineList
+from turses.models import (
+        prepend_at,
+
+        is_DM,
+        get_mentioned_usernames,
+        get_mentioned_for_reply,
+        get_dm_recipients_username,
+        get_authors_username,
+
+        is_username,
+        is_hashtag,
+        sanitize_username,
+
+        Status, 
+        DirectMessage,
+
+        ActiveList,
+        Timeline, 
+        TimelineList,
+        VisibleTimelineList,
+        )
+
+#
+# Helpers
+# 
+def create_status(**kwargs):
+    now = datetime.now()
+    defaults = {
+        'id': 1,
+        'created_at': now,
+        'user': 'testbot',
+        'text': 'Status created at %s' % now, 
+    }
+    defaults.update(kwargs)
+
+    return Status(**defaults)
+
+def create_direct_message(**kwargs):
+    now = datetime.now()
+    defaults = {
+        'id': 1,
+        'created_at': now,
+        'sender_screen_name': 'Alice',
+        'recipient_screen_name': 'Bob',
+        'text': 'Direct Message at %s' % now,
+    }
+    defaults.update(kwargs)
+
+    return DirectMessage(**defaults)
 
 
-# TODO
 class HelperFunctionTest(unittest.TestCase):
-    pass
+    def test_is_DM(self):
+        # status is NOT a DM
+        status = create_status()
+        self.failIf(is_DM(status))
 
+        dm = create_direct_message()
+        self.failUnless(is_DM(dm))
+
+    def test_get_mentioned_usernames(self):
+        user = 'turses'
+        mentioned = ('dialelo', 'mental_floss', '4n_4Wfu1_US3RN4M3')
+
+        expected_output = list(mentioned)
+
+        text = "@%s, @%s and @%s" % mentioned
+        status = create_status(user=user,
+                               text=text)
+
+        expected = set(expected_output)
+        mentioned_usernames = get_mentioned_usernames(status)
+        self.assertEqual(expected, set(mentioned_usernames))
+
+    def test_get_mentioned_for_reply(self):
+        user = 'turses'
+        mentioned = ('dialelo', 'mental_floss', '4n_4Wfu1_US3RN4M3')
+
+        expected_output = list(mentioned)
+        expected_output.append(user)
+        expected_output = map(prepend_at, expected_output)
+
+        text = "@%s, @%s and @%s" % mentioned
+        status = create_status(user=user,
+                               text=text)
+
+        expected = set(filter(prepend_at, expected_output))
+        mentioned_for_reply = get_mentioned_for_reply(status)
+        self.assertEqual(expected, set(mentioned_for_reply))
+
+    def test_get_authors_username(self):
+        user = 'turses'
+
+        # tweet
+        status = create_status(user=user)
+        author = get_authors_username(status)
+        self.assertEqual(user, author)
+
+        # retweet
+        retweeter = 'bot'
+        retweet = create_status(user=retweeter,
+                                is_retweet=True,
+                                author=user)
+        author = get_authors_username(retweet)
+        self.assertEqual(user, author)
+
+        # direct message
+        dm = create_direct_message(sender_screen_name=user,)
+        author = get_authors_username(dm)
+        self.assertEqual(user, author)
+
+    def test_get_dm_recipients_username(self):
+        # authenticating user
+        user = 'turses'
+
+        # given a status in which the author is the authenticated author
+        # must return `None`
+        status = create_status(user=user)
+        recipient_own_tweet = get_dm_recipients_username(user, status)
+        self.failIf(recipient_own_tweet)
+
+        # @user -> @another_user messages should return 'another_user'
+        expected_recipient = 'dialelo'
+        dm = create_direct_message(sender_screen_name=user,
+                                   recipient_screen_name=expected_recipient,)
+        recipient_dm_user_is_sender = get_dm_recipients_username(user, dm)
+        self.assertEqual(recipient_dm_user_is_sender, expected_recipient)
+
+        # @another_user -> @user messages should return 'another_user'
+        dm = create_direct_message(sender_screen_name=expected_recipient,
+                                   recipient_screen_name=user,)
+        recipient_dm_user_is_recipient = get_dm_recipients_username(user, dm)
+        self.assertEqual(recipient_dm_user_is_recipient, expected_recipient)
+
+    def test_is_username(self):
+        valid = ['dialelo', 'mental_floss', '4n_4Wfu1_US3RN4M3']
+        for user in valid:
+            self.failUnless(is_username(user))
+
+        # FIXME
+        #invalid = ['-asd', 'adsd?']
+        #for user in invalid:
+            #self.failIf(is_username(user))
+
+    def test_is_hashtag(self):
+        valid = ['#turses', '#cúrcuma', '#4n_4Wfu1_US3RN4M3']
+        for hashtag in valid:
+            self.failUnless(is_hashtag(hashtag))
+        # TODO: test invalid hashtags
+
+    def test_sanitize_username(self):
+        dirty_and_clean = [
+            ('@dialelo',           'dialelo'),   
+            ('?@mental_floss',     'mental_floss'),
+            ('@4n_4Wfu1_US3RN4M3', '4n_4Wfu1_US3RN4M3'),
+        ]
+        for dirty, clean in dirty_and_clean:
+            sanitized = sanitize_username(dirty)
+            self.assertEqual(sanitized, clean)
+
+    def test_get_hashtags(self):
+        pass
+
+    def test_is_valid_status_text(self):
+        pass
+
+    def test_is_valid_search_text(self):
+        pass
 
 # TODO
 class StatusTest(unittest.TestCase):
@@ -40,11 +201,6 @@ class ListTest(unittest.TestCase):
 
 
 # TODO
-class ActiveListTest(unittest.TestCase):
-    pass
-
-
-# TODO
 class UnsortedActiveListTest(unittest.TestCase):
     pass
 
@@ -54,20 +210,12 @@ class TimelineTest(unittest.TestCase):
         self.timeline = Timeline()
         self.timeline.clear()
         self.assertEqual(len(self.timeline), 0)
-        self.assertEqual(self.timeline.active_index, -1)
-
-    def _create_status(self, id, datetime):
-        from calendar import timegm
-        created_at_in_seconds = timegm(datetime.utctimetuple())
-        return Status(id=id,
-                      created_at_in_seconds=created_at_in_seconds,
-                      user='test',
-                      text='Test',)
+        self.assertEqual(self.timeline.active_index, ActiveList.NULL_INDEX)
 
     def test_unique_statuses_in_timeline(self):
         self.assertEqual(len(self.timeline), 0)
         # create and add the status
-        status = self._create_status(1, datetime.now())
+        status = create_status()
         self.timeline.add_status(status)
         self.assertEqual(len(self.timeline), 1)
         # check that adding more than once does not duplicate element
@@ -75,7 +223,7 @@ class TimelineTest(unittest.TestCase):
         self.assertEqual(len(self.timeline), 1)
 
     def test_active_index_becomes_0_when_adding_first_status(self):
-        status = self._create_status(1, datetime.now())
+        status = create_status()
         self.timeline.add_status(status)
         self.assertEqual(self.timeline.active_index, 0)
         # check that adding than once does not move the active
@@ -83,31 +231,56 @@ class TimelineTest(unittest.TestCase):
         self.assertEqual(self.timeline.active_index, 0)
 
     def test_insert_different_statuses(self):
-        old_status = self._create_status(1, datetime(1988, 12, 19))
-        new_status = self._create_status(2, datetime.now())
+        old_status = create_status(created_at=datetime(1988, 12, 19))
+        new_status = create_status(id=2)
         self.timeline.add_statuses([old_status, new_status])
         self.assertEqual(len(self.timeline), 2)
 
+    def assert_active(self, status):
+        active_status = self.timeline.get_active()
+        if active_status:
+            self.assertEqual(status, active_status)
+        else:
+            raise Exception("There is no active status")
+
+    def test_active_is_the_same_when_inserting_statuses(self):
+        """
+        Test that when inserting new statuses the active doesn't change.
+        """
+        active_status = create_status(created_at=datetime(1988, 12, 19))
+        self.timeline.add_status(active_status)
+        self.assert_active(active_status)
+        
+        older_status = create_status(id=2, 
+                                     created_at=datetime(1978, 12, 19))
+        self.timeline.add_status(older_status)
+        self.assert_active(active_status)
+
+        newer_status = create_status(id=2)
+        self.timeline.add_status(newer_status)
+        self.assert_active(active_status)
+
     def test_insert_different_statuses_individually(self):
-        old_status = self._create_status(1, datetime(1988, 12, 19))
-        new_status = self._create_status(2, datetime.now())
+        old_status = create_status(created_at=datetime(1988, 12, 19))
+        new_status = create_status(id=2)
         self.timeline.add_status(old_status)
         self.assertEqual(len(self.timeline), 1)
         self.timeline.add_status(new_status)
         self.assertEqual(len(self.timeline), 2)
 
     def test_statuses_ordered_reversely_by_date(self):
-        old_status = self._create_status(1, datetime(1988, 12, 19))
-        new_status = self._create_status(2, datetime.now())
+        old_status = create_status(created_at=datetime(1988, 12, 19))
+        new_status = create_status(id=2)
         self.timeline.add_statuses([old_status, new_status])
         self.assertEqual(self.timeline[0], new_status)
         self.assertEqual(self.timeline[1], old_status)
 
     def test_get_newer_than(self):
         old_created_at = datetime(1988, 12, 19)
-        old_status = self._create_status(1, old_created_at)
+        old_status = create_status(created_at=old_created_at)
         new_created_at = datetime.now()
-        new_status = self._create_status(2, new_created_at)
+        new_status = create_status(id=2,
+                                   created_at=new_created_at)
         self.timeline.add_statuses([old_status, new_status])
         # get newers than `old_status`
         newers = self.timeline.get_newer_than(old_created_at)
@@ -119,15 +292,54 @@ class TimelineTest(unittest.TestCase):
 
     def test_clear(self):
         old_created_at = datetime(1988, 12, 19)
-        old_status = self._create_status(1, old_created_at)
+        old_status = create_status(created_at=old_created_at)
         new_created_at = datetime.now()
-        new_status = self._create_status(2, new_created_at)
+        new_status = create_status(id=2, 
+                                   created_at=new_created_at)
         self.timeline.add_statuses([old_status, new_status])
         self.timeline.clear()
         self.assertEqual(len(self.timeline), 0)
         # add them again and check that they are inserted back
         self.timeline.add_statuses([old_status, new_status])
         self.assertEqual(len(self.timeline), 2)
+
+    # update function related
+
+    def test_extract_with_no_args(self):
+        mock = MagicMock(name='update')
+        timeline = Timeline(update_function=mock,)
+
+        self.assertEqual(timeline.update_function_args, None)
+        self.assertEqual(timeline.update_function_kwargs, None)
+
+    def test_extract_with_only_args(self):
+        mock = MagicMock(name='update')
+        args = 'python', 42
+        timeline = Timeline(update_function=mock,
+                            update_function_args=args,)
+
+        self.assertEqual(timeline.update_function_args, list(args))
+        self.assertEqual(timeline.update_function_kwargs, None)
+
+    def test_extract_with_only_kwargs(self):
+        mock = MagicMock(name='update')
+        kwargs = {'python': 'rocks'}
+        timeline = Timeline(update_function=mock,
+                            update_function_kwargs=kwargs)
+
+        self.assertEqual(timeline.update_function_args, None)
+        self.assertEqual(timeline.update_function_kwargs, kwargs)
+
+    def test_extract_with_both_args_and_kwargs(self):
+        mock = MagicMock(name='update')
+        args = 'python', 42
+        kwargs = {'python': 'rocks'}
+        timeline = Timeline(update_function=mock,
+                            update_function_args=args,
+                            update_function_kwargs=kwargs)
+
+        self.assertEqual(timeline.update_function_args, list(args))
+        self.assertEqual(timeline.update_function_kwargs, kwargs)
 
     def test_update_with_no_args(self):
         mock = MagicMock(name='update')
@@ -138,57 +350,127 @@ class TimelineTest(unittest.TestCase):
     def test_update_with_one_arg(self):
         mock = MagicMock(name='update')
         arg = '#python'
-        timeline = Timeline(update_function=mock, update_function_args=arg)
+        timeline = Timeline(update_function=mock, 
+                            update_function_args=arg)
         timeline.update()
+
         mock.assert_called_once_with(arg)
 
     def test_update_with_multiple_args(self):
         mock = MagicMock(name='update')
+        args = '#python', '#mock'
+        timeline = Timeline(update_function=mock, 
+                            update_function_args=args)
+        timeline.update()
+        args = list(args)
+
+        mock.assert_called_once_with(*args)
+
+    def test_update_with_kwargs(self):
+        mock = MagicMock(name='update')
+        kwargs = {'text': '#python', 'action': 'search'}
+        timeline = Timeline(update_function=mock, 
+                            update_function_kwargs=kwargs)
+        timeline.update()
+
+        mock.assert_called_once_with(**kwargs)
+
+    def test_update_with_args_and_kwargs(self):
+        mock = MagicMock(name='update')
+        args = 'twitter', 42 
+        kwargs = {'text': '#python', 'action': 'search'}
+        update_args = list(args)
+        update_args.append(kwargs)
+        timeline = Timeline(update_function=mock, 
+                            update_function_args=args,
+                            update_function_kwargs=kwargs)
+        timeline.update()
+
+        args = list(args)
+        mock.assert_called_once_with(*args, **kwargs)
+
+    def test_update_with_no_args_extra_kwargs(self):
+        mock = MagicMock(name='update')
+        timeline = Timeline(update_function=mock,)
+        extra_kwargs = {'python': 'rocks'}
+        timeline.update_with_extra_kwargs(**extra_kwargs)
+
+        mock.assert_called_once_with(**extra_kwargs)
+
+    def test_update_with_one_arg_extra_kwargs(self):
+        mock = MagicMock(name='update')
+        arg = '#python'
+        timeline = Timeline(update_function=mock, update_function_args=arg)
+        extra_kwargs = {'python': 'rocks'}
+        timeline.update_with_extra_kwargs(**extra_kwargs)
+
+        mock.assert_called_once_with(arg, **extra_kwargs)
+
+    def test_update_with_multiple_args_extra_kwargs(self):
+        mock = MagicMock(name='update')
         args = ('#python', '#mock')
-        timeline = Timeline(update_function=mock, update_function_args=args)
-        timeline.update()
-        mock.assert_called_once_with(args)
+        timeline = Timeline(update_function=mock, 
+                            update_function_args=args)
+        extra_kwargs = {'python': 'rocks'}
+        timeline.update_with_extra_kwargs(**extra_kwargs)
 
-    def test_update_with_kargs(self):
-        mock = MagicMock(name='update')
-        args = ({'text': '#python', 'action': 'search'})
-        timeline = Timeline(update_function=mock, update_function_args=args)
-        timeline.update()
-        mock.assert_called_once_with(args)
+        args = list(args)
+        mock.assert_called_once_with(*args, **extra_kwargs)
 
-    def test_update_with_args_and_kargs(self):
+    def test_update_with_kwargs_extra_kwargs(self):
         mock = MagicMock(name='update')
-        args = ('twitter', 42, {'text': '#python', 'action': 'search'})
-        timeline = Timeline(update_function=mock, update_function_args=args)
-        timeline.update()
-        mock.assert_called_once_with(args)
+        kwargs = {'text': '#python', 'action': 'search'}
+        timeline = Timeline(update_function=mock, 
+                            update_function_kwargs=kwargs)
+        extra_kwargs = {'text': 'rocks'}
+        timeline.update_with_extra_kwargs(**extra_kwargs)
+
+        args = kwargs.copy()
+        args.update(extra_kwargs)
+        mock.assert_called_once_with(**args)
+
+    def test_update_with_args_and_kwargs_extra_kwargs(self):
+        mock = MagicMock(name='update')
+        args = 'twitter', 42
+        kwargs = {'text': '#python', 'action': 'search'}
+        timeline = Timeline(update_function=mock, 
+                            update_function_args=args,
+                            update_function_kwargs=kwargs)
+
+        extra_kwargs = {'text': 'rocks'}
+        timeline.update_with_extra_kwargs(**extra_kwargs)
+
+        args = list(args)
+        kwargs = kwargs.copy()
+        kwargs.update(extra_kwargs)
+        mock.assert_called_once_with(*args, **kwargs)
 
 
 class TimelineListTest(unittest.TestCase):
     def setUp(self):
         self.timeline_list = TimelineList()
 
-    def test_has_timelines_false_if_empty(self):
-        self.failIf(self.timeline_list.has_timelines())
-
     def append_timeline(self):
         self.timeline_list.append_timeline(Timeline('Timeline'))
+
+    def test_has_timelines_false_if_empty(self):
+        self.failIf(self.timeline_list.has_timelines())
 
     def test_has_timelines_true_otherwise(self):
         self.append_timeline()
         self.failUnless(self.timeline_list.has_timelines())
 
-    def test_active_index_minus_1_with_no_timelines(self):
-        self.assertEqual(self.timeline_list.active_index, -1)
+    def test_null_index_with_no_timelines(self):
+        self.assertEqual(self.timeline_list.active_index, ActiveList.NULL_INDEX)
 
     def test_active_index_0_when_appending_first_timeline(self):
         self.append_timeline()
         self.assertEqual(self.timeline_list.active_index, 0)
 
     def test_activate_previous(self):
-        # -1 when there are no timelines
+        # null index when there are no timelines
         self.timeline_list.activate_previous()
-        self.assertEqual(self.timeline_list.active_index, -1)
+        self.assertEqual(self.timeline_list.active_index, ActiveList.NULL_INDEX)
         # does not change if its the first
         self.append_timeline()
         self.assertEqual(self.timeline_list.active_index, 0)
@@ -196,9 +478,9 @@ class TimelineListTest(unittest.TestCase):
         self.assertEqual(self.timeline_list.active_index, 0)
 
     def test_activate_next(self):
-        # -1 when there are no timelines
+        # null index when there are no timelines
         self.timeline_list.activate_next()
-        self.assertEqual(self.timeline_list.active_index, -1)
+        self.assertEqual(self.timeline_list.active_index, ActiveList.NULL_INDEX)
         # does not change if its the last
         self.append_timeline()
         self.assertEqual(self.timeline_list.active_index, 0)
@@ -252,9 +534,9 @@ class TimelineListTest(unittest.TestCase):
         self.assertEqual(len(self.timeline_list), 2)
 
     def test_activate_first(self):
-        # -1 when there are no timelines
+        # null index when there are no timelines
         self.timeline_list.activate_first()
-        self.assertEqual(self.timeline_list.active_index, -1)
+        self.assertEqual(self.timeline_list.active_index, ActiveList.NULL_INDEX)
         # does not change if its the first
         self.append_timeline()
         self.assertEqual(self.timeline_list.active_index, 0)
@@ -269,9 +551,9 @@ class TimelineListTest(unittest.TestCase):
         self.assertEqual(self.timeline_list.active_index, 0)
 
     def test_activate_last(self):
-        # -1 when there are no timelines
+        # null index when there are no timelines
         self.timeline_list.activate_last()
-        self.assertEqual(self.timeline_list.active_index, -1)
+        self.assertEqual(self.timeline_list.active_index, ActiveList.NULL_INDEX)
         # does not change if its the last
         self.append_timeline()
         self.assertEqual(self.timeline_list.active_index, 0)
@@ -284,18 +566,18 @@ class TimelineListTest(unittest.TestCase):
         self.assertEqual(self.timeline_list.active_index, 2)
 
     def test_shift_active_previous(self):
-        # -1 when there are no timelines
+        # null index when there are no timelines
         self.timeline_list.shift_active_previous()
-        self.assertEqual(self.timeline_list.active_index, -1)
+        self.assertEqual(self.timeline_list.active_index, ActiveList.NULL_INDEX)
         # does not change if its the first
         self.append_timeline()
         self.timeline_list.shift_active_previous()
         self.assertEqual(self.timeline_list.active_index, 0)
 
     def test_shift_active_next(self):
-        # -1 when there are no timelines
+        # null index when there are no timelines
         self.timeline_list.shift_active_next()
-        self.assertEqual(self.timeline_list.active_index, -1)
+        self.assertEqual(self.timeline_list.active_index, ActiveList.NULL_INDEX)
         # does not change if its the last
         self.append_timeline()
         self.timeline_list.shift_active_next()
@@ -309,9 +591,106 @@ class TimelineListTest(unittest.TestCase):
         self.assertEqual(self.timeline_list.active_index, 2)
         self.timeline_list.shift_active_next()
         self.assertEqual(self.timeline_list.active_index, 2)
-    # TODO test update functions with mocks
-    # TODO get_*
 
 
-if __name__ == '__main__':
+class VisibleTimelineListTest(TimelineListTest):
+    def setUp(self):
+        self.timeline_list = VisibleTimelineList()
+
+    def assert_visible(self, visible_list):
+        self.assertEqual(self.timeline_list.visible, visible_list)        
+
+    def test_no_visible_when_newly_created(self):
+        self.assert_visible([])
+        self.timeline_list.expand_visible_previous()
+
+    def test_only_visible_is_index_0_when_appending_first_timeline(self):
+        self.append_timeline()
+        self.assert_visible([0])
+
+    def test_expand_visible_previous(self):
+        self.append_timeline()
+        self.append_timeline()
+        self.append_timeline()
+        self.assert_visible([0])
+        self.timeline_list.activate_last()
+        self.assert_visible([2])
+
+        self.timeline_list.expand_visible_previous()
+        self.assert_visible([1, 2])
+        self.timeline_list.expand_visible_previous()
+        self.assert_visible([0, 1, 2])
+
+        # there are no more timelines
+        self.timeline_list.expand_visible_previous()
+        self.assert_visible([0, 1, 2])
+
+    def test_expand_visible_next(self):
+        self.append_timeline()
+        self.append_timeline()
+        self.append_timeline()
+        self.assert_visible([0])
+
+        self.timeline_list.expand_visible_next()
+        self.assert_visible([0, 1])
+        self.timeline_list.expand_visible_next()
+        self.assert_visible([0, 1, 2])
+
+        # there are no more timelines
+        self.timeline_list.expand_visible_next()
+        self.assert_visible([0, 1, 2])
+
+    def test_shrink_visible_beggining(self):
+        self.append_timeline()
+        self.append_timeline()
+        self.append_timeline()
+        self.timeline_list.activate_last()
+        self.timeline_list.expand_visible_previous()
+        self.timeline_list.expand_visible_previous()
+        self.assert_visible([0, 1, 2])
+
+        self.timeline_list.shrink_visible_beggining()
+        self.assert_visible([1, 2])
+        self.timeline_list.shrink_visible_beggining()
+        self.assert_visible([2])
+
+        # at least the active timeline has to be visible
+        self.timeline_list.shrink_visible_beggining()
+        self.assert_visible([2])
+
+    def test_shrink_visible_end(self):
+        self.append_timeline()
+        self.append_timeline()
+        self.append_timeline()
+        self.timeline_list.expand_visible_next()
+        self.timeline_list.expand_visible_next()
+        self.assert_visible([0, 1, 2])
+
+        self.timeline_list.shrink_visible_end()
+        self.assert_visible([0, 1])
+        self.timeline_list.shrink_visible_end()
+        self.assert_visible([0])
+
+        # at least the active timeline has to be visible
+        self.timeline_list.shrink_visible_end()
+        self.assert_visible([0])
+
+    def test_visible_active_only_when_activating_invisible_timeline(self):
+        self.append_timeline()
+        self.append_timeline()
+        self.append_timeline()
+        self.timeline_list.expand_visible_next()
+        self.assert_visible([0, 1])
+
+        self.timeline_list.activate_last()
+        self.assert_visible([2])
+
+        self.timeline_list.expand_visible_previous()
+        self.assert_visible([1, 2])
+
+        self.timeline_list.activate_first()
+        self.assert_visible([0])
+
+
+if __name__ == '__main__':                 
     unittest.main()

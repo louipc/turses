@@ -7,18 +7,25 @@ turses.cli
 This module contains the logic to launch `turses` with a curses interface.
 """
 
-from .util import parse_arguments
+from .utils import parse_arguments
 from .config import Configuration
 from .controller import CursesController
+from .constant import palette
 from .ui.curses import CursesInterface
+from .api.backends import TweepyApi
 
 
 def main():
     try:
-        configuration = Configuration(parse_arguments())
-        ui = CursesInterface()
-        CursesController(palette=configuration.palette, 
+        args = parse_arguments()
+
+        configuration = Configuration(args)
+        ui = CursesInterface(configuration)
+
+        # start `turses`
+        CursesController(palette=palette, 
                          configuration=configuration, 
-                         ui=ui)
+                         ui=ui,
+                         api_backend=TweepyApi)
     except KeyboardInterrupt:
         exit(0)
