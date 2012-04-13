@@ -48,7 +48,7 @@ setup(name="turses",
           "Natural Language :: English",
           "Operating System :: POSIX :: Linux",
           "Programming Language :: Python :: 2.7",
-          "Topic :: Comminications"
+          "Topic :: Communications"
       ],
       install_requires=requirements,
       tests_require=test_requirements,)
