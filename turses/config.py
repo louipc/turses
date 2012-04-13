@@ -41,8 +41,7 @@ from .api.base import authorization
 # -- Defaults -----------------------------------------------------------------
 
 KEY_BINDINGS = {
-    # Motion
-
+    # motion
     'up':
          ('k', _('scroll up')),
     'down':                   
@@ -56,8 +55,7 @@ KEY_BINDINGS = {
     'scroll_to_bottom':       
         ('G', _('scroll to bottom')),
 
-    # Buffers
-
+    # buffers
     'activate_first_buffer':  
        ('a', _('activate first buffer')),
     'activate_last_buffer':   
@@ -86,7 +84,6 @@ KEY_BINDINGS = {
         ('A', _('mark all tweets in the current timeline as read')),
 
     # tweets
-
     'tweet':                  
         ('t', _('compose a tweet')),
     'delete_tweet':           
@@ -103,18 +100,14 @@ KEY_BINDINGS = {
         ('u', _('refresh the active timeline')),
     'tweet_hashtag':          
         ('H', _('compose a tweet with the same hashtags as the focused status')),
-
-    # friendship
-    'follow_selected':        
-        ('f', _('follow selected status\' author')),
-    'unfollow_selected':      
-        ('U', _('unfollow selected status\' author')),
-
-    # favorites
     'fav':                    
         ('b', _('mark focused tweet as favorite')),
     'delete_fav':             
         ('ctrl b', _('remove tweet from favorites')),
+    'follow_selected':        
+        ('f', _('follow selected status\' author')),
+    'unfollow_selected':      
+        ('U', _('unfollow selected status\' author')),
 
     # timelines
     'home':                   
@@ -150,6 +143,69 @@ KEY_BINDINGS = {
     'redraw':                 
         ('ctrl l', _('redraw the screen')),
 }
+
+MOTION_KEY_BINDINGS = [
+    'up',
+    'down',                   
+    'left',                   
+    'right',                  
+    'scroll_to_top',          
+    'scroll_to_bottom',       
+]
+
+BUFFERS_KEY_BINDINGS = [
+    'activate_first_buffer',  
+    'activate_last_buffer',   
+    'shift_buffer_beggining', 
+    'shift_buffer_end',       
+    'shift_buffer_left',      
+    'shift_buffer_right',     
+    'expand_visible_left',    
+    'expand_visible_right',   
+    'shrink_visible_left',    
+    'shrink_visible_right',   
+    'delete_buffer',          
+    'clear',                  
+    'mark_all_as_read',       
+]
+
+TWEETS_KEY_BINDINGS = [
+    'tweet',                  
+    'delete_tweet',           
+    'reply',                  
+    'retweet',                
+    'retweet_and_edit',       
+    'send_dm',                 
+    'update',                 
+    'tweet_hashtag',          
+    'fav',                    
+    'delete_fav',             
+    'follow_selected',        
+    'unfollow_selected',      
+]
+
+TIMELINES_KEY_BINDINGS = [
+    'home',                   
+    'own_tweets',             
+    'favorites',              
+    'mentions',               
+    'DMs',                    
+    'search',                 
+    'search_user',            
+    'user_timeline',          
+    'thread',                 
+    'hashtags',               
+]
+
+META_KEY_BINDINGS = [
+    'help',                   
+]
+
+TURSES_KEY_BINDINGS = [
+    'quit',                   
+    'openurl',              
+    'redraw',                 
+]
 
 PALETTE = [
     #Tabs
@@ -269,9 +325,17 @@ class Configuration(object):
 
         # Key bindings
         conf.add_section(SECTION_KEY_BINDINGS)
-        for binding in self.key_bindings:
-            key, description = self.key_bindings[binding]
-            conf.set(SECTION_KEY_BINDINGS, binding, key)
+        binding_lists = [MOTION_KEY_BINDINGS,
+                         BUFFERS_KEY_BINDINGS,
+                         TWEETS_KEY_BINDINGS,
+                         TIMELINES_KEY_BINDINGS,
+                         META_KEY_BINDINGS,
+                         TURSES_KEY_BINDINGS,]
+        for binding_list in binding_lists:
+            for binding in binding_list:
+                key = self.key_bindings[binding][0]
+                conf.set(SECTION_KEY_BINDINGS, binding, key)
+        
 
         # Color
         conf.add_section(SECTION_PALETTE)
@@ -281,13 +345,13 @@ class Configuration(object):
             conf.set(SECTION_PALETTE, label_name + '_bg', bg)
 
         # Styles
-        conf.add_section('styles')
-        conf.set('styles', 'header_template', self.styles['header_template'])
-        conf.set('styles', 'dm_template',     self.styles['dm_template'])
+        conf.add_section(SECTION_STYLES)
+        for style in self.styles:
+            conf.set(SECTION_STYLES, style, self.styles[style])
 
         # Debug
-        conf.add_section('debug')
-        conf.set('debug', 'logging_level', self.logging_level)
+        conf.add_section(SECTION_DEBUG)
+        conf.set(SECTION_DEBUG, 'logging_level', LOGGING_LEVEL)
 
         with open(config_file, 'wb') as config:
             conf.write(config)
