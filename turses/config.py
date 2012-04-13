@@ -32,7 +32,7 @@ Here is an example with two user accounts: `alice` and `bob`.
 """
 
 from ConfigParser import RawConfigParser
-from os import getenv, path, mkdir
+from os import getenv, path, mkdir, remove
 from gettext import gettext as _
 
 from .utils import encode
@@ -252,12 +252,25 @@ BROWSER = getenv('BROWSER')
 CONFIG_DIR = '.turses'
 CONFIG_PATH = path.join(HOME, CONFIG_DIR)
 
+LEGACY_CONFIG_DIR = '.config/turses'
+LEGACY_CONFIG_PATH = path.join(HOME, LEGACY_CONFIG_DIR)
+LEGACY_CONFIG_FILE = path.join(LEGACY_CONFIG_PATH, 'turses.cfg')
+LEGACY_TOKEN_FILE = path.join(LEGACY_CONFIG_PATH, 'turses.tok')
+
 # Names of the sections in the configuration
 SECTION_KEY_BINDINGS = 'bindings'
 SECTION_PALETTE = 'colors'
 SECTION_STYLES = 'styles'
 SECTION_DEBUG = 'debug'
 SECTION_TOKEN = 'token'
+
+
+def print_deprecation_notice():
+    print "NOTE:"
+    print
+    print "The configuration file in %s has been deprecated." % LEGACY_CONFIG_FILE
+    print "A new configuration directory is being created in %s." % CONFIG_PATH
+    print
 
 
 class Configuration(object):
@@ -274,12 +287,15 @@ class Configuration(object):
         """
         self.load_defaults()
 
+        self.browser = BROWSER
+
         # create the config directory if it does not exist
         if not path.isdir(CONFIG_PATH):
             try:
                 mkdir(CONFIG_PATH)
             except:
                 print encode(_('Error creating config directory in %s' % CONFIG_DIR))
+                exit(3)
 
         # generate config file and exit
         if cli_args.generate_config:
@@ -299,27 +315,96 @@ class Configuration(object):
             token_file = path.join(CONFIG_PATH, 'token')
         self._init_token(token_file)
 
-    def _init_config(self, config_file):
-        # check if there is any configuration to load
-        if path.isfile(config_file):
-            self.parse_config_file(config_file)
-        else:
-            self.generate_config_file(config_file)
-        self.config_file = config_file
-
-    def _init_token(self, token_file):
-        if not path.isfile(token_file):
-            self.authorize_new_account()
-        else:
-            self.parse_token_file(token_file)
-        self.token_file = token_file
-
     def load_defaults(self):
         """Load default values into configuration."""
         self.key_bindings = KEY_BINDINGS
         self.palette = PALETTE
         self.styles = STYLES
         self.logging_level = LOGGING_LEVEL
+
+    def _init_config(self, config_file):
+        if path.isfile(LEGACY_CONFIG_FILE):
+            self._parse_legacy_config_file()
+            print_deprecation_notice()
+            remove(LEGACY_CONFIG_FILE)
+            self.generate_config_file(config_file)
+        elif path.isfile(config_file):
+            self.parse_config_file(config_file)
+        else:
+            self.generate_config_file(config_file)
+        self.config_file = config_file
+
+    def _init_token(self, token_file):
+        if path.isfile(LEGACY_TOKEN_FILE):
+            self.parse_token_file(LEGACY_TOKEN_FILE)
+            remove(LEGACY_TOKEN_FILE)
+            if hasattr(self, 'oauth_token') and \
+               hasattr(self, 'oauth_token_secret'):
+                   self.generate_token_file(token_file,
+                                            self.oauth_token,
+                                            self.oauth_token_secret)
+        elif not path.isfile(token_file):
+            self.authorize_new_account()
+        else:
+            self.parse_token_file(token_file)
+        self.token_file = token_file
+
+    def _parse_legacy_config_file(self):
+        """
+        Parse a legacy configuration file.
+        """
+        conf = RawConfigParser()
+        conf.read(LEGACY_CONFIG_FILE)
+
+        styles = self.styles.copy()
+
+        if conf.has_option('params', 'dm_template'):
+            styles['dm_template'] = conf.get('params', 'dm_template')
+
+        if conf.has_option('params', 'header_template'):
+            styles['header_template'] = conf.get('params', 'header_template')
+
+        self.styles.update(styles)
+
+        if conf.has_option('params', 'logging_level'):
+            self.logging_level  = conf.getint('params', 'logging_level')
+
+        key_bindings = self.key_bindings.copy()
+
+        for key in key_bindings:
+            if conf.has_option('keys', key):
+                custom_key = conf.get('keys', key) 
+                key_values = key_bindings[key]
+                default_key, description = key_values[0], key_values[1]
+                new_key_values = custom_key, description
+                key_bindings[key] = new_key_values
+
+        self.key_bindings.update(key_bindings)
+
+        palette_labels = [color[0] for color in PALETTE]
+        for label in palette_labels:
+            if conf.has_option('colors', label):
+                custom_fg  = conf.get('colors', label) 
+                self._set_color(label, custom_fg)
+
+    def _parse_legacy_token_file(self):
+        conf = RawConfigParser()
+        conf.read(LEGACY_TOKEN_FILE)
+
+        if conf.has_option(SECTION_TOKEN, 'oauth_token'):
+            self.oauth_token = conf.get(SECTION_TOKEN, 'oauth_token')
+
+        if conf.has_option(SECTION_TOKEN, 'oauth_token'):
+            self.oauth_token_secret = conf.get(SECTION_TOKEN, 'oauth_token_secret')
+
+    def _set_color(self, color_label, custom_fg=None, custom_bg=None):
+        for color in self.palette:
+            label, fg, bg = color[0], color[1], color[2]
+            new_fg = custom_fg if custom_fg is not None else fg
+            new_bg = custom_bg if custom_bg is not None else bg
+            if label == color_label:
+                color[1] = new_fg
+                color[2] = new_bg
 
     def generate_config_file(self, config_file):
         conf = RawConfigParser()
@@ -362,9 +447,9 @@ class Configuration(object):
         print encode(_('Generated configuration file in %s')) % config_file
 
     def generate_token_file(self, 
-                          token_file,
-                          oauth_token,
-                          oauth_token_secret):
+                            token_file,
+                            oauth_token,
+                            oauth_token_secret):
         self.oauth_token = oauth_token
         self.oauth_token_secret = oauth_token_secret
 
@@ -373,7 +458,7 @@ class Configuration(object):
         conf.set(SECTION_TOKEN, 'oauth_token', oauth_token)
         conf.set(SECTION_TOKEN, 'oauth_token_secret', oauth_token_secret)
 
-        with open(self.token_file, 'wb') as tokens:
+        with open(token_file, 'wb') as tokens:
             conf.write(tokens)
 
         print encode(_('your account has been saved'))
@@ -432,3 +517,6 @@ class Configuration(object):
         else:
             # TODO: exit codes
             exit(2)
+
+    def reload(self):
+        self.parse_config_file(self.config_file)
