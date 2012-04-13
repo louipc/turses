@@ -1040,10 +1040,11 @@ class Controller(object):
             return
 
         args = ' '.join(urls)
-        # TODO: delegate this to BROWSER environment variable (?)
-        command = self.configuration.params['openurl_command']
-        # remove %s from legacy configuration
-        command.strip('%s')
+
+        command = self.configuration.browser
+        if not command:
+            self.error_message(_('You have to set the BROWSER environment variable to open URLs'))
+            return
 
         try:
             spawn_process(command, args)
