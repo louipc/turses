@@ -18,19 +18,19 @@ from .decorators import wrap_exceptions
 from .api.base import AsyncApi
 from .utils import get_urls, spawn_process
 from .models import (
-        Timeline, 
-        VisibleTimelineList,
+        is_DM,
+        is_username,
+        is_valid_status_text, 
+        is_valid_search_text, 
+        sanitize_username,
 
         get_authors_username, 
         get_mentioned_for_reply, 
         get_dm_recipients_username,
         get_mentioned_usernames,
         get_hashtags, 
-
-        is_valid_status_text, 
-        is_valid_search_text, 
-        is_valid_username,
-        is_DM
+        Timeline, 
+        VisibleTimelineList,
 )
 
 
@@ -805,7 +805,8 @@ class Controller(object):
         self.ui.set_focus('body')
 
         # TODO make sure that the user EXISTS and THEN fetch its tweets
-        if not is_valid_username(username):
+        username = sanitize_username(username)
+        if not is_username(username):
             self.info_message(_('Invalid username'))
             return
         else:
