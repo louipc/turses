@@ -40,165 +40,142 @@ from .api.base import authorization
 
 # -- Defaults -----------------------------------------------------------------
 
-# a list of (name, key, description) tuples with the default key bindings
 KEY_BINDINGS = {
-    'motion': {
-        'up':
-             ('k', _('scroll up')),
-         'down':                   
-             ('j', _('scroll down')),
-        'left':                   
-            ('h', _('activate the timeline on the left')),
-        'right':                  
-            ('l', _('activate the timeline on the right')),
-        'scroll_to_top':          
-            ('g', _('scroll to top')),
-        'scroll_to_bottom':       
-            ('G', _('scroll to bottom')),
-    },
+    # Motion
 
-    'buffers': {
-       'activate_first_buffer':  
-           ('a', _('activate first buffer')),
-        'activate_last_buffer':   
-            ('e', _('activate last buffer')),
-        'shift_buffer_beggining': 
-            ('ctrl a', _('shift active buffer to the beginning')),
-        'shift_buffer_end':       
-            ('ctrl e', _('shift active buffer to the end')),
-        'shift_buffer_left':      
+    'up':
+         ('k', _('scroll up')),
+    'down':                   
+         ('j', _('scroll down')),
+    'left':                   
+        ('h', _('activate the timeline on the left')),
+    'right':                  
+        ('l', _('activate the timeline on the right')),
+    'scroll_to_top':          
+        ('g', _('scroll to top')),
+    'scroll_to_bottom':       
+        ('G', _('scroll to bottom')),
+
+    # Buffers
+
+    'activate_first_buffer':  
+       ('a', _('activate first buffer')),
+    'activate_last_buffer':   
+        ('e', _('activate last buffer')),
+    'shift_buffer_beggining': 
+        ('ctrl a', _('shift active buffer to the beginning')),
+    'shift_buffer_end':       
+        ('ctrl e', _('shift active buffer to the end')),
+    'shift_buffer_left':      
         ('<', _('shift active buffer one position to the left')),
-        'shift_buffer_right':     
+    'shift_buffer_right':     
         ('>', _('shift active buffer one position to the right')),
-        'expand_visible_left':    
+    'expand_visible_left':    
         ('p', _('expand visible timelines one column to the left')),
-        'expand_visible_right':   
+    'expand_visible_right':   
         ('n', _('expand visible timelines one column to the right')),
-        'shrink_visible_left':    
+    'shrink_visible_left':    
         ('P', _('shrink visible timelines one column from the left')),
-        'shrink_visible_right':   
+    'shrink_visible_right':   
         ('N', _('shrink visible timelines one column from the left')),
-        'delete_buffer':          
+    'delete_buffer':          
         ('d', _('delete buffer')),
-        'clear':                  
+    'clear':                  
         ('c', _('clear status bar')),
-        'mark_all_as_read':       
+    'mark_all_as_read':       
         ('A', _('mark all tweets in the current timeline as read')),
-    },
 
-    'tweets': {
-        'tweet':                  
-            ('t', _('compose a tweet')),
-        'delete_tweet':           
-            ('X', _('delete focused status')),
-        'reply':                  
-            ('r', _('reply to focused status')),
-        'retweet':                
-            ('R', _('retweet focused status')),
-        'retweet_and_edit':       
-            ('E', _('open a editor for manually retweeting the focused status')),
-        'send_dm':                 
-            ('D', _('compose a direct message')),
-        'update':                 
-            ('u', _('refresh the active timeline')),
-        'tweet_hashtag':          
-            ('H', _('compose a tweet with the same hashtags as the focused status')),
-    },
+    # tweets
 
-    'friendship': {
-        'follow_selected':        
-            ('f', _('follow selected status\' author')),
-        'unfollow_selected':      
-            ('U', _('unfollow selected status\' author')),
-    },
+    'tweet':                  
+        ('t', _('compose a tweet')),
+    'delete_tweet':           
+        ('X', _('delete focused status')),
+    'reply':                  
+        ('r', _('reply to focused status')),
+    'retweet':                
+        ('R', _('retweet focused status')),
+    'retweet_and_edit':       
+        ('E', _('open a editor for manually retweeting the focused status')),
+    'send_dm':                 
+        ('D', _('compose a direct message')),
+    'update':                 
+        ('u', _('refresh the active timeline')),
+    'tweet_hashtag':          
+        ('H', _('compose a tweet with the same hashtags as the focused status')),
 
-    'favorites': {
-        'fav':                    
-            ('b', _('mark focused tweet as favorite')),
-        'delete_fav':             
-            ('ctrl b', _('remove tweet from favorites')),
-    },
+    # friendship
+    'follow_selected':        
+        ('f', _('follow selected status\' author')),
+    'unfollow_selected':      
+        ('U', _('unfollow selected status\' author')),
 
-    'timelines': {
-        'home':                   
-            ('.', _('open a home timeline')),
-        'own_tweets':             
-            ('_', _('open a timeline with your tweets')),
-        'favorites':              
-            ('B', _('open a timeline with your favorites')),
-        'mentions':               
-            ('m', _('open a mentions timeline')),
-        'DMs':                    
-            ('M', _('open a direct message timeline')),
-        'search':                 
-            ('/', _('search for term and show resulting timeline')),
-        'search_user':            
-            ('@', _('open a timeline with the tweets of the specified user')),
-        'user_timeline':          
-            ('+', _('open a timeline with the tweets of the focused status\' author')),
-        'thread':                 
-            ('T', _('open the thread of the focused status')),
-        'hashtags':               
-            ('L', _('open a search timeline with the hashtags of the focused status')),
-    },
+    # favorites
+    'fav':                    
+        ('b', _('mark focused tweet as favorite')),
+    'delete_fav':             
+        ('ctrl b', _('remove tweet from favorites')),
 
-    'meta': {
-        #('user_info',              'i', ''),
-        'help':                   
-            ('?', _('show program help')),
-    },
+    # timelines
+    'home':                   
+        ('.', _('open a home timeline')),
+    'own_tweets':             
+        ('_', _('open a timeline with your tweets')),
+    'favorites':              
+        ('B', _('open a timeline with your favorites')),
+    'mentions':               
+        ('m', _('open a mentions timeline')),
+    'DMs':                    
+        ('M', _('open a direct message timeline')),
+    'search':                 
+        ('/', _('search for term and show resulting timeline')),
+    'search_user':            
+        ('@', _('open a timeline with the tweets of the specified user')),
+    'user_timeline':          
+        ('+', _('open a timeline with the tweets of the focused status\' author')),
+    'thread':                 
+        ('T', _('open the thread of the focused status')),
+    'hashtags':               
+        ('L', _('open a search timeline with the hashtags of the focused status')),
 
-    'turses': {
-        'quit':                   
-            ('q', _('exit program')),
-        'openurl':              
-            ('o', _('open URLs of the focused status in a browser')),
-        'redraw':                 
-            ('ctrl l', _('redraw the screen')),
-    }
+    # meta
+    'help':                   
+        ('?', _('show program help')),
+
+    # turses
+    'quit':                   
+        ('q', _('exit program')),
+    'openurl':              
+        ('o', _('open URLs of the focused status in a browser')),
+    'redraw':                 
+        ('ctrl l', _('redraw the screen')),
 }
 
-PALETTE = {
-    # Tabs
-    'active_tab':  
-        ('white', ''),
-    'visible_tab': 
-        ('light cyan', ''),
-    'inactive_tab': 
-        ('dark blue', ''),
+PALETTE = [
+    #Tabs
+    ['active_tab',  'white', ''],
+    ['visible_tab', 'light cyan', ''],
+    ['inactive_tab', 'dark blue', ''],
 
     # Statuses
-    'header': 
-        ('light blue', ''),
-    'body': 
-        ('default', '',),
-    'focus':
-        ('dark red', '',),
-    'line': 
-        ('dark blue', ''),
-    'unread': 
-        ('dark red', ''),
-    'read': 
-        ('dark blue', ''),
-    'favorited': 
-        ('yellow', ''),
+    ['header', 'light blue', ''],
+    ['body', 'default', '', 'standout'],
+    ['focus','dark red', '', 'standout'],
+    ['line', 'dark blue', ''],
+    ['unread', 'dark red', ''],
+    ['read', 'dark blue', ''],
+    ['favorited', 'yellow', ''],
 
     # Text
-    'highlight': 
-        ('dark red', ''),
-    'highlight_nick': 
-        ('light red', ''),
-    'attag': 
-        ('brown', ''),
-    'hashtag': 
-        ('dark green', ''),
+    ['highlight', 'dark red', ''],
+    ['highlight_nick', 'light red', ''],
+    ['attag', 'brown', ''],
+    ['hashtag', 'dark green', ''],
 
     # Messages
-    'error': 
-        ('white', 'dark red'),
-    'info': 
-        ('white', 'dark blue'),
-}
+    ['error', 'white', 'dark red'],
+    ['info', 'white', 'dark blue'],
+]
 
 STYLES = {
     # TODO: make time string configurable 
@@ -219,6 +196,12 @@ BROWSER = getenv('BROWSER')
 CONFIG_DIR = '.turses'
 CONFIG_PATH = path.join(HOME, CONFIG_DIR)
 
+# Names of the sections in the configuration
+SECTION_KEY_BINDINGS = 'bindings'
+SECTION_PALETTE = 'colors'
+SECTION_STYLES = 'styles'
+SECTION_DEBUG = 'debug'
+
 
 class Configuration(object):
     """
@@ -226,10 +209,6 @@ class Configuration(object):
 
     Has backwards compatibility with the Tyrs legacy configuration.
     """
-    SECTION_KEY_BINDINGS = 'bindings'
-    SECTION_PALETTE = 'palette'
-    SECTION_STYLES = 'styles'
-    SECTION_DEBUG = 'debug'
 
     def __init__(self, cli_args):
         """
@@ -289,19 +268,17 @@ class Configuration(object):
         conf = RawConfigParser()
 
         # Key bindings
-        for category in self.key_bindings:
-            conf.add_section(category)
-            bindings = self.key_bindings[category]
-            for binding_name in bindings:
-                key, description = bindings[binding_name]
-                conf.set(category, binding_name, key)
+        conf.add_section(SECTION_KEY_BINDINGS)
+        for binding in self.key_bindings:
+            key, description = self.key_bindings[binding]
+            conf.set(SECTION_KEY_BINDINGS, binding, key)
 
         # Color
-        conf.add_section('colors')
+        conf.add_section(SECTION_PALETTE)
         for label in self.palette:
-            fg, bg = self.palette[label]
-            conf.set('colors', label, fg)
-            conf.set('colors', label + '_bg', bg)
+            label_name, fg, bg = label[0], label[1], label[2]
+            conf.set(SECTION_PALETTE, label_name, fg)
+            conf.set(SECTION_PALETTE, label_name + '_bg', bg)
 
         # Styles
         conf.add_section('styles')
@@ -329,13 +306,11 @@ class Configuration(object):
         self._parse_debug()
 
     def _parse_key_bindings(self):
-        for category in self.key_bindings:
-            bindings = self.key_bindings[category]
-            for binding_name in bindings:
-                if self._conf.has_option(category, binding_name):
-                    key, description = bindings[binding_name]
-                    custom_key = self._conf.get(category, binding_name) 
-                    bindings[binding_name] = custom_key, description
+        for binding in self.key_bindings:
+            if self._conf.has_option(SECTION_KEY_BINDINGS, binding):
+                key, description = self.key_bindings[binding]
+                custom_key = self._conf.get(SECTION_KEY_BINDINGS, binding) 
+                self.key_bindings[binding] = custom_key
 
     def _parse_palette(self):
         pass
