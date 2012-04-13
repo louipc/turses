@@ -15,18 +15,36 @@ from bisect import insort
 from .utils import html_unescape, timestamp_from_datetime
 
 ##
-#  Helper functions
+#  Helpers
 ##
+
+username_regex = re.compile(r'[A-Za-z0-9_]+')
+
+prepend_at = lambda username: '@%s' % username
 
 def is_DM(status):
     return status.__class__ == DirectMessage
 
+def get_mentioned_usernames(status):
+    """
+    Return mentioned usernames in `status` without '@'.
+    """
+    usernames = []
+    for word in status.text.split():
+        if len(word) > 1 and word.startswith('@'):
+            word.strip('@')
+            usernames.append(word)
+    return map(sanitize_username, usernames)
+
 def get_mentioned_for_reply(status):
+    """
+    Return a list containing the author of `status` and all the mentioned 
+    usernames prepended with '@'.
+    """
     author = get_authors_username(status)
     mentioned = get_mentioned_usernames(status)
     mentioned.insert(0, author)
 
-    prepend_at = lambda username: '@%s' % username
     return map(prepend_at, mentioned)
 
 def get_authors_username(status):
@@ -41,33 +59,55 @@ def get_authors_username(status):
     return username
 
 def get_dm_recipients_username(sender, status):
+    """
+    Return the recipient for a Direct Message depending on what `status`
+    is.
+
+    If is a `turses.models.Status` and sender != `status.user` I will return 
+    `status.user`.
+
+    If is a `turses.models.DirectMessage` I will return the username that
+    is not `sender` looking at the DMs sender and recipient.
+
+    Otherwise I return `None`.
+    """
+    username = None
     if is_DM(status):
         users = [status.sender_screen_name,
                  status.recipient_screen_name,]
         if sender in users:
-            users.pop(sender)
+            users.pop(users.index(sender))
             username = users.pop()
-    else:
-        # status
+    elif status.user != sender:
         username = status.user
     return username
 
-def is_username(string):
-    return len(string) > 1 and string.startswith('@')
+def is_username(username):
+    """
+    Return `True` if `username` is a valid Twitter username, `False`
+    otherwise.
+    """
+    match = username_regex.match(username)
+    if not match:
+        return False
+    else:
+        return match.string == username
 
 def is_hashtag(string):
     return len(string) > 1 and string.startswith('#')
 
 def sanitize_username(username):
-    is_legal_username_char = lambda char: char.isalnum()
-    sanitized = filter(is_legal_username_char, username[1:])
+    """
+    Return `username` with illegal characters for a Twitter username 
+    striped.
+    """
+    sanitized = filter(is_username, username[1:])
     return sanitized
 
-def get_mentioned_usernames(status):
-    usernames = filter(is_username, status.text.split())
-    return map(sanitize_username, usernames)
-
 def get_hashtags(status):
+    """
+    Return a list of hashtags encountered in `status`.
+    """
     return filter(is_hashtag, status.text.split())
 
 def is_valid_status_text(text):
@@ -77,11 +117,6 @@ def is_valid_status_text(text):
 def is_valid_search_text(text):
     """Checks the validity of a search text."""
     return bool(text)
-
-def is_valid_username(username):
-    username_regex = re.compile(r'[A-Za-z0-9_]+')
-    return bool(username_regex.match(username))
-
 
 ##
 #  Classes
