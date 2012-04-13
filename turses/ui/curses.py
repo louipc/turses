@@ -526,8 +526,6 @@ class HelpBuffer(ScrollableListBoxWrapper):
                                                             offset=offset,))
 
     def create_help_buffer(self):
-        # TODO: remove the descriptions from the code. Store the keybindings
-        #       in `turses/constant.py`. 
         self.insert_header()
         # Motion
         self.insert_division(_('Motion'))
