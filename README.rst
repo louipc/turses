@@ -65,8 +65,10 @@ Any feedback is very much appreciated.
 Roadmap
 -------
 
- - Lists
  - Documentation
+ - Lists
+ - Streaming
+ - Notifications
  - Geo
  - Blocking
 
