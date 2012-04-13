@@ -69,7 +69,12 @@ class KeyHandler(object):
         """
         Return True if `key` corresponds to the action specified by `name`.
         """
-        return key == self.configuration.keys[name]
+        try:
+            bound_key = self.configuration.keys[name]
+        except KeyError:
+            return False
+        else:
+            return key == bound_key
 
     def handle_keyboard_input(self, key):
         """Handle a keyboard input."""
@@ -214,6 +219,9 @@ class KeyHandler(object):
         # Follow hashtags
         elif self.is_bound(key, 'hashtags'):
             self.controller.search_hashtags()
+        # Authors timeline
+        elif self.is_bound(key, 'user_timeline'):
+            self.controller.focused_status_author_timeline()
 
     def _twitter_key_handler(self, key):
         # Update timeline
@@ -385,13 +393,14 @@ class Controller(object):
     def append_timeline(self, 
                         name, 
                         update_function, 
-                        update_args=None):
+                        update_args=None,
+                        update_kwargs=None):
         """
         Given a name, function to update a timeline and optionally
         arguments to the update function, it creates the timeline and
         appends it to `timelines` asynchronously.
         """
-        args = name, update_function, update_args
+        args = name, update_function, update_args, update_kwargs
         thread = Thread(target=self._append_timeline,
                         args=args)
         thread.run()
@@ -399,10 +408,12 @@ class Controller(object):
     def _append_timeline(self,
                          name, 
                          update_function, 
-                         update_args=None):
+                         update_args,
+                         update_kwargs):
         timeline = Timeline(name=name,
                             update_function=update_function,
-                            update_function_args=update_args) 
+                            update_function_args=update_args,
+                            update_function_kwargs=update_kwargs) 
         timeline.update()
         timeline.activate_first()
         self.timelines.append_timeline(timeline)
@@ -432,6 +443,18 @@ class Controller(object):
                              on_error=timeline_not_fetched,
                              on_success=timeline_fetched,)
                               
+    def append_user_timeline(self, username):
+        timeline_fetched = partial(self.info_message, 
+                                    _('@%s\'s tweets fetched' % username))
+        timeline_not_fetched = partial(self.error_message, 
+                                        _('Failed to fetch @%s\'s tweets' % username))
+
+        self.append_timeline(name='@%s' % username,
+                             update_function=self.api.get_user_timeline,
+                             update_kwargs={'screen_name': username},
+                             on_error=timeline_not_fetched,
+                             on_success=timeline_fetched,)
+
     def append_own_tweets_timeline(self):
         timeline_fetched = partial(self.info_message, 
                                     _('Your tweets fetched'))
@@ -842,6 +865,11 @@ class Controller(object):
         status = self.timelines.get_focused_status()
         hashtags = ' '.join(get_hashtags(status))
         self.search_handler(text=hashtags)
+
+    def focused_status_author_timeline(self):
+        status = self.timelines.get_focused_status()
+        author = get_authors_username(status)
+        self.append_user_timeline(author)
 
     def tweet(self):
         self.ui.show_tweet_editor(prompt=_('Tweet'), 
