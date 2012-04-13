@@ -580,8 +580,10 @@ class HelpBuffer(ScrollableListBoxWrapper):
         self.insert_help_item('mentions', _('Open a mentions timeline'))
         self.insert_help_item('DMs', _('Open a direct message timeline'))
         self.insert_help_item('search', _('Search for term and show resulting timeline'))
+        self.insert_help_item('search_user', _('Open the timeline of the specified user'))
         self.insert_help_item('hashtags', _('Search the hashtags of the focused status'))
         self.insert_help_item('thread', _('Open selected thread'))
+        self.insert_help_item('user_timeline', _('Open focused status author\'s timeline'))
         
         #self.insert_help_item('user_info', _('Show user information '))
 

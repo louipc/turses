@@ -1,3 +1,7 @@
+0.0.16
+------
+- binding to open focused status authors' tweets
+
 0.0.15
 ------
 - bugfix: DM recipient was not correctly resolved

@@ -85,6 +85,7 @@ key = {
     'search_user':            '@',
     'thread':                 'T',
     'hashtags':               'L',
+    'user_timeline':          '+',
 
     # Meta
     'user_info':              'i',
