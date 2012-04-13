@@ -17,26 +17,27 @@ from re import sub, findall
 from subprocess import call
 from sys import stdout
 from os import devnull
+from gettext import gettext as _
 
 from . import __version__
 
 def parse_arguments():
-    """Parse all arguments from the command line."""
+    """Parse arguments from the command line."""
 
-    parser = ArgumentParser("turses: Twitter client with a sexy curses interface.")
+    parser = ArgumentParser("turses: Twitter client featuring a sexy curses interface.")
 
     parser.add_argument("-a", "--account",
-            help="Use another account, store in a different file.")
+            help=_("Use account with the specified username."))
 
     parser.add_argument("-c", "--config",
-            help="Use another configuration file.")
+            help=_("Use the specified configuration file."))
 
     parser.add_argument("-g", "--generate-config",
-            help="Generate a default configuration file.")
+            help=_("Generate a default configuration file is the specified path."))
 
     version = "turses %s" % __version__
     parser.add_argument("-v", "--version", action="version", version=version,
-            help="Show the current version of turses")
+            help=_("Show the current version of turses"))
 
     args = parser.parse_args()
     return args
