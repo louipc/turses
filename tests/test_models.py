@@ -164,6 +164,7 @@ class HelperFunctionTest(unittest.TestCase):
     def test_sanitize_username(self):
         dirty_and_clean = [
             ('@dialelo',           'dialelo'),   
+            ('dialelo',            'dialelo'),   
             ('?@mental_floss',     'mental_floss'),
             ('@4n_4Wfu1_US3RN4M3', '4n_4Wfu1_US3RN4M3'),
         ]

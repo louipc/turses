@@ -101,7 +101,7 @@ def sanitize_username(username):
     Return `username` with illegal characters for a Twitter username 
     striped.
     """
-    sanitized = filter(is_username, username[1:])
+    sanitized = filter(is_username, username)
     return sanitized
 
 def get_hashtags(status):
