@@ -11,7 +11,7 @@ import logging
 import oauth2 as oauth
 from curses import ascii
 from ConfigParser import RawConfigParser
-from os import environ, path, makedirs, mkdir
+from os import getenv, path, makedirs, mkdir
 from gettext import gettext as _
 from urlparse import parse_qsl
 
@@ -25,7 +25,7 @@ class Configuration(object):
 
     def __init__(self, args):
         self.init_config()
-        self.home = environ['HOME']
+        self.home = getenv('HOME')
         self.get_xdg_config()
         self.get_browser()
         # generate the config file
@@ -50,16 +50,10 @@ class Configuration(object):
         self.palette = constant.palette
 
     def get_xdg_config(self):
-        try:
-            self.xdg_config = environ['XDG_CONFIG_HOME']
-        except:
-            self.xdg_config = self.home+'/.config'
+        self.xdg_config = getenv('XDG_CONFIG_HOME', self.home+'/.config')
 
     def get_browser(self):
-        try:
-            self.browser = environ['BROWSER']
-        except:
-            self.browser = ''
+        self.browser = getenv('BROWSER', '')
 
     def check_for_default_config(self):
         default_dir = '/turses'
