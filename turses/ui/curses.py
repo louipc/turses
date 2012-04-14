@@ -11,7 +11,7 @@ in `turses.ui.base`.
 from gettext import gettext as _
 
 from urwid import (
-        AttrWrap, 
+        AttrMap,
         WidgetWrap, 
         Padding, 
         WidgetDecoration,
@@ -56,7 +56,7 @@ banner = [
      "   _                             ",
      " _| |_ _   _ _ __ ___  ___  ____ ",
      "|_   _| | | | '__/ __|/   \/ ___|",
-     "  | | | | | | |  |   \  _ ||   \\ ",
+     "  | | | | | | |  |   \  ~ ||   \\ ",
      "  | |_| |_| | |  \__ |  __/\__ | ",
      "  \___|\____|_| |____/\___||___/ ",
      "  ······························ ",
@@ -67,15 +67,15 @@ banner = [
      _("Press 'q' to quit turses"),
      "",
      "",
-     "New configuration and token files from the old ones",
-     "have been created in %s." % CONFIG_PATH,
+     _("New configuration and token files from the old ones"),
+     _("have been created in %s." % CONFIG_PATH),
      "",
      "",
      "    ~                                              ",
      "    |+.turses/                                     ",
      "    | |-config                                     ",
-     "    | |-token       # default account's token      ",
-     "    | `-bob.token   # @bob                         ",
+     _("    | |-token       # default account's token      "),
+     _("    | `-bob.token   # @bob account's token         "),
      "    |+...                                          ",
      "    |-...                                          ",
      "",
@@ -270,7 +270,8 @@ class TextEditor(WidgetWrap):
                  done_signal_handler):
         if content:
             content += ' '
-        self.editor = Edit(u'%s (twice enter key to validate or esc) \n>> ' % prompt, content)
+        widget = Edit(u'%s (twice enter key to validate or esc) \n>> ' % prompt, content)
+        self.editor = AttrMap(widget, 'editor')
         self.last_key = ''
         
         connect_signal(self, 'done', done_signal_handler)
@@ -294,7 +295,7 @@ class TextEditor(WidgetWrap):
 
 
 class TweetEditor(WidgetWrap):
-    """Editor for creating tweets."""
+    """Editor for creating teets."""
 
     __metaclass__ = signals.MetaSignals
     signals = ['done']
@@ -305,7 +306,7 @@ class TweetEditor(WidgetWrap):
                  done_signal_handler):
         if content:
             content += ' '
-        self.editor = Edit(u'%s (twice enter key to validate or esc) \n>> ' % prompt, content)
+        self.editor = AttrMap(Edit(u'%s (twice enter key to validate or esc) \n>> ' % prompt, content), 'editor')
 
         self.counter = len(content)
         self.counter_widget = Text(str(self.counter))
@@ -591,7 +592,7 @@ class HelpBuffer(ScrollableListBoxWrapper):
 
     def insert_title(self, title):
         self.items.append(Divider(' '))
-        self.items.append(Padding(AttrWrap(Text(title), 'focus'), left=4))
+        self.items.append(Padding(AttrMap(Text(title), 'focus'), left=4))
 
     # from `ScrollableListBoxWrapper`
 
@@ -669,14 +670,14 @@ class StatusWidget(WidgetWrap):
         self.configuration = configuration
 
         text = status.text
-        status_content = Padding(AttrWrap(Text(text), 'body'), left=1, right=1)
+        status_content = Padding(AttrMap(Text(text), 'body'), left=1, right=1)
         header = self._create_header(status)
         box = BoxDecoration(status_content, title=header)
 
         if not is_DM(status) and status.is_favorite:
-            widget = AttrWrap(box, 'favorited', 'focus')
+            widget = AttrMap(box, 'favorited', 'focus')
         else:
-            widget = AttrWrap(box, 'line', 'focus')
+            widget = AttrMap(box, 'line', 'focus')
         self.__super.__init__(widget)
 
     def selectable(self):
@@ -750,7 +751,7 @@ class BoxDecoration(WidgetDecoration, WidgetWrap):
 
         def use_attr(a, t):
             if a:
-                t = AttrWrap(t, a)
+                t = AttrMap(t, a)
             return t
 
         # top line
@@ -758,7 +759,7 @@ class BoxDecoration(WidgetDecoration, WidgetWrap):
         tline_attr = Columns([('fixed', 2, 
                                         Divider(utf8decode("─"))),
                                     ('fixed', len(title), 
-                                        AttrWrap(Text(title), self.color)),
+                                        AttrMap(Text(title), self.color)),
                                     Divider(utf8decode("─")),])
         tline = use_attr(tline, tline_attr)
         # bottom line

@@ -134,6 +134,8 @@ KEY_BINDINGS = {
     # meta
     'help':                   
         ('?', _('show program help')),
+    'reload_config':                   
+        ('C', _('reload configuration')),
 
     # turses
     'quit':                   
@@ -199,6 +201,7 @@ TIMELINES_KEY_BINDINGS = [
 
 META_KEY_BINDINGS = [
     'help',                   
+    'reload_config',
 ]
 
 TURSES_KEY_BINDINGS = [
@@ -231,6 +234,9 @@ PALETTE = [
     # Messages
     ['error', 'white', 'dark red'],
     ['info', 'white', 'dark blue'],
+
+    # Editor
+    ['editor', 'dark red', ''],
 ]
 
 STYLES = {

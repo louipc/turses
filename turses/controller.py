@@ -124,6 +124,9 @@ class KeyHandler(object):
         # help
         elif self.is_bound(key, 'help'):
             self.controller.help_mode()
+        # reload configuration
+        elif self.is_bound(key, 'reload_config'):
+            self.controller.reload_configuration()
 
     def _motion_key_handler(self, key):
         ## up
@@ -330,6 +333,9 @@ class Controller(object):
         self.timelines = VisibleTimelineList()
         # TODO make default timeline list configurable
         self.append_default_timelines()
+
+    def reload_configuration(self):
+        raise NotImplementedError
 
     # -- Callbacks ------------------------------------------------------------
 
@@ -1072,3 +1078,11 @@ class CursesController(Controller):
                 self.loop.draw_screen()
             except AssertionError:
                 pass
+
+    def reload_configuration(self):
+        self.configuration.reload()
+        self.info_message(_('Configuration reloaded'))
+        self._restart_main_loop()
+
+    def _restart_main_loop(self):
+        raise RestartTursesException
