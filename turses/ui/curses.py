@@ -35,7 +35,7 @@ from urwid import (
         )
 from urwid import __version__ as urwid_version
 
-from .. import __version__
+from .. import version
 from ..config import (
         MOTION_KEY_BINDINGS,
         BUFFERS_KEY_BINDINGS,
@@ -43,6 +43,8 @@ from ..config import (
         TIMELINES_KEY_BINDINGS,
         META_KEY_BINDINGS,
         TURSES_KEY_BINDINGS,
+
+        CONFIG_PATH
 )
 from ..models import is_DM, get_authors_username
 from ..utils import encode 
@@ -58,11 +60,25 @@ banner = [
      "  | |_| |_| | |  \__ |  __/\__ | ",
      "  \___|\____|_| |____/\___||___/ ",
      "  ······························ ",
-     "%s" % __version__,
+     "%s" % version,
      "",
      "",
      _("Press '?' for help"),
      _("Press 'q' to quit turses"),
+     "",
+     "",
+     "New configuration and token files from the old ones",
+     "have been created in %s." % CONFIG_PATH,
+     "",
+     "",
+     "    ~                                              ",
+     "    |+.turses/                                     ",
+     "    | |-config                                     ",
+     "    | |-token       # default account's token      ",
+     "    | `-bob.token   # @bob                         ",
+     "    |+...                                          ",
+     "    |-...                                          ",
+     "",
      "",
 ]
 

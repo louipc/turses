@@ -19,7 +19,7 @@ from sys import stdout
 from os import devnull
 from gettext import gettext as _
 
-from . import __version__
+from . import version as turses_version
 
 def parse_arguments():
     """Parse arguments from the command line."""
@@ -35,7 +35,7 @@ def parse_arguments():
     parser.add_argument("-g", "--generate-config",
             help=_("Generate a default configuration file is the specified path."))
 
-    version = "turses %s" % __version__
+    version = "turses %s" % turses_version
     parser.add_argument("-v", "--version", action="version", version=version,
             help=_("Show the current version of turses"))
 
