@@ -286,10 +286,10 @@ class Configuration(object):
     Has backwards compatibility with the Tyrs legacy configuration.
     """
 
-    def __init__(self, cli_args):
+    def __init__(self, cli_args=None):
         """
-        Create a `Configuration` object taking into account the arguments
-        provided in the command line interface.
+        Create a `Configuration` taking into account the arguments
+        from the command line interface (if any).
         """
         self.load_defaults()
 
@@ -304,17 +304,17 @@ class Configuration(object):
                 exit(3)
 
         # generate config file and exit
-        if cli_args.generate_config:
+        if cli_args and cli_args.generate_config:
             self.generate_config_file(cli_args.generate_config)
             exit(0)
 
-        if cli_args.config:
+        if cli_args and cli_args.config:
             config_file = cli_args.config
         else:
             config_file = path.join(CONFIG_PATH, 'config')
         self._init_config(config_file)
 
-        if cli_args.account:
+        if cli_args and cli_args.account:
             token_file = path.join(CONFIG_PATH, '%s.token' % cli_args.account)
         else:
             # loads the default `token' if no account was specified 
@@ -341,6 +341,7 @@ class Configuration(object):
         self.config_file = config_file
 
     def _init_token(self, token_file):
+        self.token_file = token_file
         if path.isfile(LEGACY_TOKEN_FILE):
             self.parse_token_file(LEGACY_TOKEN_FILE)
             remove(LEGACY_TOKEN_FILE)
@@ -353,7 +354,6 @@ class Configuration(object):
             self.authorize_new_account()
         else:
             self.parse_token_file(token_file)
-        self.token_file = token_file
 
     def _parse_legacy_config_file(self):
         """
@@ -516,9 +516,9 @@ class Configuration(object):
     def authorize_new_account(self):
         access_token = authorization()
         if access_token:
-            self.create_token_file(self.token_file,
-                                   access_token['oauth_token'],
-                                   access_token['oauth_token_secret'])
+            self.generate_token_file(self.token_file,
+                                     access_token['oauth_token'],
+                                     access_token['oauth_token_secret'])
         else:
             # TODO: exit codes
             exit(2)
