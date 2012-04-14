@@ -22,8 +22,8 @@ def main():
         ui = CursesInterface(configuration)
 
         # start `turses`
-        CursesController(configuration=configuration, 
-                         ui=ui,
-                         api_backend=TweepyApi)
+        controller = CursesController(configuration=configuration, 
+                                      ui=ui,
+                                      api_backend=TweepyApi)
     except KeyboardInterrupt:
         exit(0)

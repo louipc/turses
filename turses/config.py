@@ -217,10 +217,10 @@ PALETTE = [
     ['inactive_tab', 'dark blue', ''],
 
     # Statuses
-    ['header', 'light blue', ''],
-    ['body', 'default', '', 'standout'],
-    ['focus','dark red', '', 'standout'],
-    ['line', 'dark blue', ''],
+    ['header', 'light blue', 'black'],
+    ['body', 'white', ''],
+    ['focus','dark red', ''],
+    ['line', 'black', ''],
     ['unread', 'dark red', ''],
     ['read', 'dark blue', ''],
     ['favorited', 'yellow', ''],

@@ -1082,7 +1082,3 @@ class CursesController(Controller):
     def reload_configuration(self):
         self.configuration.reload()
         self.info_message(_('Configuration reloaded'))
-        self._restart_main_loop()
-
-    def _restart_main_loop(self):
-        raise RestartTursesException
