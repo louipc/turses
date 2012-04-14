@@ -6,6 +6,8 @@
 turses: a Twitter client with a sexy curses interface
 =====================================================
 
+``turses`` is a Twitter client for the console. 
+
 Features
 --------
 
@@ -33,6 +35,7 @@ This part of the documentation will help you using ``turses``.
 
    user/install
    user/usage
+   user/configuration
 
 Dev Guide
 ---------
@@ -46,3 +49,4 @@ you.
    dev/internals
    dev/todo
    dev/authors
+   dev/changelog
