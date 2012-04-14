@@ -212,14 +212,14 @@ TURSES_KEY_BINDINGS = [
 
 PALETTE = [
     #Tabs
-    ['active_tab',  'white', ''],
-    ['visible_tab', 'light cyan', ''],
+    ['active_tab',  'white', 'dark blue'],
+    ['visible_tab', 'yellow', 'dark blue'],
     ['inactive_tab', 'dark blue', ''],
 
     # Statuses
-    ['header', 'light blue', 'black'],
+    ['header', 'light blue', ''],
     ['body', 'white', ''],
-    ['focus','dark red', ''],
+    ['focus', 'light red', ''],
     ['line', 'black', ''],
     ['unread', 'dark red', ''],
     ['read', 'dark blue', ''],
