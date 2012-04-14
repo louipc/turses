@@ -369,17 +369,10 @@ class Configuration(object):
         if conf.has_option('params', 'logging_level'):
             self.logging_level  = conf.getint('params', 'logging_level')
 
-        key_bindings = self.key_bindings.copy()
-
-        for key in key_bindings:
-            if conf.has_option('keys', key):
-                custom_key = conf.get('keys', key) 
-                key_values = key_bindings[key]
-                default_key, description = key_values[0], key_values[1]
-                new_key_values = custom_key, description
-                key_bindings[key] = new_key_values
-
-        self.key_bindings.update(key_bindings)
+        for binding in self.key_bindings:
+            if conf.has_option('keys', binding):
+                custom_key = conf.get('keys', binding) 
+                self._set_key_binding(binding, custom_key)
 
         palette_labels = [color[0] for color in PALETTE]
         for label in palette_labels:
@@ -405,6 +398,14 @@ class Configuration(object):
             if label == color_label:
                 color[1] = new_fg
                 color[2] = new_bg
+
+    def _set_key_binding(self, binding, new_key):
+        if not self.key_bindings.has_key(binding):
+            return
+
+        key, description = self.key_bindings[binding]
+        new_key_binding = new_key, description
+        self.key_bindings[binding] = new_key_binding
 
     def generate_config_file(self, config_file):
         conf = RawConfigParser()
@@ -475,9 +476,8 @@ class Configuration(object):
     def _parse_key_bindings(self):
         for binding in self.key_bindings:
             if self._conf.has_option(SECTION_KEY_BINDINGS, binding):
-                key, description = self.key_bindings[binding]
                 custom_key = self._conf.get(SECTION_KEY_BINDINGS, binding) 
-                self.key_bindings[binding] = custom_key, description
+                self._set_key_binding(binding, custom_key)
 
     def _parse_palette(self):
         # Color
@@ -487,8 +487,7 @@ class Configuration(object):
                 fg = self._conf.get(SECTION_PALETTE, label_name)
             if self._conf.has_option(SECTION_PALETTE, label_name + '_bg'):
                 bg = self._conf.get(SECTION_PALETTE, label_name + '_bg')
-            label[1] = fg
-            label[2] = bg
+            self._set_color(label_name, fg, bg)
 
     def _parse_styles(self):
         for style in self.styles:
