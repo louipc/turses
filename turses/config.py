@@ -35,7 +35,7 @@ from ConfigParser import RawConfigParser
 from os import getenv, path, mkdir, remove
 from gettext import gettext as _
 
-from .utils import encode
+from .utils import encode, wrap_exceptions
 from .api.base import authorization
 
 # -- Defaults -----------------------------------------------------------------
@@ -257,6 +257,8 @@ BROWSER = getenv('BROWSER')
 # Default config path
 CONFIG_DIR = '.turses'
 CONFIG_PATH = path.join(HOME, CONFIG_DIR)
+DEFAULT_CONFIG_FILE = path.join(CONFIG_PATH, 'config')
+DEFAULT_TOKEN_FILE = path.join(CONFIG_PATH, 'token')
 
 LEGACY_CONFIG_DIR = '.config/turses'
 LEGACY_CONFIG_PATH = path.join(HOME, LEGACY_CONFIG_DIR)
@@ -305,20 +307,20 @@ class Configuration(object):
 
         # generate config file and exit
         if cli_args and cli_args.generate_config:
-            self.generate_config_file(cli_args.generate_config)
+            self.generate_config_file(config_file=cli_args.generate_config,)
             exit(0)
 
         if cli_args and cli_args.config:
             config_file = cli_args.config
         else:
-            config_file = path.join(CONFIG_PATH, 'config')
+            config_file = DEFAULT_CONFIG_FILE
         self._init_config(config_file)
 
         if cli_args and cli_args.account:
             token_file = path.join(CONFIG_PATH, '%s.token' % cli_args.account)
         else:
             # loads the default `token' if no account was specified 
-            token_file = path.join(CONFIG_PATH, 'token')
+            token_file = DEFAULT_TOKEN_FILE
         self._init_token(token_file)
 
     def load_defaults(self):
@@ -414,7 +416,15 @@ class Configuration(object):
         self.key_bindings[binding] = new_key_binding
 
     def generate_config_file(self, config_file):
+        self._generate_config_file(config_file=config_file,
+                                   on_error=self._config_generation_error,
+                                   on_success=self._config_generation_success)
+
+    @wrap_exceptions
+    def _generate_config_file(self, config_file):
         conf = RawConfigParser()
+
+        self.config_file = config_file
 
         # Key bindings
         conf.add_section(SECTION_KEY_BINDINGS)
@@ -449,9 +459,12 @@ class Configuration(object):
         with open(config_file, 'wb') as config:
             conf.write(config)
 
-        self.config_file = config_file
+    def _config_generation_error(self):
+        print encode(_('Unable to create configuration file in %s')) % self.config_file
+        exit(2)
 
-        print encode(_('Generated configuration file in %s')) % config_file
+    def _config_generation_success(self):
+        print encode(_('Created configuration file in %s')) % self.config_file
 
     def generate_token_file(self, 
                             token_file,

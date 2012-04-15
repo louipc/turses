@@ -15,9 +15,8 @@ from threading import Thread
 from urlparse import parse_qsl
 from gettext import gettext as _
 
-from ..decorators import wrap_exceptions
 from ..models import is_DM
-from ..utils import encode
+from ..utils import encode, wrap_exceptions
 
 
 twitter_consumer_key = 'OEn4hrNGknVz9ozQytoR0A'

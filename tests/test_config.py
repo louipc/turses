@@ -7,9 +7,14 @@
 import unittest
 from sys import path
 path.append('../')
-from os import path
 
-from turses.config import Configuration, CONFIG_PATH
+from turses.config import (
+        DEFAULT_CONFIG_FILE, 
+        DEFAULT_TOKEN_FILE,
+
+        Configuration,
+)
+
 
 class Args(object):
     """
@@ -28,12 +33,24 @@ class ConfigurationTest(unittest.TestCase):
     """Tests for `turses.config.Configuration`."""
 
     def test_defaults(self):
-        config = Configuration(Args())
-        self.assertEqual(config.config_file, path.join(CONFIG_PATH, 'config'))
-        self.assertEqual(config.token_file, path.join(CONFIG_PATH, 'token'))
+        config = Configuration()
+        self.assertEqual(config.config_file, DEFAULT_CONFIG_FILE)
+        self.assertEqual(config.token_file, DEFAULT_TOKEN_FILE)
+
+    def test_parse_config_file(self):
+        pass
+
+    def test_parse_token_file(self):
+        pass
+
+    def test_parse_legacy_config_file(self):
+        pass
+
+    def test_parse_legacy_token_file(self):
+        pass
 
     def test_set_color(self):
-        config = Configuration(Args())
+        config = Configuration()
 
         palette = [
             ['first', 'cyan', 'black', 'default', ''], 
@@ -52,7 +69,7 @@ class ConfigurationTest(unittest.TestCase):
         self.assertEqual(palette, config.palette)
 
     def test_set_key_binding(self):
-        config = Configuration(Args())
+        config = Configuration()
 
         key_bindings = {
             'quit': ('q', 'Quit the program'),
@@ -72,6 +89,15 @@ class ConfigurationTest(unittest.TestCase):
 
         config._set_key_binding('idontexist', '~')
         self.assertEqual(swapped_key_bindings, config.key_bindings)
+
+    def test_args_account(self):
+        pass
+
+    def test_args_generate_config(self):
+        pass
+
+    def test_args_config(self):
+        pass
 
 
 if __name__ == '__main__':

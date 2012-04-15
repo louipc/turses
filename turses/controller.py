@@ -14,9 +14,8 @@ from functools import partial
 
 import urwid
 
-from .decorators import wrap_exceptions
 from .api.base import AsyncApi
-from .utils import get_urls, spawn_process
+from .utils import get_urls, spawn_process, wrap_exceptions
 from .models import (
         is_DM,
         is_username,

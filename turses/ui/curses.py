@@ -75,7 +75,7 @@ banner = [
      "    |+.turses/                                     ",
      "    | |-config                                     ",
      _("    | |-token       # default account's token      "),
-     _("    | `-bob.token   # @bob account's token         "),
+     _("    | `-bob.token   # another account's token      "),
      "    |+...                                          ",
      "    |-...                                          ",
      "",
@@ -270,13 +270,14 @@ class TextEditor(WidgetWrap):
                  done_signal_handler):
         if content:
             content += ' '
-        widget = Edit(u'%s (twice enter key to validate or esc) \n>> ' % prompt, content)
-        self.editor = AttrMap(widget, 'editor')
-        self.last_key = ''
-        
+        self.editor = Edit(u'%s (twice enter key to validate or esc) \n>> ' % prompt, content)
+
+        widgets = [self.editor]
+        w = AttrMap(Columns(widgets), 'editor')
+
         connect_signal(self, 'done', done_signal_handler)
 
-        self.__super.__init__(self.editor)
+        self.__super.__init__(w)
 
     def keypress(self, size, key):
         if key == 'enter' and self.last_key == 'enter':
@@ -295,7 +296,7 @@ class TextEditor(WidgetWrap):
 
 
 class TweetEditor(WidgetWrap):
-    """Editor for creating teets."""
+    """Editor for creating tweets."""
 
     __metaclass__ = signals.MetaSignals
     signals = ['done']
@@ -306,16 +307,13 @@ class TweetEditor(WidgetWrap):
                  done_signal_handler):
         if content:
             content += ' '
-        self.editor = AttrMap(Edit(u'%s (twice enter key to validate or esc) \n>> ' % prompt, content), 'editor')
+        self.editor = Edit(u'%s (twice enter key to validate or esc) \n>> ' % prompt, content)
 
         self.counter = len(content)
         self.counter_widget = Text(str(self.counter))
 
         widgets = [('fixed', 4, self.counter_widget), self.editor]
-        w = Columns(widget_list=widgets,
-                    # `Column` passes keypresses to the focused widget,
-                    # in this case the editor
-                    focus_column=1)
+        w = AttrMap(Columns(widgets), 'editor')
 
         connect_signal(self, 'done', done_signal_handler)
         connect_signal(self.editor, 'change', self.update_counter)
@@ -338,8 +336,7 @@ class TweetEditor(WidgetWrap):
 
         self.last_key = key
         size = size,
-        editor = self._w.get_focus()
-        editor.keypress(size, key)
+        self.editor.keypress(size, key)
 
     def emit_done_signal(self, content=None):
         emit_signal(self, 'done', content)
