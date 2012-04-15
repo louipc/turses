@@ -1080,4 +1080,5 @@ class CursesController(Controller):
 
     def reload_configuration(self):
         self.configuration.reload()
+        self.redraw_screen()
         self.info_message(_('Configuration reloaded'))

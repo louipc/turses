@@ -723,11 +723,7 @@ class StatusWidget(WidgetWrap):
         return encode(header)
 
     def _dm_header(self, dm):
-        try:
-            dm_template = ' ' + self.configuration.styles['dm_template'] + ' '
-        except AttributeError:
-            # legacy configuration support
-            dm_template = ' {sender_screen_name} -> {recipient_screen_name} - {time} '
+        dm_template = ' ' + self.configuration.styles['dm_template'] + ' '
         relative_created_at = dm.get_relative_created_at()
         header = unicode(dm_template).format(
             sender_screen_name=dm.sender_screen_name,
