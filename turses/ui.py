@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
 """
-turses.ui.curses
-~~~~~~~~~~~~~~~~
+turses.ui
+~~~~~~~~~
 
-This module contains the curses implementation of the UI widgets contained
-in `turses.ui.base`.
+This module contains the UI widgets.
 """
 
 from gettext import gettext as _
@@ -35,8 +34,8 @@ from urwid import (
         )
 from urwid import __version__ as urwid_version
 
-from .. import version
-from ..config import (
+from . import version
+from .config import (
         MOTION_KEY_BINDINGS,
         BUFFERS_KEY_BINDINGS,
         TWEETS_KEY_BINDINGS,
@@ -46,13 +45,12 @@ from ..config import (
 
         CONFIG_PATH
 )
-from ..models import is_DM, get_authors_username
-from ..utils import encode 
-from .base import UserInterface
+from .models import is_DM, get_authors_username
+from .utils import encode 
  
 TWEET_MAX_CHARS = 140
 
-banner = [ 
+BANNER = [ 
      "   _                             ",
      " _| |_ _   _ _ __ ___  ___  ____ ",
      "|_   _| | | | '__/ __|/   \/ ___|",
@@ -83,7 +81,7 @@ banner = [
 ]
 
 
-class CursesInterface(Frame, UserInterface):
+class CursesInterface(Frame):
     """
     Creates a curses interface for the program, providing functions to draw 
     all the components of the UI.
@@ -248,7 +246,7 @@ class WelcomeBuffer(WidgetWrap):
     def _create_text(self):
         """Creates the text to display in the welcome buffer."""
         self.text = []
-        for line in banner:
+        for line in BANNER:
             self._insert_line(line)
 
         return ScrollableListBox(self.text)

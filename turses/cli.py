@@ -12,7 +12,7 @@ from urwid import set_encoding
 from .utils import parse_arguments
 from .config import Configuration
 from .controller import CursesController
-from .ui.curses import CursesInterface
+from .ui import CursesInterface
 from .api.backends import TweepyApi
 
 
