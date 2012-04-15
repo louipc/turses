@@ -9,9 +9,11 @@ from sys import path
 path.append('../')
 
 from turses.config import (
+        PALETTE,
         DEFAULT_CONFIG_FILE, 
         DEFAULT_TOKEN_FILE,
 
+        validate_color,
         Configuration,
 )
 
@@ -31,6 +33,13 @@ class Args(object):
 
 class ConfigurationTest(unittest.TestCase):
     """Tests for `turses.config.Configuration`."""
+
+    def test_palette(self):
+        for label in list(PALETTE):
+            # ignore the label name
+            for color in label[1:]:
+                if color:
+                    self.assertTrue(validate_color(color))
 
     def test_defaults(self):
         config = Configuration()

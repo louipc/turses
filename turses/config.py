@@ -210,6 +210,31 @@ TURSES_KEY_BINDINGS = [
     'redraw',                 
 ]
 
+# TODO: not hard coded
+# valid colors for `urwid`s palette
+VALID_COLORS = [
+    'default',
+    'black',
+    'dark red',
+    'dark green',
+    'brown',
+    'dark blue',
+    'dark magenta',
+    'dark cyan',
+    'light gray',
+    'dark gray',
+    'light red',
+    'light green',
+    'yellow',
+    'light blue',
+    'light magenta',
+    'light cyan',
+    'white',
+]
+
+def validate_color(colorstring):
+    return colorstring if colorstring in VALID_COLORS else ''
+
 PALETTE = [
     #Tabs
     ['active_tab',  'white', 'dark blue'],
@@ -236,7 +261,7 @@ PALETTE = [
     ['info', 'white', 'dark blue'],
 
     # Editor
-    ['editor', 'dark red', ''],
+    ['editor', 'white', 'dark blue'],
 ]
 
 STYLES = {
@@ -401,8 +426,8 @@ class Configuration(object):
     def _set_color(self, color_label, custom_fg=None, custom_bg=None):
         for color in self.palette:
             label, fg, bg = color[0], color[1], color[2]
-            new_fg = custom_fg if custom_fg is not None else fg
-            new_bg = custom_bg if custom_bg is not None else bg
+            new_fg = custom_fg if validate_color(custom_fg) is not None else fg
+            new_bg = custom_bg if validate_color(custom_bg) is not None else bg
             if label == color_label:
                 color[1] = new_fg
                 color[2] = new_bg
