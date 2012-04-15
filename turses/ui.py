@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 
 """
-turses.ui.curses
-~~~~~~~~~~~~~~~~
+turses.ui
+~~~~~~~~~
 
-This module contains the curses implementation of the UI widgets contained
-in `turses.ui.base`.
+This module contains the UI widgets.
 """
 
 from gettext import gettext as _
 
 from urwid import (
-        AttrWrap, 
+        AttrMap,
         WidgetWrap, 
         Padding, 
         WidgetDecoration,
@@ -35,39 +34,54 @@ from urwid import (
         )
 from urwid import __version__ as urwid_version
 
-from .. import __version__
-from ..config import (
+from . import version
+from .config import (
         MOTION_KEY_BINDINGS,
         BUFFERS_KEY_BINDINGS,
         TWEETS_KEY_BINDINGS,
         TIMELINES_KEY_BINDINGS,
         META_KEY_BINDINGS,
         TURSES_KEY_BINDINGS,
+        
+        CONFIG_PATH
 )
-from ..models import is_DM, get_authors_username
-from ..utils import encode 
-from .base import UserInterface
+from .models import is_DM, get_authors_username
+from .utils import encode 
  
 TWEET_MAX_CHARS = 140
 
-banner = [ 
+BANNER = [ 
      "   _                             ",
      " _| |_ _   _ _ __ ___  ___  ____ ",
      "|_   _| | | | '__/ __|/   \/ ___|",
-     "  | | | | | | |  |   \  _ ||   \\ ",
+     "  | | | | | | |  |   \  ~ ||   \\ ",
      "  | |_| |_| | |  \__ |  __/\__ | ",
      "  \___|\____|_| |____/\___||___/ ",
      "  ······························ ",
-     "%s" % __version__,
+     "%s" % version,
      "",
      "",
      _("Press '?' for help"),
      _("Press 'q' to quit turses"),
      "",
+     "",
+     _("New configuration and token files from the old ones"),
+     _("have been created in %s." % CONFIG_PATH),
+     "",
+     "",
+     "    ~                                              ",
+     "    |+.turses/                                     ",
+     "    | |-config                                     ",
+     _("    | |-token       # default account's token      "),
+     _("    | `-bob.token   # another account's token      "),
+     "    |+...                                          ",
+     "    |-...                                          ",
+     "",
+     "",
 ]
 
 
-class CursesInterface(Frame, UserInterface):
+class CursesInterface(Frame):
     """
     Creates a curses interface for the program, providing functions to draw 
     all the components of the UI.
@@ -232,7 +246,7 @@ class WelcomeBuffer(WidgetWrap):
     def _create_text(self):
         """Creates the text to display in the welcome buffer."""
         self.text = []
-        for line in banner:
+        for line in BANNER:
             self._insert_line(line)
 
         return ScrollableListBox(self.text)
@@ -255,11 +269,13 @@ class TextEditor(WidgetWrap):
         if content:
             content += ' '
         self.editor = Edit(u'%s (twice enter key to validate or esc) \n>> ' % prompt, content)
-        self.last_key = ''
-        
+
+        widgets = [self.editor]
+        w = AttrMap(Columns(widgets), 'editor')
+
         connect_signal(self, 'done', done_signal_handler)
 
-        self.__super.__init__(self.editor)
+        self.__super.__init__(w)
 
     def keypress(self, size, key):
         if key == 'enter' and self.last_key == 'enter':
@@ -295,10 +311,7 @@ class TweetEditor(WidgetWrap):
         self.counter_widget = Text(str(self.counter))
 
         widgets = [('fixed', 4, self.counter_widget), self.editor]
-        w = Columns(widget_list=widgets,
-                    # `Column` passes keypresses to the focused widget,
-                    # in this case the editor
-                    focus_column=1)
+        w = AttrMap(Columns(widgets), 'editor')
 
         connect_signal(self, 'done', done_signal_handler)
         connect_signal(self.editor, 'change', self.update_counter)
@@ -321,8 +334,7 @@ class TweetEditor(WidgetWrap):
 
         self.last_key = key
         size = size,
-        editor = self._w.get_focus()
-        editor.keypress(size, key)
+        self.editor.keypress(size, key)
 
     def emit_done_signal(self, content=None):
         emit_signal(self, 'done', content)
@@ -575,7 +587,7 @@ class HelpBuffer(ScrollableListBoxWrapper):
 
     def insert_title(self, title):
         self.items.append(Divider(' '))
-        self.items.append(Padding(AttrWrap(Text(title), 'focus'), left=4))
+        self.items.append(Padding(AttrMap(Text(title), 'focus'), left=4))
 
     # from `ScrollableListBoxWrapper`
 
@@ -653,14 +665,14 @@ class StatusWidget(WidgetWrap):
         self.configuration = configuration
 
         text = status.text
-        status_content = Padding(AttrWrap(Text(text), 'body'), left=1, right=1)
+        status_content = Padding(AttrMap(Text(text), 'body'), left=1, right=1)
         header = self._create_header(status)
         box = BoxDecoration(status_content, title=header)
 
         if not is_DM(status) and status.is_favorite:
-            widget = AttrWrap(box, 'favorited', 'focus')
+            widget = AttrMap(box, 'favorited', 'focus')
         else:
-            widget = AttrWrap(box, 'line', 'focus')
+            widget = AttrMap(box, 'line', 'focus')
         self.__super.__init__(widget)
 
     def selectable(self):
@@ -709,11 +721,7 @@ class StatusWidget(WidgetWrap):
         return encode(header)
 
     def _dm_header(self, dm):
-        try:
-            dm_template = ' ' + self.configuration.styles['dm_template'] + ' '
-        except AttributeError:
-            # legacy configuration support
-            dm_template = ' {sender_screen_name} -> {recipient_screen_name} - {time} '
+        dm_template = ' ' + self.configuration.styles['dm_template'] + ' '
         relative_created_at = dm.get_relative_created_at()
         header = unicode(dm_template).format(
             sender_screen_name=dm.sender_screen_name,
@@ -734,7 +742,7 @@ class BoxDecoration(WidgetDecoration, WidgetWrap):
 
         def use_attr(a, t):
             if a:
-                t = AttrWrap(t, a)
+                t = AttrMap(t, a)
             return t
 
         # top line
@@ -742,7 +750,7 @@ class BoxDecoration(WidgetDecoration, WidgetWrap):
         tline_attr = Columns([('fixed', 2, 
                                         Divider(utf8decode("─"))),
                                     ('fixed', len(title), 
-                                        AttrWrap(Text(title), self.color)),
+                                        AttrMap(Text(title), self.color)),
                                     Divider(utf8decode("─")),])
         tline = use_attr(tline, tline_attr)
         # bottom line

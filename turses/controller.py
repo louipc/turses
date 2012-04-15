@@ -14,9 +14,8 @@ from functools import partial
 
 import urwid
 
-from .decorators import wrap_exceptions
 from .api.base import AsyncApi
-from .utils import get_urls, spawn_process
+from .utils import get_urls, spawn_process, wrap_exceptions
 from .models import (
         is_DM,
         is_username,
@@ -124,6 +123,9 @@ class KeyHandler(object):
         # help
         elif self.is_bound(key, 'help'):
             self.controller.help_mode()
+        # reload configuration
+        elif self.is_bound(key, 'reload_config'):
+            self.controller.reload_configuration()
 
     def _motion_key_handler(self, key):
         ## up
@@ -330,6 +332,9 @@ class Controller(object):
         self.timelines = VisibleTimelineList()
         # TODO make default timeline list configurable
         self.append_default_timelines()
+
+    def reload_configuration(self):
+        raise NotImplementedError
 
     # -- Callbacks ------------------------------------------------------------
 
@@ -1072,3 +1077,8 @@ class CursesController(Controller):
                 self.loop.draw_screen()
             except AssertionError:
                 pass
+
+    def reload_configuration(self):
+        self.configuration.reload()
+        self.redraw_screen()
+        self.info_message(_('Configuration reloaded'))

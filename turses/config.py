@@ -32,10 +32,10 @@ Here is an example with two user accounts: `alice` and `bob`.
 """
 
 from ConfigParser import RawConfigParser
-from os import environ, path, mkdir, remove
+from os import getenv, path, mkdir, remove
 from gettext import gettext as _
 
-from .utils import encode
+from .utils import encode, wrap_exceptions
 from .api.base import authorization
 
 # -- Defaults -----------------------------------------------------------------
@@ -134,6 +134,8 @@ KEY_BINDINGS = {
     # meta
     'help':                   
         ('?', _('show program help')),
+    'reload_config':                   
+        ('C', _('reload configuration')),
 
     # turses
     'quit':                   
@@ -199,6 +201,7 @@ TIMELINES_KEY_BINDINGS = [
 
 META_KEY_BINDINGS = [
     'help',                   
+    'reload_config',
 ]
 
 TURSES_KEY_BINDINGS = [
@@ -207,17 +210,42 @@ TURSES_KEY_BINDINGS = [
     'redraw',                 
 ]
 
+# TODO: not hard coded
+# valid colors for `urwid`s palette
+VALID_COLORS = [
+    'default',
+    'black',
+    'dark red',
+    'dark green',
+    'brown',
+    'dark blue',
+    'dark magenta',
+    'dark cyan',
+    'light gray',
+    'dark gray',
+    'light red',
+    'light green',
+    'yellow',
+    'light blue',
+    'light magenta',
+    'light cyan',
+    'white',
+]
+
+def validate_color(colorstring):
+    return colorstring if colorstring in VALID_COLORS else ''
+
 PALETTE = [
     #Tabs
-    ['active_tab',  'white', ''],
-    ['visible_tab', 'light cyan', ''],
+    ['active_tab',  'white', 'dark blue'],
+    ['visible_tab', 'yellow', 'dark blue'],
     ['inactive_tab', 'dark blue', ''],
 
     # Statuses
     ['header', 'light blue', ''],
-    ['body', 'default', '', 'standout'],
-    ['focus','dark red', '', 'standout'],
-    ['line', 'dark blue', ''],
+    ['body', 'white', ''],
+    ['focus', 'light red', ''],
+    ['line', 'black', ''],
     ['unread', 'dark red', ''],
     ['read', 'dark blue', ''],
     ['favorited', 'yellow', ''],
@@ -231,6 +259,9 @@ PALETTE = [
     # Messages
     ['error', 'white', 'dark red'],
     ['info', 'white', 'dark blue'],
+
+    # Editor
+    ['editor', 'white', 'dark blue'],
 ]
 
 STYLES = {
@@ -243,14 +274,16 @@ STYLES = {
 LOGGING_LEVEL = 3
 
 # Environment
-HOME = environ['HOME']
-BROWSER = environ['BROWSER']
+HOME = getenv('HOME')
+BROWSER = getenv('BROWSER')
 
 # -- Configuration ------------------------------------------------------------
 
 # Default config path
 CONFIG_DIR = '.turses'
 CONFIG_PATH = path.join(HOME, CONFIG_DIR)
+DEFAULT_CONFIG_FILE = path.join(CONFIG_PATH, 'config')
+DEFAULT_TOKEN_FILE = path.join(CONFIG_PATH, 'token')
 
 LEGACY_CONFIG_DIR = '.config/turses'
 LEGACY_CONFIG_PATH = path.join(HOME, LEGACY_CONFIG_DIR)
@@ -280,10 +313,10 @@ class Configuration(object):
     Has backwards compatibility with the Tyrs legacy configuration.
     """
 
-    def __init__(self, cli_args):
+    def __init__(self, cli_args=None):
         """
-        Create a `Configuration` object taking into account the arguments
-        provided in the command line interface.
+        Create a `Configuration` taking into account the arguments
+        from the command line interface (if any).
         """
         self.load_defaults()
 
@@ -298,21 +331,21 @@ class Configuration(object):
                 exit(3)
 
         # generate config file and exit
-        if cli_args.generate_config:
-            self.generate_config_file(cli_args.generate_config)
+        if cli_args and cli_args.generate_config:
+            self.generate_config_file(config_file=cli_args.generate_config,)
             exit(0)
 
-        if cli_args.config:
+        if cli_args and cli_args.config:
             config_file = cli_args.config
         else:
-            config_file = path.join(CONFIG_PATH, 'config')
+            config_file = DEFAULT_CONFIG_FILE
         self._init_config(config_file)
 
-        if cli_args.account:
+        if cli_args and cli_args.account:
             token_file = path.join(CONFIG_PATH, '%s.token' % cli_args.account)
         else:
             # loads the default `token' if no account was specified 
-            token_file = path.join(CONFIG_PATH, 'token')
+            token_file = DEFAULT_TOKEN_FILE
         self._init_token(token_file)
 
     def load_defaults(self):
@@ -335,6 +368,7 @@ class Configuration(object):
         self.config_file = config_file
 
     def _init_token(self, token_file):
+        self.token_file = token_file
         if path.isfile(LEGACY_TOKEN_FILE):
             self.parse_token_file(LEGACY_TOKEN_FILE)
             remove(LEGACY_TOKEN_FILE)
@@ -347,7 +381,6 @@ class Configuration(object):
             self.authorize_new_account()
         else:
             self.parse_token_file(token_file)
-        self.token_file = token_file
 
     def _parse_legacy_config_file(self):
         """
@@ -369,17 +402,10 @@ class Configuration(object):
         if conf.has_option('params', 'logging_level'):
             self.logging_level  = conf.getint('params', 'logging_level')
 
-        key_bindings = self.key_bindings.copy()
-
-        for key in key_bindings:
-            if conf.has_option('keys', key):
-                custom_key = conf.get('keys', key) 
-                key_values = key_bindings[key]
-                default_key, description = key_values[0], key_values[1]
-                new_key_values = custom_key, description
-                key_bindings[key] = new_key_values
-
-        self.key_bindings.update(key_bindings)
+        for binding in self.key_bindings:
+            if conf.has_option('keys', binding):
+                custom_key = conf.get('keys', binding) 
+                self._set_key_binding(binding, custom_key)
 
         palette_labels = [color[0] for color in PALETTE]
         for label in palette_labels:
@@ -400,14 +426,30 @@ class Configuration(object):
     def _set_color(self, color_label, custom_fg=None, custom_bg=None):
         for color in self.palette:
             label, fg, bg = color[0], color[1], color[2]
-            new_fg = custom_fg if custom_fg is not None else fg
-            new_bg = custom_bg if custom_bg is not None else bg
+            new_fg = custom_fg if validate_color(custom_fg) is not None else fg
+            new_bg = custom_bg if validate_color(custom_bg) is not None else bg
             if label == color_label:
                 color[1] = new_fg
                 color[2] = new_bg
 
+    def _set_key_binding(self, binding, new_key):
+        if not self.key_bindings.has_key(binding):
+            return
+
+        key, description = self.key_bindings[binding]
+        new_key_binding = new_key, description
+        self.key_bindings[binding] = new_key_binding
+
     def generate_config_file(self, config_file):
+        self._generate_config_file(config_file=config_file,
+                                   on_error=self._config_generation_error,
+                                   on_success=self._config_generation_success)
+
+    @wrap_exceptions
+    def _generate_config_file(self, config_file):
         conf = RawConfigParser()
+
+        self.config_file = config_file
 
         # Key bindings
         conf.add_section(SECTION_KEY_BINDINGS)
@@ -442,9 +484,12 @@ class Configuration(object):
         with open(config_file, 'wb') as config:
             conf.write(config)
 
-        self.config_file = config_file
+    def _config_generation_error(self):
+        print encode(_('Unable to create configuration file in %s')) % self.config_file
+        exit(2)
 
-        print encode(_('Generated configuration file in %s')) % config_file
+    def _config_generation_success(self):
+        print encode(_('Created configuration file in %s')) % self.config_file
 
     def generate_token_file(self, 
                             token_file,
@@ -475,9 +520,8 @@ class Configuration(object):
     def _parse_key_bindings(self):
         for binding in self.key_bindings:
             if self._conf.has_option(SECTION_KEY_BINDINGS, binding):
-                key, description = self.key_bindings[binding]
                 custom_key = self._conf.get(SECTION_KEY_BINDINGS, binding) 
-                self.key_bindings[binding] = custom_key, description
+                self._set_key_binding(binding, custom_key)
 
     def _parse_palette(self):
         # Color
@@ -487,8 +531,7 @@ class Configuration(object):
                 fg = self._conf.get(SECTION_PALETTE, label_name)
             if self._conf.has_option(SECTION_PALETTE, label_name + '_bg'):
                 bg = self._conf.get(SECTION_PALETTE, label_name + '_bg')
-            label[1] = fg
-            label[2] = bg
+            self._set_color(label_name, fg, bg)
 
     def _parse_styles(self):
         for style in self.styles:

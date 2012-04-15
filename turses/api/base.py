@@ -15,13 +15,12 @@ from threading import Thread
 from urlparse import parse_qsl
 from gettext import gettext as _
 
-from ..decorators import wrap_exceptions
 from ..models import is_DM
-from ..utils import encode
+from ..utils import encode, wrap_exceptions
 
 
-twitter_consumer_key = 'OEn4hrNGknVz9ozQytoR0A'
-twitter_consumer_secret = 'viud49uVgdVO9dnOGxSQJRo7jphTioIlEn3OdpkZI'
+TWITTER_CONSUMER_KEY = 'OEn4hrNGknVz9ozQytoR0A'
+TWITTER_CONSUMER_SECRET = 'viud49uVgdVO9dnOGxSQJRo7jphTioIlEn3OdpkZI'
 
 BASE_URL = 'https://api.twitter.com'
 
@@ -53,8 +52,8 @@ def authorization():
     REQUEST_TOKEN_URL = BASE_URL + '/oauth/request_token'
     ACCESS_TOKEN_URL  = BASE_URL + '/oauth/access_token'
     AUTHORIZATION_URL = BASE_URL + '/oauth/authorize'
-    consumer_key      = twitter_consumer_key
-    consumer_secret   = twitter_consumer_secret
+    consumer_key      = TWITTER_CONSUMER_KEY
+    consumer_secret   = TWITTER_CONSUMER_SECRET
     oauth_consumer    = oauth.Consumer(key=consumer_key, secret=consumer_secret)
     oauth_client      = oauth.Client(oauth_consumer)
 
@@ -105,8 +104,8 @@ class Api(object):
     def __init__(self,
                  access_token_key,
                  access_token_secret,
-                 consumer_key=twitter_consumer_key,
-                 consumer_secret=twitter_consumer_secret,):
+                 consumer_key=TWITTER_CONSUMER_KEY,
+                 consumer_secret=TWITTER_CONSUMER_SECRET,):
         self._consumer_key = consumer_key
         self._consumer_secret = consumer_secret
         self._access_token_key = access_token_key

@@ -18,8 +18,10 @@ from subprocess import call
 from sys import stdout
 from os import devnull
 from gettext import gettext as _
+from functools import wraps
 
-from . import __version__
+from . import version as turses_version
+
 
 def parse_arguments():
     """Parse arguments from the command line."""
@@ -35,12 +37,37 @@ def parse_arguments():
     parser.add_argument("-g", "--generate-config",
             help=_("Generate a default configuration file is the specified path."))
 
-    version = "turses %s" % __version__
+    version = "turses %s" % turses_version
     parser.add_argument("-v", "--version", action="version", version=version,
             help=_("Show the current version of turses"))
 
     args = parser.parse_args()
     return args
+
+def wrap_exceptions(func):
+    """
+    Augments the function arguments with the `on_error` and `on_success`
+    keyword arguments. 
+    
+    Executes the decorated function in a try except block and calls `on_success` 
+    (if given) if no exception was raised, otherwise calls `on_error` (if given).
+    """
+    @wraps(func)
+    def wrapper(self=None, *args, **kwargs):
+        on_error = kwargs.pop('on_error', None)
+        on_success = kwargs.pop('on_success', None)
+
+        try:
+            result = func(self, *args, **kwargs)
+        except:
+            if callable(on_error):
+                on_error()
+        else:
+            if callable(on_success):
+                on_success()
+            return result
+
+    return wrapper
 
 def get_time():
     return strftime('%H:%M:%S', gmtime())
@@ -57,6 +84,7 @@ def html_unescape(str):
     return sub(r'&([^;]+);', entity_replacer, str)
 
 def get_urls(text):
+    # TODO: improve this
     return findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', text)
 
 def encode(string):
