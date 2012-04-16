@@ -88,10 +88,9 @@ def is_username(username):
     otherwise.
     """
     match = username_regex.match(username)
-    if not match:
-        return False
-    else:
-        return match.string == username
+    if match:
+        return match.start() == 0 and match.end() == len(username)
+    return False 
 
 def is_hashtag(string):
     return len(string) > 1 and string.startswith('#')
