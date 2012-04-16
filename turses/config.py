@@ -105,6 +105,9 @@ KEY_BINDINGS = {
         ('D', _('compose a direct message')),
     'update':                 
         ('u', _('refresh the active timeline')),
+    'update_all':                 
+        ('S', _('refresh all the timelines')),
+
     'tweet_hashtag':          
         ('H', _('compose a tweet with the same hashtags as the focused status')),
     'fav':                    
@@ -186,6 +189,7 @@ TWEETS_KEY_BINDINGS = [
     'retweet_and_edit',       
     'send_dm',                 
     'update',                 
+    'update_all',
     'tweet_hashtag',          
     'fav',                    
     'delete_fav',             

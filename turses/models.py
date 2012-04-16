@@ -573,11 +573,6 @@ class TimelineList(UnsortedActiveList):
             timeline = self.timelines[self.active_index]
             timeline.update()
 
-    def update_all(self):
-        """Updates every `Timeline`."""
-        for timeline in self.timelines:
-            timeline.update()
-
     def delete_all(self):
         """Deletes every `Timeline`."""
         self.active_index = -1

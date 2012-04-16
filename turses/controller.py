@@ -230,6 +230,9 @@ class KeyHandler(object):
         # Update timeline
         if self.is_bound(key, 'update'):
             self.controller.update_active_timeline()
+        # Update all timelines
+        if self.is_bound(key, 'update_all'):
+            self.controller.update_all_timelines()
         # Tweet
         elif self.is_bound(key, 'tweet'): 
             self.controller.tweet()
@@ -438,6 +441,11 @@ class Controller(object):
         self.append_favorites_timeline()
         self.append_direct_messages_timeline()
         self.append_own_tweets_timeline()
+        for timeline in self.timelines:
+            timeline.update()
+            timeline.activate_first()
+            self.draw_timelines()
+            self.info_message(_('%s fetched' % timeline.name))
         self.info_message(_('Timelines loaded'))
 
     def append_home_timeline(self):
@@ -534,6 +542,7 @@ class Controller(object):
     def update_all_timelines(self):
         for timeline in self.timelines:
             timeline.update()
+            self.draw_timelines()
             self.info_message(_('%s updated' % timeline.name))
 
     # -- Timeline mode --------------------------------------------------------
