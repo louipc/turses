@@ -2,4 +2,4 @@ Authors
 =======
 
 
-.. include:: ../../AUTHORS.rst
+.. include:: ../../AUTHORS
