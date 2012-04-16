@@ -13,6 +13,6 @@ __title__ = "turses"
 __author__ = "Alejandro Gómez"
 __copyright__ = "Copyright 2012 turses contributors"
 __license__ = "GPL3"
-__version__ = (0, 0, 15)
+__version__ = (0, 1, 0)
 
 version = "%s.%s.%s" % __version__
