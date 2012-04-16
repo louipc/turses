@@ -20,26 +20,26 @@ With ``pip`` ::
 
     $ pip install turses
 
-or (but you should consider using ``pip``):  ::
+or (but `you should consider using pip <http://www.pip-installer.org/en/latest/other-tools.html#pip-compared-to-easy-install>`_):  ::
 
     $ easy_install turses
 
 Features
 --------
 
- - Multiple timelines (buffers)
- - Multi-column 
- - Tweet, Reply, Retweet, Delete tweet
- - Follow/Unfollow
- - Favorite/Unfavorite
- - Direct Messages
- - Open URLs in browser
- - Thread view
- - Unread count
- - Search
- - View any user's tweets
- - Fully customizable
- - Multiple accounts
+- Multiple timelines (buffers)
+- Multi-column 
+- Tweet, Reply, Retweet, Delete tweet
+- Follow/Unfollow
+- Favorite/Unfavorite
+- Direct Messages
+- Open URLs in browser
+- Thread view
+- Unread count
+- Search
+- View any user's tweets
+- Fully customizable
+- Multiple accounts
 
 Development
 -----------
@@ -64,12 +64,12 @@ Any feedback is very much appreciated.
 Roadmap
 -------
 
- - Documentation
- - Lists
- - Streaming
- - Notifications
- - Geo
- - Blocking
+- Documentation
+- Lists
+- Streaming
+- Notifications
+- Geo
+- Blocking
 
 Screenshots
 -----------
