@@ -56,8 +56,8 @@ the on the `issue tracker`_.
 To contribute code:
  1. Create a branch from ``develop``
  2. Commit your changes
- 4. Add yourself to AUTHORS
- 3. Send a pull request
+ 3. Add yourself to AUTHORS
+ 4. Send a pull request
 
 Any feedback is very much appreciated.
 
