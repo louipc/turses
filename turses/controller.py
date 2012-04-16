@@ -87,7 +87,8 @@ class KeyHandler(object):
         self._turses_key_handler(key)
 
         # Timeline commands
-        self._timeline_key_handler(key)
+        if not self.controller.is_in_help_mode():
+            self._timeline_key_handler(key)
 
         if self.controller.is_in_info_mode():
             return
@@ -422,6 +423,8 @@ class Controller(object):
         timeline.update()
         timeline.activate_first()
         self.timelines.append_timeline(timeline)
+        if self.is_in_info_mode():
+            self.timeline_mode()
         self.draw_timelines()
 
     def append_default_timelines(self):
