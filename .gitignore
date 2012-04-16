@@ -7,4 +7,5 @@ credentials.py
 test
 dist/
 build/
+_build/
 MANIFEST

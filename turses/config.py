@@ -562,9 +562,10 @@ class Configuration(object):
     def authorize_new_account(self):
         access_token = authorization()
         if access_token:
-            self.generate_token_file(self.token_file,
-                                     access_token['oauth_token'],
-                                     access_token['oauth_token_secret'])
+            self.oauth_token = access_token['oauth_token']
+            self.create_token_file(self.token_file,
+                                   access_token['oauth_token'],
+                                   access_token['oauth_token_secret'])
         else:
             # TODO: exit codes
             exit(2)

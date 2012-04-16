@@ -1,0 +1,8 @@
+- more customization for scrolling
+ - top/bottom offset around focused tweet
+ - move by pages (visible tweets)
+ - customizable offset scroll
+- list support
+- user profiles
+- multiple accounts in the same session
+- update timelines periodically 
