@@ -439,7 +439,6 @@ class Configuration(object):
             if label == color_label:
                 color[1] = custom_fg if validate_color(custom_fg) is not None else fg
                 color[2] = custom_bg if validate_color(custom_bg) is not None else bg
-            
 
     def _set_key_binding(self, binding, new_key):
         if not self.key_bindings.has_key(binding):

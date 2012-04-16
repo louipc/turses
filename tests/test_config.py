@@ -5,6 +5,7 @@
 ###############################################################################
 
 import unittest
+from mock import Mock
 from os.path import join
 from sys import path
 path.append('../')
@@ -114,7 +115,11 @@ class ConfigurationTest(unittest.TestCase):
         self.assertEqual(token_path, config.token_file)
 
     def test_args_generate_config(self):
-        pass
+        config_path = '~/.turses/custom_config'
+        args = Args(generate_config=config_path)
+        ConfigurationMock = Mock(Configuration)
+        config = ConfigurationMock(args)
+        config.generate_config_file.assert_called_once()
 
     def test_args_config(self):
         config_path = '/path/to/custom/config/file'
