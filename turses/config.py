@@ -4,314 +4,570 @@
 turses.config
 ~~~~~~~~~~~~~
 
-This module contains a class for managing the configuration.
+This module contains the configuration logic.
+
+
+There is one mayor configuration file in turses:
+
+    `config`
+        contains user preferences: colors, bindings, etc.
+
+An one default token file:
+
+    `token`
+        contains authentication token for the default user account
+
+Each user account (that is no the default one) has its .token file.
+Keep this secret.
+
+    `<alias>.token`
+        contains the oauth tokens
+
+The standard location is under $HOME directory, in a folder called `.turses`.
+Here is an example with two accounts apart from the default one, aliased
+to `alice` and `bob`.
+
+    ~
+    |+.turses/
+    | |-config
+    | |-token
+    | |-alice.token
+    | `-bob.token
+    |+...
+    |-...
+    `
 """
 
-import logging
-import oauth2 as oauth
-from curses import ascii
 from ConfigParser import RawConfigParser
-from os import environ, path, makedirs, mkdir
+from os import getenv, path, mkdir, remove
 from gettext import gettext as _
-from urlparse import parse_qsl
 
-from . import constant
-from .utils import encode
-from .api.base import twitter_consumer_key, twitter_consumer_secret
+from .utils import encode, wrap_exceptions
+from .api.base import authorization
+
+# -- Defaults -----------------------------------------------------------------
+
+KEY_BINDINGS = {
+    # motion
+    'up':
+         ('k', _('scroll up')),
+    'down':                   
+         ('j', _('scroll down')),
+    'left':                   
+        ('h', _('activate the timeline on the left')),
+    'right':                  
+        ('l', _('activate the timeline on the right')),
+    'scroll_to_top':          
+        ('g', _('scroll to top')),
+    'scroll_to_bottom':       
+        ('G', _('scroll to bottom')),
+
+    # buffers
+    'activate_first_buffer':  
+       ('a', _('activate first buffer')),
+    'activate_last_buffer':   
+        ('e', _('activate last buffer')),
+    'shift_buffer_beggining': 
+        ('ctrl a', _('shift active buffer to the beginning')),
+    'shift_buffer_end':       
+        ('ctrl e', _('shift active buffer to the end')),
+    'shift_buffer_left':      
+        ('<', _('shift active buffer one position to the left')),
+    'shift_buffer_right':     
+        ('>', _('shift active buffer one position to the right')),
+    'expand_visible_left':    
+        ('p', _('expand visible timelines one column to the left')),
+    'expand_visible_right':   
+        ('n', _('expand visible timelines one column to the right')),
+    'shrink_visible_left':    
+        ('P', _('shrink visible timelines one column from the left')),
+    'shrink_visible_right':   
+        ('N', _('shrink visible timelines one column from the left')),
+    'delete_buffer':          
+        ('d', _('delete buffer')),
+    'clear':                  
+        ('c', _('clear status bar')),
+    'mark_all_as_read':       
+        ('A', _('mark all tweets in the current timeline as read')),
+
+    # tweets
+    'tweet':                  
+        ('t', _('compose a tweet')),
+    'delete_tweet':           
+        ('X', _('delete focused status')),
+    'reply':                  
+        ('r', _('reply to focused status')),
+    'retweet':                
+        ('R', _('retweet focused status')),
+    'retweet_and_edit':       
+        ('E', _('open a editor for manually retweeting the focused status')),
+    'send_dm':                 
+        ('D', _('compose a direct message')),
+    'update':                 
+        ('u', _('refresh the active timeline')),
+    'tweet_hashtag':          
+        ('H', _('compose a tweet with the same hashtags as the focused status')),
+    'fav':                    
+        ('b', _('mark focused tweet as favorite')),
+    'delete_fav':             
+        ('ctrl b', _('remove tweet from favorites')),
+    'follow_selected':        
+        ('f', _('follow selected status\' author')),
+    'unfollow_selected':      
+        ('U', _('unfollow selected status\' author')),
+
+    # timelines
+    'home':                   
+        ('.', _('open a home timeline')),
+    'own_tweets':             
+        ('_', _('open a timeline with your tweets')),
+    'favorites':              
+        ('B', _('open a timeline with your favorites')),
+    'mentions':               
+        ('m', _('open a mentions timeline')),
+    'DMs':                    
+        ('M', _('open a direct message timeline')),
+    'search':                 
+        ('/', _('search for term and show resulting timeline')),
+    'search_user':            
+        ('@', _('open a timeline with the tweets of the specified user')),
+    'user_timeline':          
+        ('+', _('open a timeline with the tweets of the focused status\' author')),
+    'thread':                 
+        ('T', _('open the thread of the focused status')),
+    'hashtags':               
+        ('L', _('open a search timeline with the hashtags of the focused status')),
+
+    # meta
+    'help':                   
+        ('?', _('show program help')),
+    'reload_config':                   
+        ('C', _('reload configuration')),
+
+    # turses
+    'quit':                   
+        ('q', _('exit program')),
+    'openurl':              
+        ('o', _('open URLs of the focused status in a browser')),
+    'redraw':                 
+        ('ctrl l', _('redraw the screen')),
+}
+
+MOTION_KEY_BINDINGS = [
+    'up',
+    'down',                   
+    'left',                   
+    'right',                  
+    'scroll_to_top',          
+    'scroll_to_bottom',       
+]
+
+BUFFERS_KEY_BINDINGS = [
+    'activate_first_buffer',  
+    'activate_last_buffer',   
+    'shift_buffer_beggining', 
+    'shift_buffer_end',       
+    'shift_buffer_left',      
+    'shift_buffer_right',     
+    'expand_visible_left',    
+    'expand_visible_right',   
+    'shrink_visible_left',    
+    'shrink_visible_right',   
+    'delete_buffer',          
+    'clear',                  
+    'mark_all_as_read',       
+]
+
+TWEETS_KEY_BINDINGS = [
+    'tweet',                  
+    'delete_tweet',           
+    'reply',                  
+    'retweet',                
+    'retweet_and_edit',       
+    'send_dm',                 
+    'update',                 
+    'tweet_hashtag',          
+    'fav',                    
+    'delete_fav',             
+    'follow_selected',        
+    'unfollow_selected',      
+]
+
+TIMELINES_KEY_BINDINGS = [
+    'home',                   
+    'own_tweets',             
+    'favorites',              
+    'mentions',               
+    'DMs',                    
+    'search',                 
+    'search_user',            
+    'user_timeline',          
+    'thread',                 
+    'hashtags',               
+]
+
+META_KEY_BINDINGS = [
+    'help',                   
+    'reload_config',
+]
+
+TURSES_KEY_BINDINGS = [
+    'quit',                   
+    'openurl',              
+    'redraw',                 
+]
+
+# TODO: not hard coded
+# valid colors for `urwid`s palette
+VALID_COLORS = [
+    'default',
+    'black',
+    'dark red',
+    'dark green',
+    'brown',
+    'dark blue',
+    'dark magenta',
+    'dark cyan',
+    'light gray',
+    'dark gray',
+    'light red',
+    'light green',
+    'yellow',
+    'light blue',
+    'light magenta',
+    'light cyan',
+    'white',
+]
+
+def validate_color(colorstring):
+    return colorstring if colorstring in VALID_COLORS else ''
+
+PALETTE = [
+    #Tabs
+    ['active_tab',  'white', 'dark blue'],
+    ['visible_tab', 'yellow', 'dark blue'],
+    ['inactive_tab', 'dark blue', ''],
+
+    # Statuses
+    ['header', 'light blue', ''],
+    ['body', 'white', ''],
+    ['focus', 'light red', ''],
+    ['line', 'black', ''],
+    ['unread', 'dark red', ''],
+    ['read', 'dark blue', ''],
+    ['favorited', 'yellow', ''],
+
+    # Text
+    ['highlight', 'dark red', ''],
+    ['highlight_nick', 'light red', ''],
+    ['attag', 'brown', ''],
+    ['hashtag', 'dark green', ''],
+
+    # Messages
+    ['error', 'white', 'dark red'],
+    ['info', 'white', 'dark blue'],
+
+    # Editor
+    ['editor', 'white', 'dark blue'],
+]
+
+STYLES = {
+    # TODO: make time string configurable 
+    'header_template':      ' {username}{retweeted}{retweeter} - {time}{reply} {retweet_count} ',
+    'dm_template':          ' {sender_screen_name} => {recipient_screen_name} - {time} ',
+}
+
+# Debug
+LOGGING_LEVEL = 3
+
+# Environment
+HOME = getenv('HOME')
+BROWSER = getenv('BROWSER')
+
+# -- Configuration ------------------------------------------------------------
+
+# Default config path
+CONFIG_DIR = '.turses'
+CONFIG_PATH = path.join(HOME, CONFIG_DIR)
+DEFAULT_CONFIG_FILE = path.join(CONFIG_PATH, 'config')
+DEFAULT_TOKEN_FILE = path.join(CONFIG_PATH, 'token')
+
+LEGACY_CONFIG_DIR = '.config/turses'
+LEGACY_CONFIG_PATH = path.join(HOME, LEGACY_CONFIG_DIR)
+LEGACY_CONFIG_FILE = path.join(LEGACY_CONFIG_PATH, 'turses.cfg')
+LEGACY_TOKEN_FILE = path.join(LEGACY_CONFIG_PATH, 'turses.tok')
+
+# Names of the sections in the configuration
+SECTION_KEY_BINDINGS = 'bindings'
+SECTION_PALETTE = 'colors'
+SECTION_STYLES = 'styles'
+SECTION_DEBUG = 'debug'
+SECTION_TOKEN = 'token'
+
+
+def print_deprecation_notice():
+    print "NOTE:"
+    print
+    print "The configuration file in %s has been deprecated." % LEGACY_CONFIG_FILE
+    print "A new configuration directory is being created in %s." % CONFIG_PATH
+    print
 
 
 class Configuration(object):
-    """Class responsible for managing the configuration."""
+    """
+    Create and parse configuration files.
 
-    def __init__(self, args):
-        self.init_config()
-        self.home = environ['HOME']
-        self.get_xdg_config()
-        self.get_browser()
-        # generate the config file
-        if args.generate_config != None:
-            self.generate_config_file(args.generate_config)
+    Has backwards compatibility with the Tyrs legacy configuration.
+    """
+
+    def __init__(self, cli_args=None):
+        """
+        Create a `Configuration` taking into account the arguments
+        from the command line interface (if any).
+        """
+        self.load_defaults()
+
+        self.browser = BROWSER
+
+        # create the config directory if it does not exist
+        if not path.isdir(CONFIG_PATH):
+            try:
+                mkdir(CONFIG_PATH)
+            except:
+                print encode(_('Error creating config directory in %s' % CONFIG_DIR))
+                exit(3)
+
+        # generate config file and exit
+        if cli_args and cli_args.generate_config:
+            self.generate_config_file(config_file=cli_args.generate_config,)
             exit(0)
 
-        self.set_path(args)
-        self.check_for_default_config()
-        self.conf = RawConfigParser()
-        self.conf.read(self.config_file)
-        if not path.isfile(self.token_file):
-            self.new_account()
+        if cli_args and cli_args.config:
+            config_file = cli_args.config
         else:
-            self.parse_token()
+            config_file = DEFAULT_CONFIG_FILE
+        self.config_file = config_file
 
-        self.parse_config()
+        if cli_args and cli_args.account:
+            token_file = path.join(CONFIG_PATH, '%s.token' % cli_args.account)
+        else:
+            # loads the default `token' if no account was specified 
+            token_file = DEFAULT_TOKEN_FILE
+        self.token_file = token_file
 
-    def init_config(self):
-        self.keys    = constant.key
-        self.params  = constant.params
-        self.palette = constant.palette
+    def load(self):
+        """Loads configuration from files."""
+        self._init_config()
+        self._init_token()
 
-    def get_xdg_config(self):
-        try:
-            self.xdg_config = environ['XDG_CONFIG_HOME']
-        except:
-            self.xdg_config = self.home+'/.config'
+    def load_defaults(self):
+        """Load default values into configuration."""
+        self.key_bindings = KEY_BINDINGS
+        self.palette = PALETTE
+        self.styles = STYLES
+        self.logging_level = LOGGING_LEVEL
 
-    def get_browser(self):
-        try:
-            self.browser = environ['BROWSER']
-        except:
-            self.browser = ''
+    def _init_config(self):
+        if path.isfile(LEGACY_CONFIG_FILE):
+            self._parse_legacy_config_file()
+            print_deprecation_notice()
+            remove(LEGACY_CONFIG_FILE)
+            self.generate_config_file(self.config_file)
+        elif path.isfile(self.config_file):
+            self.parse_config_file(self.config_file)
+        else:
+            self.generate_config_file(self.config_file)
 
-    def check_for_default_config(self):
-        default_dir = '/turses'
-        default_file = '/turses/turses.cfg'
-        if not path.isfile(self.xdg_config + default_file):
-            if not path.exists(self.xdg_config + default_dir):
-                try:
-                    makedirs(self.xdg_config + default_dir)
-                except:
-                    print encode(_('Couldn\'t create the directory in %s/turses')) % self.xdg_config
-            self.generate_config_file(self.xdg_config + default_file)
+    def _init_token(self):
+        if path.isfile(LEGACY_TOKEN_FILE):
+            self.parse_token_file(LEGACY_TOKEN_FILE)
+            remove(LEGACY_TOKEN_FILE)
+            if hasattr(self, 'oauth_token') and \
+               hasattr(self, 'oauth_token_secret'):
+                   self.generate_token_file(self.token_file,
+                                            self.oauth_token,
+                                            self.oauth_token_secret)
+        elif not path.isfile(self.token_file):
+            self.authorize_new_account()
+        else:
+            self.parse_token_file(self.token_file)
+
+    def _parse_legacy_config_file(self):
+        """
+        Parse a legacy configuration file.
+        """
+        conf = RawConfigParser()
+        conf.read(LEGACY_CONFIG_FILE)
+
+        styles = self.styles.copy()
+
+        if conf.has_option('params', 'dm_template'):
+            styles['dm_template'] = conf.get('params', 'dm_template')
+
+        if conf.has_option('params', 'header_template'):
+            styles['header_template'] = conf.get('params', 'header_template')
+
+        self.styles.update(styles)
+
+        if conf.has_option('params', 'logging_level'):
+            self.logging_level  = conf.getint('params', 'logging_level')
+
+        for binding in self.key_bindings:
+            if conf.has_option('keys', binding):
+                custom_key = conf.get('keys', binding) 
+                self._set_key_binding(binding, custom_key)
+
+        palette_labels = [color[0] for color in PALETTE]
+        for label in palette_labels:
+            if conf.has_option('colors', label):
+                custom_fg  = conf.get('colors', label) 
+                self._set_color(label, custom_fg)
+
+    def _parse_legacy_token_file(self):
+        conf = RawConfigParser()
+        conf.read(LEGACY_TOKEN_FILE)
+
+        if conf.has_option(SECTION_TOKEN, 'oauth_token'):
+            self.oauth_token = conf.get(SECTION_TOKEN, 'oauth_token')
+
+        if conf.has_option(SECTION_TOKEN, 'oauth_token'):
+            self.oauth_token_secret = conf.get(SECTION_TOKEN, 'oauth_token_secret')
+
+    def _set_color(self, color_label, custom_fg=None, custom_bg=None):
+        for color in self.palette:
+            label, fg, bg = color[0], color[1], color[2]
+            if label == color_label:
+                color[1] = custom_fg if validate_color(custom_fg) is not None else fg
+                color[2] = custom_bg if validate_color(custom_bg) is not None else bg
+
+    def _set_key_binding(self, binding, new_key):
+        if not self.key_bindings.has_key(binding):
+            return
+
+        key, description = self.key_bindings[binding]
+        new_key_binding = new_key, description
+        self.key_bindings[binding] = new_key_binding
 
     def generate_config_file(self, config_file):
+        self._generate_config_file(config_file=config_file,
+                                   on_error=self._config_generation_error,
+                                   on_success=self._config_generation_success)
+
+    @wrap_exceptions
+    def _generate_config_file(self, config_file):
         conf = RawConfigParser()
-        conf.read(config_file)
 
-        # COLOR
-        conf.add_section('colors')
-        for c in self.palette:
-            conf.set('colors', c[0], c[1])
-        # KEYS
-        conf.add_section('keys')
-        for k in self.keys:
-            conf.set('keys', k, self.keys[k])
-        # PARAMS
-        conf.add_section('params')
-        for p in self.params:
-            if self.params[p] == True:
-                value = 1
-            elif self.params[p] == False:
-                value = 0
-            elif self.params[p] == None:
-                continue
-            else:
-                value = self.params[p]
+        self.config_file = config_file
 
-            conf.set('params', p, value)
+        # Key bindings
+        conf.add_section(SECTION_KEY_BINDINGS)
+        binding_lists = [MOTION_KEY_BINDINGS,
+                         BUFFERS_KEY_BINDINGS,
+                         TWEETS_KEY_BINDINGS,
+                         TIMELINES_KEY_BINDINGS,
+                         META_KEY_BINDINGS,
+                         TURSES_KEY_BINDINGS,]
+        for binding_list in binding_lists:
+            for binding in binding_list:
+                key = self.key_bindings[binding][0]
+                conf.set(SECTION_KEY_BINDINGS, binding, key)
+        
+
+        # Color
+        conf.add_section(SECTION_PALETTE)
+        for label in self.palette:
+            label_name, fg, bg = label[0], label[1], label[2]
+            conf.set(SECTION_PALETTE, label_name, fg)
+            conf.set(SECTION_PALETTE, label_name + '_bg', bg)
+
+        # Styles
+        conf.add_section(SECTION_STYLES)
+        for style in self.styles:
+            conf.set(SECTION_STYLES, style, self.styles[style])
+
+        # Debug
+        conf.add_section(SECTION_DEBUG)
+        conf.set(SECTION_DEBUG, 'logging_level', LOGGING_LEVEL)
 
         with open(config_file, 'wb') as config:
             conf.write(config)
 
-        print encode(_('Generating configuration file in %s')) % config_file
+    def _config_generation_error(self):
+        print encode(_('Unable to create configuration file in %s')) % self.config_file
+        exit(2)
 
-    def set_path(self, args):
-        # Default config path set
-        if self.xdg_config != '':
-            self.turses_path = self.xdg_config + '/turses/'
-        else:
-            self.turses_path = self.home + '/.config/turses/'
-        # Setup the token file
-        self.token_file = self.turses_path + 'turses.tok'
-        if args.account != None:
-            self.token_file += '.' + args.account
-        # Setup the config file
-        self.config_file = self.turses_path + 'turses.cfg'
-        if args.config != None:
-            self.config_file += '.' + args.config
+    def _config_generation_success(self):
+        print encode(_('Created configuration file in %s')) % self.config_file
 
-    def new_account(self):
-        self.authorization()
-        self.createTokenFile()
-
-    def parse_token(self):
-        token = RawConfigParser()
-        token.read(self.token_file)
-
-        self.oauth_token = token.get('token', 'oauth_token')
-        self.oauth_token_secret = token.get('token', 'oauth_token_secret')
-
-    def parse_config(self):
-        self.parse_color()
-        self.parse_keys()
-        self.parse_params()
-        self.init_logger()
-
-    def parse_color(self):
-        for i, c in enumerate(self.palette):
-            if self.conf.has_option('colors', c[0]):
-                self.palette[i][1] = (self.conf.get('colors', c[0]))
-
-    def parse_keys(self):
-        for key in self.keys:
-            if self.conf.has_option('keys', key):
-                self.keys[key] = self.conf.get('keys', key)
-            else:
-                self.keys[key] = self.keys[key]
-
-    def char_value(self, ch):
-        if ch[0] == '^':
-            i = 0
-            while i <= 31:
-                if ascii.unctrl(i) == ch.upper():
-                    return i
-                i +=1
-        return ord(ch)
-
-    def parse_params(self):
-
-        # refresh (in minutes)
-        if self.conf.has_option('params', 'refresh'):
-            self.params['refresh']     = int(self.conf.get('params', 'refresh'))
-
-        if self.conf.has_option('params', 'box_position'):
-            self.params['refresh']     = int(self.conf.get('params', 'box_position'))
-
-        # tweet_border
-        if self.conf.has_option('params', 'tweet_border'):
-            self.params['tweet_border'] = int(self.conf.get('params', 'tweet_border'))
-
-        # Relative_time
-        if self.conf.has_option('params', 'relative_time'):
-            self.params['relative_time'] = int(self.conf.get('params', 'relative_time'))
-
-        # Retweet_By
-        if self.conf.has_option('params', 'retweet_by'):
-            self.params['retweet_by'] = int(self.conf.get('params', 'retweet_by'))
-
-        # Openurl_command
-        #  NOTE: originally `openurl_command` configuration parameter was
-        #        prioritary but I'm deprecating this, using the BROWSER
-        #        environment variable instead.
-        if self.browser != '':
-            self.params['openurl_command'] = self.browser
-        elif self.conf.has_option('params', 'openurl_command'):
-            self.params['openurl_command'] = self.conf.get('params',
-                'openurl_command')
-
-        if self.conf.has_option('params', 'logging_level'):
-            self.params['logging_level'] = self.conf.get('params', 'logging_level')
-
-        if self.conf.has_option('params', 'header_template'):
-            self.params['header_template'] = self.conf.get('params', 'header_template')
-
-        if self.conf.has_option('params', 'dm_template'):
-            self.params['dm_template'] = self.conf.get('params', 'dm_template')
-
-    def init_logger(self):
-        log_file = self.xdg_config + '/turses/turses.log'
-        lvl = self.init_logger_level()
-
-        logging.basicConfig(
-            filename=log_file,
-            level=lvl,
-            format='%(asctime)s %(levelname)s - %(message)s',
-            datefmt='%d/%m/%Y %H:%M:%S',
-            )
-        logging.info('turses starting...')
-
-    def init_logger_level(self):
-        try:
-            lvl = int(self.params['logging_level'])
-        except:
-            # INFO is the default logging level
-            return logging.INFO
-
-        if lvl == 1:
-            return logging.DEBUG
-        elif lvl == 2:
-            return logging.INFO
-        elif lvl == 3:
-            return logging.WARNING
-        elif lvl == 4:
-            return logging.ERROR
-
-    # TODO: can `tweepy` be used for this?
-    def authorization(self):
-        ''' This function from python-twitter developers '''
-        # Copyright 2007 The Python-Twitter Developers
-        #
-        # Licensed under the Apache License, Version 2.0 (the "License");
-        # you may not use this file except in compliance with the License.
-        # You may obtain a copy of the License at
-        #
-        #     http://www.apache.org/licenses/LICENSE-2.0
-        #
-        # Unless required by applicable law or agreed to in writing, software
-        # distributed under the License is distributed on an "AS IS" BASIS,
-        # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-        # See the License for the specific language governing permissions and
-        # limitations under the License.
-
-        base_url = 'https://api.twitter.com'
-
-        print 'base_url:{0}'.format(base_url)
-
-
-        REQUEST_TOKEN_URL = base_url + '/oauth/request_token'
-        ACCESS_TOKEN_URL  = base_url + '/oauth/access_token'
-        AUTHORIZATION_URL = base_url + '/oauth/authorize'
-        consumer_key      = twitter_consumer_key
-        consumer_secret   = twitter_consumer_secret
-        oauth_consumer    = oauth.Consumer(key=consumer_key, secret=consumer_secret)
-        oauth_client      = oauth.Client(oauth_consumer)
-
-        print encode(_('Requesting temp token from Twitter'))
-
-        resp, content = oauth_client.request(REQUEST_TOKEN_URL, 'GET')
-
-        if resp['status'] != '200':
-            print encode(_('Invalid respond, requesting temp token: %s')) % str(resp['status'])
-        else:
-            request_token = dict(parse_qsl(content))
-
-            print ''
-            print encode(_('Please visit the following page to retrieve needed pin code'))
-            print encode(_('to obtain an Authentication Token:'))
-            print ''
-            print '%s?oauth_token=%s' % (AUTHORIZATION_URL, request_token['oauth_token'])
-            print ''
-
-            pincode = raw_input('Pin code? ')
-
-            token = oauth.Token(request_token['oauth_token'], request_token['oauth_token_secret'])
-            token.set_verifier(pincode)
-
-            print ''
-            print encode(_('Generating and signing request for an access token'))
-            print ''
-
-            oauth_client  = oauth.Client(oauth_consumer, token)
-            resp, content = oauth_client.request(ACCESS_TOKEN_URL, method='POST', body='oauth_verifier=%s' % pincode)
-            access_token  = dict(parse_qsl(content))
-
-            if resp['status'] != '200':
-                print 'response:{0}'.format(resp['status'])
-                print encode(_('Request for access token failed: %s')) % resp['status']
-                print access_token
-                exit()
-            else:
-                self.oauth_token = access_token['oauth_token']
-                self.oauth_token_secret = access_token['oauth_token_secret']
-
-    def createTokenFile(self):
-        if not path.isdir(self.turses_path):
-            try:
-                mkdir(self.turses_path)
-            except:
-                print encode(_('Error creating directory .config/turses'))
+    def generate_token_file(self, 
+                            token_file,
+                            oauth_token,
+                            oauth_token_secret):
+        self.oauth_token = oauth_token
+        self.oauth_token_secret = oauth_token_secret
 
         conf = RawConfigParser()
-        conf.add_section('token')
-        conf.set('token', 'oauth_token', self.oauth_token)
-        conf.set('token', 'oauth_token_secret', self.oauth_token_secret)
+        conf.add_section(SECTION_TOKEN)
+        conf.set(SECTION_TOKEN, 'oauth_token', oauth_token)
+        conf.set(SECTION_TOKEN, 'oauth_token_secret', oauth_token_secret)
 
-        with open(self.token_file, 'wb') as tokens:
+        with open(token_file, 'wb') as tokens:
             conf.write(tokens)
 
         print encode(_('your account has been saved'))
 
-    def save_last_read(self, last_read):
-        conf = RawConfigParser()
-        conf.read(self.token_file)
+    def parse_config_file(self, config_file):
+        self._conf = RawConfigParser()
+        self._conf.read(config_file)
 
-        with open(self.token_file, 'wb') as tokens:
-            conf.write(tokens)
+        self._parse_key_bindings()
+        self._parse_palette()
+        self._parse_styles()
+        self._parse_debug()
+
+    def _parse_key_bindings(self):
+        for binding in self.key_bindings:
+            if self._conf.has_option(SECTION_KEY_BINDINGS, binding):
+                custom_key = self._conf.get(SECTION_KEY_BINDINGS, binding) 
+                self._set_key_binding(binding, custom_key)
+
+    def _parse_palette(self):
+        # Color
+        for label in self.palette:
+            label_name, fg, bg = label[0], label[1], label[2]
+            if self._conf.has_option(SECTION_PALETTE, label_name):
+                fg = self._conf.get(SECTION_PALETTE, label_name)
+            if self._conf.has_option(SECTION_PALETTE, label_name + '_bg'):
+                bg = self._conf.get(SECTION_PALETTE, label_name + '_bg')
+            self._set_color(label_name, fg, bg)
+
+    def _parse_styles(self):
+        for style in self.styles:
+            if self._conf.has_option(SECTION_STYLES, style):
+                self.styles[style] = self._conf.get(SECTION_STYLES, style)
+
+    def _parse_debug(self):
+        if self._conf.has_option(SECTION_DEBUG, 'logging_level'):
+            self.logging_level = self._conf.get(SECTION_DEBUG, 'logging_level')
+
+    def parse_token_file(self, token_file):
+        self._conf = RawConfigParser()
+        self._conf.read(token_file)
+
+        if self._conf.has_option(SECTION_TOKEN, 'oauth_token'):
+            self.oauth_token = self._conf.get(SECTION_TOKEN, 'oauth_token')
+        if self._conf.has_option(SECTION_TOKEN, 'oauth_token_secret'):
+            self.oauth_token_secret = self._conf.get(SECTION_TOKEN, 'oauth_token_secret')
+
+    def authorize_new_account(self):
+        access_token = authorization()
+        if access_token:
+            self.generate_token_file(self.token_file,
+                                     access_token['oauth_token'],
+                                     access_token['oauth_token_secret'])
+        else:
+            # TODO: exit codes
+            exit(2)
+
+    def reload(self):
+        self.parse_config_file(self.config_file)

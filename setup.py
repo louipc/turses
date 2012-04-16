@@ -21,16 +21,15 @@ except IOError:
     long_description = ""
 
 setup(name="turses",
-      version=turses.__version__,
+      version=turses.version,
       author="Alejandro Gómez",
       author_email="alejandroogomez@gmail.com",
-      license="GPLv3",
+      url="http://github.com/alejandrogomez/turses",
       description="A Twitter client with a curses interface.",
       long_description=long_description,
       keywords="twitter client curses",
       packages=[
           "turses", 
-          "turses.ui",
           "turses.api",
       ],
       package_data={'': ['LICENSE']},
@@ -48,6 +47,7 @@ setup(name="turses",
           "Natural Language :: English",
           "Operating System :: POSIX :: Linux",
           "Programming Language :: Python :: 2.7",
+          "Topic :: Communications"
       ],
       install_requires=requirements,
       tests_require=test_requirements,)

@@ -1,9 +1,8 @@
 turses: a Twitter client featuring a curses interface
 =====================================================
 
-
-A Twitter client with a sexy curses interface written in Python. Various parts of 
-the codebase are borrowed from the `Tyrs`_ project by `Nicolas Paris`_.
+``turses`` is a Twitter client with a sexy curses interface written in Python. Various 
+parts of the codebase are borrowed from the `Tyrs`_ project by `Nicolas Paris`_.
 
 .. _`Tyrs`: http://tyrs.nicosphere.net
 .. _`Nicolas Paris`: http://github.com/Nic0
@@ -65,8 +64,10 @@ Any feedback is very much appreciated.
 Roadmap
 -------
 
- - Lists
  - Documentation
+ - Lists
+ - Streaming
+ - Notifications
  - Geo
  - Blocking
 

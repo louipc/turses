@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 
 """
-turses.ui.curses
-~~~~~~~~~~~~~~~~
+turses.ui
+~~~~~~~~~
 
-This module contains the curses implementation of the UI widgets contained
-in `turses.ui.base`.
+This module contains the UI widgets.
 """
 
 from gettext import gettext as _
 
 from urwid import (
-        AttrWrap, 
+        AttrMap,
         WidgetWrap, 
         Padding, 
         WidgetDecoration,
@@ -35,31 +34,54 @@ from urwid import (
         )
 from urwid import __version__ as urwid_version
 
-from .. import __version__
-from ..models import is_DM, get_authors_username
-from ..utils import encode 
-from .base import UserInterface
+from . import version
+from .config import (
+        MOTION_KEY_BINDINGS,
+        BUFFERS_KEY_BINDINGS,
+        TWEETS_KEY_BINDINGS,
+        TIMELINES_KEY_BINDINGS,
+        META_KEY_BINDINGS,
+        TURSES_KEY_BINDINGS,
+
+        CONFIG_PATH
+)
+from .models import is_DM, get_authors_username
+from .utils import encode 
  
 TWEET_MAX_CHARS = 140
 
-banner = [ 
+BANNER = [ 
      "   _                             ",
      " _| |_ _   _ _ __ ___  ___  ____ ",
      "|_   _| | | | '__/ __|/   \/ ___|",
-     "  | | | | | | |  |   \  _ ||   \\ ",
+     "  | | | | | | |  |   \  ~ ||   \\ ",
      "  | |_| |_| | |  \__ |  __/\__ | ",
      "  \___|\____|_| |____/\___||___/ ",
      "  ······························ ",
-     "%s" % __version__,
+     "%s" % version,
      "",
      "",
      _("Press '?' for help"),
      _("Press 'q' to quit turses"),
      "",
+     "",
+     _("New configuration and token files from the old ones"),
+     _("have been created in %s." % CONFIG_PATH),
+     "",
+     "",
+     "    ~                                              ",
+     "    |+.turses/                                     ",
+     "    | |-config                                     ",
+     _("    | |-token       # default account's token      "),
+     _("    | `-bob.token   # another account's token      "),
+     "    |+...                                          ",
+     "    |-...                                          ",
+     "",
+     "",
 ]
 
 
-class CursesInterface(Frame, UserInterface):
+class CursesInterface(Frame):
     """
     Creates a curses interface for the program, providing functions to draw 
     all the components of the UI.
@@ -224,7 +246,7 @@ class WelcomeBuffer(WidgetWrap):
     def _create_text(self):
         """Creates the text to display in the welcome buffer."""
         self.text = []
-        for line in banner:
+        for line in BANNER:
             self._insert_line(line)
 
         return ScrollableListBox(self.text)
@@ -247,11 +269,13 @@ class TextEditor(WidgetWrap):
         if content:
             content += ' '
         self.editor = Edit(u'%s (twice enter key to validate or esc) \n>> ' % prompt, content)
-        self.last_key = ''
-        
+
+        widgets = [self.editor]
+        w = AttrMap(Columns(widgets), 'editor')
+
         connect_signal(self, 'done', done_signal_handler)
 
-        self.__super.__init__(self.editor)
+        self.__super.__init__(w)
 
     def keypress(self, size, key):
         if key == 'enter' and self.last_key == 'enter':
@@ -287,10 +311,7 @@ class TweetEditor(WidgetWrap):
         self.counter_widget = Text(str(self.counter))
 
         widgets = [('fixed', 4, self.counter_widget), self.editor]
-        w = Columns(widget_list=widgets,
-                    # `Column` passes keypresses to the focused widget,
-                    # in this case the editor
-                    focus_column=1)
+        w = AttrMap(Columns(widgets), 'editor')
 
         connect_signal(self, 'done', done_signal_handler)
         connect_signal(self.editor, 'change', self.update_counter)
@@ -313,8 +334,7 @@ class TweetEditor(WidgetWrap):
 
         self.last_key = key
         size = size,
-        editor = self._w.get_focus()
-        editor.keypress(size, key)
+        self.editor.keypress(size, key)
 
     def emit_done_signal(self, content=None):
         emit_signal(self, 'done', content)
@@ -525,72 +545,37 @@ class HelpBuffer(ScrollableListBoxWrapper):
                                           ScrollableListBox(self.items,
                                                             offset=offset,))
 
+    def _insert_bindings(self, bindings):
+        for label in bindings:
+            values = self.configuration.key_bindings[label]
+            key, description = values[0], values[1]
+            widgets = [
+                ('fixed', self.col[0], Text('  ' + label)), 
+                ('fixed', self.col[1], Text(key)),
+                Text(description) 
+            ]
+            self.items.append(Columns(widgets))
+
     def create_help_buffer(self):
-        # TODO: remove the descriptions from the code. Store the keybindings
-        #       in `turses/constant.py`. 
         self.insert_header()
-        # Motion
-        self.insert_division(_('Motion'))
-        self.insert_help_item('up', _('Scroll up one tweet'))
-        self.insert_help_item('down', _('Scroll down one tweet'))
-        self.insert_help_item('left', _('Activate the timeline on the left'))
-        self.insert_help_item('right', _('Activate the timeline on the right'))
-        self.insert_help_item('scroll_to_top', _('Scroll to first tweet'))
-        self.insert_help_item('scroll_to_bottom', _('Scroll to last tweet'))
 
-        self.insert_division(_('Buffers'))
-        self.insert_help_item('shift_buffer_left', _('Shift active buffer one position to the left'))
-        self.insert_help_item('shift_buffer_right', _('Shift active buffer one position to the right'))
-        self.insert_help_item('shift_buffer_beggining', _('Shift active buffer to the beggining'))
-        self.insert_help_item('shift_buffer_end', _('Shift active buffer to the end'))
-        self.insert_help_item('activate_first_buffer', _('Activate first buffer'))
-        self.insert_help_item('activate_last_buffer', _('Activate last buffer'))
-        self.insert_help_item('shift_buffer_beggining', _('Shift active buffer to the beggining'))
-        self.insert_help_item('shift_buffer_end', _('Shift active buffer to the end'))
-        self.insert_help_item('expand_visible_left', _('Expand visible timelines one column to the left'))
-        self.insert_help_item('expand_visible_right', _('Expand visible timelines one column to the right'))
-        self.insert_help_item('shrink_visible_left', _('Shrink visible timelines one column from the left'))
-        self.insert_help_item('shrink_visible_right', _('Shrink visible timelines one column from the left'))
-        self.insert_help_item('delete_buffer', _('Delete active buffer'))
-        self.insert_help_item('clear', _('Clear active buffer'))
-        self.insert_help_item('mark_all_as_read', _('Mark all tweets in timeline as read'))
+        self.insert_title(_('Motion'))
+        self._insert_bindings(MOTION_KEY_BINDINGS)
 
-        # Twitter
-        self.insert_division(_('Tweets'))
-        self.insert_help_item('tweet', _('Compose a tweet'))
-        self.insert_help_item('delete_tweet', _('Delete selected tweet (must be yours)'))
-        self.insert_help_item('reply', _('Reply to selected tweet'))
-        self.insert_help_item('retweet', _('Retweet selected tweet'))
-        self.insert_help_item('retweet_and_edit', _('Retweet selected tweet editing it first'))
-        self.insert_help_item('sendDM', _('Send direct message'))
-        self.insert_help_item('update', _('Refresh current timeline'))
-        self.insert_help_item('tweet_hashtag', _('Compose a tweet with the same hashtags as the focused'))
+        self.insert_title(_('Buffers'))
+        self._insert_bindings(BUFFERS_KEY_BINDINGS)
 
-        self.insert_division(_('Friendship'))
-        self.insert_help_item('follow_selected', _('Follow selected tweet\'s author'))
-        self.insert_help_item('unfollow_selected', _('Unfollow selected tweet\'s author'))
+        self.insert_title(_('Tweets'))
+        self._insert_bindings(TWEETS_KEY_BINDINGS)
 
-        self.insert_division(_('Favorites'))
-        self.insert_help_item('fav', _('Mark selected tweet as favorite'))
-        self.insert_help_item('delete_fav', _('Remove a tweet from favorites'))
+        self.insert_title(_('Timelines'))
+        self._insert_bindings(TIMELINES_KEY_BINDINGS)
 
-        self.insert_division(_('Timelines'))
-        self.insert_help_item('home', _('Open a home timeline'))
-        self.insert_help_item('favorites', _('Open a favorites timeline'))
-        self.insert_help_item('mentions', _('Open a mentions timeline'))
-        self.insert_help_item('DMs', _('Open a direct message timeline'))
-        self.insert_help_item('search', _('Search for term and show resulting timeline'))
-        self.insert_help_item('hashtags', _('Search the hashtags of the focused status'))
-        self.insert_help_item('thread', _('Open selected thread'))
-        
-        #self.insert_help_item('user_info', _('Show user information '))
+        self.insert_title(_('Meta'))
+        self._insert_bindings(META_KEY_BINDINGS)
 
-        # Others
-        self.insert_division(_('Others'))
-        self.insert_help_item('quit', _('Leave turses'))
-        self.insert_help_item('help', _('Show help buffer'))
-        self.insert_help_item('openurl', _('Open URL in browser'))
-        self.insert_help_item('redraw', _('Redraw the screen'))
+        self.insert_title(_('Turses'))
+        self._insert_bindings(TURSES_KEY_BINDINGS)
 
     def insert_header(self):
         widgets = [
@@ -600,18 +585,9 @@ class HelpBuffer(ScrollableListBoxWrapper):
         ]
         self.items.append(Columns(widgets))
 
-    def insert_division(self, title):
+    def insert_title(self, title):
         self.items.append(Divider(' '))
-        self.items.append(Padding(AttrWrap(Text(title), 'focus'), left=4))
-        self.items.append(Divider(' '))
-
-    def insert_help_item(self, key, description):
-        widgets = [
-            ('fixed', self.col[0], Text('  ' + key)), 
-            ('fixed', self.col[1], Text(self.configuration.keys[key])),
-            Text(description) 
-        ]
-        self.items.append(Columns(widgets))
+        self.items.append(Padding(AttrMap(Text(title), 'focus'), left=4))
 
     # from `ScrollableListBoxWrapper`
 
@@ -689,14 +665,14 @@ class StatusWidget(WidgetWrap):
         self.configuration = configuration
 
         text = status.text
-        status_content = Padding(AttrWrap(Text(text), 'body'), left=1, right=1)
+        status_content = Padding(AttrMap(Text(text), 'body'), left=1, right=1)
         header = self._create_header(status)
         box = BoxDecoration(status_content, title=header)
 
         if not is_DM(status) and status.is_favorite:
-            widget = AttrWrap(box, 'favorited', 'focus')
+            widget = AttrMap(box, 'favorited', 'focus')
         else:
-            widget = AttrWrap(box, 'line', 'focus')
+            widget = AttrMap(box, 'line', 'focus')
         self.__super.__init__(widget)
 
     def selectable(self):
@@ -732,7 +708,7 @@ class StatusWidget(WidgetWrap):
             retweet_count = str(status.retweet_count)
             
         # create header
-        header_template = ' ' + self.configuration.params['header_template'] + ' '
+        header_template = ' ' + self.configuration.styles['header_template'] + ' '
         header = unicode(header_template).format(
             username= username,
             retweeted = retweeted,
@@ -745,11 +721,7 @@ class StatusWidget(WidgetWrap):
         return encode(header)
 
     def _dm_header(self, dm):
-        try:
-            dm_template = ' ' + self.configuration.params['dm_template'] + ' '
-        except AttributeError:
-            # legacy configuration support
-            dm_template = ' {sender_screen_name} -> {recipient_screen_name} - {time} '
+        dm_template = ' ' + self.configuration.styles['dm_template'] + ' '
         relative_created_at = dm.get_relative_created_at()
         header = unicode(dm_template).format(
             sender_screen_name=dm.sender_screen_name,
@@ -770,7 +742,7 @@ class BoxDecoration(WidgetDecoration, WidgetWrap):
 
         def use_attr(a, t):
             if a:
-                t = AttrWrap(t, a)
+                t = AttrMap(t, a)
             return t
 
         # top line
@@ -778,7 +750,7 @@ class BoxDecoration(WidgetDecoration, WidgetWrap):
         tline_attr = Columns([('fixed', 2, 
                                         Divider(utf8decode("─"))),
                                     ('fixed', len(title), 
-                                        AttrWrap(Text(title), self.color)),
+                                        AttrMap(Text(title), self.color)),
                                     Divider(utf8decode("─")),])
         tline = use_attr(tline, tline_attr)
         # bottom line

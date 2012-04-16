@@ -12,27 +12,174 @@ from datetime import datetime
 from mock import MagicMock
 
 from turses.models import (
-        ActiveList,
+        prepend_at,
+
+        is_DM,
+        get_mentioned_usernames,
+        get_mentioned_for_reply,
+        get_dm_recipients_username,
+        get_authors_username,
+
+        is_username,
+        is_hashtag,
+        sanitize_username,
+
         Status, 
+        DirectMessage,
+
+        ActiveList,
         Timeline, 
         TimelineList,
-        VisibleTimelineList
+        VisibleTimelineList,
         )
 
 #
 # Helpers
 # 
-def create_status(id, datetime):
-    return Status(id=id,
-                  created_at=datetime,
-                  user='test',
-                  text='Test',)
+def create_status(**kwargs):
+    now = datetime.now()
+    defaults = {
+        'id': 1,
+        'created_at': now,
+        'user': 'testbot',
+        'text': 'Status created at %s' % now, 
+    }
+    defaults.update(kwargs)
+
+    return Status(**defaults)
+
+def create_direct_message(**kwargs):
+    now = datetime.now()
+    defaults = {
+        'id': 1,
+        'created_at': now,
+        'sender_screen_name': 'Alice',
+        'recipient_screen_name': 'Bob',
+        'text': 'Direct Message at %s' % now,
+    }
+    defaults.update(kwargs)
+
+    return DirectMessage(**defaults)
 
 
-# TODO
 class HelperFunctionTest(unittest.TestCase):
-    pass
+    def test_is_DM(self):
+        # status is NOT a DM
+        status = create_status()
+        self.failIf(is_DM(status))
 
+        dm = create_direct_message()
+        self.failUnless(is_DM(dm))
+
+    def test_get_mentioned_usernames(self):
+        user = 'turses'
+        mentioned = ('dialelo', 'mental_floss', '4n_4Wfu1_US3RN4M3')
+
+        expected_output = list(mentioned)
+
+        text = "@%s, @%s and @%s" % mentioned
+        status = create_status(user=user,
+                               text=text)
+
+        expected = set(expected_output)
+        mentioned_usernames = get_mentioned_usernames(status)
+        self.assertEqual(expected, set(mentioned_usernames))
+
+    def test_get_mentioned_for_reply(self):
+        user = 'turses'
+        mentioned = ('dialelo', 'mental_floss', '4n_4Wfu1_US3RN4M3')
+
+        expected_output = list(mentioned)
+        expected_output.append(user)
+        expected_output = map(prepend_at, expected_output)
+
+        text = "@%s, @%s and @%s" % mentioned
+        status = create_status(user=user,
+                               text=text)
+
+        expected = set(filter(prepend_at, expected_output))
+        mentioned_for_reply = get_mentioned_for_reply(status)
+        self.assertEqual(expected, set(mentioned_for_reply))
+
+    def test_get_authors_username(self):
+        user = 'turses'
+
+        # tweet
+        status = create_status(user=user)
+        author = get_authors_username(status)
+        self.assertEqual(user, author)
+
+        # retweet
+        retweeter = 'bot'
+        retweet = create_status(user=retweeter,
+                                is_retweet=True,
+                                author=user)
+        author = get_authors_username(retweet)
+        self.assertEqual(user, author)
+
+        # direct message
+        dm = create_direct_message(sender_screen_name=user,)
+        author = get_authors_username(dm)
+        self.assertEqual(user, author)
+
+    def test_get_dm_recipients_username(self):
+        # authenticating user
+        user = 'turses'
+
+        # given a status in which the author is the authenticated author
+        # must return `None`
+        status = create_status(user=user)
+        recipient_own_tweet = get_dm_recipients_username(user, status)
+        self.failIf(recipient_own_tweet)
+
+        # @user -> @another_user messages should return 'another_user'
+        expected_recipient = 'dialelo'
+        dm = create_direct_message(sender_screen_name=user,
+                                   recipient_screen_name=expected_recipient,)
+        recipient_dm_user_is_sender = get_dm_recipients_username(user, dm)
+        self.assertEqual(recipient_dm_user_is_sender, expected_recipient)
+
+        # @another_user -> @user messages should return 'another_user'
+        dm = create_direct_message(sender_screen_name=expected_recipient,
+                                   recipient_screen_name=user,)
+        recipient_dm_user_is_recipient = get_dm_recipients_username(user, dm)
+        self.assertEqual(recipient_dm_user_is_recipient, expected_recipient)
+
+    def test_is_username(self):
+        valid = ['dialelo', 'mental_floss', '4n_4Wfu1_US3RN4M3']
+        for user in valid:
+            self.failUnless(is_username(user))
+
+        # FIXME
+        #invalid = ['-asd', 'adsd?']
+        #for user in invalid:
+            #self.failIf(is_username(user))
+
+    def test_is_hashtag(self):
+        valid = ['#turses', '#cúrcuma', '#4n_4Wfu1_US3RN4M3']
+        for hashtag in valid:
+            self.failUnless(is_hashtag(hashtag))
+        # TODO: test invalid hashtags
+
+    def test_sanitize_username(self):
+        dirty_and_clean = [
+            ('@dialelo',           'dialelo'),   
+            ('dialelo',            'dialelo'),   
+            ('?@mental_floss',     'mental_floss'),
+            ('@4n_4Wfu1_US3RN4M3', '4n_4Wfu1_US3RN4M3'),
+        ]
+        for dirty, clean in dirty_and_clean:
+            sanitized = sanitize_username(dirty)
+            self.assertEqual(sanitized, clean)
+
+    def test_get_hashtags(self):
+        pass
+
+    def test_is_valid_status_text(self):
+        pass
+
+    def test_is_valid_search_text(self):
+        pass
 
 # TODO
 class StatusTest(unittest.TestCase):
@@ -69,7 +216,7 @@ class TimelineTest(unittest.TestCase):
     def test_unique_statuses_in_timeline(self):
         self.assertEqual(len(self.timeline), 0)
         # create and add the status
-        status = create_status(1, datetime.now())
+        status = create_status()
         self.timeline.add_status(status)
         self.assertEqual(len(self.timeline), 1)
         # check that adding more than once does not duplicate element
@@ -77,7 +224,7 @@ class TimelineTest(unittest.TestCase):
         self.assertEqual(len(self.timeline), 1)
 
     def test_active_index_becomes_0_when_adding_first_status(self):
-        status = create_status(1, datetime.now())
+        status = create_status()
         self.timeline.add_status(status)
         self.assertEqual(self.timeline.active_index, 0)
         # check that adding than once does not move the active
@@ -85,8 +232,8 @@ class TimelineTest(unittest.TestCase):
         self.assertEqual(self.timeline.active_index, 0)
 
     def test_insert_different_statuses(self):
-        old_status = create_status(1, datetime(1988, 12, 19))
-        new_status = create_status(2, datetime.now())
+        old_status = create_status(created_at=datetime(1988, 12, 19))
+        new_status = create_status(id=2)
         self.timeline.add_statuses([old_status, new_status])
         self.assertEqual(len(self.timeline), 2)
 
@@ -101,38 +248,40 @@ class TimelineTest(unittest.TestCase):
         """
         Test that when inserting new statuses the active doesn't change.
         """
-        active_status = create_status(1, datetime(1988, 12, 19))
+        active_status = create_status(created_at=datetime(1988, 12, 19))
         self.timeline.add_status(active_status)
         self.assert_active(active_status)
         
-        older_status = create_status(2, datetime(1978, 12, 19))
+        older_status = create_status(id=2, 
+                                     created_at=datetime(1978, 12, 19))
         self.timeline.add_status(older_status)
         self.assert_active(active_status)
 
-        newer_status = create_status(2, datetime.now())
+        newer_status = create_status(id=2)
         self.timeline.add_status(newer_status)
         self.assert_active(active_status)
 
     def test_insert_different_statuses_individually(self):
-        old_status = create_status(1, datetime(1988, 12, 19))
-        new_status = create_status(2, datetime.now())
+        old_status = create_status(created_at=datetime(1988, 12, 19))
+        new_status = create_status(id=2)
         self.timeline.add_status(old_status)
         self.assertEqual(len(self.timeline), 1)
         self.timeline.add_status(new_status)
         self.assertEqual(len(self.timeline), 2)
 
     def test_statuses_ordered_reversely_by_date(self):
-        old_status = create_status(1, datetime(1988, 12, 19))
-        new_status = create_status(2, datetime.now())
+        old_status = create_status(created_at=datetime(1988, 12, 19))
+        new_status = create_status(id=2)
         self.timeline.add_statuses([old_status, new_status])
         self.assertEqual(self.timeline[0], new_status)
         self.assertEqual(self.timeline[1], old_status)
 
     def test_get_newer_than(self):
         old_created_at = datetime(1988, 12, 19)
-        old_status = create_status(1, old_created_at)
+        old_status = create_status(created_at=old_created_at)
         new_created_at = datetime.now()
-        new_status = create_status(2, new_created_at)
+        new_status = create_status(id=2,
+                                   created_at=new_created_at)
         self.timeline.add_statuses([old_status, new_status])
         # get newers than `old_status`
         newers = self.timeline.get_newer_than(old_created_at)
@@ -144,9 +293,10 @@ class TimelineTest(unittest.TestCase):
 
     def test_clear(self):
         old_created_at = datetime(1988, 12, 19)
-        old_status = create_status(1, old_created_at)
+        old_status = create_status(created_at=old_created_at)
         new_created_at = datetime.now()
-        new_status = create_status(2, new_created_at)
+        new_status = create_status(id=2, 
+                                   created_at=new_created_at)
         self.timeline.add_statuses([old_status, new_status])
         self.timeline.clear()
         self.assertEqual(len(self.timeline), 0)
@@ -156,14 +306,14 @@ class TimelineTest(unittest.TestCase):
 
     # update function related
 
-    def test_extract_update_args_and_kwargs_no_args(self):
+    def test_extract_with_no_args(self):
         mock = MagicMock(name='update')
         timeline = Timeline(update_function=mock,)
 
         self.assertEqual(timeline.update_function_args, None)
         self.assertEqual(timeline.update_function_kwargs, None)
 
-    def test_extract_update_args_and_kwargs_only_args(self):
+    def test_extract_with_only_args(self):
         mock = MagicMock(name='update')
         args = 'python', 42
         timeline = Timeline(update_function=mock,
@@ -172,7 +322,7 @@ class TimelineTest(unittest.TestCase):
         self.assertEqual(timeline.update_function_args, list(args))
         self.assertEqual(timeline.update_function_kwargs, None)
 
-    def test_extract_update_args_and_kwargs_only_kwargs(self):
+    def test_extract_with_only_kwargs(self):
         mock = MagicMock(name='update')
         kwargs = {'python': 'rocks'}
         timeline = Timeline(update_function=mock,
@@ -181,7 +331,7 @@ class TimelineTest(unittest.TestCase):
         self.assertEqual(timeline.update_function_args, None)
         self.assertEqual(timeline.update_function_kwargs, kwargs)
 
-    def test_extract_update_args_and_kwargs_only_kwargs(self):
+    def test_extract_with_both_args_and_kwargs(self):
         mock = MagicMock(name='update')
         args = 'python', 42
         kwargs = {'python': 'rocks'}

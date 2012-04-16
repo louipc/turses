@@ -14,23 +14,22 @@ from functools import partial
 
 import urwid
 
-from .decorators import wrap_exceptions
 from .api.base import AsyncApi
-from .utils import get_urls, spawn_process
+from .utils import get_urls, spawn_process, wrap_exceptions
 from .models import (
-        Timeline, 
-        VisibleTimelineList,
+        is_DM,
+        is_username,
+        is_valid_status_text, 
+        is_valid_search_text, 
+        sanitize_username,
 
         get_authors_username, 
         get_mentioned_for_reply, 
         get_dm_recipients_username,
         get_mentioned_usernames,
         get_hashtags, 
-
-        is_valid_status_text, 
-        is_valid_search_text, 
-        is_valid_username,
-        is_DM
+        Timeline, 
+        VisibleTimelineList,
 )
 
 
@@ -69,7 +68,12 @@ class KeyHandler(object):
         """
         Return True if `key` corresponds to the action specified by `name`.
         """
-        return key == self.configuration.keys[name]
+        try:
+            bound_key, bound_key_description = self.configuration.key_bindings[name]
+        except KeyError:
+            return False
+        else:
+            return key == bound_key
 
     def handle_keyboard_input(self, key):
         """Handle a keyboard input."""
@@ -83,7 +87,8 @@ class KeyHandler(object):
         self._turses_key_handler(key)
 
         # Timeline commands
-        self._timeline_key_handler(key)
+        if not self.controller.is_in_help_mode():
+            self._timeline_key_handler(key)
 
         if self.controller.is_in_info_mode():
             return
@@ -119,6 +124,9 @@ class KeyHandler(object):
         # help
         elif self.is_bound(key, 'help'):
             self.controller.help_mode()
+        # reload configuration
+        elif self.is_bound(key, 'reload_config'):
+            self.controller.reload_configuration()
 
     def _motion_key_handler(self, key):
         ## up
@@ -214,6 +222,9 @@ class KeyHandler(object):
         # Follow hashtags
         elif self.is_bound(key, 'hashtags'):
             self.controller.search_hashtags()
+        # Authors timeline
+        elif self.is_bound(key, 'user_timeline'):
+            self.controller.focused_status_author_timeline()
 
     def _twitter_key_handler(self, key):
         # Update timeline
@@ -323,6 +334,9 @@ class Controller(object):
         # TODO make default timeline list configurable
         self.append_default_timelines()
 
+    def reload_configuration(self):
+        raise NotImplementedError
+
     # -- Callbacks ------------------------------------------------------------
 
     def api_init_error(self):
@@ -385,13 +399,14 @@ class Controller(object):
     def append_timeline(self, 
                         name, 
                         update_function, 
-                        update_args=None):
+                        update_args=None,
+                        update_kwargs=None):
         """
         Given a name, function to update a timeline and optionally
         arguments to the update function, it creates the timeline and
         appends it to `timelines` asynchronously.
         """
-        args = name, update_function, update_args
+        args = name, update_function, update_args, update_kwargs
         thread = Thread(target=self._append_timeline,
                         args=args)
         thread.run()
@@ -399,13 +414,17 @@ class Controller(object):
     def _append_timeline(self,
                          name, 
                          update_function, 
-                         update_args=None):
+                         update_args,
+                         update_kwargs):
         timeline = Timeline(name=name,
                             update_function=update_function,
-                            update_function_args=update_args) 
+                            update_function_args=update_args,
+                            update_function_kwargs=update_kwargs) 
         timeline.update()
         timeline.activate_first()
         self.timelines.append_timeline(timeline)
+        if self.is_in_info_mode():
+            self.timeline_mode()
         self.draw_timelines()
 
     def append_default_timelines(self):
@@ -432,6 +451,18 @@ class Controller(object):
                              on_error=timeline_not_fetched,
                              on_success=timeline_fetched,)
                               
+    def append_user_timeline(self, username):
+        timeline_fetched = partial(self.info_message, 
+                                    _('@%s\'s tweets fetched' % username))
+        timeline_not_fetched = partial(self.error_message, 
+                                        _('Failed to fetch @%s\'s tweets' % username))
+
+        self.append_timeline(name='@%s' % username,
+                             update_function=self.api.get_user_timeline,
+                             update_kwargs={'screen_name': username},
+                             on_error=timeline_not_fetched,
+                             on_success=timeline_fetched,)
+
     def append_own_tweets_timeline(self):
         timeline_fetched = partial(self.info_message, 
                                     _('Your tweets fetched'))
@@ -804,7 +835,8 @@ class Controller(object):
         self.ui.set_focus('body')
 
         # TODO make sure that the user EXISTS and THEN fetch its tweets
-        if not is_valid_username(username):
+        username = sanitize_username(username)
+        if not is_username(username):
             self.info_message(_('Invalid username'))
             return
         else:
@@ -840,6 +872,11 @@ class Controller(object):
         status = self.timelines.get_focused_status()
         hashtags = ' '.join(get_hashtags(status))
         self.search_handler(text=hashtags)
+
+    def focused_status_author_timeline(self):
+        status = self.timelines.get_focused_status()
+        author = get_authors_username(status)
+        self.append_user_timeline(author)
 
     def tweet(self):
         self.ui.show_tweet_editor(prompt=_('Tweet'), 
@@ -1010,10 +1047,11 @@ class Controller(object):
             return
 
         args = ' '.join(urls)
-        # TODO: delegate this to BROWSER environment variable (?)
-        command = self.configuration.params['openurl_command']
-        # remove %s from legacy configuration
-        command.strip('%s')
+
+        command = self.configuration.browser
+        if not command:
+            self.error_message(_('You have to set the BROWSER environment variable to open URLs'))
+            return
 
         try:
             spawn_process(command, args)
@@ -1024,15 +1062,11 @@ class Controller(object):
 class CursesController(Controller):
     """Controller for the curses implementation.""" 
 
-    def __init__(self, palette, *args, **kwargs):
-        self.palette = palette
-        Controller.__init__(self, *args, **kwargs)
-
     def main_loop(self):
         if not hasattr(self, 'loop'):
             self.key_handler = KeyHandler(self.configuration, self)
             self.loop = urwid.MainLoop(self.ui,
-                                       self.palette, 
+                                       self.configuration.palette, 
                                        input_filter=self.key_handler.handle,)
         self.loop.run()
 
@@ -1045,3 +1079,8 @@ class CursesController(Controller):
                 self.loop.draw_screen()
             except AssertionError:
                 pass
+
+    def reload_configuration(self):
+        self.configuration.reload()
+        self.redraw_screen()
+        self.info_message(_('Configuration reloaded'))

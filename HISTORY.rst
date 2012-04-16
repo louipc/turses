@@ -1,3 +1,9 @@
+0.1.0
+-----
+- binding to open focused status authors' tweets
+- reload configuration
+- configuration default location and format changed
+
 0.0.15
 ------
 - bugfix: DM recipient was not correctly resolved

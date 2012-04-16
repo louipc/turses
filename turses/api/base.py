@@ -10,14 +10,89 @@ for different implementations.
 It also contains an asynchronous wrapper to `Api`.
 """
 
+import oauth2 as oauth
 from threading import Thread
+from urlparse import parse_qsl
+from gettext import gettext as _
 
-from ..decorators import wrap_exceptions
 from ..models import is_DM
+from ..utils import encode, wrap_exceptions
 
 
-twitter_consumer_key = 'OEn4hrNGknVz9ozQytoR0A'
-twitter_consumer_secret = 'viud49uVgdVO9dnOGxSQJRo7jphTioIlEn3OdpkZI'
+TWITTER_CONSUMER_KEY = 'OEn4hrNGknVz9ozQytoR0A'
+TWITTER_CONSUMER_SECRET = 'viud49uVgdVO9dnOGxSQJRo7jphTioIlEn3OdpkZI'
+
+BASE_URL = 'https://api.twitter.com'
+
+def authorization():
+    """
+    Authorize `turses` to use a Twitter account. 
+
+    Return a dictionary with `oauth_token` and `oauth_token_secret`
+    if succesfull, `None` otherwise.
+    """
+    # This function is borrowed from python-twitter developers 
+
+    # Copyright 2007 The Python-Twitter Developers
+    #
+    # Licensed under the Apache License, Version 2.0 (the "License");
+    # you may not use this file except in compliance with the License.
+    # You may obtain a copy of the License at
+    #
+    #     http://www.apache.org/licenses/LICENSE-2.0
+    #
+    # Unless required by applicable law or agreed to in writing, software
+    # distributed under the License is distributed on an "AS IS" BASIS,
+    # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    # See the License for the specific language governing permissions and
+    # limitations under the License.
+    print 'base_url:{0}'.format(BASE_URL)
+
+
+    REQUEST_TOKEN_URL = BASE_URL + '/oauth/request_token'
+    ACCESS_TOKEN_URL  = BASE_URL + '/oauth/access_token'
+    AUTHORIZATION_URL = BASE_URL + '/oauth/authorize'
+    consumer_key      = TWITTER_CONSUMER_KEY
+    consumer_secret   = TWITTER_CONSUMER_SECRET
+    oauth_consumer    = oauth.Consumer(key=consumer_key, secret=consumer_secret)
+    oauth_client      = oauth.Client(oauth_consumer)
+
+    print encode(_('Requesting temp token from Twitter'))
+
+    resp, content = oauth_client.request(REQUEST_TOKEN_URL, 'GET')
+
+    if resp['status'] != '200':
+        print encode(_('Invalid respond, requesting temp token: %s')) % str(resp['status'])
+        return
+
+    request_token = dict(parse_qsl(content))
+
+    print ''
+    print encode(_('Please visit the following page to retrieve needed pin code'))
+    print encode(_('to obtain an Authentication Token:'))
+    print ''
+    print '%s?oauth_token=%s' % (AUTHORIZATION_URL, request_token['oauth_token'])
+    print ''
+
+    pincode = raw_input('Pin code? ')
+
+    token = oauth.Token(request_token['oauth_token'], request_token['oauth_token_secret'])
+    token.set_verifier(pincode)
+
+    print ''
+    print encode(_('Generating and signing request for an access token'))
+    print ''
+
+    oauth_client  = oauth.Client(oauth_consumer, token)
+    resp, content = oauth_client.request(ACCESS_TOKEN_URL, method='POST', body='oauth_verifier=%s' % pincode)
+    access_token  = dict(parse_qsl(content))
+
+    if resp['status'] == '200':
+        return access_token
+    else:
+        print 'response:{0}'.format(resp['status'])
+        print encode(_('Request for access token failed: %s')) % resp['status']
+        return None
 
 
 class Api(object):
@@ -29,8 +104,8 @@ class Api(object):
     def __init__(self,
                  access_token_key,
                  access_token_secret,
-                 consumer_key=twitter_consumer_key,
-                 consumer_secret=twitter_consumer_secret,):
+                 consumer_key=TWITTER_CONSUMER_KEY,
+                 consumer_secret=TWITTER_CONSUMER_SECRET,):
         self._consumer_key = consumer_key
         self._consumer_secret = consumer_secret
         self._access_token_key = access_token_key
