@@ -5,11 +5,14 @@
 ###############################################################################
 
 import unittest
+from os.path import join
 from sys import path
 path.append('../')
 
 from turses.config import (
         PALETTE,
+        
+        CONFIG_PATH,
         DEFAULT_CONFIG_FILE, 
         DEFAULT_TOKEN_FILE,
 
@@ -35,6 +38,7 @@ class ConfigurationTest(unittest.TestCase):
     """Tests for `turses.config.Configuration`."""
 
     def test_palette(self):
+        """Test that every color in the default `PALETTE` is valid."""
         for label in list(PALETTE):
             # ignore the label name
             for color in label[1:]:
@@ -42,6 +46,7 @@ class ConfigurationTest(unittest.TestCase):
                     self.assertTrue(validate_color(color))
 
     def test_defaults(self):
+        """Test that defaults get loaded correctly."""
         config = Configuration()
         self.assertEqual(config.config_file, DEFAULT_CONFIG_FILE)
         self.assertEqual(config.token_file, DEFAULT_TOKEN_FILE)
@@ -59,6 +64,7 @@ class ConfigurationTest(unittest.TestCase):
         pass
 
     def test_set_color(self):
+        """Test `Configuration._set_color`."""
         config = Configuration()
 
         palette = [
@@ -78,6 +84,7 @@ class ConfigurationTest(unittest.TestCase):
         self.assertEqual(palette, config.palette)
 
     def test_set_key_binding(self):
+        """Test `Configuration._set_key_binding`."""
         config = Configuration()
 
         key_bindings = {
@@ -100,13 +107,20 @@ class ConfigurationTest(unittest.TestCase):
         self.assertEqual(swapped_key_bindings, config.key_bindings)
 
     def test_args_account(self):
-        pass
+        account = 'bob'
+        args = Args(account=account)
+        config = Configuration(args)
+        token_path = join(CONFIG_PATH, "%s.token" % account)
+        self.assertEqual(token_path, config.token_file)
 
     def test_args_generate_config(self):
         pass
 
     def test_args_config(self):
-        pass
+        config_path = '/path/to/custom/config/file'
+        args = Args(config=config_path)
+        config = Configuration(args)
+        self.assertEqual(config_path, config.config_file)
 
 
 if __name__ == '__main__':

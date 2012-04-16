@@ -12,18 +12,25 @@ There is one mayor configuration file in turses:
     `config`
         contains user preferences: colors, bindings, etc.
 
-And each user account has its .token file with authentication tokens.
+An one default token file:
+
+    `token`
+        contains authentication token for the default user account
+
+Each user account (that is no the default one) has its .token file.
 Keep this secret.
 
-    `<username>.token`
+    `<alias>.token`
         contains the oauth tokens
 
-The standar location is under $HOME directory, in a folder called `.turses`.
-Here is an example with two user accounts: `alice` and `bob`.
+The standard location is under $HOME directory, in a folder called `.turses`.
+Here is an example with two accounts apart from the default one, aliased
+to `alice` and `bob`.
 
     ~
     |+.turses/
     | |-config
+    | |-token
     | |-alice.token
     | `-bob.token
     |+...
@@ -339,14 +346,19 @@ class Configuration(object):
             config_file = cli_args.config
         else:
             config_file = DEFAULT_CONFIG_FILE
-        self._init_config(config_file)
+        self.config_file = config_file
 
         if cli_args and cli_args.account:
             token_file = path.join(CONFIG_PATH, '%s.token' % cli_args.account)
         else:
             # loads the default `token' if no account was specified 
             token_file = DEFAULT_TOKEN_FILE
-        self._init_token(token_file)
+        self.token_file = token_file
+
+    def load(self):
+        """Loads configuration from files."""
+        self._init_config()
+        self._init_token()
 
     def load_defaults(self):
         """Load default values into configuration."""
@@ -355,32 +367,30 @@ class Configuration(object):
         self.styles = STYLES
         self.logging_level = LOGGING_LEVEL
 
-    def _init_config(self, config_file):
+    def _init_config(self):
         if path.isfile(LEGACY_CONFIG_FILE):
             self._parse_legacy_config_file()
             print_deprecation_notice()
             remove(LEGACY_CONFIG_FILE)
-            self.generate_config_file(config_file)
-        elif path.isfile(config_file):
-            self.parse_config_file(config_file)
+            self.generate_config_file(self.config_file)
+        elif path.isfile(self.config_file):
+            self.parse_config_file(self.config_file)
         else:
-            self.generate_config_file(config_file)
-        self.config_file = config_file
+            self.generate_config_file(self.config_file)
 
-    def _init_token(self, token_file):
-        self.token_file = token_file
+    def _init_token(self):
         if path.isfile(LEGACY_TOKEN_FILE):
             self.parse_token_file(LEGACY_TOKEN_FILE)
             remove(LEGACY_TOKEN_FILE)
             if hasattr(self, 'oauth_token') and \
                hasattr(self, 'oauth_token_secret'):
-                   self.generate_token_file(token_file,
+                   self.generate_token_file(self.token_file,
                                             self.oauth_token,
                                             self.oauth_token_secret)
-        elif not path.isfile(token_file):
+        elif not path.isfile(self.token_file):
             self.authorize_new_account()
         else:
-            self.parse_token_file(token_file)
+            self.parse_token_file(self.token_file)
 
     def _parse_legacy_config_file(self):
         """
@@ -426,11 +436,10 @@ class Configuration(object):
     def _set_color(self, color_label, custom_fg=None, custom_bg=None):
         for color in self.palette:
             label, fg, bg = color[0], color[1], color[2]
-            new_fg = custom_fg if validate_color(custom_fg) is not None else fg
-            new_bg = custom_bg if validate_color(custom_bg) is not None else bg
             if label == color_label:
-                color[1] = new_fg
-                color[2] = new_bg
+                color[1] = custom_fg if validate_color(custom_fg) is not None else fg
+                color[2] = custom_bg if validate_color(custom_bg) is not None else bg
+            
 
     def _set_key_binding(self, binding, new_key):
         if not self.key_bindings.has_key(binding):

@@ -23,6 +23,7 @@ def main():
         args = parse_arguments()
 
         configuration = Configuration(args)
+        configuration.load()
         ui = CursesInterface(configuration)
 
         # start `turses`
