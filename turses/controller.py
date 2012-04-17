@@ -9,7 +9,6 @@ This module contains the controller logic of turses.
 
 
 from gettext import gettext as _
-from threading import Thread
 from functools import partial
 
 import urwid
@@ -323,11 +322,8 @@ class Controller(object):
         """Exit the program."""
         raise NotImplementedError
 
+    @async
     def init_timelines(self):
-        timelines_thread = Thread(target=self._init_timelines)
-        timelines_thread.start()
-    
-    def _init_timelines(self):
         # API has to be authenticated
         while (not self.api.is_authenticated):
             pass
@@ -407,18 +403,8 @@ class Controller(object):
         """
         Given a name, function to update a timeline and optionally
         arguments to the update function, it creates the timeline and
-        appends it to `timelines` asynchronously.
+        appends it to `timelines`.
         """
-        args = name, update_function, update_args, update_kwargs
-        thread = Thread(target=self._append_timeline,
-                        args=args)
-        thread.run()
-
-    def _append_timeline(self,
-                         name, 
-                         update_function, 
-                         update_args,
-                         update_kwargs):
         timeline = Timeline(name=name,
                             update_function=update_function,
                             update_function_args=update_args,
@@ -434,16 +420,13 @@ class Controller(object):
     def append_default_timelines(self):
         self.append_home_timeline()
         self.timeline_mode()
-        self.append_mentions_timeline()
-        self.append_favorites_timeline()
-        self.append_direct_messages_timeline()
-        self.append_own_tweets_timeline()
-        for timeline in self.timelines:
-            timeline.update()
-            timeline.activate_first()
+        for append in [self.append_mentions_timeline,
+                       self.append_favorites_timeline,
+                       self.append_direct_messages_timeline,
+                       self.append_own_tweets_timeline]:
+            append()
             self.draw_timelines()
-            self.info_message(_('%s fetched' % timeline.name))
-        self.info_message(_('Timelines loaded'))
+        self.clear_status()
 
     def append_home_timeline(self):
         timeline_fetched = partial(self.info_message, 
@@ -541,6 +524,7 @@ class Controller(object):
             timeline.update()
             self.draw_timelines()
             self.info_message(_('%s updated' % timeline.name))
+        self.clear_status()
 
     # -- Timeline mode --------------------------------------------------------
 
@@ -584,11 +568,8 @@ class Controller(object):
             tweet.read = True
         self.update_header()
 
+    @async
     def update_active_timeline(self):
-        update_thread = Thread(target=self._update_active_timeline)
-        update_thread.start()
-
-    def _update_active_timeline(self):
         """Updates the timeline and renders the active timeline."""
         if self.timelines.has_timelines():
             active_timeline = self.timelines.get_active_timeline()
@@ -601,15 +582,8 @@ class Controller(object):
                 self.draw_timelines()
             self.info_message('%s updated' % active_timeline.name)
 
+    @async
     def update_active_timeline_with_newer_statuses(self):
-        update_thread = Thread(target=self._update_with_newer_statuses)
-        update_thread.run()
-
-    def update_active_timeline_with_older_statuses(self):
-        update_thread = Thread(target=self._update_with_older_statuses)
-        update_thread.run()
-
-    def _update_with_newer_statuses(self):
         """
         Updates the active timeline with newer tweets than the active.
         """
@@ -617,7 +591,8 @@ class Controller(object):
         active_status = active_timeline.get_active()
         active_timeline.update_with_extra_kwargs(since_id=active_status.id)
 
-    def _update_with_older_statuses(self):
+    @async
+    def update_active_timeline_with_older_statuses(self):
         """
         Updates the active timeline with older tweets than the active.
         """
