@@ -15,7 +15,7 @@ from functools import partial
 import urwid
 
 from .api.base import AsyncApi
-from .utils import get_urls, spawn_process, wrap_exceptions
+from .utils import get_urls, spawn_process, wrap_exceptions, async
 from .models import (
         is_DM,
         is_username,
@@ -430,11 +430,8 @@ class Controller(object):
             self.timeline_mode()
         self.draw_timelines()
 
+    @async
     def append_default_timelines(self):
-        thread = Thread(target=self._append_default_timelines)
-        thread.run()
-
-    def _append_default_timelines(self):
         self.append_home_timeline()
         self.timeline_mode()
         self.append_mentions_timeline()
