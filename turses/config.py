@@ -404,23 +404,25 @@ class Configuration(object):
             self._parse_legacy_config_file()
             print_deprecation_notice()
             remove(LEGACY_CONFIG_FILE)
-            self.generate_config_file(self.config_file)
         elif path.isfile(self.config_file):
             self.parse_config_file(self.config_file)
-            # TODO: modernize config files
-        else:
-            self.generate_config_file(self.config_file)
+        # inserts new values when neccesary
+        self.generate_config_file(self.config_file)
 
     def _add_section_default_timelines(self, conf):
-        conf.add_section(SECTION_DEFAULT_TIMELINES)
+        # Default timelines
+        if not conf.has_section(SECTION_DEFAULT_TIMELINES):
+            conf.add_section(SECTION_DEFAULT_TIMELINES)
         for timeline in DEFAULT_TIMELINES:
+            if conf.has_option(SECTION_DEFAULT_TIMELINES, timeline):
+                continue
             value = str(self.default_timelines[timeline]).lower()
             conf.set(SECTION_DEFAULT_TIMELINES, timeline, value)
             
-
     def _add_section_key_bindings(self, conf): 
         # Key bindings
-        conf.add_section(SECTION_KEY_BINDINGS)
+        if not conf.has_section(SECTION_KEY_BINDINGS):
+            conf.add_section(SECTION_KEY_BINDINGS)
         binding_lists = [MOTION_KEY_BINDINGS,
                          BUFFERS_KEY_BINDINGS,
                          TWEETS_KEY_BINDINGS,
@@ -430,26 +432,47 @@ class Configuration(object):
         for binding_list in binding_lists:
             for binding in binding_list:
                 key = self.key_bindings[binding][0]
+                if conf.has_option(SECTION_KEY_BINDINGS, binding):
+                    continue
                 conf.set(SECTION_KEY_BINDINGS, binding, key)
-        
 
     def _add_section_palette(self, conf):
         # Color
-        conf.add_section(SECTION_PALETTE)
-        for label in self.palette:
+        if not conf.has_section(SECTION_PALETTE):
+            conf.add_section(SECTION_PALETTE)
+        for label in PALETTE:
             label_name, fg, bg = label[0], label[1], label[2]
-            conf.set(SECTION_PALETTE, label_name, fg)
-            conf.set(SECTION_PALETTE, label_name + '_bg', bg)
+
+            # fg
+            if conf.has_option(SECTION_PALETTE, label_name) and \
+                validate_color(conf.get(SECTION_PALETTE, label_name)):
+                pass
+            else:
+                conf.set(SECTION_PALETTE, label_name, fg)
+
+            #bg
+            label_name_bg = label_name + '_bg'
+            if conf.has_option(SECTION_PALETTE, label_name_bg) and \
+                validate_color(conf.get(SECTION_PALETTE, label_name_bg)):
+                pass
+            else:
+                conf.set(SECTION_PALETTE, label_name_bg, bg)
 
     def _add_section_styles(self, conf):
         # Styles
-        conf.add_section(SECTION_STYLES)
-        for style in self.styles:
+        if not conf.has_section(SECTION_STYLES):
+            conf.add_section(SECTION_STYLES)
+        for style in STYLES:
+            if conf.has_option(SECTION_STYLES, style):
+                continue
             conf.set(SECTION_STYLES, style, self.styles[style])
 
     def _add_section_debug(self, conf):
         # Debug
-        conf.add_section(SECTION_DEBUG)
+        if not conf.has_section(SECTION_DEBUG):
+            conf.add_section(SECTION_DEBUG)
+        if conf.has_option(SECTION_DEBUG, 'logging_level'):
+            return
         conf.set(SECTION_DEBUG, 'logging_level', LOGGING_LEVEL)
 
     def _init_token(self):
@@ -523,19 +546,27 @@ class Configuration(object):
         self.key_bindings[binding] = new_key_binding
 
     def generate_config_file(self, config_file):
-        self._generate_config_file(config_file=config_file,
-                                   on_error=self._config_generation_error,
-                                   on_success=self._config_generation_success)
+        kwargs = {
+            'config_file': config_file,
+            'on_error': self._config_generation_error,
+        }
+
+        if not path.isfile(config_file):
+            kwargs.update({
+                'on_success': self._config_generation_success
+            })
+
+        self._generate_config_file(**kwargs)
 
     @wrap_exceptions
     def _generate_config_file(self, config_file):
         conf = RawConfigParser()
 
-        self.config_file = config_file
         self._add_section_default_timelines(conf)
         self._add_section_key_bindings(conf)
         self._add_section_palette(conf)
-        self._add_section_debuf(conf)
+        self._add_section_styles(conf)
+        self._add_section_debug(conf)
 
         with open(config_file, 'wb') as config:
             conf.write(config)
