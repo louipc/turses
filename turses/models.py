@@ -20,6 +20,8 @@ from .utils import html_unescape, timestamp_from_datetime
 
 username_regex = re.compile(r'[A-Za-z0-9_]+')
 
+hashtag_regex = re.compile(r'#.+')
+
 prepend_at = lambda username: '@%s' % username
 
 def is_DM(status):
@@ -92,8 +94,15 @@ def is_username(username):
         return match.start() == 0 and match.end() == len(username)
     return False 
 
-def is_hashtag(string):
-    return len(string) > 1 and string.startswith('#')
+def is_hashtag(hashtag):
+    """
+    Return `True` if `hashtag` is a valid Twitter hashtag, `False`
+    otherwise.
+    """
+    match = hashtag_regex.match(hashtag)
+    if match:
+        return match.start() == 0 and match.end() == len(hashtag)
+    return False 
 
 def sanitize_username(username):
     """

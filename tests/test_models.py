@@ -156,10 +156,13 @@ class HelperFunctionTest(unittest.TestCase):
             self.failIf(is_username(user))
 
     def test_is_hashtag(self):
-        valid = ['#turses', '#cúrcuma', '#4n_4Wfu1_US3RN4M3']
+        valid = ['#turses', '#cúrcuma', '#4n_4Wfu1_H45hT46']
         for hashtag in valid:
             self.failUnless(is_hashtag(hashtag))
-        # TODO: test invalid hashtags
+
+        invalid = ['s#turses', '#']
+        for hashtag in invalid:
+            self.failIf(is_hashtag(hashtag))
 
     def test_sanitize_username(self):
         dirty_and_clean = [

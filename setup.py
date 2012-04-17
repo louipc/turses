@@ -15,7 +15,7 @@ requirements = [
     "tweepy",
 ]
 test_requirements = list(requirements)
-test_requirements.extend(["mock", "nose", "coverage", "nose-progressive"])
+test_requirements.extend(["mock", "nose", "coverage",])
 
 try:
     long_description = open("README.rst").read() + "\n\n" + open("HISTORY.rst").read()

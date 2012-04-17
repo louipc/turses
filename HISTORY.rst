@@ -1,3 +1,7 @@
+0.1.2
+-----
+- bugfix: error with packaging
+
 0.1.1
 -----
 - bindings to update all timelines
