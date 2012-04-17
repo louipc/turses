@@ -15,6 +15,13 @@ import urwid
 
 from .api.base import AsyncApi
 from .utils import get_urls, spawn_process, wrap_exceptions, async
+from .config import (
+        HOME_TIMELINE,
+        MENTIONS_TIMELINE,
+        FAVORITES_TIMELINE,
+        MESSAGES_TIMELINE,
+        OWN_TWEETS_TIMELINE,
+)
 from .models import (
         is_DM,
         is_username,
@@ -418,14 +425,36 @@ class Controller(object):
 
     @async
     def append_default_timelines(self):
-        self.append_home_timeline()
-        self.timeline_mode()
-        for append in [self.append_mentions_timeline,
-                       self.append_favorites_timeline,
-                       self.append_direct_messages_timeline,
-                       self.append_own_tweets_timeline]:
-            append()
-            self.draw_timelines()
+        default_timelines = {
+            HOME_TIMELINE:       self.append_home_timeline,
+            MENTIONS_TIMELINE:   self.append_mentions_timeline,
+            FAVORITES_TIMELINE:  self.append_favorites_timeline,
+            MESSAGES_TIMELINE:   self.append_direct_messages_timeline,
+            OWN_TWEETS_TIMELINE: self.append_own_tweets_timeline,
+        }
+
+        timelines = [
+            HOME_TIMELINE,      
+            MENTIONS_TIMELINE,  
+            FAVORITES_TIMELINE, 
+            MESSAGES_TIMELINE,  
+            OWN_TWEETS_TIMELINE,
+        ]
+
+        is_any = any([self.configuration.default_timelines[timeline] 
+                      for timeline in timelines])
+                                                    
+        if is_any:
+            self.timeline_mode()
+        else:
+            self.info_message(_('You don\'t have any default timelines activated'))
+            return 
+
+        for timeline in timelines:
+            append = default_timelines[timeline]
+            if self.configuration.default_timelines[timeline]:
+                append()
+                self.draw_timelines()
         self.clear_status()
 
     def append_home_timeline(self):

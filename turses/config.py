@@ -47,6 +47,24 @@ from .api.base import authorization
 
 # -- Defaults -----------------------------------------------------------------
 
+# Timelines
+
+HOME_TIMELINE = 'home'
+MENTIONS_TIMELINE = 'mentions'
+FAVORITES_TIMELINE = 'favorites'
+MESSAGES_TIMELINE = 'messages'
+OWN_TWEETS_TIMELINE = 'own_tweets'
+
+DEFAULT_TIMELINES = {
+    HOME_TIMELINE:       True,
+    MENTIONS_TIMELINE:   True,
+    FAVORITES_TIMELINE:  True,
+    MESSAGES_TIMELINE:   True,
+    OWN_TWEETS_TIMELINE: True,
+}
+
+# Key bindings
+
 KEY_BINDINGS = {
     # motion
     'up':
@@ -221,6 +239,8 @@ TURSES_KEY_BINDINGS = [
     'redraw',                 
 ]
 
+# Palette
+
 # TODO: not hard coded
 # valid colors for `urwid`s palette
 VALID_COLORS = [
@@ -275,6 +295,8 @@ PALETTE = [
     ['editor', 'white', 'dark blue'],
 ]
 
+# Styles
+
 STYLES = {
     # TODO: make time string configurable 
     'header_template':      ' {username}{retweeted}{retweeter} - {time}{reply} {retweet_count} ',
@@ -282,9 +304,11 @@ STYLES = {
 }
 
 # Debug
+
 LOGGING_LEVEL = 3
 
 # Environment
+
 HOME = getenv('HOME')
 BROWSER = getenv('BROWSER')
 
@@ -302,10 +326,13 @@ LEGACY_CONFIG_FILE = path.join(LEGACY_CONFIG_PATH, 'turses.cfg')
 LEGACY_TOKEN_FILE = path.join(LEGACY_CONFIG_PATH, 'turses.tok')
 
 # Names of the sections in the configuration
+SECTION_DEFAULT_TIMELINES = 'timelines'
 SECTION_KEY_BINDINGS = 'bindings'
 SECTION_PALETTE = 'colors'
 SECTION_STYLES = 'styles'
 SECTION_DEBUG = 'debug'
+
+# Names of the sections in the token file
 SECTION_TOKEN = 'token'
 
 
@@ -366,6 +393,7 @@ class Configuration(object):
 
     def load_defaults(self):
         """Load default values into configuration."""
+        self.default_timelines = DEFAULT_TIMELINES
         self.key_bindings = KEY_BINDINGS
         self.palette = PALETTE
         self.styles = STYLES
@@ -379,8 +407,50 @@ class Configuration(object):
             self.generate_config_file(self.config_file)
         elif path.isfile(self.config_file):
             self.parse_config_file(self.config_file)
+            # TODO: modernize config files
         else:
             self.generate_config_file(self.config_file)
+
+    def _add_section_default_timelines(self, conf):
+        conf.add_section(SECTION_DEFAULT_TIMELINES)
+        for timeline in DEFAULT_TIMELINES:
+            value = str(self.default_timelines[timeline]).lower()
+            conf.set(SECTION_DEFAULT_TIMELINES, timeline, value)
+            
+
+    def _add_section_key_bindings(self, conf): 
+        # Key bindings
+        conf.add_section(SECTION_KEY_BINDINGS)
+        binding_lists = [MOTION_KEY_BINDINGS,
+                         BUFFERS_KEY_BINDINGS,
+                         TWEETS_KEY_BINDINGS,
+                         TIMELINES_KEY_BINDINGS,
+                         META_KEY_BINDINGS,
+                         TURSES_KEY_BINDINGS,]
+        for binding_list in binding_lists:
+            for binding in binding_list:
+                key = self.key_bindings[binding][0]
+                conf.set(SECTION_KEY_BINDINGS, binding, key)
+        
+
+    def _add_section_palette(self, conf):
+        # Color
+        conf.add_section(SECTION_PALETTE)
+        for label in self.palette:
+            label_name, fg, bg = label[0], label[1], label[2]
+            conf.set(SECTION_PALETTE, label_name, fg)
+            conf.set(SECTION_PALETTE, label_name + '_bg', bg)
+
+    def _add_section_styles(self, conf):
+        # Styles
+        conf.add_section(SECTION_STYLES)
+        for style in self.styles:
+            conf.set(SECTION_STYLES, style, self.styles[style])
+
+    def _add_section_debug(self, conf):
+        # Debug
+        conf.add_section(SECTION_DEBUG)
+        conf.set(SECTION_DEBUG, 'logging_level', LOGGING_LEVEL)
 
     def _init_token(self):
         if path.isfile(LEGACY_TOKEN_FILE):
@@ -462,36 +532,10 @@ class Configuration(object):
         conf = RawConfigParser()
 
         self.config_file = config_file
-
-        # Key bindings
-        conf.add_section(SECTION_KEY_BINDINGS)
-        binding_lists = [MOTION_KEY_BINDINGS,
-                         BUFFERS_KEY_BINDINGS,
-                         TWEETS_KEY_BINDINGS,
-                         TIMELINES_KEY_BINDINGS,
-                         META_KEY_BINDINGS,
-                         TURSES_KEY_BINDINGS,]
-        for binding_list in binding_lists:
-            for binding in binding_list:
-                key = self.key_bindings[binding][0]
-                conf.set(SECTION_KEY_BINDINGS, binding, key)
-        
-
-        # Color
-        conf.add_section(SECTION_PALETTE)
-        for label in self.palette:
-            label_name, fg, bg = label[0], label[1], label[2]
-            conf.set(SECTION_PALETTE, label_name, fg)
-            conf.set(SECTION_PALETTE, label_name + '_bg', bg)
-
-        # Styles
-        conf.add_section(SECTION_STYLES)
-        for style in self.styles:
-            conf.set(SECTION_STYLES, style, self.styles[style])
-
-        # Debug
-        conf.add_section(SECTION_DEBUG)
-        conf.set(SECTION_DEBUG, 'logging_level', LOGGING_LEVEL)
+        self._add_section_default_timelines(conf)
+        self._add_section_key_bindings(conf)
+        self._add_section_palette(conf)
+        self._add_section_debuf(conf)
 
         with open(config_file, 'wb') as config:
             conf.write(config)
@@ -524,10 +568,21 @@ class Configuration(object):
         self._conf = RawConfigParser()
         self._conf.read(config_file)
 
+        self._parse_default_timelines()
         self._parse_key_bindings()
         self._parse_palette()
         self._parse_styles()
         self._parse_debug()
+
+    def _parse_default_timelines(self):
+        for timeline in self.default_timelines:
+            if self._conf.has_option(SECTION_DEFAULT_TIMELINES, timeline):
+                try:
+                    value = self._conf.getboolean(SECTION_DEFAULT_TIMELINES, 
+                                                  timeline) 
+                except ValueError:
+                   continue
+                self.default_timelines[timeline] = value
 
     def _parse_key_bindings(self):
         for binding in self.key_bindings:
