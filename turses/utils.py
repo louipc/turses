@@ -12,7 +12,6 @@ from datetime import datetime, timedelta
 from email.utils import parsedate_tz
 from htmlentitydefs import entitydefs
 from threading import Thread
-from time import strftime, gmtime
 from calendar import timegm
 from re import sub, findall
 from subprocess import call
@@ -86,9 +85,6 @@ def async(func):
             Thread(target=func).start()
         Thread(target=func, args=func_args).start()
     return wrapper
-
-def get_time():
-    return strftime('%H:%M:%S', gmtime())
 
 def html_unescape(str):
     """Unescapes HTML entities."""
