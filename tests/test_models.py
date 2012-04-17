@@ -307,6 +307,25 @@ class TimelineTest(unittest.TestCase):
         self.timeline.add_statuses([old_status, new_status])
         self.assertEqual(len(self.timeline), 2)
 
+    def test_get_unread_count(self):
+        self.assertEqual(self.timeline.get_unread_count(), 0)
+
+        # a status
+        status = create_status(id=1)
+        self.timeline.add_status(status)
+        self.assertEqual(self.timeline.get_unread_count(), 1)
+
+        self.timeline.mark_all_as_read()
+        self.assertEqual(self.timeline.get_unread_count(), 0)
+        
+        # new statuses
+        statuses = [create_status(id=id_num) for id_num in xrange(2, 10)]
+        self.timeline.add_statuses(statuses)
+        self.assertEqual(self.timeline.get_unread_count(), len(statuses))
+
+        self.timeline.mark_all_as_read()
+        self.assertEqual(self.timeline.get_unread_count(), 0)
+
     # update function related
 
     def test_extract_with_no_args(self):
