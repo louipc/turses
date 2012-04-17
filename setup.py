@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import os
+import sys
 from distutils.core import setup
 
 import turses
@@ -19,6 +21,11 @@ try:
     long_description = open("README.rst").read() + "\n\n" + open("HISTORY.rst").read()
 except IOError:
     long_description = ""
+
+# Publish Helper.
+if sys.argv[-1] == 'publish':
+    os.system('python setup.py sdist upload')
+    sys.exit()
 
 setup(name="turses",
       version=turses.version,

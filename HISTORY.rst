@@ -1,3 +1,8 @@
+0.1.1
+-----
+- bindings to update all timelines
+- bugfix: `generate_token_file` instead of `create_token_file`
+
 0.1.0
 -----
 - binding to open focused status authors' tweets

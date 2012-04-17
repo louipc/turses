@@ -105,6 +105,9 @@ KEY_BINDINGS = {
         ('D', _('compose a direct message')),
     'update':                 
         ('u', _('refresh the active timeline')),
+    'update_all':                 
+        ('S', _('refresh all the timelines')),
+
     'tweet_hashtag':          
         ('H', _('compose a tweet with the same hashtags as the focused status')),
     'fav':                    
@@ -186,6 +189,7 @@ TWEETS_KEY_BINDINGS = [
     'retweet_and_edit',       
     'send_dm',                 
     'update',                 
+    'update_all',
     'tweet_hashtag',          
     'fav',                    
     'delete_fav',             
@@ -309,13 +313,13 @@ def print_deprecation_notice():
     print "NOTE:"
     print
     print "The configuration file in %s has been deprecated." % LEGACY_CONFIG_FILE
-    print "A new configuration directory is being created in %s." % CONFIG_PATH
+    print "A new configuration directory is being generated in %s." % CONFIG_PATH
     print
 
 
 class Configuration(object):
     """
-    Create and parse configuration files.
+    Generate and parse configuration files.
 
     Has backwards compatibility with the Tyrs legacy configuration.
     """
@@ -493,11 +497,11 @@ class Configuration(object):
             conf.write(config)
 
     def _config_generation_error(self):
-        print encode(_('Unable to create configuration file in %s')) % self.config_file
+        print encode(_('Unable to generate configuration file in %s')) % self.config_file
         exit(2)
 
     def _config_generation_success(self):
-        print encode(_('Created configuration file in %s')) % self.config_file
+        print encode(_('Generated configuration file in %s')) % self.config_file
 
     def generate_token_file(self, 
                             token_file,
@@ -563,7 +567,7 @@ class Configuration(object):
         access_token = authorization()
         if access_token:
             self.oauth_token = access_token['oauth_token']
-            self.create_token_file(self.token_file,
+            self.generate_token_file(self.token_file,
                                    access_token['oauth_token'],
                                    access_token['oauth_token_secret'])
         else:

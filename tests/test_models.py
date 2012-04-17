@@ -150,10 +150,10 @@ class HelperFunctionTest(unittest.TestCase):
         for user in valid:
             self.failUnless(is_username(user))
 
-        # FIXME
-        #invalid = ['-asd', 'adsd?']
-        #for user in invalid:
-            #self.failIf(is_username(user))
+        invalid = ['-asd', 'adsd?']
+    
+        for user in invalid:
+            self.failIf(is_username(user))
 
     def test_is_hashtag(self):
         valid = ['#turses', '#cúrcuma', '#4n_4Wfu1_US3RN4M3']

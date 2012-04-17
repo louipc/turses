@@ -88,10 +88,9 @@ def is_username(username):
     otherwise.
     """
     match = username_regex.match(username)
-    if not match:
-        return False
-    else:
-        return match.string == username
+    if match:
+        return match.start() == 0 and match.end() == len(username)
+    return False 
 
 def is_hashtag(string):
     return len(string) > 1 and string.startswith('#')
@@ -575,11 +574,6 @@ class TimelineList(UnsortedActiveList):
     def update_active_timeline(self):
         if self.has_timelines():
             timeline = self.timelines[self.active_index]
-            timeline.update()
-
-    def update_all(self):
-        """Updates every `Timeline`."""
-        for timeline in self.timelines:
             timeline.update()
 
     def delete_all(self):
