@@ -8,7 +8,7 @@ PIPI=pip install
 PIPFLAGS=--ignore-installed --no-deps
 
 TESTRUNNER=nosetests
-TESTFLAGS=--with-color --nocapture --logging-clear-handlers --with-coverage --cover-package=turses
+TESTFLAGS=--nocapture --logging-clear-handlers --with-coverage --cover-package=turses
 WATCHTESTFLAGS=--verbosity=0
 
 
