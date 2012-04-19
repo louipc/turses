@@ -550,6 +550,7 @@ class Controller(object):
                                  on_error=timeline_not_fetched,
                                  on_success=timeline_fetched)
 
+    @async
     def update_all_timelines(self):
         for timeline in self.timelines:
             timeline.update()
