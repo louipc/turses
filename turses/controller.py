@@ -897,9 +897,11 @@ class Controller(object):
         author = get_authors_username(status)
         self.append_user_timeline(author)
 
-    def tweet(self):
-        self.ui.show_tweet_editor(prompt=_('Tweet'), 
-                                  content='',
+    def tweet(self, 
+              prompt=_('Tweet'), 
+              content=''):
+        self.ui.show_tweet_editor(prompt=prompt,
+                                  content=content,
                                   done_signal_handler=self.tweet_handler)
         self.editor_mode()
 
@@ -922,8 +924,10 @@ class Controller(object):
 
     def manual_retweet(self):
         status = self.timelines.get_active_status()
+
         if status is None:
             return
+
         rt_text = 'RT ' + status.text
         if is_valid_status_text(' ' + rt_text):
             self.tweet(content=rt_text)
