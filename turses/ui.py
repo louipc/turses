@@ -227,7 +227,12 @@ class CursesInterface(Frame):
                           recipient=recipient,)
 
     def remove_editor(self, done_signal_handler):
-        disconnect_signal(self.editor, 'done', done_signal_handler)
+        try:
+            disconnect_signal(self.editor, 'done', done_signal_handler)
+        except:
+            # `disconnect_signal` raises an exception if no signal was
+            # connected from `self.editor`. We can safely ignore it.
+            pass
         self.editor = None
         self.clear_status()
 

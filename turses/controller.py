@@ -41,7 +41,7 @@ from .models import (
 
 class KeyHandler(object):
     """
-    Maps actions from configuration to calls to controllers' functions.
+    Maps key bindings from configuration to calls to controllers' functions.
     """
 
     def __init__(self, 
@@ -49,26 +49,6 @@ class KeyHandler(object):
                  controller):
         self.configuration = configuration
         self.controller = controller
-        self.editor = False
-
-    def handle(self, input, *args, **kwargs):
-        """Handle any input."""
-
-        if self.is_keyboard_input(input):
-            key = ''.join(input)
-            self.handle_keyboard_input(key)
-        else:
-            # TODO mouse support
-            return
-
-    # -- Keyboard input --------------------------------------------------------
-
-    def is_keyboard_input(self, input):
-        """Return True if `input` is keyboard input."""
-        if input:
-            is_string = lambda s : isinstance(s, str) or isinstance(s, unicode)
-            _and = lambda a, b: a and b 
-            return reduce(_and, map(is_string, input))
 
     def is_bound(self, key, name):
         """
@@ -81,26 +61,26 @@ class KeyHandler(object):
         else:
             return key == bound_key
 
-    def handle_keyboard_input(self, key):
-        """Handle a keyboard input."""
-        # Editor mode goes first
-        if self.editor:
-            size = 20,
-            self.editor.keypress(size, key)
-            return
-
+    def handle(self, key):
+        """Handle keyboard input."""
         # Global commands
-        self._turses_key_handler(key)
+        handled = not self._turses_key_handler(key)
+        if handled:
+            return
 
         # Timeline commands
         if not self.controller.is_in_help_mode():
-            self._timeline_key_handler(key)
+            handled = not self._timeline_key_handler(key)
+            if handled:
+                return
 
         if self.controller.is_in_info_mode():
             return
 
         # Motion commands
-        self._motion_key_handler(key)
+        handled = not self._motion_key_handler(key)
+        if handled:
+            return
         
         # Help mode commands
         #  only accepts motion commands, timeline commands and <Esc>
@@ -112,13 +92,21 @@ class KeyHandler(object):
         # Timeline mode commands
 
         # Buffer commands
-        self._buffer_key_handler(key)
+        handled = not self._buffer_key_handler(key)
+        if handled:
+            return
 
         # Twitter commands
-        self._twitter_key_handler(key)
+        handled = not self._twitter_key_handler(key)
+        if handled:
+            return
 
         # External programs
-        self._external_program_handler(key)
+        handled = not self._external_program_handler(key)
+        if handled:
+            return
+        else:
+            return key
 
     def _turses_key_handler(self, key):
         # quit
@@ -133,6 +121,8 @@ class KeyHandler(object):
         # reload configuration
         elif self.is_bound(key, 'reload_config'):
             self.controller.reload_configuration()
+        else:
+            return key
 
     def _motion_key_handler(self, key):
         ## up
@@ -147,6 +137,8 @@ class KeyHandler(object):
         # scroll to bottom
         elif self.is_bound(key, 'scroll_to_bottom'):
             self.controller.scroll_bottom()
+        else:
+            return key
 
     def _buffer_key_handler(self, key):
         # Right
@@ -196,6 +188,8 @@ class KeyHandler(object):
         # Mark all as read
         elif self.is_bound(key, 'mark_all_as_read'):
             self.controller.mark_all_as_read()
+        else:
+            return key
 
     def _timeline_key_handler(self, key):
         # Show home Timeline
@@ -231,6 +225,8 @@ class KeyHandler(object):
         # Authors timeline
         elif self.is_bound(key, 'user_timeline'):
             self.controller.focused_status_author_timeline()
+        else:
+            return key
 
     def _twitter_key_handler(self, key):
         # Update timeline
@@ -272,17 +268,15 @@ class KeyHandler(object):
         # Tweet with hashtags
         elif self.is_bound(key, 'tweet_hashtag'): 
             self.controller.tweet_with_hashtags()
+        else:
+            return key
 
     def _external_program_handler(self, key):
         # Open URL
         if self.is_bound(key, 'openurl'):
             self.controller.open_urls()
-
-    # -- Editor ----------------------------------------------------------------
-
-    def unset_editor(self):
-        """Stop forwarding input to the editor."""
-        self.editor = False
+        else:
+            return key
 
 
 class Controller(object):
@@ -291,7 +285,6 @@ class Controller(object):
     INFO_MODE = 0
     TIMELINE_MODE = 1
     HELP_MODE = 2
-    EDITOR_MODE = 3
 
     # -- Initialization -------------------------------------------------------
 
@@ -389,15 +382,6 @@ class Controller(object):
 
     def is_in_help_mode(self):
         return self.mode == self.HELP_MODE
-
-    def editor_mode(self):
-        """Activate editor mode."""
-        self.mode = self.EDITOR_MODE
-        self.key_handler.editor = self.ui.editor
-
-    def is_in_editor_mode(self):
-        return self.mode == self.EDITOR_MODE
-
 
     # -- Timelines ------------------------------------------------------------
 
@@ -765,7 +749,6 @@ class Controller(object):
 
     def tweet_handler(self, text):
         """Handle the post as a tweet of the given `text`."""
-        self.key_handler.unset_editor()
         self.timeline_mode()
         self.ui.remove_editor(self.tweet_handler)
         self.ui.set_focus('body')
@@ -787,7 +770,6 @@ class Controller(object):
 
     def direct_message_handler(self, username, text):
         """Handle the post as a DM of the given `text` to `username`."""
-        self.key_handler.unset_editor()
         self.timeline_mode()
         self.ui.remove_editor(self.direct_message_handler)
         self.ui.set_focus('body')
@@ -814,11 +796,9 @@ class Controller(object):
         Handles creating a timeline tracking the search term given in 
         `text`.
         """
-        if self.is_in_editor_mode():
-            self.key_handler.unset_editor()
-            self.timeline_mode()
-            self.ui.remove_editor(self.search_handler)
-            self.ui.set_focus('body')
+        self.timeline_mode()
+        self.ui.remove_editor(self.search_handler)
+        self.ui.set_focus('body')
 
         if text is None:
             self.info_message(_('Search cancelled'))
@@ -846,7 +826,6 @@ class Controller(object):
         """
         Handles creating a timeline tracking the searched user's tweets.
         """
-        self.key_handler.unset_editor()
         self.ui.remove_editor(self.search_user_handler)
         self.ui.set_focus('body')
 
@@ -876,13 +855,11 @@ class Controller(object):
         self.ui.show_text_editor(prompt='Search', 
                                  content=text,
                                  done_signal_handler=self.search_handler)
-        self.editor_mode()
 
     def search_user(self):
         self.ui.show_text_editor(prompt=_('Search user (no need to prepend it with "@")'),
                                  content='',
                                  done_signal_handler=self.search_user_handler)
-        self.editor_mode()
 
     def search_hashtags(self):
         status = self.timelines.get_active_status()
@@ -904,7 +881,6 @@ class Controller(object):
         self.ui.show_tweet_editor(prompt=prompt,
                                   content=content,
                                   done_signal_handler=self.tweet_handler)
-        self.editor_mode()
 
     def retweet(self):
         status = self.timelines.get_active_status()
@@ -953,7 +929,6 @@ class Controller(object):
         self.ui.show_tweet_editor(prompt=_('Reply to %s' % author),
                                   content=' '.join(mentioned),
                                   done_signal_handler=self.tweet_handler)
-        self.editor_mode()
 
     def direct_message(self):
         status = self.timelines.get_active_status()
@@ -965,7 +940,6 @@ class Controller(object):
                                    content='',
                                    recipient=recipient,
                                    done_signal_handler=self.direct_message_handler)
-            self.editor_mode()
         else:
             self.error_message(_('What do you mean?'))
 
@@ -979,7 +953,6 @@ class Controller(object):
             self.ui.show_tweet_editor(prompt=_('%s' % hashtags),
                                       content=hashtags,
                                       done_signal_handler=self.tweet_handler)
-        self.editor_mode()
 
     def delete_tweet(self):
         status = self.timelines.get_active_status()
@@ -1115,7 +1088,8 @@ class CursesController(Controller):
             self.key_handler = KeyHandler(self.configuration, self)
             self.loop = urwid.MainLoop(self.ui,
                                        self.configuration.palette, 
-                                       input_filter=self.key_handler.handle,)
+                                       handle_mouse=False,
+                                       unhandled_input=self.key_handler.handle,)
         self.loop.run()
 
     def exit(self):
