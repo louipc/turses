@@ -32,7 +32,6 @@ from urwid import (
         connect_signal, 
         disconnect_signal
         )
-from urwid import __version__ as urwid_version
 
 from . import version
 from .config import (
@@ -737,8 +736,6 @@ class BoxDecoration(WidgetDecoration, WidgetWrap):
 
     def __init__(self, original_widget, title=''):
         self.color = 'header'
-        if int(urwid_version[0]) == 1:
-            utf8decode = lambda string: string
 
         def use_attr(a, t):
             if a:
@@ -748,32 +745,32 @@ class BoxDecoration(WidgetDecoration, WidgetWrap):
         # top line
         tline = None
         tline_attr = Columns([('fixed', 2, 
-                                        Divider(utf8decode("─"))),
+                                        Divider(u"─")),
                                     ('fixed', len(title), 
                                         AttrMap(Text(title), self.color)),
-                                    Divider(utf8decode("─")),])
+                                    Divider(u"─"),])
         tline = use_attr(tline, tline_attr)
         # bottom line
         bline = None
-        bline = use_attr(bline, Divider(utf8decode("─")))
+        bline = use_attr(bline, Divider(u"─"))
         # left line
         lline = None
-        lline = use_attr(lline, SolidFill(utf8decode("│")))
+        lline = use_attr(lline, SolidFill(u"│"))
         # right line
         rline = None
-        rline = use_attr(rline, SolidFill(utf8decode("│")))
+        rline = use_attr(rline, SolidFill(u"│"))
         # top left corner
         tlcorner = None
-        tlcorner = use_attr(tlcorner, Text(utf8decode("┌")))
+        tlcorner = use_attr(tlcorner, Text(u"┌"))
         # top right corner
         trcorner = None
-        trcorner = use_attr(trcorner, Text(utf8decode("┐")))
+        trcorner = use_attr(trcorner, Text(u"┐"))
         # bottom left corner
         blcorner = None
-        blcorner = use_attr(blcorner, Text(utf8decode("└")))
+        blcorner = use_attr(blcorner, Text(u"└"))
         # bottom right corner
         brcorner = None
-        brcorner = use_attr(brcorner, Text(utf8decode("┘")))
+        brcorner = use_attr(brcorner, Text(u"┘"))
 
         # top
         top = Columns([('fixed', 1, tlcorner),
