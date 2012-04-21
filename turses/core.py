@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 """
-turses.controller
-~~~~~~~~~~~~~~~~~
+turses.core
+~~~~~~~~~~~
 
 This module contains the controller logic of turses.
 """
@@ -10,6 +10,7 @@ This module contains the controller logic of turses.
 
 from gettext import gettext as _
 from functools import partial
+from time import time
 
 import urwid
 
@@ -330,8 +331,8 @@ class Controller(object):
         self.user = self.api.verify_credentials()
         self.info_message(_('Initializing timelines'))
         self.timelines = VisibleTimelineList()
-        # TODO make default timeline list configurable
         self.append_default_timelines()
+        self.set_update_alarm()
 
     def reload_configuration(self):
         raise NotImplementedError
@@ -341,6 +342,12 @@ class Controller(object):
     def api_init_error(self):
         # TODO retry
         self.error_message(_('Couldn\'t initialize API'))
+
+    def set_update_alarm(self):
+        freq = self.configuration.update_frequency
+        update_time = time() + freq
+        self.loop.set_alarm_at(update_time, self.update_all_timelines)
+
 
     # -- Modes ----------------------------------------------------------------
 
