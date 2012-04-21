@@ -1080,7 +1080,7 @@ class Controller(object):
             self.error_message(_('Unable to launch the browser'))
 
 
-class CursesController(Controller):
+class Turses(Controller):
     """Controller for the curses implementation.""" 
 
     def main_loop(self):

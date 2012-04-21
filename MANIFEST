@@ -1,9 +1,8 @@
 setup.py
 bin/turses
 turses/__init__.py
-turses/cli.py
 turses/config.py
-turses/controller.py
+turses/core.py
 turses/models.py
 turses/ui.py
 turses/utils.py
