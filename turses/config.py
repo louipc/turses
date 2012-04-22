@@ -38,6 +38,7 @@ to `alice` and `bob`.
     `
 """
 
+from sys import exit
 from ConfigParser import RawConfigParser
 from os import getenv, path, mkdir, remove
 from gettext import gettext as _
@@ -412,8 +413,8 @@ class Configuration(object):
             remove(LEGACY_CONFIG_FILE)
         elif path.isfile(self.config_file):
             self.parse_config_file(self.config_file)
-        # inserts new values when neccesary
-        self.generate_config_file(self.config_file)
+        else:
+            self.generate_config_file(self.config_file)
 
     def _add_section_default_timelines(self, conf):
         # Default timelines
@@ -431,7 +432,8 @@ class Configuration(object):
             conf.add_section(SECTION_TWITTER)
         if conf.has_option(SECTION_TWITTER, 'update_frequency'):
             return
-        conf.set(SECTION_TWITTER, 'update_frequency', UPDATE_FREQUENCY)
+        else:
+            conf.set(SECTION_TWITTER, 'update_frequency', UPDATE_FREQUENCY)
             
     def _add_section_key_bindings(self, conf): 
         # Key bindings

@@ -10,9 +10,9 @@ This module contains the controller logic of turses.
 
 from gettext import gettext as _
 from functools import partial
-from time import time
 
 import urwid
+from tweepy import TweepError
 
 from .api.base import AsyncApi
 from .utils import get_urls, spawn_process, wrap_exceptions, async
@@ -309,6 +309,8 @@ class Controller(object):
         # start main loop
         try:
             self.main_loop()
+        except TweepError:
+            self.error_message(_('API error'))
         except:
             exit(1)
 
@@ -332,7 +334,8 @@ class Controller(object):
         self.info_message(_('Initializing timelines'))
         self.timelines = VisibleTimelineList()
         self.append_default_timelines()
-        self.set_update_alarm()
+        seconds = self.configuration.update_frequency
+        self.loop.set_alarm_in(seconds, self.update_alarm)
 
     def reload_configuration(self):
         raise NotImplementedError
@@ -343,11 +346,10 @@ class Controller(object):
         # TODO retry
         self.error_message(_('Couldn\'t initialize API'))
 
-    def set_update_alarm(self):
-        freq = self.configuration.update_frequency
-        update_time = time() + freq
-        self.loop.set_alarm_at(update_time, self.update_all_timelines)
-
+    def update_alarm(self, *args, **kwargs):
+        seconds = self.configuration.update_frequency
+        self.update_all_timelines()
+        self.loop.set_alarm_in(seconds, self.update_alarm)
 
     # -- Modes ----------------------------------------------------------------
 
