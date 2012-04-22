@@ -469,8 +469,9 @@ class Timeline(ActiveList):
 
     def get_unread_count(self):
         def one_if_unread(tweet):
-            readed = lambda tweet: getattr(tweet, 'read', False)
-            return 0 if readed(tweet) else 1
+            if hasattr(tweet, 'read') and tweet.read:
+                return 0
+            return 1
 
         return sum([one_if_unread(tweet) for tweet in self.statuses])
 
@@ -524,6 +525,10 @@ class Timeline(ActiveList):
         active_status = self.get_active()
         if active_status:
             active_status.read = True
+
+    def mark_all_as_read(self):
+        for status in self.statuses:
+            status.read = True
 
 
 class TimelineList(UnsortedActiveList):
@@ -645,10 +650,6 @@ class TimelineList(UnsortedActiveList):
         if self.has_timelines():
             active_timeline = self.get_active_timeline()
             active_timeline.mark_active_as_read()
-
-    def get_focused_status(self):
-        active_timeline = self.get_active_timeline()
-        return active_timeline.get_active()
 
     def shift_active_previous(self):
         active_index = self.active_index

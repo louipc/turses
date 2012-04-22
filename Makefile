@@ -1,5 +1,5 @@
 APPNAME=turses
-VERSION=0.1.3
+VERSION=0.1.4
 DISTPKG=dist/$(APPNAME)-$(VERSION).tar.gz
 
 PY=python
@@ -8,7 +8,7 @@ PIPI=pip install
 PIPFLAGS=--ignore-installed --no-deps
 
 TESTRUNNER=nosetests
-TESTFLAGS=--with-color --nocapture --logging-clear-handlers --with-coverage --cover-package=turses
+TESTFLAGS=--nocapture --logging-clear-handlers --with-coverage --cover-package=turses
 WATCHTESTFLAGS=--verbosity=0
 
 
