@@ -1,6 +1,29 @@
-0.0.16
-------
+0.1.4
+-----
+- update all timelines periodically
+- configurable default timelines
+- bugfix: don't crash with empty timelines
+- bugfix: manual retweet crashed
+- bugfix: don't capture all input
+
+0.1.3
+-----
+- bugfix: packaging error
+
+0.1.2
+-----
+- bugfix: error with packaging
+
+0.1.1
+-----
+- bindings to update all timelines
+- bugfix: `generate_token_file` instead of `create_token_file`
+
+0.1.0
+-----
 - binding to open focused status authors' tweets
+- reload configuration
+- configuration default location and format changed
 
 0.0.15
 ------

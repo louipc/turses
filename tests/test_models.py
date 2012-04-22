@@ -150,16 +150,19 @@ class HelperFunctionTest(unittest.TestCase):
         for user in valid:
             self.failUnless(is_username(user))
 
-        # FIXME
-        #invalid = ['-asd', 'adsd?']
-        #for user in invalid:
-            #self.failIf(is_username(user))
+        invalid = ['-asd', 'adsd?']
+    
+        for user in invalid:
+            self.failIf(is_username(user))
 
     def test_is_hashtag(self):
-        valid = ['#turses', '#cúrcuma', '#4n_4Wfu1_US3RN4M3']
+        valid = ['#turses', '#cúrcuma', '#4n_4Wfu1_H45hT46']
         for hashtag in valid:
             self.failUnless(is_hashtag(hashtag))
-        # TODO: test invalid hashtags
+
+        invalid = ['s#turses', '#']
+        for hashtag in invalid:
+            self.failIf(is_hashtag(hashtag))
 
     def test_sanitize_username(self):
         dirty_and_clean = [
@@ -303,6 +306,25 @@ class TimelineTest(unittest.TestCase):
         # add them again and check that they are inserted back
         self.timeline.add_statuses([old_status, new_status])
         self.assertEqual(len(self.timeline), 2)
+
+    def test_get_unread_count(self):
+        self.assertEqual(self.timeline.get_unread_count(), 0)
+
+        # a status
+        status = create_status(id=1)
+        self.timeline.add_status(status)
+        self.assertEqual(self.timeline.get_unread_count(), 1)
+
+        self.timeline.mark_all_as_read()
+        self.assertEqual(self.timeline.get_unread_count(), 0)
+        
+        # new statuses
+        statuses = [create_status(id=id_num) for id_num in xrange(2, 10)]
+        self.timeline.add_statuses(statuses)
+        self.assertEqual(self.timeline.get_unread_count(), len(statuses))
+
+        self.timeline.mark_all_as_read()
+        self.assertEqual(self.timeline.get_unread_count(), 0)
 
     # update function related
 

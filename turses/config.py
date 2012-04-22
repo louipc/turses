@@ -12,18 +12,25 @@ There is one mayor configuration file in turses:
     `config`
         contains user preferences: colors, bindings, etc.
 
-And each user account has its .token file with authentication tokens.
+An one default token file:
+
+    `token`
+        contains authentication token for the default user account
+
+Each user account (that is no the default one) has its .token file.
 Keep this secret.
 
-    `<username>.token`
+    `<alias>.token`
         contains the oauth tokens
 
-The standar location is under $HOME directory, in a folder called `.turses`.
-Here is an example with two user accounts: `alice` and `bob`.
+The standard location is under $HOME directory, in a folder called `.turses`.
+Here is an example with two accounts apart from the default one, aliased
+to `alice` and `bob`.
 
     ~
     |+.turses/
     | |-config
+    | |-token
     | |-alice.token
     | `-bob.token
     |+...
@@ -31,6 +38,7 @@ Here is an example with two user accounts: `alice` and `bob`.
     `
 """
 
+from sys import exit
 from ConfigParser import RawConfigParser
 from os import getenv, path, mkdir, remove
 from gettext import gettext as _
@@ -39,6 +47,24 @@ from .utils import encode, wrap_exceptions
 from .api.base import authorization
 
 # -- Defaults -----------------------------------------------------------------
+
+# Timelines
+
+HOME_TIMELINE = 'home'
+MENTIONS_TIMELINE = 'mentions'
+FAVORITES_TIMELINE = 'favorites'
+MESSAGES_TIMELINE = 'messages'
+OWN_TWEETS_TIMELINE = 'own_tweets'
+
+DEFAULT_TIMELINES = {
+    HOME_TIMELINE:       True,
+    MENTIONS_TIMELINE:   True,
+    FAVORITES_TIMELINE:  True,
+    MESSAGES_TIMELINE:   True,
+    OWN_TWEETS_TIMELINE: True,
+}
+
+# Key bindings
 
 KEY_BINDINGS = {
     # motion
@@ -98,6 +124,9 @@ KEY_BINDINGS = {
         ('D', _('compose a direct message')),
     'update':                 
         ('u', _('refresh the active timeline')),
+    'update_all':                 
+        ('S', _('refresh all the timelines')),
+
     'tweet_hashtag':          
         ('H', _('compose a tweet with the same hashtags as the focused status')),
     'fav':                    
@@ -179,6 +208,7 @@ TWEETS_KEY_BINDINGS = [
     'retweet_and_edit',       
     'send_dm',                 
     'update',                 
+    'update_all',
     'tweet_hashtag',          
     'fav',                    
     'delete_fav',             
@@ -209,6 +239,8 @@ TURSES_KEY_BINDINGS = [
     'openurl',              
     'redraw',                 
 ]
+
+# Palette
 
 # TODO: not hard coded
 # valid colors for `urwid`s palette
@@ -264,6 +296,8 @@ PALETTE = [
     ['editor', 'white', 'dark blue'],
 ]
 
+# Styles
+
 STYLES = {
     # TODO: make time string configurable 
     'header_template':      ' {username}{retweeted}{retweeter} - {time}{reply} {retweet_count} ',
@@ -271,9 +305,15 @@ STYLES = {
 }
 
 # Debug
+
 LOGGING_LEVEL = 3
 
+# Twitter
+
+UPDATE_FREQUENCY = 300
+
 # Environment
+
 HOME = getenv('HOME')
 BROWSER = getenv('BROWSER')
 
@@ -291,10 +331,14 @@ LEGACY_CONFIG_FILE = path.join(LEGACY_CONFIG_PATH, 'turses.cfg')
 LEGACY_TOKEN_FILE = path.join(LEGACY_CONFIG_PATH, 'turses.tok')
 
 # Names of the sections in the configuration
+SECTION_DEFAULT_TIMELINES = 'timelines'
 SECTION_KEY_BINDINGS = 'bindings'
 SECTION_PALETTE = 'colors'
 SECTION_STYLES = 'styles'
 SECTION_DEBUG = 'debug'
+SECTION_TWITTER = 'twitter'
+
+# Names of the sections in the token file
 SECTION_TOKEN = 'token'
 
 
@@ -302,13 +346,13 @@ def print_deprecation_notice():
     print "NOTE:"
     print
     print "The configuration file in %s has been deprecated." % LEGACY_CONFIG_FILE
-    print "A new configuration directory is being created in %s." % CONFIG_PATH
+    print "A new configuration directory is being generated in %s." % CONFIG_PATH
     print
 
 
 class Configuration(object):
     """
-    Create and parse configuration files.
+    Generate and parse configuration files.
 
     Has backwards compatibility with the Tyrs legacy configuration.
     """
@@ -339,48 +383,127 @@ class Configuration(object):
             config_file = cli_args.config
         else:
             config_file = DEFAULT_CONFIG_FILE
-        self._init_config(config_file)
+        self.config_file = config_file
 
         if cli_args and cli_args.account:
             token_file = path.join(CONFIG_PATH, '%s.token' % cli_args.account)
         else:
             # loads the default `token' if no account was specified 
             token_file = DEFAULT_TOKEN_FILE
-        self._init_token(token_file)
+        self.token_file = token_file
+
+    def load(self):
+        """Loads configuration from files."""
+        self._init_config()
+        self._init_token()
 
     def load_defaults(self):
         """Load default values into configuration."""
+        self.default_timelines = DEFAULT_TIMELINES
+        self.update_frequency = UPDATE_FREQUENCY
         self.key_bindings = KEY_BINDINGS
         self.palette = PALETTE
         self.styles = STYLES
         self.logging_level = LOGGING_LEVEL
 
-    def _init_config(self, config_file):
+    def _init_config(self):
         if path.isfile(LEGACY_CONFIG_FILE):
             self._parse_legacy_config_file()
             print_deprecation_notice()
             remove(LEGACY_CONFIG_FILE)
-            self.generate_config_file(config_file)
-        elif path.isfile(config_file):
-            self.parse_config_file(config_file)
+        elif path.isfile(self.config_file):
+            self.parse_config_file(self.config_file)
         else:
-            self.generate_config_file(config_file)
-        self.config_file = config_file
+            self.generate_config_file(self.config_file)
 
-    def _init_token(self, token_file):
-        self.token_file = token_file
+    def _add_section_default_timelines(self, conf):
+        # Default timelines
+        if not conf.has_section(SECTION_DEFAULT_TIMELINES):
+            conf.add_section(SECTION_DEFAULT_TIMELINES)
+        for timeline in DEFAULT_TIMELINES:
+            if conf.has_option(SECTION_DEFAULT_TIMELINES, timeline):
+                continue
+            value = str(self.default_timelines[timeline]).lower()
+            conf.set(SECTION_DEFAULT_TIMELINES, timeline, value)
+
+    def _add_section_twitter(self, conf):
+        # Twitter
+        if not conf.has_section(SECTION_TWITTER):
+            conf.add_section(SECTION_TWITTER)
+        if conf.has_option(SECTION_TWITTER, 'update_frequency'):
+            return
+        else:
+            conf.set(SECTION_TWITTER, 'update_frequency', UPDATE_FREQUENCY)
+            
+    def _add_section_key_bindings(self, conf): 
+        # Key bindings
+        if not conf.has_section(SECTION_KEY_BINDINGS):
+            conf.add_section(SECTION_KEY_BINDINGS)
+        binding_lists = [MOTION_KEY_BINDINGS,
+                         BUFFERS_KEY_BINDINGS,
+                         TWEETS_KEY_BINDINGS,
+                         TIMELINES_KEY_BINDINGS,
+                         META_KEY_BINDINGS,
+                         TURSES_KEY_BINDINGS,]
+        for binding_list in binding_lists:
+            for binding in binding_list:
+                key = self.key_bindings[binding][0]
+                if conf.has_option(SECTION_KEY_BINDINGS, binding):
+                    continue
+                conf.set(SECTION_KEY_BINDINGS, binding, key)
+
+    def _add_section_palette(self, conf):
+        # Color
+        if not conf.has_section(SECTION_PALETTE):
+            conf.add_section(SECTION_PALETTE)
+        for label in PALETTE:
+            label_name, fg, bg = label[0], label[1], label[2]
+
+            # fg
+            if conf.has_option(SECTION_PALETTE, label_name) and \
+                validate_color(conf.get(SECTION_PALETTE, label_name)):
+                pass
+            else:
+                conf.set(SECTION_PALETTE, label_name, fg)
+
+            #bg
+            label_name_bg = label_name + '_bg'
+            if conf.has_option(SECTION_PALETTE, label_name_bg) and \
+                validate_color(conf.get(SECTION_PALETTE, label_name_bg)):
+                pass
+            else:
+                conf.set(SECTION_PALETTE, label_name_bg, bg)
+
+    def _add_section_styles(self, conf):
+        # Styles
+        if not conf.has_section(SECTION_STYLES):
+            conf.add_section(SECTION_STYLES)
+        for style in STYLES:
+            if conf.has_option(SECTION_STYLES, style):
+                continue
+            conf.set(SECTION_STYLES, style, self.styles[style])
+
+    def _add_section_debug(self, conf):
+        # Debug
+        if not conf.has_section(SECTION_DEBUG):
+            conf.add_section(SECTION_DEBUG)
+        if conf.has_option(SECTION_DEBUG, 'logging_level'):
+            return
+        conf.set(SECTION_DEBUG, 'logging_level', LOGGING_LEVEL)
+
+    def _init_token(self):
         if path.isfile(LEGACY_TOKEN_FILE):
             self.parse_token_file(LEGACY_TOKEN_FILE)
             remove(LEGACY_TOKEN_FILE)
             if hasattr(self, 'oauth_token') and \
                hasattr(self, 'oauth_token_secret'):
-                   self.generate_token_file(token_file,
+                   self.generate_token_file(self.token_file,
                                             self.oauth_token,
                                             self.oauth_token_secret)
-        elif not path.isfile(token_file):
+        elif not path.isfile(self.token_file):
             self.authorize_new_account()
         else:
-            self.parse_token_file(token_file)
+            self.parse_token_file(self.token_file)
 
     def _parse_legacy_config_file(self):
         """
@@ -426,11 +549,9 @@ class Configuration(object):
     def _set_color(self, color_label, custom_fg=None, custom_bg=None):
         for color in self.palette:
             label, fg, bg = color[0], color[1], color[2]
-            new_fg = custom_fg if validate_color(custom_fg) is not None else fg
-            new_bg = custom_bg if validate_color(custom_bg) is not None else bg
             if label == color_label:
-                color[1] = new_fg
-                color[2] = new_bg
+                color[1] = custom_fg if validate_color(custom_fg) is not None else fg
+                color[2] = custom_bg if validate_color(custom_bg) is not None else bg
 
     def _set_key_binding(self, binding, new_key):
         if not self.key_bindings.has_key(binding):
@@ -441,55 +562,38 @@ class Configuration(object):
         self.key_bindings[binding] = new_key_binding
 
     def generate_config_file(self, config_file):
-        self._generate_config_file(config_file=config_file,
-                                   on_error=self._config_generation_error,
-                                   on_success=self._config_generation_success)
+        kwargs = {
+            'config_file': config_file,
+            'on_error': self._config_generation_error,
+        }
+
+        if not path.isfile(config_file):
+            kwargs.update({
+                'on_success': self._config_generation_success
+            })
+
+        self._generate_config_file(**kwargs)
 
     @wrap_exceptions
     def _generate_config_file(self, config_file):
         conf = RawConfigParser()
 
-        self.config_file = config_file
-
-        # Key bindings
-        conf.add_section(SECTION_KEY_BINDINGS)
-        binding_lists = [MOTION_KEY_BINDINGS,
-                         BUFFERS_KEY_BINDINGS,
-                         TWEETS_KEY_BINDINGS,
-                         TIMELINES_KEY_BINDINGS,
-                         META_KEY_BINDINGS,
-                         TURSES_KEY_BINDINGS,]
-        for binding_list in binding_lists:
-            for binding in binding_list:
-                key = self.key_bindings[binding][0]
-                conf.set(SECTION_KEY_BINDINGS, binding, key)
-        
-
-        # Color
-        conf.add_section(SECTION_PALETTE)
-        for label in self.palette:
-            label_name, fg, bg = label[0], label[1], label[2]
-            conf.set(SECTION_PALETTE, label_name, fg)
-            conf.set(SECTION_PALETTE, label_name + '_bg', bg)
-
-        # Styles
-        conf.add_section(SECTION_STYLES)
-        for style in self.styles:
-            conf.set(SECTION_STYLES, style, self.styles[style])
-
-        # Debug
-        conf.add_section(SECTION_DEBUG)
-        conf.set(SECTION_DEBUG, 'logging_level', LOGGING_LEVEL)
+        self._add_section_default_timelines(conf)
+        self._add_section_twitter(conf)
+        self._add_section_key_bindings(conf)
+        self._add_section_palette(conf)
+        self._add_section_styles(conf)
+        self._add_section_debug(conf)
 
         with open(config_file, 'wb') as config:
             conf.write(config)
 
     def _config_generation_error(self):
-        print encode(_('Unable to create configuration file in %s')) % self.config_file
+        print encode(_('Unable to generate configuration file in %s')) % self.config_file
         exit(2)
 
     def _config_generation_success(self):
-        print encode(_('Created configuration file in %s')) % self.config_file
+        print encode(_('Generated configuration file in %s')) % self.config_file
 
     def generate_token_file(self, 
                             token_file,
@@ -509,53 +613,69 @@ class Configuration(object):
         print encode(_('your account has been saved'))
 
     def parse_config_file(self, config_file):
-        self._conf = RawConfigParser()
-        self._conf.read(config_file)
+        conf = RawConfigParser()
+        conf.read(config_file)
 
-        self._parse_key_bindings()
-        self._parse_palette()
-        self._parse_styles()
-        self._parse_debug()
+        self._parse_default_timelines(conf)
+        self._parse_twitter(conf)
+        self._parse_key_bindings(conf)
+        self._parse_palette(conf)
+        self._parse_styles(conf)
+        self._parse_debug(conf)
 
-    def _parse_key_bindings(self):
+    def _parse_default_timelines(self, conf):
+        for timeline in self.default_timelines:
+            if conf.has_option(SECTION_DEFAULT_TIMELINES, timeline):
+                try:
+                    value = conf.getboolean(SECTION_DEFAULT_TIMELINES, 
+                                            timeline) 
+                except ValueError:
+                   continue
+                self.default_timelines[timeline] = value
+
+    def _parse_twitter(self, conf):
+        if conf.has_option(SECTION_TWITTER, 'update_frequency'):
+            self.update_frequency = conf.getint(SECTION_TWITTER, 'update_frequency')
+
+    def _parse_key_bindings(self, conf):
         for binding in self.key_bindings:
-            if self._conf.has_option(SECTION_KEY_BINDINGS, binding):
-                custom_key = self._conf.get(SECTION_KEY_BINDINGS, binding) 
+            if conf.has_option(SECTION_KEY_BINDINGS, binding):
+                custom_key = conf.get(SECTION_KEY_BINDINGS, binding) 
                 self._set_key_binding(binding, custom_key)
 
-    def _parse_palette(self):
+    def _parse_palette(self, conf):
         # Color
         for label in self.palette:
             label_name, fg, bg = label[0], label[1], label[2]
-            if self._conf.has_option(SECTION_PALETTE, label_name):
-                fg = self._conf.get(SECTION_PALETTE, label_name)
-            if self._conf.has_option(SECTION_PALETTE, label_name + '_bg'):
-                bg = self._conf.get(SECTION_PALETTE, label_name + '_bg')
+            if conf.has_option(SECTION_PALETTE, label_name):
+                fg = conf.get(SECTION_PALETTE, label_name)
+            if conf.has_option(SECTION_PALETTE, label_name + '_bg'):
+                bg = conf.get(SECTION_PALETTE, label_name + '_bg')
             self._set_color(label_name, fg, bg)
 
-    def _parse_styles(self):
+    def _parse_styles(self, conf):
         for style in self.styles:
-            if self._conf.has_option(SECTION_STYLES, style):
-                self.styles[style] = self._conf.get(SECTION_STYLES, style)
+            if conf.has_option(SECTION_STYLES, style):
+                self.styles[style] = conf.get(SECTION_STYLES, style)
 
-    def _parse_debug(self):
-        if self._conf.has_option(SECTION_DEBUG, 'logging_level'):
-            self.logging_level = self._conf.get(SECTION_DEBUG, 'logging_level')
+    def _parse_debug(self, conf):
+        if conf.has_option(SECTION_DEBUG, 'logging_level'):
+            self.logging_level = conf.get(SECTION_DEBUG, 'logging_level')
 
     def parse_token_file(self, token_file):
-        self._conf = RawConfigParser()
-        self._conf.read(token_file)
+        conf = RawConfigParser()
+        conf.read(token_file)
 
-        if self._conf.has_option(SECTION_TOKEN, 'oauth_token'):
-            self.oauth_token = self._conf.get(SECTION_TOKEN, 'oauth_token')
-        if self._conf.has_option(SECTION_TOKEN, 'oauth_token_secret'):
-            self.oauth_token_secret = self._conf.get(SECTION_TOKEN, 'oauth_token_secret')
+        if conf.has_option(SECTION_TOKEN, 'oauth_token'):
+            self.oauth_token = conf.get(SECTION_TOKEN, 'oauth_token')
+        if conf.has_option(SECTION_TOKEN, 'oauth_token_secret'):
+            self.oauth_token_secret = conf.get(SECTION_TOKEN, 'oauth_token_secret')
 
     def authorize_new_account(self):
         access_token = authorization()
         if access_token:
             self.oauth_token = access_token['oauth_token']
-            self.create_token_file(self.token_file,
+            self.generate_token_file(self.token_file,
                                    access_token['oauth_token'],
                                    access_token['oauth_token_secret'])
         else:

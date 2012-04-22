@@ -20,6 +20,8 @@ from .utils import html_unescape, timestamp_from_datetime
 
 username_regex = re.compile(r'[A-Za-z0-9_]+')
 
+hashtag_regex = re.compile(r'#.+')
+
 prepend_at = lambda username: '@%s' % username
 
 def is_DM(status):
@@ -88,13 +90,19 @@ def is_username(username):
     otherwise.
     """
     match = username_regex.match(username)
-    if not match:
-        return False
-    else:
-        return match.string == username
+    if match:
+        return match.start() == 0 and match.end() == len(username)
+    return False 
 
-def is_hashtag(string):
-    return len(string) > 1 and string.startswith('#')
+def is_hashtag(hashtag):
+    """
+    Return `True` if `hashtag` is a valid Twitter hashtag, `False`
+    otherwise.
+    """
+    match = hashtag_regex.match(hashtag)
+    if match:
+        return match.start() == 0 and match.end() == len(hashtag)
+    return False 
 
 def sanitize_username(username):
     """
@@ -165,6 +173,9 @@ class Status(object):
         self.is_favorite = is_favorite
         self.retweet_count = retweet_count
         self.author = author
+
+    # TODO: `datetime.datetime` object as `created_at` attributte and get
+    #        rid off `created_at_in_seconds` attribute
 
     def get_relative_created_at(self):
         """Return a human readable string representing the posting time."""
@@ -458,8 +469,9 @@ class Timeline(ActiveList):
 
     def get_unread_count(self):
         def one_if_unread(tweet):
-            readed = lambda tweet: getattr(tweet, 'read', False)
-            return 0 if readed(tweet) else 1
+            if hasattr(tweet, 'read') and tweet.read:
+                return 0
+            return 1
 
         return sum([one_if_unread(tweet) for tweet in self.statuses])
 
@@ -513,6 +525,10 @@ class Timeline(ActiveList):
         active_status = self.get_active()
         if active_status:
             active_status.read = True
+
+    def mark_all_as_read(self):
+        for status in self.statuses:
+            status.read = True
 
 
 class TimelineList(UnsortedActiveList):
@@ -572,11 +588,6 @@ class TimelineList(UnsortedActiveList):
     def update_active_timeline(self):
         if self.has_timelines():
             timeline = self.timelines[self.active_index]
-            timeline.update()
-
-    def update_all(self):
-        """Updates every `Timeline`."""
-        for timeline in self.timelines:
             timeline.update()
 
     def delete_all(self):
@@ -639,10 +650,6 @@ class TimelineList(UnsortedActiveList):
         if self.has_timelines():
             active_timeline = self.get_active_timeline()
             active_timeline.mark_active_as_read()
-
-    def get_focused_status(self):
-        active_timeline = self.get_active_timeline()
-        return active_timeline.get_active()
 
     def shift_active_previous(self):
         active_index = self.active_index

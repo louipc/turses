@@ -11,7 +11,7 @@ from argparse import ArgumentParser
 from datetime import datetime, timedelta
 from email.utils import parsedate_tz
 from htmlentitydefs import entitydefs
-from time import strftime, gmtime
+from threading import Thread
 from calendar import timegm
 from re import sub, findall
 from subprocess import call
@@ -69,8 +69,22 @@ def wrap_exceptions(func):
 
     return wrapper
 
-def get_time():
-    return strftime('%H:%M:%S', gmtime())
+def async(func):
+    """
+    Decorator for executing a function asynchronously.
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if args and kwargs:
+            func_args = args, kwargs        
+        elif args:
+            func_args = args
+        elif kwargs:
+            func_args = kwargs
+        else:
+            Thread(target=func).start()
+        Thread(target=func, args=func_args).start()
+    return wrapper
 
 def html_unescape(str):
     """Unescapes HTML entities."""

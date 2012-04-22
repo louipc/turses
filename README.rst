@@ -1,9 +1,8 @@
 turses: a Twitter client featuring a curses interface
 =====================================================
 
-
-A Twitter client with a sexy curses interface written in Python. Various parts of 
-the codebase are borrowed from the `Tyrs`_ project by `Nicolas Paris`_.
+``turses`` is a Twitter client with a sexy curses interface written in Python. Various 
+parts of the codebase are borrowed from the `Tyrs`_ project by `Nicolas Paris`_.
 
 .. _`Tyrs`: http://tyrs.nicosphere.net
 .. _`Nicolas Paris`: http://github.com/Nic0
@@ -50,15 +49,15 @@ The code is hosted on a `git repo`_.
 .. _`git repo`: http://github.com/alejandrogomez/turses
 
 ``turses`` is evolving fast, a list of tasks can be found on 
-the TODO file. Eventually every task will reside in the repository's 
-`issue tracker`_.  
+the on the `issue tracker`_.  
 
 .. _`issue tracker`: http://github.com/alejandrogomez/turses/issues
 
 To contribute code:
  1. Create a branch from ``develop``
  2. Commit your changes
- 3. Send a pull request
+ 3. Add yourself to AUTHORS
+ 4. Send a pull request
 
 Any feedback is very much appreciated.
 
@@ -69,6 +68,7 @@ Roadmap
 - Lists
 - Streaming
 - Notifications
+- Multiple sessions
 - Geo
 - Blocking
 
@@ -78,6 +78,7 @@ Screenshots
 A ``turses`` session with multiple columns running on ``urxvt``:
 
 .. image:: http://dialelo.com/img/turses_buffers.png
+
 
 License
 -------
