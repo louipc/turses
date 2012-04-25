@@ -12,7 +12,7 @@ import re
 from functools import total_ordering
 from bisect import insort
 
-from .utils import html_unescape, timestamp_from_datetime
+from turses.utils import html_unescape, timestamp_from_datetime
 
 ##
 #  Helpers

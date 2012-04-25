@@ -43,8 +43,8 @@ from ConfigParser import RawConfigParser
 from os import getenv, path, mkdir, remove
 from gettext import gettext as _
 
-from .utils import encode, wrap_exceptions
-from .api.base import authorization
+from turses.utils import encode, wrap_exceptions
+from turses.api.base import authorization
 
 # -- Defaults -----------------------------------------------------------------
 
@@ -285,8 +285,8 @@ PALETTE = [
     # Text
     ['highlight', 'dark red', ''],
     ['highlight_nick', 'light red', ''],
-    ['attag', 'brown', ''],
-    ['hashtag', 'dark green', ''],
+    ['attag', 'yellow', ''],
+    ['hashtag', 'light red', ''],
 
     # Messages
     ['error', 'white', 'dark red'],

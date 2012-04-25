@@ -33,8 +33,8 @@ from urwid import (
         disconnect_signal
         )
 
-from . import version
-from .config import (
+from turses import version
+from turses.config import (
         MOTION_KEY_BINDINGS,
         BUFFERS_KEY_BINDINGS,
         TWEETS_KEY_BINDINGS,
@@ -44,8 +44,15 @@ from .config import (
         
         CONFIG_PATH
 )
-from .models import is_DM, get_authors_username
-from .utils import encode 
+from turses.models import (
+        is_hashtag, 
+        is_username, 
+        is_DM, 
+        
+        get_authors_username, 
+        sanitize_username
+)
+from turses.utils import encode 
  
 TWEET_MAX_CHARS = 140
 
@@ -668,7 +675,7 @@ class StatusWidget(WidgetWrap):
         self.status = status
         self.configuration = configuration
 
-        text = status.text
+        text = self.apply_attributes(status.text)
         status_content = Padding(AttrMap(Text(text), 'body'), left=1, right=1)
         header = self._create_header(status)
         box = BoxDecoration(status_content, title=header)
@@ -678,6 +685,28 @@ class StatusWidget(WidgetWrap):
         else:
             widget = AttrMap(box, 'line', 'focus')
         self.__super.__init__(widget)
+
+    def apply_attributes(self, text):
+        """
+        Apply the attributes to certain words of `text`. Right now it applies
+        attributes to hashtags and Twitter usernames.
+        """
+        words = text.split()
+        def apply_attribute(string):
+            if is_hashtag(string):
+                return ('hashtag', string)
+            elif string.startswith('@') and is_username(string[1:-1]):
+                # we can lose some characters here..
+                username = sanitize_username(string)
+                return ('attag', '@' + username)
+            else:
+                return  string
+        text = map(apply_attribute, words)
+        tweet = []
+        for word in text:
+            tweet.append(word)
+            tweet.append(' ')
+        return tweet
 
     def selectable(self):
         return True

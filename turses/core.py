@@ -8,22 +8,27 @@ This module contains the controller logic of turses.
 """
 
 
+import webbrowser
 from gettext import gettext as _
 from functools import partial
 
 import urwid
 from tweepy import TweepError
 
-from .api.base import AsyncApi
-from .utils import get_urls, spawn_process, wrap_exceptions, async
-from .config import (
+from turses.utils import (
+        get_urls, 
+        spawn_process, 
+        wrap_exceptions, 
+        async,
+)
+from turses.config import (
         HOME_TIMELINE,
         MENTIONS_TIMELINE,
         FAVORITES_TIMELINE,
         MESSAGES_TIMELINE,
         OWN_TWEETS_TIMELINE,
 )
-from .models import (
+from turses.models import (
         is_DM,
         is_username,
         is_valid_status_text, 
@@ -38,6 +43,7 @@ from .models import (
         Timeline, 
         VisibleTimelineList,
 )
+from turses.api.base import AsyncApi
 
 
 class KeyHandler(object):
@@ -1087,7 +1093,7 @@ class Controller(object):
             return
 
         try:
-            spawn_process(command, args)
+            webbrowser.open(args)
         except:
             self.error_message(_('Unable to launch the browser'))
 

@@ -15,8 +15,8 @@ from threading import Thread
 from urlparse import parse_qsl
 from gettext import gettext as _
 
-from ..models import is_DM
-from ..utils import encode, wrap_exceptions
+from turses.models import is_DM
+from turses.utils import encode, wrap_exceptions
 
 
 TWITTER_CONSUMER_KEY = 'OEn4hrNGknVz9ozQytoR0A'

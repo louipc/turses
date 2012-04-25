@@ -20,7 +20,7 @@ from os import devnull
 from gettext import gettext as _
 from functools import wraps
 
-from . import version as turses_version
+from turses import version as turses_version
 
 
 def parse_arguments():
