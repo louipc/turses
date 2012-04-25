@@ -8,7 +8,6 @@ This module contains the controller logic of turses.
 """
 
 
-import webbrowser
 from gettext import gettext as _
 from functools import partial
 
@@ -1093,7 +1092,7 @@ class Controller(object):
             return
 
         try:
-            webbrowser.open(args)
+            spawn_process(command, args)
         except:
             self.error_message(_('Unable to launch the browser'))
 
