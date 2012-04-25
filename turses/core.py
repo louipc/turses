@@ -14,16 +14,20 @@ from functools import partial
 import urwid
 from tweepy import TweepError
 
-from .api.base import AsyncApi
-from .utils import get_urls, spawn_process, wrap_exceptions, async
-from .config import (
+from turses.utils import (
+        get_urls, 
+        spawn_process, 
+        wrap_exceptions, 
+        async,
+)
+from turses.config import (
         HOME_TIMELINE,
         MENTIONS_TIMELINE,
         FAVORITES_TIMELINE,
         MESSAGES_TIMELINE,
         OWN_TWEETS_TIMELINE,
 )
-from .models import (
+from turses.models import (
         is_DM,
         is_username,
         is_valid_status_text, 
@@ -38,6 +42,7 @@ from .models import (
         Timeline, 
         VisibleTimelineList,
 )
+from turses.api.base import AsyncApi
 
 
 class KeyHandler(object):
@@ -562,9 +567,12 @@ class Controller(object):
         timeline_names = self.timelines.get_timeline_names()
         unread_tweets = self.timelines.get_unread_counts()
 
+        template = self.configuration.styles['tab_template']
+
         name_and_unread = zip(timeline_names, map(str, unread_tweets))
 
-        tabs = ["%s [%s]" % (name, unread) for name, unread in name_and_unread]
+        tabs = [template.format(timeline_name=name, unread=unread) 
+                for (name, unread) in name_and_unread]
         self.ui.set_tab_names(tabs)
 
         # highlight the active

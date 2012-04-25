@@ -12,7 +12,7 @@ import re
 from functools import total_ordering
 from bisect import insort
 
-from .utils import html_unescape, timestamp_from_datetime
+from turses.utils import html_unescape, timestamp_from_datetime, wrap_exceptions
 
 ##
 #  Helpers
@@ -416,6 +416,7 @@ class Timeline(ActiveList):
         newer = lambda status : status.created_at > datetime
         return filter(newer, self.statuses)
 
+    @wrap_exceptions
     def update(self):
         # TODO: use a generator (?)
         if not self.update_function:

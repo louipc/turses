@@ -1,3 +1,8 @@
+0.1.5
+-----
+- configurable tab text
+- colored hashtags and usernames
+
 0.1.4
 -----
 - update all timelines periodically

@@ -8,12 +8,10 @@ This module contains implementations of `turses.api.base.Api` using multiple
 API backends.
 """
 
-# `tweepy`
 from tweepy import API as BaseTweepyApi
 from tweepy import OAuthHandler as TweepyOAuthHandler
 
-from .base import Api
-from ..models import (
+from turses.models import (
         User, 
         Status, 
         DirectMessage, 
@@ -22,7 +20,8 @@ from ..models import (
         get_authors_username,
         get_mentioned_usernames,
 )
-from ..utils import datetime_from_twitter_datestring
+from turses.utils import datetime_from_twitter_datestring
+from turses.api.base import Api
 
 
 class TweepyApi(BaseTweepyApi, Api):
