@@ -562,9 +562,12 @@ class Controller(object):
         timeline_names = self.timelines.get_timeline_names()
         unread_tweets = self.timelines.get_unread_counts()
 
+        template = self.configuration.styles['tab_template']
+
         name_and_unread = zip(timeline_names, map(str, unread_tweets))
 
-        tabs = ["%s [%s]" % (name, unread) for name, unread in name_and_unread]
+        tabs = [template.format(timeline_name=name, unread=unread) 
+                for (name, unread) in name_and_unread]
         self.ui.set_tab_names(tabs)
 
         # highlight the active

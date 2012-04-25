@@ -302,6 +302,7 @@ STYLES = {
     # TODO: make time string configurable 
     'header_template':      ' {username}{retweeted}{retweeter} - {time}{reply} {retweet_count} ',
     'dm_template':          ' {sender_screen_name} => {recipient_screen_name} - {time} ',
+    'tab_template': '{timeline_name} [{unread}]',
 }
 
 # Debug
