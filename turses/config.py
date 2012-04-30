@@ -658,7 +658,7 @@ class Configuration(object):
     def _parse_styles(self, conf):
         for style in self.styles:
             if conf.has_option(SECTION_STYLES, style):
-                self.styles[style] = conf.get(SECTION_STYLES, style)
+                self.styles[style] = unicode(conf.get(SECTION_STYLES, style), 'utf-8')
 
     def _parse_debug(self, conf):
         if conf.has_option(SECTION_DEBUG, 'logging_level'):
