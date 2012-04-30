@@ -24,8 +24,10 @@ hashtag_regex = re.compile(r'#.+')
 
 prepend_at = lambda username: '@%s' % username
 
+
 def is_DM(status):
     return status.__class__ == DirectMessage
+
 
 def get_mentioned_usernames(status):
     """
@@ -38,6 +40,7 @@ def get_mentioned_usernames(status):
             usernames.append(word)
     return map(sanitize_username, usernames)
 
+
 def get_mentioned_for_reply(status):
     """
     Return a list containing the author of `status` and all the mentioned
@@ -49,6 +52,7 @@ def get_mentioned_for_reply(status):
 
     return map(prepend_at, mentioned)
 
+
 def get_authors_username(status):
     """Return the original author's username of the given status."""
     if is_DM(status):
@@ -59,6 +63,7 @@ def get_authors_username(status):
         username = status.user
 
     return username
+
 
 def get_dm_recipients_username(sender, status):
     """
@@ -76,13 +81,14 @@ def get_dm_recipients_username(sender, status):
     username = None
     if is_DM(status):
         users = [status.sender_screen_name,
-                 status.recipient_screen_name,]
+                 status.recipient_screen_name]
         if sender in users:
             users.pop(users.index(sender))
             username = users.pop()
     elif status.user != sender:
         username = status.user
     return username
+
 
 def is_username(username):
     """
@@ -94,6 +100,7 @@ def is_username(username):
         return match.start() == 0 and match.end() == len(username)
     return False
 
+
 def is_hashtag(hashtag):
     """
     Return `True` if `hashtag` is a valid Twitter hashtag, `False`
@@ -104,6 +111,7 @@ def is_hashtag(hashtag):
         return match.start() == 0 and match.end() == len(hashtag)
     return False
 
+
 def sanitize_username(username):
     """
     Return `username` with illegal characters for a Twitter username
@@ -112,23 +120,28 @@ def sanitize_username(username):
     sanitized = filter(is_username, username)
     return sanitized
 
+
 def get_hashtags(status):
     """
     Return a list of hashtags encountered in `status`.
     """
     return filter(is_hashtag, status.text.split())
 
+
 def is_valid_status_text(text):
     """Checks the validity of a status text."""
     return text and len(text) <= 140
+
 
 def is_valid_search_text(text):
     """Checks the validity of a search text."""
     return bool(text)
 
+
 ##
 #  Classes
 ##
+
 
 class User(object):
     """
@@ -149,7 +162,6 @@ class Status(object):
     Api adapters must convert their representations to instances of this class.
     """
 
-    # TODO make all arguments mandatory
     def __init__(self,
                  id,
                  created_at,
@@ -173,31 +185,28 @@ class Status(object):
         self.retweet_count = retweet_count
         self.author = author
 
-    # TODO: `datetime.datetime` object as `created_at` attributte and get
-    #        rid off `created_at_in_seconds` attribute
-
     def get_relative_created_at(self):
         """Return a human readable string representing the posting time."""
         # This code is borrowed from `python-twitter` library
         fudge = 1.25
-        delta  = long(time.time()) - timestamp_from_datetime(self.created_at)
+        delta = long(time.time()) - timestamp_from_datetime(self.created_at)
 
         if delta < (1 * fudge):
-          return "about a second ago"
-        elif delta < (60 * (1/fudge)):
-          return "about %d seconds ago" % (delta)
+            return "a second ago"
+        elif delta < (60 * (1 / fudge)):
+            return "%d seconds ago" % (delta)
         elif delta < (60 * fudge):
-          return "about a minute ago"
-        elif delta < (60 * 60 * (1/fudge)):
-          return "about %d minutes ago" % (delta / 60)
+            return "a minute ago"
+        elif delta < (60 * 60 * (1 / fudge)):
+            return "%d minutes ago" % (delta / 60)
         elif delta < (60 * 60 * fudge) or delta / (60 * 60) == 1:
-          return "about an hour ago"
-        elif delta < (60 * 60 * 24 * (1/fudge)):
-          return "about %d hours ago" % (delta / (60 * 60))
+            return "an hour ago"
+        elif delta < (60 * 60 * 24 * (1 / fudge)):
+            return "%d hours ago" % (delta / (60 * 60))
         elif delta < (60 * 60 * 24 * fudge) or delta / (60 * 60 * 24) == 1:
-          return "about a day ago"
+            return "a day ago"
         else:
-          return "about %d days ago" % (delta / (60 * 60 * 24))
+            return "%d days ago" % (delta / (60 * 60 * 24))
 
     # magic
 
@@ -223,7 +232,7 @@ class DirectMessage(Status):
                  recipient_screen_name,
                  text):
         self.id = id
-        self.created_at= created_at
+        self.created_at = created_at
         self.sender_screen_name = sender_screen_name
         self.recipient_screen_name = recipient_screen_name
         self.text = html_unescape(text)
@@ -358,7 +367,7 @@ class Timeline(ActiveList):
                                           update_function_kwargs)
 
     def _extract_args_and_kwargs(self, update_args, update_kwargs):
-        is_dict = lambda d : isinstance(d, dict)
+        is_dict = lambda d: isinstance(d, dict)
         is_tuple = lambda t: isinstance(t, tuple)
         is_list = lambda l: isinstance(l, list)
 
@@ -412,7 +421,7 @@ class Timeline(ActiveList):
 
     def get_newer_than(self, datetime):
         """Return the statuses that are more recent than `datetime`."""
-        newer = lambda status : status.created_at > datetime
+        newer = lambda status: status.created_at > datetime
         return filter(newer, self.statuses)
 
     @wrap_exceptions
@@ -542,7 +551,7 @@ class TimelineList(UnsortedActiveList):
         self.timelines = []
 
     def has_timelines(self):
-        return self.active_index !=  self.NULL_INDEX and self.timelines
+        return self.active_index != self.NULL_INDEX and self.timelines
 
     def get_active_timeline_name(self):
         if self.has_timelines():
