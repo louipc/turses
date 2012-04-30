@@ -305,7 +305,7 @@ STYLES = {
     'header_template':      ' {username}{retweeted}{retweeter} - {time}{reply} {retweet_count} ',
     'dm_template':          ' {sender_screen_name} => {recipient_screen_name} - {time} ',
     'tab_template': '{timeline_name} [{unread}]',
-    'box_around_status': False,
+    'box_around_status': True,
     'status_divider': False,
     'status_divider_char': '─',
 }
