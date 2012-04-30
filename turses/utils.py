@@ -13,6 +13,7 @@ from email.utils import parsedate_tz
 from htmlentitydefs import entitydefs
 from threading import Thread
 from calendar import timegm
+import re
 from re import sub, findall
 from subprocess import call
 from sys import stdout
@@ -21,6 +22,8 @@ from gettext import gettext as _
 from functools import wraps
 
 from turses import version as turses_version
+
+URL_REGEX = re.compile('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
 
 
 def parse_arguments():
@@ -47,9 +50,9 @@ def parse_arguments():
 def wrap_exceptions(func):
     """
     Augments the function arguments with the `on_error` and `on_success`
-    keyword arguments. 
-    
-    Executes the decorated function in a try except block and calls `on_success` 
+    keyword arguments.
+
+    Executes the decorated function in a try except block and calls `on_success`
     (if given) if no exception was raised, otherwise calls `on_error` (if given).
     """
     @wraps(func)
@@ -76,7 +79,7 @@ def async(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         if args and kwargs:
-            func_args = args, kwargs        
+            func_args = args, kwargs
         elif args:
             func_args = args
         elif kwargs:
@@ -86,8 +89,9 @@ def async(func):
         Thread(target=func, args=func_args).start()
     return wrapper
 
-def html_unescape(str):
-    """Unescapes HTML entities."""
+
+def html_unescape(string):
+    """Unescape HTML entities from `string`."""
     def entity_replacer(m):
         entity = m.group(1)
         if entity in entitydefs:
@@ -95,11 +99,18 @@ def html_unescape(str):
         else:
             return m.group(0)
 
-    return sub(r'&([^;]+);', entity_replacer, str)
+    return sub(r'&([^;]+);', entity_replacer, string)
+
+
+def is_url(string):
+    match = URL_REGEX.match(string)
+    if not match:
+        return False
+    return match.start() == 0 and match.end() == len(string)
+
 
 def get_urls(text):
-    # TODO: improve this
-    return findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', text)
+    return findall(URL_REGEX, text)
 
 def encode(string):
     try:
@@ -116,7 +127,7 @@ def datetime_from_twitter_datestring(datestring):
 
     Twitter API returns date strings with the format: %a %b %d %H:%M:%S %z %Y
     """
-    # this code is borrowed from a StackOverflow answer: 
+    # this code is borrowed from a StackOverflow answer:
     #   http://stackoverflow.com/a/7704266
     time_tuple = parsedate_tz(datestring.strip())
     dt = datetime(*time_tuple[:6])

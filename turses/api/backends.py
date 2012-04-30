@@ -12,10 +12,10 @@ from tweepy import API as BaseTweepyApi
 from tweepy import OAuthHandler as TweepyOAuthHandler
 
 from turses.models import (
-        User, 
-        Status, 
-        DirectMessage, 
-        List, 
+        User,
+        Status,
+        DirectMessage,
+        List,
 
         get_authors_username,
         get_mentioned_usernames,
@@ -27,8 +27,8 @@ from turses.api.base import Api
 class TweepyApi(BaseTweepyApi, Api):
     """
     A `Api` implementation using `tweepy` library.
-    
-        http://github.com/tweepy/tweepy/ 
+
+        http://github.com/tweepy/tweepy/
     """
 
     def __init__(self, *args, **kwargs):
@@ -38,11 +38,39 @@ class TweepyApi(BaseTweepyApi, Api):
 
     def _to_status(self, statuses):
         def to_status(status):
+            text = status.text
+
+            is_reply = False
+            in_reply_to_user = ''
+            is_retweet = False
+            retweet_count = 0
+            is_favorite = False
+            author = ''
+
+            if getattr(status, 'retweeted_status', False):
+                is_retweet = True
+                text = status.retweeted_status.text
+                retweet_count = status.retweet_count
+                author = status.retweeted_status.author.screen_name
+
+            if status.in_reply_to_screen_name:
+                is_reply = True
+                in_reply_to_user = status.in_reply_to_screen_name
+
+            if status.favorited:
+                is_favorite = True
+
             kwargs = {
                 'id': status.id,
                 'created_at': status.created_at,
                 'user': status.user.screen_name,
-                'text': status.text,
+                'text': text,
+                'is_retweet': is_retweet,
+                'is_reply': is_reply,
+                'is_favorite': is_favorite,
+                'in_reply_to_user': in_reply_to_user,
+                'retweet_count': retweet_count,
+                'author': author,
             }
             return Status(**kwargs)
 
@@ -104,7 +132,7 @@ class TweepyApi(BaseTweepyApi, Api):
     def verify_credentials(self):
         def to_user(user):
             kwargs = {
-                'screen_name': user.screen_name, 
+                'screen_name': user.screen_name,
             }
             return User(**kwargs)
         return to_user(self._api.me())
@@ -112,7 +140,7 @@ class TweepyApi(BaseTweepyApi, Api):
     # timelines
 
     def get_home_timeline(self, **kwargs):
-        tweets = self._api.home_timeline(**kwargs) 
+        tweets = self._api.home_timeline(**kwargs)
         retweets = self._api.retweeted_to_me(**kwargs)
         tweets.extend(retweets)
         return self._to_status(tweets)
@@ -137,16 +165,16 @@ class TweepyApi(BaseTweepyApi, Api):
 
     def get_direct_messages(self, **kwargs):
         dms = self._api.direct_messages(**kwargs)
-        sent = self._api.sent_direct_messages(**kwargs) 
+        sent = self._api.sent_direct_messages(**kwargs)
         dms.extend(sent)
         return self._to_direct_message(dms)
-        
+
     def get_thread(self, status, **kwargs):
         author = get_authors_username(status)
         mentioned = get_mentioned_usernames(status)
         if author not in mentioned:
             mentioned.append(author)
-        
+
         tweets = []
         for username in mentioned:
             tweets.extend(self.get_user_timeline(username, **kwargs))
