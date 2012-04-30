@@ -49,7 +49,6 @@ from turses.models import (
         is_username,
         is_DM,
 
-        get_authors_username,
         sanitize_username
 )
 from turses.utils import encode, is_url
@@ -71,9 +70,9 @@ BANNER = [
      _("Press 'q' to quit turses"),
      "",
      "",
-     _("New configuration and token files from the old ones"),
-     _("have been created in %s." % CONFIG_PATH),
-     "",
+     _("Configuration and token files reside under"),
+     _("your $HOME directory"),
+     #"",
      "",
      "    ~                                              ",
      "    |+.turses/                                     ",
@@ -81,7 +80,6 @@ BANNER = [
      _("    | |-token       # default account's token      "),
      _("    | `-bob.token   # another account's token      "),
      "    |+...                                          ",
-     "    |-...                                          ",
      "",
      "",
 ]
@@ -696,7 +694,7 @@ class StatusWidget(WidgetWrap):
             if is_hashtag(string):
                 return ('hashtag', string)
             elif string.startswith('@') and is_username(string[1:-1]):
-                # we can lose some characters here..
+                # FIXME: we can lose some characters here..
                 username = sanitize_username(string)
                 return ('attag', '@' + username)
             elif is_url(string):
@@ -737,9 +735,10 @@ class StatusWidget(WidgetWrap):
         # retweet
         if status.is_retweet:
             retweeted = u" \u267b "
-            retweeter = username
-            author = get_authors_username(status)
-            username = author
+            # `username` is the author of the original tweet
+            username = status.author
+            # `retweeter` is the user who made the RT
+            retweeter = status.user
             retweet_count = str(status.retweet_count)
 
         # create header

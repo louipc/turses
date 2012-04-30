@@ -40,7 +40,7 @@ def get_mentioned_usernames(status):
 
 def get_mentioned_for_reply(status):
     """
-    Return a list containing the author of `status` and all the mentioned 
+    Return a list containing the author of `status` and all the mentioned
     usernames prepended with '@'.
     """
     author = get_authors_username(status)
@@ -65,7 +65,7 @@ def get_dm_recipients_username(sender, status):
     Return the recipient for a Direct Message depending on what `status`
     is.
 
-    If is a `turses.models.Status` and sender != `status.user` I will return 
+    If is a `turses.models.Status` and sender != `status.user` I will return
     `status.user`.
 
     If is a `turses.models.DirectMessage` I will return the username that
@@ -92,7 +92,7 @@ def is_username(username):
     match = username_regex.match(username)
     if match:
         return match.start() == 0 and match.end() == len(username)
-    return False 
+    return False
 
 def is_hashtag(hashtag):
     """
@@ -102,11 +102,11 @@ def is_hashtag(hashtag):
     match = hashtag_regex.match(hashtag)
     if match:
         return match.start() == 0 and match.end() == len(hashtag)
-    return False 
+    return False
 
 def sanitize_username(username):
     """
-    Return `username` with illegal characters for a Twitter username 
+    Return `username` with illegal characters for a Twitter username
     striped.
     """
     sanitized = filter(is_username, username)
@@ -144,13 +144,13 @@ class User(object):
 @total_ordering
 class Status(object):
     """
-    A Twitter status. 
-    
+    A Twitter status.
+
     Api adapters must convert their representations to instances of this class.
     """
 
     # TODO make all arguments mandatory
-    def __init__(self, 
+    def __init__(self,
                  id,
                  created_at,
                  user,
@@ -163,7 +163,6 @@ class Status(object):
                  # for retweets
                  retweet_count=0,
                  author='',):
-                 
         self.id = id
         self.created_at = created_at
         self.user = user
@@ -209,8 +208,8 @@ class Status(object):
 
 class DirectMessage(Status):
     """
-    A Twitter direct message. 
-    
+    A Twitter direct message.
+
     Api adapters must convert their representations to instances of this class.
     """
 
@@ -229,11 +228,11 @@ class DirectMessage(Status):
 
 class List(object):
     """
-    A Twitter list. 
-    
+    A Twitter list.
+
     Api adapters must convert their representations to instances of this class.
     """
-    
+
     def __init__(self,
                  id,
                  owner,
@@ -251,13 +250,13 @@ class List(object):
         self.member_count = member_count
         self.subscriber_count = subscriber_count
         self.private = private
-                 
+
 
 class ActiveList(object):
     """
-    A list that contains an 'active' element. 
-    
-    This class implements some functions but the subclasses must define 
+    A list that contains an 'active' element.
+
+    This class implements some functions but the subclasses must define
     `get_active`, `is_valid_index` and `activate_last` methods.
     """
     NULL_INDEX = -1
@@ -276,7 +275,7 @@ class ActiveList(object):
         new_index = self.active_index - 1
         if self.is_valid_index(new_index):
             self.active_index = new_index
-    
+
     def activate_next(self):
         """Marks as active the next `Timeline` if it exists."""
         new_index = self.active_index + 1
@@ -296,8 +295,8 @@ class ActiveList(object):
 class UnsortedActiveList(ActiveList):
     """
     An `ActiveList` in which the 'active' element can be shifted position by
-    position, to the begging and to the end. 
-    
+    position, to the begging and to the end.
+
     Subclasses must implement all the provided methods.
     """
 
@@ -327,7 +326,7 @@ class Timeline(ActiveList):
     extends `ActiveList`.
     """
 
-    def __init__(self, 
+    def __init__(self,
                  name='',
                  statuses=None,
                  update_function=None,
@@ -437,7 +436,7 @@ class Timeline(ActiveList):
         else:
             new_statuses = self.update_function()
         self.add_statuses(new_statuses)
-    
+
     def update_with_extra_kwargs(self, **extra_kwargs):
         if not self.update_function:
             return
@@ -458,10 +457,10 @@ class Timeline(ActiveList):
 
         if update_args:
             # both args and kwargs
-            new_statuses = self.update_function(*args, **kwargs) 
+            new_statuses = self.update_function(*args, **kwargs)
         else:
             # kwargs only
-            new_statuses = self.update_function(**kwargs) 
+            new_statuses = self.update_function(**kwargs)
 
         self.add_statuses(new_statuses)
 
@@ -500,7 +499,7 @@ class Timeline(ActiveList):
     def activate_previous(self):
         ActiveList.activate_previous(self)
         self.mark_active_as_read()
-    
+
     def activate_next(self):
         ActiveList.activate_next(self)
         self.mark_active_as_read()
@@ -570,10 +569,10 @@ class TimelineList(UnsortedActiveList):
             self._mark_read()
             return
         self.timelines.append(timeline)
-        
+
     def delete_active_timeline(self):
         """
-        Deletes the active timeline (if any) and shifts the active index 
+        Deletes the active timeline (if any) and shifts the active index
         to the right.
         """
         if self.has_timelines():
@@ -611,7 +610,7 @@ class TimelineList(UnsortedActiveList):
         return self.timelines.__len__()
 
     # from `UnsortedActiveList`
-    
+
     def get_active(self):
         return self.get_active_timeline()
 
@@ -621,7 +620,7 @@ class TimelineList(UnsortedActiveList):
     def activate_previous(self):
         UnsortedActiveList.activate_previous(self)
         self._mark_read()
-    
+
     def activate_next(self):
         UnsortedActiveList.activate_next(self)
         self._mark_read()
@@ -637,7 +636,7 @@ class TimelineList(UnsortedActiveList):
 
     def _swap_timelines(self, one, other):
         """
-        Given the indexes of two timelines `one` and `other`, it swaps the 
+        Given the indexes of two timelines `one` and `other`, it swaps the
         `Timeline` objects contained in those positions.
         """
         if self.is_valid_index(one) and self.is_valid_index(other):
@@ -700,7 +699,7 @@ class VisibleTimelineList(TimelineList):
 
     def expand_visible_next(self):
         if not self.visible:
-            return 
+            return
 
         self.visible.sort()
         highest = self.visible[-1]
@@ -762,7 +761,7 @@ class VisibleTimelineList(TimelineList):
     def activate_previous(self):
         TimelineList.activate_previous(self)
         self._set_active_as_visible()
-    
+
     def activate_next(self):
         TimelineList.activate_next(self)
         self._set_active_as_visible()

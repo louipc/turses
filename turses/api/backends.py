@@ -38,11 +38,39 @@ class TweepyApi(BaseTweepyApi, Api):
 
     def _to_status(self, statuses):
         def to_status(status):
+            text = status.text
+
+            is_reply = False
+            in_reply_to_user = ''
+            is_retweet = False
+            retweet_count = 0
+            is_favorite = False
+            author = ''
+
+            if getattr(status, 'retweeted_status', False):
+                is_retweet = True
+                text = status.retweeted_status.text
+                retweet_count = status.retweet_count
+                author = status.retweeted_status.author.screen_name
+
+            if status.in_reply_to_screen_name:
+                is_reply = True
+                in_reply_to_user = status.in_reply_to_screen_name
+
+            if status.favorited:
+                is_favorite = True
+
             kwargs = {
                 'id': status.id,
                 'created_at': status.created_at,
                 'user': status.user.screen_name,
-                'text': status.text,
+                'text': text,
+                'is_retweet': is_retweet,
+                'is_reply': is_reply,
+                'is_favorite': is_favorite,
+                'in_reply_to_user': in_reply_to_user,
+                'retweet_count': retweet_count,
+                'author': author,
             }
             return Status(**kwargs)
 
