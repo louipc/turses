@@ -128,20 +128,19 @@ class CursesInterface(Frame):
     # -- Footer ---------------------------------------------------------------
 
     def _visible_status_bar(self):
-        return self.footer.__class__ is StatusBar
+        return isinstance(self.footer.__class__, StatusBar)
 
     def _can_write_status(self):
         if self.footer is None:
-            self.footer = StatusBar()
-        elif self._visible_status_bar():
-            pass
-        else:
+            self.footer = StatusBar('')
+        elif not self._visible_status_bar():
             return False
         return True
 
     def status_message(self, text):
         if self._can_write_status():
-            self.footer.message(text)
+            if isinstance(self.footer, StatusBar):
+                self.footer.message(text)
             self.set_footer(self.footer)
 
     def status_error_message(self, message):
@@ -263,7 +262,7 @@ class WelcomeBuffer(WidgetWrap):
         return ScrollableListBox(self.text)
 
     def _insert_line(self, line):
-        text= Text(line, align='center')
+        text = Text(line, align='center')
         self.text.append(text)
 
 
@@ -451,11 +450,11 @@ class StatusBar(WidgetWrap):
 
     def error_message(self, text):
         self.message([('error', self.ERROR),
-                      ('default', self.ARROW + text),])
+                      ('default', self.ARROW + text)])
 
     def info_message(self, text):
         self.message([('info', self.INFO),
-                      ('default', self.ARROW +  text),])
+                      ('default', self.ARROW + text)])
 
     def clear(self):
         """Clear the text."""
@@ -545,7 +544,7 @@ class HelpBuffer(ScrollableListBoxWrapper):
 
     col = [30, 7]
 
-    def __init__ (self, configuration):
+    def __init__(self, configuration):
         self.configuration = configuration
 
         self.items = []
@@ -671,7 +670,7 @@ class TimelineWidget(ScrollableListBox):
 class StatusWidget(WidgetWrap):
     """Widget containing a Twitter status."""
 
-    def __init__ (self, status, configuration):
+    def __init__(self, status, configuration):
         self.status = status
         self.configuration = configuration
 
@@ -692,6 +691,7 @@ class StatusWidget(WidgetWrap):
         attributes to hashtags and Twitter usernames.
         """
         words = text.split()
+
         def apply_attribute(string):
             if is_hashtag(string):
                 return ('hashtag', string)
@@ -745,12 +745,12 @@ class StatusWidget(WidgetWrap):
         # create header
         header_template = ' ' + self.configuration.styles['header_template'] + ' '
         header = unicode(header_template).format(
-            username= username,
-            retweeted = retweeted,
-            retweeter = retweeter,
-            time = relative_created_at,
-            reply = reply,
-            retweet_count = retweet_count,
+            username=username,
+            retweeted=retweeted,
+            retweeter=retweeter,
+            time=relative_created_at,
+            reply=reply,
+            retweet_count=retweet_count,
         )
 
         return encode(header)
@@ -761,7 +761,7 @@ class StatusWidget(WidgetWrap):
         header = unicode(dm_template).format(
             sender_screen_name=dm.sender_screen_name,
             recipient_screen_name=dm.recipient_screen_name,
-            time = relative_created_at,
+            time=relative_created_at,
         )
 
         return encode(header)
@@ -784,7 +784,7 @@ class BoxDecoration(WidgetDecoration, WidgetWrap):
                                         Divider(u"─")),
                                     ('fixed', len(title),
                                         AttrMap(Text(title), self.color)),
-                                    Divider(u"─"),])
+                                    Divider(u"─")])
         tline = use_attr(tline, tline_attr)
         # bottom line
         bline = None
@@ -811,23 +811,23 @@ class BoxDecoration(WidgetDecoration, WidgetWrap):
         # top
         top = Columns([('fixed', 1, tlcorner),
                              tline,
-                             ('fixed', 1, trcorner),])
+                             ('fixed', 1, trcorner)])
         # middle
         middle = Columns([('fixed', 1, lline),
-                                original_widget,
-                                ('fixed', 1, rline)],
-                               box_columns = [0,2],
-                               focus_column = 1)
+                          original_widget,
+                          ('fixed', 1, rline)],
+                          box_columns=[0, 2],
+                          focus_column=1)
         # bottom
         bottom = Columns([('fixed', 1, blcorner),
                                 bline,
                                 ('fixed', 1, brcorner)])
 
         # widget decoration
-        pile = Pile([('flow',top),
-                           middle,
-                           ('flow',bottom)],
-                          focus_item = 1)
+        pile = Pile([('flow', top),
+                    middle,
+                    ('flow', bottom)],
+                    focus_item=1)
 
         WidgetDecoration.__init__(self, original_widget)
         WidgetWrap.__init__(self, pile)

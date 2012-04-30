@@ -12,10 +12,10 @@ from tweepy import API as BaseTweepyApi
 from tweepy import OAuthHandler as TweepyOAuthHandler
 
 from turses.models import (
-        User, 
-        Status, 
-        DirectMessage, 
-        List, 
+        User,
+        Status,
+        DirectMessage,
+        List,
 
         get_authors_username,
         get_mentioned_usernames,
@@ -27,8 +27,8 @@ from turses.api.base import Api
 class TweepyApi(BaseTweepyApi, Api):
     """
     A `Api` implementation using `tweepy` library.
-    
-        http://github.com/tweepy/tweepy/ 
+
+        http://github.com/tweepy/tweepy/
     """
 
     def __init__(self, *args, **kwargs):
@@ -104,7 +104,7 @@ class TweepyApi(BaseTweepyApi, Api):
     def verify_credentials(self):
         def to_user(user):
             kwargs = {
-                'screen_name': user.screen_name, 
+                'screen_name': user.screen_name,
             }
             return User(**kwargs)
         return to_user(self._api.me())
@@ -112,7 +112,7 @@ class TweepyApi(BaseTweepyApi, Api):
     # timelines
 
     def get_home_timeline(self, **kwargs):
-        tweets = self._api.home_timeline(**kwargs) 
+        tweets = self._api.home_timeline(**kwargs)
         retweets = self._api.retweeted_to_me(**kwargs)
         tweets.extend(retweets)
         return self._to_status(tweets)
@@ -137,16 +137,16 @@ class TweepyApi(BaseTweepyApi, Api):
 
     def get_direct_messages(self, **kwargs):
         dms = self._api.direct_messages(**kwargs)
-        sent = self._api.sent_direct_messages(**kwargs) 
+        sent = self._api.sent_direct_messages(**kwargs)
         dms.extend(sent)
         return self._to_direct_message(dms)
-        
+
     def get_thread(self, status, **kwargs):
         author = get_authors_username(status)
         mentioned = get_mentioned_usernames(status)
         if author not in mentioned:
             mentioned.append(author)
-        
+
         tweets = []
         for username in mentioned:
             tweets.extend(self.get_user_timeline(username, **kwargs))
