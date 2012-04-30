@@ -264,6 +264,7 @@ VALID_COLORS = [
     'white',
 ]
 
+
 def validate_color(colorstring):
     return colorstring if colorstring in VALID_COLORS else ''
 
@@ -304,6 +305,9 @@ STYLES = {
     'header_template':      ' {username}{retweeted}{retweeter} - {time}{reply} {retweet_count} ',
     'dm_template':          ' {sender_screen_name} => {recipient_screen_name} - {time} ',
     'tab_template': '{timeline_name} [{unread}]',
+    'box_around_status': False,
+    'status_divider': False,
+    'status_divider_char': '─',
 }
 
 # Debug
@@ -446,7 +450,7 @@ class Configuration(object):
                          TWEETS_KEY_BINDINGS,
                          TIMELINES_KEY_BINDINGS,
                          META_KEY_BINDINGS,
-                         TURSES_KEY_BINDINGS,]
+                         TURSES_KEY_BINDINGS, ]
         for binding_list in binding_lists:
             for binding in binding_list:
                 key = self.key_bindings[binding][0]
@@ -497,11 +501,11 @@ class Configuration(object):
         if path.isfile(LEGACY_TOKEN_FILE):
             self.parse_token_file(LEGACY_TOKEN_FILE)
             remove(LEGACY_TOKEN_FILE)
-            if hasattr(self, 'oauth_token') and \
-               hasattr(self, 'oauth_token_secret'):
-                   self.generate_token_file(self.token_file,
-                                            self.oauth_token,
-                                            self.oauth_token_secret)
+            if (hasattr(self, 'oauth_token') and
+                hasattr(self, 'oauth_token_secret')):
+                self.generate_token_file(self.token_file,
+                                         self.oauth_token,
+                                         self.oauth_token_secret)
         elif not path.isfile(self.token_file):
             self.authorize_new_account()
         else:
@@ -525,7 +529,7 @@ class Configuration(object):
         self.styles.update(styles)
 
         if conf.has_option('params', 'logging_level'):
-            self.logging_level  = conf.getint('params', 'logging_level')
+            self.logging_level = conf.getint('params', 'logging_level')
 
         for binding in self.key_bindings:
             if conf.has_option('keys', binding):
@@ -535,7 +539,7 @@ class Configuration(object):
         palette_labels = [color[0] for color in PALETTE]
         for label in palette_labels:
             if conf.has_option('colors', label):
-                custom_fg  = conf.get('colors', label)
+                custom_fg = conf.get('colors', label)
                 self._set_color(label, custom_fg)
 
     def _parse_legacy_token_file(self):
@@ -556,7 +560,7 @@ class Configuration(object):
                 color[2] = custom_bg if validate_color(custom_bg) is not None else bg
 
     def _set_key_binding(self, binding, new_key):
-        if not self.key_bindings.has_key(binding):
+        if not binding in self.key_bindings:
             return
 
         key, description = self.key_bindings[binding]
@@ -632,7 +636,7 @@ class Configuration(object):
                     value = conf.getboolean(SECTION_DEFAULT_TIMELINES,
                                             timeline)
                 except ValueError:
-                   continue
+                    continue
                 self.default_timelines[timeline] = value
 
     def _parse_twitter(self, conf):
@@ -658,7 +662,11 @@ class Configuration(object):
     def _parse_styles(self, conf):
         for style in self.styles:
             if conf.has_option(SECTION_STYLES, style):
-                self.styles[style] = unicode(conf.get(SECTION_STYLES, style), 'utf-8')
+                if style == 'box_around_status' or style == 'status_divider':
+                    self.styles[style] = conf.getboolean(SECTION_STYLES, style)
+                else:
+                    self.styles[style] = unicode(conf.get(SECTION_STYLES, style),
+                                                 'utf-8')
 
     def _parse_debug(self, conf):
         if conf.has_option(SECTION_DEBUG, 'logging_level'):

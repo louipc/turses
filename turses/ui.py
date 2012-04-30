@@ -9,48 +9,20 @@ This module contains the UI widgets.
 
 from gettext import gettext as _
 
-from urwid import (
-        AttrMap,
-        WidgetWrap,
-        Padding,
-        WidgetDecoration,
-        Divider,
-        SolidFill,
+from urwid import (AttrMap, WidgetWrap, Padding, Divider, SolidFill,
+                   WidgetDecoration,
 
-        # widgets
-        Text,
-        Edit,
-        Frame,
-        Columns,
-        Pile,
-        ListBox,
-        SimpleListWalker,
+                   # widgets
+                   Text, Edit, Frame, Columns, Pile, ListBox, SimpleListWalker,
 
-        # signals
-        signals,
-        emit_signal,
-        connect_signal,
-        disconnect_signal
-        )
+                   # signals
+                   signals, emit_signal, connect_signal, disconnect_signal)
 
 from turses import version
-from turses.config import (
-        MOTION_KEY_BINDINGS,
-        BUFFERS_KEY_BINDINGS,
-        TWEETS_KEY_BINDINGS,
-        TIMELINES_KEY_BINDINGS,
-        META_KEY_BINDINGS,
-        TURSES_KEY_BINDINGS,
-
-        CONFIG_PATH
-)
-from turses.models import (
-        is_hashtag,
-        is_username,
-        is_DM,
-
-        sanitize_username
-)
+from turses.config import (MOTION_KEY_BINDINGS, BUFFERS_KEY_BINDINGS,
+                           TWEETS_KEY_BINDINGS, TIMELINES_KEY_BINDINGS,
+                           META_KEY_BINDINGS, TURSES_KEY_BINDINGS, )
+from turses.models import is_hashtag, is_username, is_DM, sanitize_username
 from turses.utils import encode, is_url
 
 TWEET_MAX_CHARS = 140
@@ -672,16 +644,47 @@ class StatusWidget(WidgetWrap):
         self.status = status
         self.configuration = configuration
 
+        header_text = self._create_header(status)
         text = self.apply_attributes(status.text)
-        status_content = Padding(AttrMap(Text(text), 'body'), left=1, right=1)
-        header = self._create_header(status)
-        box = BoxDecoration(status_content, title=header)
 
-        if not is_DM(status) and status.is_favorite:
-            widget = AttrMap(box, 'favorited', 'focus')
-        else:
-            widget = AttrMap(box, 'line', 'focus')
+        is_favorite = not is_DM(status) and status.is_favorite
+        widget = self._build_widget(header_text, text, is_favorite)
+
         self.__super.__init__(widget)
+
+    def _build_widget(self, header_text, text, favorite=False):
+        """Return the wrapped widget."""
+        box_around_status = self.configuration.styles.get('box_around_status',
+                                                          True)
+        divider = self.configuration.styles.get('status_divider',
+                                                False)
+
+        header = AttrMap(Text(header_text), 'header')
+        body = Padding(AttrMap(Text(text), 'body'), left=1, right=1)
+
+        border_attr = 'line'
+        if favorite:
+            border_attr = 'favorited'
+
+        if box_around_status:
+            # draw a box around the status
+            # focusing the first item both dividers are highlighted
+            # on focus
+            widget = AttrMap(BoxDecoration(body, title=header_text),
+                             border_attr, 'focus')
+        elif divider:
+            # use a divider
+            # we focus the divider to change colors when this
+            # widget is focused
+            status_divider = self.configuration.styles.get('status_divider_char',
+                                                           '·')
+
+            divider = AttrMap(Divider(status_divider),
+                              border_attr, 'focus')
+            widget = Pile([header, body, divider], focus_item=2)
+        else:
+            widget = Pile([header, body], focus_item=1)
+        return widget
 
     def apply_attributes(self, text):
         """
@@ -770,8 +773,6 @@ class BoxDecoration(WidgetDecoration, WidgetWrap):
     """Draw a box around `original_widget`."""
 
     def __init__(self, original_widget, title=''):
-        self.color = 'header'
-
         def use_attr(a, t):
             if a:
                 t = AttrMap(t, a)
@@ -780,32 +781,32 @@ class BoxDecoration(WidgetDecoration, WidgetWrap):
         # top line
         tline = None
         tline_attr = Columns([('fixed', 2,
-                                        Divider(u"─")),
+                                        Divider(u"\u2500")),
                                     ('fixed', len(title),
-                                        AttrMap(Text(title), self.color)),
-                                    Divider(u"─")])
+                                        AttrMap(Text(title), 'header')),
+                                    Divider(u"\u2500")])
         tline = use_attr(tline, tline_attr)
         # bottom line
         bline = None
-        bline = use_attr(bline, Divider(u"─"))
+        bline = use_attr(bline, Divider(u"\u2500"))
         # left line
         lline = None
-        lline = use_attr(lline, SolidFill(u"│"))
+        lline = use_attr(lline, SolidFill(u"\u2502"))
         # right line
         rline = None
-        rline = use_attr(rline, SolidFill(u"│"))
+        rline = use_attr(rline, SolidFill(u"\u2502"))
         # top left corner
         tlcorner = None
-        tlcorner = use_attr(tlcorner, Text(u"┌"))
+        tlcorner = use_attr(tlcorner, Text(u"\u250c"))
         # top right corner
         trcorner = None
-        trcorner = use_attr(trcorner, Text(u"┐"))
+        trcorner = use_attr(trcorner, Text(u"\u2510"))
         # bottom left corner
         blcorner = None
-        blcorner = use_attr(blcorner, Text(u"└"))
+        blcorner = use_attr(blcorner, Text(u"\u2514"))
         # bottom right corner
         brcorner = None
-        brcorner = use_attr(brcorner, Text(u"┘"))
+        brcorner = use_attr(brcorner, Text(u"\u2518"))
 
         # top
         top = Columns([('fixed', 1, tlcorner),
