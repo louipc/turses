@@ -6,7 +6,7 @@ Installation
 From source
 -----------
 
-``turses`` is evolving fast, you can find the `latest version on GitHub 
+``turses`` is evolving fast, you can find the `latest version on GitHub
 <https://github.com/alejandrogomez/turses>`_.
 
 You can either clone the public repository::
@@ -35,7 +35,7 @@ Installing is simple with `pip <http://www.pip-installer.org/>`_::
 
     $ pip install turses
 
-or (but `you should consider using pip 
+or (but `you should consider using pip
 <http://www.pip-installer.org/en/latest/other-tools.html#pip-compared-to-easy-install>`_):  ::
 
     $ easy_install turses

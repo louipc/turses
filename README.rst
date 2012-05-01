@@ -1,7 +1,7 @@
 turses: a Twitter client featuring a curses interface
 =====================================================
 
-``turses`` is a Twitter client with a sexy curses interface written in Python. Various 
+``turses`` is a Twitter client with a sexy curses interface written in Python. Various
 parts of the codebase are borrowed from the `Tyrs`_ project by `Nicolas Paris`_.
 
 .. _`Tyrs`: http://tyrs.nicosphere.net
@@ -28,7 +28,7 @@ Features
 --------
 
 - Multiple timelines (buffers)
-- Multi-column 
+- Multi-column
 - Tweet, Reply, Retweet, Delete tweet
 - Follow/Unfollow
 - Favorite/Unfavorite
@@ -48,8 +48,8 @@ The code is hosted on a `git repo`_.
 
 .. _`git repo`: http://github.com/alejandrogomez/turses
 
-``turses`` is evolving fast, a list of tasks can be found on 
-the on the `issue tracker`_.  
+``turses`` is evolving fast, a list of tasks can be found on
+the on the `issue tracker`_.
 
 .. _`issue tracker`: http://github.com/alejandrogomez/turses/issues
 
