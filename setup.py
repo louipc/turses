@@ -36,7 +36,7 @@ setup(name="turses",
       long_description=long_description,
       keywords="twitter client curses",
       packages=[
-          "turses", 
+          "turses",
           "turses.api",
       ],
       package_data={'': ['LICENSE']},

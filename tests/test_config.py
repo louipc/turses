@@ -12,9 +12,9 @@ path.append('../')
 
 from turses.config import (
         PALETTE,
-        
+
         CONFIG_PATH,
-        DEFAULT_CONFIG_FILE, 
+        DEFAULT_CONFIG_FILE,
         DEFAULT_TOKEN_FILE,
 
         validate_color,
@@ -26,9 +26,9 @@ class Args(object):
     """
     Represents the arguments.
     """
-    def __init__(self, 
-                 account=None, 
-                 config=None, 
+    def __init__(self,
+                 account=None,
+                 config=None,
                  generate_config=None):
         self.account = account
         self.config = config
@@ -69,7 +69,7 @@ class ConfigurationTest(unittest.TestCase):
         config = Configuration()
 
         palette = [
-            ['first', 'cyan', 'black', 'default', ''], 
+            ['first', 'cyan', 'black', 'default', ''],
             ['second', 'green', 'black',]
         ]
         modified_color = ['first', 'black', 'cyan', 'default', '']

@@ -20,7 +20,7 @@ try:
     ui = CursesInterface(configuration)
 
     # start `turses`
-    Turses(configuration=configuration, 
+    Turses(configuration=configuration,
            ui=ui,
            api_backend=TweepyApi)
 except KeyboardInterrupt:

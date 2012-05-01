@@ -36,4 +36,3 @@
 - binding to open focused status authors' tweets
 - reload configuration
 - configuration default location and format changed
-

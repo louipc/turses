@@ -15,9 +15,9 @@ import urwid
 from tweepy import TweepError
 
 from turses.utils import (
-        get_urls, 
-        spawn_process, 
-        wrap_exceptions, 
+        get_urls,
+        spawn_process,
+        wrap_exceptions,
         async,
 )
 from turses.config import (
@@ -30,16 +30,16 @@ from turses.config import (
 from turses.models import (
         is_DM,
         is_username,
-        is_valid_status_text, 
-        is_valid_search_text, 
+        is_valid_status_text,
+        is_valid_search_text,
         sanitize_username,
 
-        get_authors_username, 
-        get_mentioned_for_reply, 
+        get_authors_username,
+        get_mentioned_for_reply,
         get_dm_recipients_username,
         get_mentioned_usernames,
-        get_hashtags, 
-        Timeline, 
+        get_hashtags,
+        Timeline,
         VisibleTimelineList,
 )
 from turses.api.base import AsyncApi
@@ -50,8 +50,8 @@ class KeyHandler(object):
     Maps key bindings from configuration to calls to controllers' functions.
     """
 
-    def __init__(self, 
-                 configuration, 
+    def __init__(self,
+                 configuration,
                  controller):
         self.configuration = configuration
         self.controller = controller
@@ -87,7 +87,7 @@ class KeyHandler(object):
         handled = not self._motion_key_handler(key)
         if handled:
             return
-        
+
         # Help mode commands
         #  only accepts motion commands, timeline commands and <Esc>
         if self.controller.is_in_help_mode() and key == 'esc':
@@ -119,7 +119,7 @@ class KeyHandler(object):
         if self.is_bound(key, 'quit'):
             self.controller.exit()
         # redraw screen
-        elif self.is_bound(key, 'redraw'): 
+        elif self.is_bound(key, 'redraw'):
             self.controller.redraw_screen()
         # help
         elif self.is_bound(key, 'help'):
@@ -151,7 +151,7 @@ class KeyHandler(object):
         if self.is_bound(key, 'right') or key == 'right':
             self.controller.next_timeline()
         # Left
-        elif self.is_bound(key, 'left') or key == 'left': 
+        elif self.is_bound(key, 'left') or key == 'left':
             self.controller.previous_timeline()
         # Shift active buffer left
         elif self.is_bound(key, 'shift_buffer_left'):
@@ -220,10 +220,10 @@ class KeyHandler(object):
         elif self.is_bound(key, 'search_user'):
             self.controller.search_user()
         # Thread
-        elif self.is_bound(key, 'thread'): 
+        elif self.is_bound(key, 'thread'):
             self.controller.append_thread_timeline()
         # User info
-        elif self.is_bound(key, 'user_info'): 
+        elif self.is_bound(key, 'user_info'):
             self.controller.info_message('Still to implement!')
         # Follow hashtags
         elif self.is_bound(key, 'hashtags'):
@@ -242,37 +242,37 @@ class KeyHandler(object):
         if self.is_bound(key, 'update_all'):
             self.controller.update_all_timelines()
         # Tweet
-        elif self.is_bound(key, 'tweet'): 
+        elif self.is_bound(key, 'tweet'):
             self.controller.tweet()
         # Reply
-        elif self.is_bound(key, 'reply'): 
+        elif self.is_bound(key, 'reply'):
             self.controller.reply()
         # Retweet
-        elif self.is_bound(key, 'retweet'): 
+        elif self.is_bound(key, 'retweet'):
             self.controller.retweet()
         # Retweet and Edit
-        elif self.is_bound(key, 'retweet_and_edit'): 
+        elif self.is_bound(key, 'retweet_and_edit'):
             self.controller.manual_retweet()
         # Delete (own) tweet
-        elif self.is_bound(key, 'delete_tweet'): 
+        elif self.is_bound(key, 'delete_tweet'):
             self.controller.delete_tweet()
         # Follow Selected
-        elif self.is_bound(key, 'follow_selected'): 
+        elif self.is_bound(key, 'follow_selected'):
             self.controller.follow_selected()
         # Unfollow Selected
-        elif self.is_bound(key, 'unfollow_selected'): 
+        elif self.is_bound(key, 'unfollow_selected'):
             self.controller.unfollow_selected()
         # Send Direct Message
-        elif self.is_bound(key, 'sendDM'): 
+        elif self.is_bound(key, 'sendDM'):
             self.controller.direct_message()
         # Create favorite
-        elif self.is_bound(key, 'fav'): 
+        elif self.is_bound(key, 'fav'):
             self.controller.favorite()
         # Destroy favorite
-        elif self.is_bound(key, 'delete_fav'): 
+        elif self.is_bound(key, 'delete_fav'):
             self.controller.unfavorite()
         # Tweet with hashtags
-        elif self.is_bound(key, 'tweet_hashtag'): 
+        elif self.is_bound(key, 'tweet_hashtag'):
             self.controller.tweet_with_hashtags()
         else:
             return key
@@ -303,7 +303,7 @@ class Controller(object):
 
         # API
         self.info_message(_('Initializing API'))
-        oauth_token = self.configuration.oauth_token 
+        oauth_token = self.configuration.oauth_token
         oauth_token_secret = self.configuration.oauth_token_secret
         self.api = AsyncApi(api_backend,
                             access_token_key=oauth_token,
@@ -321,7 +321,7 @@ class Controller(object):
 
     def main_loop(self):
         """
-        Main loop of the program, `Controller` subclasses must override this 
+        Main loop of the program, `Controller` subclasses must override this
         method.
         """
         raise NotImplementedError
@@ -361,7 +361,7 @@ class Controller(object):
     def timeline_mode(self):
         """
         Activates the Timeline mode if there are Timelines.
-        
+
         If not, shows program info.
         """
         if self.is_in_timeline_mode():
@@ -400,9 +400,9 @@ class Controller(object):
     # -- Timelines ------------------------------------------------------------
 
     @wrap_exceptions
-    def append_timeline(self, 
-                        name, 
-                        update_function, 
+    def append_timeline(self,
+                        name,
+                        update_function,
                         update_args=None,
                         update_kwargs=None):
         """
@@ -413,7 +413,7 @@ class Controller(object):
         timeline = Timeline(name=name,
                             update_function=update_function,
                             update_function_args=update_args,
-                            update_function_kwargs=update_kwargs) 
+                            update_function_kwargs=update_kwargs)
         timeline.update()
         timeline.activate_first()
         self.timelines.append_timeline(timeline)
@@ -432,21 +432,21 @@ class Controller(object):
         }
 
         timelines = [
-            HOME_TIMELINE,      
-            MENTIONS_TIMELINE,  
-            FAVORITES_TIMELINE, 
-            MESSAGES_TIMELINE,  
+            HOME_TIMELINE,
+            MENTIONS_TIMELINE,
+            FAVORITES_TIMELINE,
+            MESSAGES_TIMELINE,
             OWN_TWEETS_TIMELINE,
         ]
 
-        is_any = any([self.configuration.default_timelines[timeline] 
+        is_any = any([self.configuration.default_timelines[timeline]
                       for timeline in timelines])
-                                                    
+
         if is_any:
             self.timeline_mode()
         else:
             self.info_message(_('You don\'t have any default timelines activated'))
-            return 
+            return
 
         for timeline in timelines:
             append = default_timelines[timeline]
@@ -456,20 +456,20 @@ class Controller(object):
         self.clear_status()
 
     def append_home_timeline(self):
-        timeline_fetched = partial(self.info_message, 
+        timeline_fetched = partial(self.info_message,
                                     _('Home timeline fetched'))
-        timeline_not_fetched = partial(self.error_message, 
+        timeline_not_fetched = partial(self.error_message,
                                         _('Failed to fetch home timeline'))
 
-        self.append_timeline(name=_('tweets'),     
+        self.append_timeline(name=_('tweets'),
                              update_function=self.api.get_home_timeline,
                              on_error=timeline_not_fetched,
                              on_success=timeline_fetched,)
-                              
+
     def append_user_timeline(self, username):
-        timeline_fetched = partial(self.info_message, 
+        timeline_fetched = partial(self.info_message,
                                     _('@%s\'s tweets fetched' % username))
-        timeline_not_fetched = partial(self.error_message, 
+        timeline_not_fetched = partial(self.error_message,
                                         _('Failed to fetch @%s\'s tweets' % username))
 
         self.append_timeline(name='@%s' % username,
@@ -479,44 +479,44 @@ class Controller(object):
                              on_success=timeline_fetched,)
 
     def append_own_tweets_timeline(self):
-        timeline_fetched = partial(self.info_message, 
+        timeline_fetched = partial(self.info_message,
                                     _('Your tweets fetched'))
-        timeline_not_fetched = partial(self.error_message, 
+        timeline_not_fetched = partial(self.error_message,
                                         _('Failed to fetch your tweets'))
 
         if not hasattr(self, 'user'):
             self.user = self.api.verify_credentials()
-        self.append_timeline(name='@%s' % self.user.screen_name,     
+        self.append_timeline(name='@%s' % self.user.screen_name,
                              update_function=self.api.get_own_timeline,
                              on_error=timeline_not_fetched,
                              on_success=timeline_fetched,)
 
     def append_mentions_timeline(self):
-        timeline_fetched = partial(self.info_message, 
+        timeline_fetched = partial(self.info_message,
                                     _('Mentions fetched'))
-        timeline_not_fetched = partial(self.error_message, 
+        timeline_not_fetched = partial(self.error_message,
                                         _('Failed to fetch mentions'))
 
-        self.append_timeline(name=_('mentions'),     
+        self.append_timeline(name=_('mentions'),
                              update_function=self.api.get_mentions,
                              on_error=timeline_not_fetched,
                              on_success=timeline_fetched,)
 
     def append_favorites_timeline(self):
-        timeline_fetched = partial(self.info_message, 
+        timeline_fetched = partial(self.info_message,
                                     _('Favorites fetched'))
-        timeline_not_fetched = partial(self.error_message, 
+        timeline_not_fetched = partial(self.error_message,
                                         _('Failed to fetch favorites'))
 
-        self.append_timeline(name=_('favorites'),     
+        self.append_timeline(name=_('favorites'),
                              update_function=self.api.get_favorites,
                              on_error=timeline_not_fetched,
                              on_success=timeline_fetched,)
 
     def append_direct_messages_timeline(self):
-        timeline_fetched = partial(self.info_message, 
+        timeline_fetched = partial(self.info_message,
                                     _('Messages fetched'))
-        timeline_not_fetched = partial(self.error_message, 
+        timeline_not_fetched = partial(self.error_message,
                                         _('Failed to fetch messages'))
 
         self.append_timeline(name=_('messages'),
@@ -529,9 +529,9 @@ class Controller(object):
         if status is None:
             return
 
-        timeline_fetched = partial(self.info_message, 
+        timeline_fetched = partial(self.info_message,
                                    _('Thread fetched'))
-        timeline_not_fetched = partial(self.error_message, 
+        timeline_not_fetched = partial(self.error_message,
                                        _('Failed to fetch thread'))
 
         if is_DM(status):
@@ -543,7 +543,7 @@ class Controller(object):
                 participants.insert(0, author)
 
             self.append_timeline(name=_('thread: %s' % ', '.join(participants)),
-                                 update_function=self.api.get_thread, 
+                                 update_function=self.api.get_thread,
                                  update_args=status,
                                  on_error=timeline_not_fetched,
                                  on_success=timeline_fetched)
@@ -571,7 +571,7 @@ class Controller(object):
 
         name_and_unread = zip(timeline_names, map(str, unread_tweets))
 
-        tabs = [template.format(timeline_name=name, unread=unread) 
+        tabs = [template.format(timeline_name=name, unread=unread)
                 for (name, unread) in name_and_unread]
         self.ui.set_tab_names(tabs)
 
@@ -579,7 +579,7 @@ class Controller(object):
         active_index = self.timelines.active_index
         self.ui.activate_tab(active_index)
 
-        # colorize the visible tabs 
+        # colorize the visible tabs
         visible_indexes = self.timelines.get_visible_indexes()
         self.ui.header.set_visible_tabs(visible_indexes)
 
@@ -702,7 +702,7 @@ class Controller(object):
         else:
             self.info_mode()
 
-    # -- Motion --------------------------------------------------------------- 
+    # -- Motion ---------------------------------------------------------------
 
     def scroll_up(self):
         self.ui.focus_previous()
@@ -739,7 +739,7 @@ class Controller(object):
             self.draw_timelines()
 
     # -- Footer ---------------------------------------------------------------
-        
+
     def error_message(self, message):
         self.ui.status_error_message(message)
         self.redraw_screen()
@@ -781,7 +781,7 @@ class Controller(object):
         tweet_not_sent = partial(self.error_message, _('Tweet not sent'))
 
         # API call
-        self.api.update(text=text, 
+        self.api.update(text=text,
                         on_success=tweet_sent,
                         on_error=tweet_not_sent,)
 
@@ -798,19 +798,19 @@ class Controller(object):
             self.info_message(_('DM canceled'))
             return
 
-        dm_info = _('Direct Message to @%s sent' % username) 
+        dm_info = _('Direct Message to @%s sent' % username)
         dm_sent = partial(self.info_message, dm_info)
-        dm_error =_('Failed to send message to @%s' % username) 
-        dm_not_sent = partial(self.error_message, dm_error) 
+        dm_error =_('Failed to send message to @%s' % username)
+        dm_not_sent = partial(self.error_message, dm_error)
 
-        self.api.direct_message(screen_name=username, 
+        self.api.direct_message(screen_name=username,
                                 text=text,
                                 on_success=dm_sent,
                                 on_error=dm_not_sent,)
 
     def search_handler(self, text):
         """
-        Handles creating a timeline tracking the search term given in 
+        Handles creating a timeline tracking the search term given in
         `text`.
         """
         self.timeline_mode()
@@ -834,7 +834,7 @@ class Controller(object):
                                         _('Error creating search timeline for "%s"' % text))
 
         self.append_timeline(name=_('Search: %s' % text),
-                            update_function=self.api.get_search, 
+                            update_function=self.api.get_search,
                             update_args=text,
                             on_error=timeline_not_created,
                             on_success=timeline_created)
@@ -860,16 +860,16 @@ class Controller(object):
                                        _('Unable to create @%s\'s timeline' % username))
 
         self.append_timeline(name='@%s' % username,
-                             update_function=self.api.get_user_timeline, 
+                             update_function=self.api.get_user_timeline,
                              update_args=username,
                              on_success=timeline_created,
                              on_error=timeline_not_created)
 
-    # -- Twitter -------------------------------------------------------------- 
+    # -- Twitter --------------------------------------------------------------
 
     def search(self, text=None):
         text = '' if text is None else text
-        self.ui.show_text_editor(prompt='Search', 
+        self.ui.show_text_editor(prompt='Search',
                                  content=text,
                                  done_signal_handler=self.search_handler)
 
@@ -892,8 +892,8 @@ class Controller(object):
         author = get_authors_username(status)
         self.append_user_timeline(author)
 
-    def tweet(self, 
-              prompt=_('Tweet'), 
+    def tweet(self,
+              prompt=_('Tweet'),
               content=''):
         self.ui.show_tweet_editor(prompt=prompt,
                                   content=content,
@@ -908,9 +908,9 @@ class Controller(object):
             self.error_message(_('You can\'t retweet direct messages'))
             return
 
-        retweet_posted = partial(self.info_message, 
+        retweet_posted = partial(self.info_message,
                                  _('Retweet posted'))
-        retweet_post_failed = partial(self.error_message, 
+        retweet_post_failed = partial(self.error_message,
                                       _('Failed to post retweet'))
         self.api.retweet(on_error=retweet_post_failed,
                          on_success=retweet_posted,
@@ -953,7 +953,7 @@ class Controller(object):
             return
         recipient = get_dm_recipients_username(self.user.screen_name, status)
         if recipient:
-            self.ui.show_dm_editor(prompt=_('DM to %s' % recipient), 
+            self.ui.show_dm_editor(prompt=_('DM to %s' % recipient),
                                    content='',
                                    recipient=recipient,
                                    done_signal_handler=self.direct_message_handler)
@@ -975,7 +975,7 @@ class Controller(object):
         status = self.timelines.get_active_status()
         if status is None:
             return
-        if is_DM(status): 
+        if is_DM(status):
             self.delete_dm()
             return
 
@@ -986,12 +986,12 @@ class Controller(object):
 
         # TODO: check if DM and delete DM if is
 
-        status_deleted = partial(self.info_message, 
+        status_deleted = partial(self.info_message,
                                  _('Tweet deleted'))
-        status_not_deleted = partial(self.error_message, 
+        status_not_deleted = partial(self.error_message,
                                      _('Failed to delete tweet'))
 
-        self.api.destroy_status(status=status, 
+        self.api.destroy_status(status=status,
                                 on_error=status_not_deleted,
                                 on_success=status_deleted)
 
@@ -1004,12 +1004,12 @@ class Controller(object):
             self.error_message(_('You can only delete messages sent by you'))
             return
 
-        dm_deleted = partial(self.info_message, 
+        dm_deleted = partial(self.info_message,
                              _('Message deleted'))
-        dm_not_deleted = partial(self.error_message, 
+        dm_not_deleted = partial(self.error_message,
                                  _('Failed to delete message'))
 
-        self.api.destroy_direct_message(status=dm, 
+        self.api.destroy_direct_message(status=dm,
                                         on_error=dm_not_deleted,
                                         on_success=dm_deleted)
 
@@ -1021,11 +1021,11 @@ class Controller(object):
         if username == self.user.screen_name:
             self.error_message(_('You can\'t follow yourself'))
             return
-        follow_done = partial(self.info_message, 
+        follow_done = partial(self.info_message,
                               _('You are now following @%s' % username))
-        follow_error = partial(self.error_message, 
+        follow_error = partial(self.error_message,
                                _('We can not ensure that you are following @%s' % username))
-        self.api.create_friendship(screen_name=username, 
+        self.api.create_friendship(screen_name=username,
                                    on_error=follow_error,
                                    on_success=follow_done)
 
@@ -1037,11 +1037,11 @@ class Controller(object):
         if username == self.user.screen_name:
             self.error_message(_('That doesn\'t make any sense'))
             return
-        unfollow_done = partial(self.info_message, 
+        unfollow_done = partial(self.info_message,
                                 _('You are no longer following %s' % username))
-        unfollow_error = partial(self.error_message, 
+        unfollow_error = partial(self.error_message,
                                _('We can not ensure that you are not following %s' % username))
-        self.api.destroy_friendship(screen_name=username, 
+        self.api.destroy_friendship(screen_name=username,
                                     on_error=unfollow_error,
                                     on_success=unfollow_done)
 
@@ -1098,13 +1098,13 @@ class Controller(object):
 
 
 class Turses(Controller):
-    """Controller for the curses implementation.""" 
+    """Controller for the curses implementation."""
 
     def main_loop(self):
         if not hasattr(self, 'loop'):
             self.key_handler = KeyHandler(self.configuration, self)
             self.loop = urwid.MainLoop(self.ui,
-                                       self.configuration.palette, 
+                                       self.configuration.palette,
                                        handle_mouse=False,
                                        unhandled_input=self.key_handler.handle,)
         self.loop.run()
