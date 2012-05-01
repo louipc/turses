@@ -624,6 +624,13 @@ class TimelinesBuffer(WidgetWrap):
     def focus_timeline(self, index):
         self._w.set_focus_column(index)
 
+    # XXX:
+    #  All keypresses are ignored so `turses.core.KeyHandler` can handle
+    #  every keystroke. I tried to filter the input in `urwid`s `MainLoop`
+    #  but did not work as expected.
+    def keypress(self, size, key):
+        return key
+
 
 class TimelineWidget(ScrollableListBox):
     """

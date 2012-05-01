@@ -1100,12 +1100,21 @@ class Controller(object):
 class Turses(Controller):
     """Controller for the curses implementation."""
 
+    #def input_filter(self, key_input, raw):
+        #valid_keys = [key for (key, desc)
+                          #in self.configuration.key_bindings.values()]
+        #if key in valid_keys or getattr(self.ui, 'editor', False):
+            #return key_input
+        #else:
+            #return []
+
     def main_loop(self):
         if not hasattr(self, 'loop'):
             self.key_handler = KeyHandler(self.configuration, self)
             self.loop = urwid.MainLoop(self.ui,
                                        self.configuration.palette,
                                        handle_mouse=False,
+                                       #input_filter=self.input_filter,
                                        unhandled_input=self.key_handler.handle,)
         self.loop.run()
 
