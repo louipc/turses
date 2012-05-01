@@ -1,5 +1,7 @@
-turses: a Twitter client featuring a curses interface
-=====================================================
+turses
+======
+A Twitter client for the console
+--------------------------------
 
 ``turses`` is a Twitter client with a sexy curses interface written in Python. It's 
 based on `Tyrs`_ by `Nicolas Paris`_.
