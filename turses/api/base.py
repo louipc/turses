@@ -26,12 +26,12 @@ BASE_URL = 'https://api.twitter.com'
 
 def authorization():
     """
-    Authorize `turses` to use a Twitter account. 
+    Authorize `turses` to use a Twitter account.
 
     Return a dictionary with `oauth_token` and `oauth_token_secret`
     if succesfull, `None` otherwise.
     """
-    # This function is borrowed from python-twitter developers 
+    # This function is borrowed from python-twitter developers
 
     # Copyright 2007 The Python-Twitter Developers
     #
@@ -112,19 +112,19 @@ class Api(object):
         self._access_token_secret = access_token_secret
         self.is_authenticated = False
 
-    def init_api(self): 
+    def init_api(self):
         raise NotImplementedError
 
     def verify_credentials(self):
         """
-        Return a `turses.models.User` with the authenticating user if the given 
+        Return a `turses.models.User` with the authenticating user if the given
         credentials are valid.
         """
         raise NotImplementedError
 
     # timelines
 
-    def get_home_timeline(self): 
+    def get_home_timeline(self):
         raise NotImplementedError
 
     def get_user_timeline(self, screen_name):
@@ -133,7 +133,7 @@ class Api(object):
     def get_own_timeline(self):
         raise NotImplementedError
 
-    def get_mentions(self): 
+    def get_mentions(self):
         raise NotImplementedError
 
     def get_favorites(self):
@@ -150,10 +150,10 @@ class Api(object):
 
     # statuses
 
-    def update(self, text): 
+    def update(self, text):
         raise NotImplementedError
 
-    def retweet(self, status): 
+    def retweet(self, status):
         raise NotImplementedError
 
     def destroy_status(self, status):
@@ -173,7 +173,7 @@ class Api(object):
 
     # friendship
 
-    def create_friendship(self, screen_name): 
+    def create_friendship(self, screen_name):
         raise NotImplementedError
 
     def destroy_friendship(self, screen_name):
@@ -184,7 +184,7 @@ class Api(object):
     def create_favorite(self, status):
         raise NotImplementedError
 
-    def destroy_favorite(self, status): 
+    def destroy_favorite(self, status):
         raise NotImplementedError
 
     # list methods

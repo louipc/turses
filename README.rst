@@ -31,7 +31,7 @@ Features
 --------
 
 - Multiple timelines (buffers)
-- Multi-column 
+- Multi-column
 - Tweet, Reply, Retweet, Delete tweet
 - Follow/Unfollow
 - Favorite/Unfavorite

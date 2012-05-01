@@ -24,25 +24,25 @@ from turses.models import (
         is_hashtag,
         sanitize_username,
 
-        Status, 
+        Status,
         DirectMessage,
 
         ActiveList,
-        Timeline, 
+        Timeline,
         TimelineList,
         VisibleTimelineList,
         )
 
 #
 # Helpers
-# 
+#
 def create_status(**kwargs):
     now = datetime.now()
     defaults = {
         'id': 1,
         'created_at': now,
         'user': 'testbot',
-        'text': 'Status created at %s' % now, 
+        'text': 'Status created at %s' % now,
     }
     defaults.update(kwargs)
 
@@ -151,7 +151,7 @@ class HelperFunctionTest(unittest.TestCase):
             self.failUnless(is_username(user))
 
         invalid = ['-asd', 'adsd?']
-    
+
         for user in invalid:
             self.failIf(is_username(user))
 
@@ -166,8 +166,8 @@ class HelperFunctionTest(unittest.TestCase):
 
     def test_sanitize_username(self):
         dirty_and_clean = [
-            ('@dialelo',           'dialelo'),   
-            ('dialelo',            'dialelo'),   
+            ('@dialelo',           'dialelo'),
+            ('dialelo',            'dialelo'),
             ('?@mental_floss',     'mental_floss'),
             ('@4n_4Wfu1_US3RN4M3', '4n_4Wfu1_US3RN4M3'),
         ]
@@ -254,8 +254,8 @@ class TimelineTest(unittest.TestCase):
         active_status = create_status(created_at=datetime(1988, 12, 19))
         self.timeline.add_status(active_status)
         self.assert_active(active_status)
-        
-        older_status = create_status(id=2, 
+
+        older_status = create_status(id=2,
                                      created_at=datetime(1978, 12, 19))
         self.timeline.add_status(older_status)
         self.assert_active(active_status)
@@ -298,7 +298,7 @@ class TimelineTest(unittest.TestCase):
         old_created_at = datetime(1988, 12, 19)
         old_status = create_status(created_at=old_created_at)
         new_created_at = datetime.now()
-        new_status = create_status(id=2, 
+        new_status = create_status(id=2,
                                    created_at=new_created_at)
         self.timeline.add_statuses([old_status, new_status])
         self.timeline.clear()
@@ -317,7 +317,7 @@ class TimelineTest(unittest.TestCase):
 
         self.timeline.mark_all_as_read()
         self.assertEqual(self.timeline.get_unread_count(), 0)
-        
+
         # new statuses
         statuses = [create_status(id=id_num) for id_num in xrange(2, 10)]
         self.timeline.add_statuses(statuses)
@@ -373,7 +373,7 @@ class TimelineTest(unittest.TestCase):
     def test_update_with_one_arg(self):
         mock = MagicMock(name='update')
         arg = '#python'
-        timeline = Timeline(update_function=mock, 
+        timeline = Timeline(update_function=mock,
                             update_function_args=arg)
         timeline.update()
 
@@ -382,7 +382,7 @@ class TimelineTest(unittest.TestCase):
     def test_update_with_multiple_args(self):
         mock = MagicMock(name='update')
         args = '#python', '#mock'
-        timeline = Timeline(update_function=mock, 
+        timeline = Timeline(update_function=mock,
                             update_function_args=args)
         timeline.update()
         args = list(args)
@@ -392,7 +392,7 @@ class TimelineTest(unittest.TestCase):
     def test_update_with_kwargs(self):
         mock = MagicMock(name='update')
         kwargs = {'text': '#python', 'action': 'search'}
-        timeline = Timeline(update_function=mock, 
+        timeline = Timeline(update_function=mock,
                             update_function_kwargs=kwargs)
         timeline.update()
 
@@ -400,11 +400,11 @@ class TimelineTest(unittest.TestCase):
 
     def test_update_with_args_and_kwargs(self):
         mock = MagicMock(name='update')
-        args = 'twitter', 42 
+        args = 'twitter', 42
         kwargs = {'text': '#python', 'action': 'search'}
         update_args = list(args)
         update_args.append(kwargs)
-        timeline = Timeline(update_function=mock, 
+        timeline = Timeline(update_function=mock,
                             update_function_args=args,
                             update_function_kwargs=kwargs)
         timeline.update()
@@ -432,7 +432,7 @@ class TimelineTest(unittest.TestCase):
     def test_update_with_multiple_args_extra_kwargs(self):
         mock = MagicMock(name='update')
         args = ('#python', '#mock')
-        timeline = Timeline(update_function=mock, 
+        timeline = Timeline(update_function=mock,
                             update_function_args=args)
         extra_kwargs = {'python': 'rocks'}
         timeline.update_with_extra_kwargs(**extra_kwargs)
@@ -443,7 +443,7 @@ class TimelineTest(unittest.TestCase):
     def test_update_with_kwargs_extra_kwargs(self):
         mock = MagicMock(name='update')
         kwargs = {'text': '#python', 'action': 'search'}
-        timeline = Timeline(update_function=mock, 
+        timeline = Timeline(update_function=mock,
                             update_function_kwargs=kwargs)
         extra_kwargs = {'text': 'rocks'}
         timeline.update_with_extra_kwargs(**extra_kwargs)
@@ -456,7 +456,7 @@ class TimelineTest(unittest.TestCase):
         mock = MagicMock(name='update')
         args = 'twitter', 42
         kwargs = {'text': '#python', 'action': 'search'}
-        timeline = Timeline(update_function=mock, 
+        timeline = Timeline(update_function=mock,
                             update_function_args=args,
                             update_function_kwargs=kwargs)
 
@@ -621,7 +621,7 @@ class VisibleTimelineListTest(TimelineListTest):
         self.timeline_list = VisibleTimelineList()
 
     def assert_visible(self, visible_list):
-        self.assertEqual(self.timeline_list.visible, visible_list)        
+        self.assertEqual(self.timeline_list.visible, visible_list)
 
     def test_no_visible_when_newly_created(self):
         self.assert_visible([])
@@ -715,5 +715,5 @@ class VisibleTimelineListTest(TimelineListTest):
         self.assert_visible([0])
 
 
-if __name__ == '__main__':                 
+if __name__ == '__main__':
     unittest.main()
