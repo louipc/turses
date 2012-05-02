@@ -81,7 +81,7 @@ Screenshots
 
 A ``turses`` session with multiple columns running on ``urxvt``:
 
-.. image:: http://dialelo.com/img/turses_buffers.png
+.. image:: http://dialelo.com/img/turses_screenshot.png
 
 
 License
