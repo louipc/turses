@@ -1,3 +1,8 @@
+0.1.7
+-----
+- bugfix: inconsistencies when navigating tweets with arrow keys
+- configurable status wrappers: box, divider or none
+
 0.1.6
 -----
 - colored urls
