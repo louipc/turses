@@ -44,6 +44,7 @@ setup(name="turses",
       package_dir={
           "turses":  "turses"
       },
+      scripts=['bin/turses'],
       platforms=["linux"],
       classifiers=[
           "Development Status :: 4 - Beta",
@@ -55,8 +56,5 @@ setup(name="turses",
           "Programming Language :: Python :: 2.7",
           "Topic :: Communications"
       ],
-      entry_points={
-          'console_scripts': ['turses = turses.cli:main'],
-      },
       install_requires=requirements,
       tests_require=test_requirements,)

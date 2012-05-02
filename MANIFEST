@@ -1,4 +1,5 @@
 setup.py
+bin/turses
 turses/__init__.py
 turses/config.py
 turses/core.py

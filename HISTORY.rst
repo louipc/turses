@@ -1,3 +1,7 @@
+0.1.8
+-----
+- bugfix: packaging error
+
 0.1.7
 -----
 - bugfix: inconsistencies when navigating tweets with arrow keys
