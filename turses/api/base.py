@@ -11,6 +11,7 @@ It also contains an asynchronous wrapper to `Api`.
 """
 
 import oauth2 as oauth
+from functools import wraps
 from threading import Thread
 from urlparse import parse_qsl
 from gettext import gettext as _
@@ -93,6 +94,17 @@ def authorization():
         print 'response:{0}'.format(resp['status'])
         print encode(_('Request for access token failed: %s')) % resp['status']
         return None
+
+
+def include_entities(func):
+    """
+    Injects the `include_entities=True` keyword argument into `func`.
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        kwargs.update({'include_entities': True})
+        return func(*args, **kwargs)
+    return wrapper
 
 
 class Api(object):

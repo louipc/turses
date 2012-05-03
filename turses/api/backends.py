@@ -11,17 +11,10 @@ API backends.
 from tweepy import API as BaseTweepyApi
 from tweepy import OAuthHandler as TweepyOAuthHandler
 
-from turses.models import (
-        User,
-        Status,
-        DirectMessage,
-        List,
-
-        get_authors_username,
-        get_mentioned_usernames,
-)
+from turses.models import (User, Status, DirectMessage, List,
+                           get_authors_username, get_mentioned_usernames)
 from turses.utils import datetime_from_twitter_datestring
-from turses.api.base import Api
+from turses.api.base import Api, include_entities
 
 
 class TweepyApi(BaseTweepyApi, Api):
@@ -71,6 +64,7 @@ class TweepyApi(BaseTweepyApi, Api):
                 'in_reply_to_user': in_reply_to_user,
                 'retweet_count': retweet_count,
                 'author': author,
+                'entities': getattr(status, 'entities', None),
             }
             return Status(**kwargs)
 
@@ -139,16 +133,19 @@ class TweepyApi(BaseTweepyApi, Api):
 
     # timelines
 
+    @include_entities
     def get_home_timeline(self, **kwargs):
         tweets = self._api.home_timeline(**kwargs)
         retweets = self._api.retweeted_to_me(**kwargs)
         tweets.extend(retweets)
         return self._to_status(tweets)
 
+    @include_entities
     def get_user_timeline(self, screen_name, **kwargs):
         return self._to_status(self._api.user_timeline(screen_name,
                                                        **kwargs))
 
+    @include_entities
     def get_own_timeline(self, **kwargs):
         me = self.verify_credentials()
         tweets = self._api.user_timeline(screen_name=me.screen_name,
@@ -157,18 +154,22 @@ class TweepyApi(BaseTweepyApi, Api):
         tweets.extend(retweets)
         return self._to_status(tweets)
 
+    @include_entities
     def get_mentions(self, **kwargs):
         return self._to_status(self._api.mentions(**kwargs))
 
+    @include_entities
     def get_favorites(self, **kwargs):
         return self._to_status(self._api.favorites(**kwargs))
 
+    @include_entities
     def get_direct_messages(self, **kwargs):
         dms = self._api.direct_messages(**kwargs)
         sent = self._api.sent_direct_messages(**kwargs)
         dms.extend(sent)
         return self._to_direct_message(dms)
 
+    @include_entities
     def get_thread(self, status, **kwargs):
         author = get_authors_username(status)
         mentioned = get_mentioned_usernames(status)
@@ -186,6 +187,7 @@ class TweepyApi(BaseTweepyApi, Api):
 
         return filter(belongs_to_conversation, tweets)
 
+    @include_entities
     def get_search(self, text, **kwargs):
         # `tweepy.API.search` returns `tweepy.models.SearchResult` objects instead
         # `tweepy.models.Status` so we have to convert them differently
