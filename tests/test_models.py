@@ -184,10 +184,17 @@ class HelperFunctionTest(unittest.TestCase):
     def test_is_valid_search_text(self):
         pass
 
-# TODO
-class StatusTest(unittest.TestCase):
-    pass
 
+class StatusTest(unittest.TestCase):
+    def test_map_attributes_with_no_entities(self):
+        text = '@asdf http://t.co/asdf #asf'
+        status = create_status(text=text)
+        expected_result = [('attag', '@asdf'), ' ', ('url', 'http://t.co/asdf'),
+                           ' ', ('hashtag', '#asf')]
+        result = status.map_attributes(hashtag='hashtag',
+                                       attag='attag',
+                                       url='url')
+        self.assertEqual(result, expected_result)
 
 # TODO
 class UserTest(unittest.TestCase):

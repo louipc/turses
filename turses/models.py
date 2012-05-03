@@ -12,7 +12,9 @@ import re
 from functools import total_ordering
 from bisect import insort
 
-from turses.utils import html_unescape, timestamp_from_datetime, wrap_exceptions
+from turses.utils import (html_unescape, timestamp_from_datetime,
+                          wrap_exceptions, is_url)
+
 
 ##
 #  Helpers
@@ -174,7 +176,8 @@ class Status(object):
                  in_reply_to_user='',
                  # for retweets
                  retweet_count=0,
-                 author='',):
+                 author='',
+                 entities=None):
         self.id = id
         self.created_at = created_at
         self.user = user
@@ -184,6 +187,8 @@ class Status(object):
         self.is_favorite = is_favorite
         self.retweet_count = retweet_count
         self.author = author
+        self.entities = {} if entities is None else entities
+
 
     def get_relative_created_at(self):
         """Return a human readable string representing the posting time."""
@@ -207,6 +212,37 @@ class Status(object):
             return "a day ago"
         else:
             return "%d days ago" % (delta / (60 * 60 * 24))
+
+
+    def map_attributes(self, hashtag, attag, url):
+        """
+        """
+        if self.entities:
+            return []
+
+        # Favorites don't include any entities so we parse the status
+        # text manually.
+        words = self.text.split()
+
+        def apply_attribute(string):
+            if is_hashtag(string):
+                return (hashtag, string)
+            elif string.startswith('@') and is_username(string[1:-1]):
+                # FIXME: we can lose some characters here..
+                username = sanitize_username(string)
+                return (attag, '@' + username)
+            elif is_url(string):
+                return  (url, string)
+            else:
+                return string
+        text = map(apply_attribute, words)
+        tweet = []
+        tweet.append(text[0])
+        for word in text[1:]:
+            tweet.append(' ')
+            tweet.append(word)
+        return tweet
+
 
     # magic
 

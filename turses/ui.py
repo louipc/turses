@@ -652,7 +652,9 @@ class StatusWidget(WidgetWrap):
         self.configuration = configuration
 
         header_text = self._create_header(status)
-        text = self.apply_attributes(status.text)
+        text = status.map_attributes(hashtag='hashtag',
+                                     attag='attag',
+                                     url='url')
 
         is_favorite = not is_DM(status) and status.is_favorite
         widget = self._build_widget(header_text, text, is_favorite)
@@ -693,36 +695,10 @@ class StatusWidget(WidgetWrap):
             widget = Pile([header, body], focus_item=1)
         return widget
 
-    def apply_attributes(self, text):
-        """
-        Apply the attributes to certain words of `text`. Right now it applies
-        attributes to hashtags and Twitter usernames.
-        """
-        words = text.split()
-
-        def apply_attribute(string):
-            if is_hashtag(string):
-                return ('hashtag', string)
-            elif string.startswith('@') and is_username(string[1:-1]):
-                # FIXME: we can lose some characters here..
-                username = sanitize_username(string)
-                return ('attag', '@' + username)
-            elif is_url(string):
-                return  ('url', string)
-            else:
-                return string
-        text = map(apply_attribute, words)
-        tweet = []
-        for word in text:
-            tweet.append(word)
-            tweet.append(' ')
-        return tweet
-
     def selectable(self):
         return True
 
     def keypress(self, size, key):
-        #TODO! modify widget attributes in response to certain actions
         return key
 
     def _create_header(self, status):
