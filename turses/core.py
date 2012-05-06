@@ -1085,14 +1085,16 @@ class Controller(object):
             return
 
         args = ' '.join(urls)
+        self.open_urls_in_browser(args)
 
+    def open_urls_in_browser(self, urls):
         command = self.configuration.browser
         if not command:
             self.error_message(_('You have to set the BROWSER environment variable to open URLs'))
             return
 
         try:
-            spawn_process(command, args)
+            spawn_process(command, urls)
         except:
             self.error_message(_('Unable to launch the browser'))
 
