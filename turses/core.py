@@ -264,7 +264,7 @@ class KeyHandler(object):
         elif self.is_bound(key, 'unfollow_selected'):
             self.controller.unfollow_selected()
         # Send Direct Message
-        elif self.is_bound(key, 'sendDM'):
+        elif self.is_bound(key, 'send_dm'):
             self.controller.direct_message()
         # Create favorite
         elif self.is_bound(key, 'fav'):
