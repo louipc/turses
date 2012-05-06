@@ -217,9 +217,6 @@ class Status(object):
     def map_attributes(self, hashtag, attag, url):
         """
         """
-        if self.entities:
-            return []
-
         # Favorites don't include any entities so we parse the status
         # text manually.
         words = self.text.split()
