@@ -171,6 +171,8 @@ KEY_BINDINGS = {
         ('q', _('exit program')),
     'openurl':
         ('o', _('open URLs of the focused status in a browser')),
+    'open_status_url':
+        ('O', _('open the focused status in a browser')),
     'redraw':
         ('ctrl l', _('redraw the screen')),
 }

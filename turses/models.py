@@ -26,6 +26,11 @@ hashtag_regex = re.compile(r'#.+')
 
 prepend_at = lambda username: '@%s' % username
 
+STATUS_URL_TEMPLATE = 'https://twitter.com/#!/{user}/status/{id}'
+
+
+def get_status_url(status):
+    return STATUS_URL_TEMPLATE.format(user=status.user, id=status.id)
 
 def is_DM(status):
     return status.__class__ == DirectMessage
@@ -163,7 +168,6 @@ class Status(object):
 
     Api adapters must convert their representations to instances of this class.
     """
-
     def __init__(self,
                  id,
                  created_at,

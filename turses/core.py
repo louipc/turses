@@ -35,6 +35,7 @@ from turses.models import (
         sanitize_username,
 
         get_authors_username,
+        get_status_url,
         get_mentioned_for_reply,
         get_dm_recipients_username,
         get_mentioned_usernames,
@@ -281,6 +282,8 @@ class KeyHandler(object):
         # Open URL
         if self.is_bound(key, 'openurl'):
             self.controller.open_urls()
+        if self.is_bound(key, 'open_status_url'):
+            self.controller.open_status_url()
         else:
             return key
 
@@ -800,7 +803,7 @@ class Controller(object):
 
         dm_info = _('Direct Message to @%s sent' % username)
         dm_sent = partial(self.info_message, dm_info)
-        dm_error =_('Failed to send message to @%s' % username)
+        dm_error = _('Failed to send message to @%s' % username)
         dm_not_sent = partial(self.error_message, dm_error)
 
         self.api.direct_message(screen_name=username,
@@ -1086,6 +1089,21 @@ class Controller(object):
 
         args = ' '.join(urls)
         self.open_urls_in_browser(args)
+
+    def open_status_url(self):
+        """
+        Open the focused tweet in a browser.
+        """
+        status = self.timelines.get_active_status()
+        if status is None:
+            return
+
+        if is_DM(status):
+            self.info_message(_('You only can open regular statuses in a browser'))
+            return
+
+        url = get_status_url(status)
+        self.open_urls_in_browser(url)
 
     def open_urls_in_browser(self, urls):
         command = self.configuration.browser
