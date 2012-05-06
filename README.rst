@@ -1,13 +1,16 @@
-turses: a Twitter client featuring a curses interface
-=====================================================
+turses
+======
+A Twitter client for the console
+--------------------------------
 
-``turses`` is a Twitter client with a sexy curses interface written in Python. Various 
-parts of the codebase are borrowed from the `Tyrs`_ project by `Nicolas Paris`_.
+``turses`` is a Twitter client with a sexy curses interface written in Python. It's 
+based on `Tyrs`_ by `Nicolas Paris`_.
 
 .. _`Tyrs`: http://tyrs.nicosphere.net
 .. _`Nicolas Paris`: http://github.com/Nic0
 
-The goal of the project is to build a full-featured and flexible Twitter client.
+The goal of the project is to build a full-featured, lightweight, and extremely 
+configurable Twitter client.
 
 Installation
 ------------
@@ -28,7 +31,7 @@ Features
 --------
 
 - Multiple timelines (buffers)
-- Multi-column 
+- Multi-column
 - Tweet, Reply, Retweet, Delete tweet
 - Follow/Unfollow
 - Favorite/Unfavorite
@@ -49,15 +52,16 @@ The code is hosted on a `git repo`_.
 .. _`git repo`: http://github.com/alejandrogomez/turses
 
 ``turses`` is evolving fast, a list of tasks can be found on 
-the on the `issue tracker`_.  
+the on the `issue tracker`_. Feel free to submit issues, feature
+requests or participate in ongoing discussions.
 
 .. _`issue tracker`: http://github.com/alejandrogomez/turses/issues
 
 To contribute code:
  1. Create a branch from ``develop``
  2. Commit your changes
- 3. Add yourself to AUTHORS
- 4. Send a pull request
+ 3. Add yourself to ``AUTHORS``
+ 4. Send a pull request to ``develop``
 
 Any feedback is very much appreciated.
 
@@ -77,7 +81,7 @@ Screenshots
 
 A ``turses`` session with multiple columns running on ``urxvt``:
 
-.. image:: http://dialelo.com/img/turses_buffers.png
+.. image:: http://dialelo.com/img/turses_screenshot.png
 
 
 License

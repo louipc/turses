@@ -1,5 +1,5 @@
 APPNAME=turses
-VERSION=0.1.5
+VERSION=0.1.8
 DISTPKG=dist/$(APPNAME)-$(VERSION).tar.gz
 
 PY=python
@@ -14,7 +14,7 @@ WATCHTESTFLAGS=--verbosity=0
 
 all: turses
 
-turses: clean test dist install 
+turses: clean test dist install
 
 dist: clean
 	$(DIST)

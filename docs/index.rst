@@ -6,13 +6,13 @@
 turses: a Twitter client with a sexy curses interface
 =====================================================
 
-``turses`` is a Twitter client for the console. 
+``turses`` is a Twitter client for the console.
 
 Features
 --------
 
 - Multiple timelines (buffers)
-- Multi-column 
+- Multi-column
 - Tweet, Reply, Retweet, Delete tweet
 - Follow/Unfollow
 - Favorite/Unfavorite

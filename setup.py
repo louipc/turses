@@ -15,7 +15,7 @@ requirements = [
     "tweepy",
 ]
 test_requirements = list(requirements)
-test_requirements.extend(["mock", "nose", "coverage",])
+test_requirements.extend(["mock", "nose", "coverage"])
 
 try:
     long_description = open("README.rst").read() + "\n\n" + open("HISTORY.rst").read()
@@ -36,7 +36,7 @@ setup(name="turses",
       long_description=long_description,
       keywords="twitter client curses",
       packages=[
-          "turses", 
+          "turses",
           "turses.api",
       ],
       package_data={'': ['LICENSE']},
@@ -44,7 +44,7 @@ setup(name="turses",
       package_dir={
           "turses":  "turses"
       },
-      scripts=["bin/turses"],
+      scripts=['bin/turses'],
       platforms=["linux"],
       classifiers=[
           "Development Status :: 4 - Beta",

@@ -5,6 +5,7 @@ turses/config.py
 turses/core.py
 turses/models.py
 turses/ui.py
+turses/cli.py
 turses/utils.py
 turses/api/__init__.py
 turses/api/backends.py

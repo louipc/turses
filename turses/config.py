@@ -70,174 +70,176 @@ KEY_BINDINGS = {
     # motion
     'up':
          ('k', _('scroll up')),
-    'down':                   
+    'down':
          ('j', _('scroll down')),
-    'left':                   
+    'left':
         ('h', _('activate the timeline on the left')),
-    'right':                  
+    'right':
         ('l', _('activate the timeline on the right')),
-    'scroll_to_top':          
+    'scroll_to_top':
         ('g', _('scroll to top')),
-    'scroll_to_bottom':       
+    'scroll_to_bottom':
         ('G', _('scroll to bottom')),
 
     # buffers
-    'activate_first_buffer':  
+    'activate_first_buffer':
        ('a', _('activate first buffer')),
-    'activate_last_buffer':   
+    'activate_last_buffer':
         ('e', _('activate last buffer')),
-    'shift_buffer_beggining': 
+    'shift_buffer_beggining':
         ('ctrl a', _('shift active buffer to the beginning')),
-    'shift_buffer_end':       
+    'shift_buffer_end':
         ('ctrl e', _('shift active buffer to the end')),
-    'shift_buffer_left':      
+    'shift_buffer_left':
         ('<', _('shift active buffer one position to the left')),
-    'shift_buffer_right':     
+    'shift_buffer_right':
         ('>', _('shift active buffer one position to the right')),
-    'expand_visible_left':    
+    'expand_visible_left':
         ('p', _('expand visible timelines one column to the left')),
-    'expand_visible_right':   
+    'expand_visible_right':
         ('n', _('expand visible timelines one column to the right')),
-    'shrink_visible_left':    
+    'shrink_visible_left':
         ('P', _('shrink visible timelines one column from the left')),
-    'shrink_visible_right':   
+    'shrink_visible_right':
         ('N', _('shrink visible timelines one column from the left')),
-    'delete_buffer':          
+    'delete_buffer':
         ('d', _('delete buffer')),
-    'clear':                  
+    'clear':
         ('c', _('clear status bar')),
-    'mark_all_as_read':       
+    'mark_all_as_read':
         ('A', _('mark all tweets in the current timeline as read')),
 
     # tweets
-    'tweet':                  
+    'tweet':
         ('t', _('compose a tweet')),
-    'delete_tweet':           
+    'delete_tweet':
         ('X', _('delete focused status')),
-    'reply':                  
+    'reply':
         ('r', _('reply to focused status')),
-    'retweet':                
+    'retweet':
         ('R', _('retweet focused status')),
-    'retweet_and_edit':       
+    'retweet_and_edit':
         ('E', _('open a editor for manually retweeting the focused status')),
-    'send_dm':                 
+    'send_dm':
         ('D', _('compose a direct message')),
-    'update':                 
+    'update':
         ('u', _('refresh the active timeline')),
-    'update_all':                 
+    'update_all':
         ('S', _('refresh all the timelines')),
 
-    'tweet_hashtag':          
+    'tweet_hashtag':
         ('H', _('compose a tweet with the same hashtags as the focused status')),
-    'fav':                    
+    'fav':
         ('b', _('mark focused tweet as favorite')),
-    'delete_fav':             
+    'delete_fav':
         ('ctrl b', _('remove tweet from favorites')),
-    'follow_selected':        
+    'follow_selected':
         ('f', _('follow selected status\' author')),
-    'unfollow_selected':      
+    'unfollow_selected':
         ('U', _('unfollow selected status\' author')),
 
     # timelines
-    'home':                   
+    'home':
         ('.', _('open a home timeline')),
-    'own_tweets':             
+    'own_tweets':
         ('_', _('open a timeline with your tweets')),
-    'favorites':              
+    'favorites':
         ('B', _('open a timeline with your favorites')),
-    'mentions':               
+    'mentions':
         ('m', _('open a mentions timeline')),
-    'DMs':                    
+    'DMs':
         ('M', _('open a direct message timeline')),
-    'search':                 
+    'search':
         ('/', _('search for term and show resulting timeline')),
-    'search_user':            
+    'search_user':
         ('@', _('open a timeline with the tweets of the specified user')),
-    'user_timeline':          
+    'user_timeline':
         ('+', _('open a timeline with the tweets of the focused status\' author')),
-    'thread':                 
+    'thread':
         ('T', _('open the thread of the focused status')),
-    'hashtags':               
+    'hashtags':
         ('L', _('open a search timeline with the hashtags of the focused status')),
 
     # meta
-    'help':                   
+    'help':
         ('?', _('show program help')),
-    'reload_config':                   
+    'reload_config':
         ('C', _('reload configuration')),
 
     # turses
-    'quit':                   
+    'quit':
         ('q', _('exit program')),
-    'openurl':              
+    'openurl':
         ('o', _('open URLs of the focused status in a browser')),
-    'redraw':                 
+    'open_status_url':
+        ('O', _('open the focused status in a browser')),
+    'redraw':
         ('ctrl l', _('redraw the screen')),
 }
 
 MOTION_KEY_BINDINGS = [
     'up',
-    'down',                   
-    'left',                   
-    'right',                  
-    'scroll_to_top',          
-    'scroll_to_bottom',       
+    'down',
+    'left',
+    'right',
+    'scroll_to_top',
+    'scroll_to_bottom',
 ]
 
 BUFFERS_KEY_BINDINGS = [
-    'activate_first_buffer',  
-    'activate_last_buffer',   
-    'shift_buffer_beggining', 
-    'shift_buffer_end',       
-    'shift_buffer_left',      
-    'shift_buffer_right',     
-    'expand_visible_left',    
-    'expand_visible_right',   
-    'shrink_visible_left',    
-    'shrink_visible_right',   
-    'delete_buffer',          
-    'clear',                  
-    'mark_all_as_read',       
+    'activate_first_buffer',
+    'activate_last_buffer',
+    'shift_buffer_beggining',
+    'shift_buffer_end',
+    'shift_buffer_left',
+    'shift_buffer_right',
+    'expand_visible_left',
+    'expand_visible_right',
+    'shrink_visible_left',
+    'shrink_visible_right',
+    'delete_buffer',
+    'clear',
+    'mark_all_as_read',
 ]
 
 TWEETS_KEY_BINDINGS = [
-    'tweet',                  
-    'delete_tweet',           
-    'reply',                  
-    'retweet',                
-    'retweet_and_edit',       
-    'send_dm',                 
-    'update',                 
+    'tweet',
+    'delete_tweet',
+    'reply',
+    'retweet',
+    'retweet_and_edit',
+    'send_dm',
+    'update',
     'update_all',
-    'tweet_hashtag',          
-    'fav',                    
-    'delete_fav',             
-    'follow_selected',        
-    'unfollow_selected',      
+    'tweet_hashtag',
+    'fav',
+    'delete_fav',
+    'follow_selected',
+    'unfollow_selected',
 ]
 
 TIMELINES_KEY_BINDINGS = [
-    'home',                   
-    'own_tweets',             
-    'favorites',              
-    'mentions',               
-    'DMs',                    
-    'search',                 
-    'search_user',            
-    'user_timeline',          
-    'thread',                 
-    'hashtags',               
+    'home',
+    'own_tweets',
+    'favorites',
+    'mentions',
+    'DMs',
+    'search',
+    'search_user',
+    'user_timeline',
+    'thread',
+    'hashtags',
 ]
 
 META_KEY_BINDINGS = [
-    'help',                   
+    'help',
     'reload_config',
 ]
 
 TURSES_KEY_BINDINGS = [
-    'quit',                   
-    'openurl',              
-    'redraw',                 
+    'quit',
+    'openurl',
+    'redraw',
 ]
 
 # Palette
@@ -264,6 +266,7 @@ VALID_COLORS = [
     'white',
 ]
 
+
 def validate_color(colorstring):
     return colorstring if colorstring in VALID_COLORS else ''
 
@@ -287,6 +290,7 @@ PALETTE = [
     ['highlight_nick', 'light red', ''],
     ['attag', 'yellow', ''],
     ['hashtag', 'light red', ''],
+    ['url', 'white', 'dark red'],
 
     # Messages
     ['error', 'white', 'dark red'],
@@ -299,10 +303,13 @@ PALETTE = [
 # Styles
 
 STYLES = {
-    # TODO: make time string configurable 
+    # TODO: make time string configurable
     'header_template':      ' {username}{retweeted}{retweeter} - {time}{reply} {retweet_count} ',
     'dm_template':          ' {sender_screen_name} => {recipient_screen_name} - {time} ',
     'tab_template': '{timeline_name} [{unread}]',
+    'box_around_status': True,
+    'status_divider': False,
+    'status_divider_char': '─',
 }
 
 # Debug
@@ -389,7 +396,7 @@ class Configuration(object):
         if cli_args and cli_args.account:
             token_file = path.join(CONFIG_PATH, '%s.token' % cli_args.account)
         else:
-            # loads the default `token' if no account was specified 
+            # loads the default `token' if no account was specified
             token_file = DEFAULT_TOKEN_FILE
         self.token_file = token_file
 
@@ -435,8 +442,8 @@ class Configuration(object):
             return
         else:
             conf.set(SECTION_TWITTER, 'update_frequency', UPDATE_FREQUENCY)
-            
-    def _add_section_key_bindings(self, conf): 
+
+    def _add_section_key_bindings(self, conf):
         # Key bindings
         if not conf.has_section(SECTION_KEY_BINDINGS):
             conf.add_section(SECTION_KEY_BINDINGS)
@@ -445,7 +452,7 @@ class Configuration(object):
                          TWEETS_KEY_BINDINGS,
                          TIMELINES_KEY_BINDINGS,
                          META_KEY_BINDINGS,
-                         TURSES_KEY_BINDINGS,]
+                         TURSES_KEY_BINDINGS, ]
         for binding_list in binding_lists:
             for binding in binding_list:
                 key = self.key_bindings[binding][0]
@@ -496,11 +503,11 @@ class Configuration(object):
         if path.isfile(LEGACY_TOKEN_FILE):
             self.parse_token_file(LEGACY_TOKEN_FILE)
             remove(LEGACY_TOKEN_FILE)
-            if hasattr(self, 'oauth_token') and \
-               hasattr(self, 'oauth_token_secret'):
-                   self.generate_token_file(self.token_file,
-                                            self.oauth_token,
-                                            self.oauth_token_secret)
+            if (hasattr(self, 'oauth_token') and
+                hasattr(self, 'oauth_token_secret')):
+                self.generate_token_file(self.token_file,
+                                         self.oauth_token,
+                                         self.oauth_token_secret)
         elif not path.isfile(self.token_file):
             self.authorize_new_account()
         else:
@@ -524,17 +531,17 @@ class Configuration(object):
         self.styles.update(styles)
 
         if conf.has_option('params', 'logging_level'):
-            self.logging_level  = conf.getint('params', 'logging_level')
+            self.logging_level = conf.getint('params', 'logging_level')
 
         for binding in self.key_bindings:
             if conf.has_option('keys', binding):
-                custom_key = conf.get('keys', binding) 
+                custom_key = conf.get('keys', binding)
                 self._set_key_binding(binding, custom_key)
 
         palette_labels = [color[0] for color in PALETTE]
         for label in palette_labels:
             if conf.has_option('colors', label):
-                custom_fg  = conf.get('colors', label) 
+                custom_fg = conf.get('colors', label)
                 self._set_color(label, custom_fg)
 
     def _parse_legacy_token_file(self):
@@ -555,7 +562,7 @@ class Configuration(object):
                 color[2] = custom_bg if validate_color(custom_bg) is not None else bg
 
     def _set_key_binding(self, binding, new_key):
-        if not self.key_bindings.has_key(binding):
+        if not binding in self.key_bindings:
             return
 
         key, description = self.key_bindings[binding]
@@ -596,7 +603,7 @@ class Configuration(object):
     def _config_generation_success(self):
         print encode(_('Generated configuration file in %s')) % self.config_file
 
-    def generate_token_file(self, 
+    def generate_token_file(self,
                             token_file,
                             oauth_token,
                             oauth_token_secret):
@@ -628,10 +635,10 @@ class Configuration(object):
         for timeline in self.default_timelines:
             if conf.has_option(SECTION_DEFAULT_TIMELINES, timeline):
                 try:
-                    value = conf.getboolean(SECTION_DEFAULT_TIMELINES, 
-                                            timeline) 
+                    value = conf.getboolean(SECTION_DEFAULT_TIMELINES,
+                                            timeline)
                 except ValueError:
-                   continue
+                    continue
                 self.default_timelines[timeline] = value
 
     def _parse_twitter(self, conf):
@@ -641,7 +648,7 @@ class Configuration(object):
     def _parse_key_bindings(self, conf):
         for binding in self.key_bindings:
             if conf.has_option(SECTION_KEY_BINDINGS, binding):
-                custom_key = conf.get(SECTION_KEY_BINDINGS, binding) 
+                custom_key = conf.get(SECTION_KEY_BINDINGS, binding)
                 self._set_key_binding(binding, custom_key)
 
     def _parse_palette(self, conf):
@@ -657,7 +664,11 @@ class Configuration(object):
     def _parse_styles(self, conf):
         for style in self.styles:
             if conf.has_option(SECTION_STYLES, style):
-                self.styles[style] = conf.get(SECTION_STYLES, style)
+                if style == 'box_around_status' or style == 'status_divider':
+                    self.styles[style] = conf.getboolean(SECTION_STYLES, style)
+                else:
+                    self.styles[style] = unicode(conf.get(SECTION_STYLES, style),
+                                                 'utf-8')
 
     def _parse_debug(self, conf):
         if conf.has_option(SECTION_DEBUG, 'logging_level'):
