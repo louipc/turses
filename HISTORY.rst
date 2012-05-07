@@ -1,3 +1,8 @@
+0.1.9
+-----
+- open focused status in a browser
+- show expanded URLs
+
 0.1.8
 -----
 - bugfix: packaging error
