@@ -223,12 +223,14 @@ class Status(object):
         """
         # Favorites don't include any entities so we parse the status
         # text manually.
-        if not getattr(self, 'entities', False) or getattr(self, 'is_retweet', False):
+        if not getattr(self, 'entities', False):
             text = self.retweeted_status.text if self.is_retweet else self.text
             return self.parse_attributes(text,
                                          hashtag,
                                          attag,
                                          url)
+        elif getattr(self, 'is_retweet', False):
+            return self.retweeted_status.map_attributes(hashtag, attag, url)
 
         def map_attr(attr, entity_list):
             attr_mappings = []
@@ -257,11 +259,14 @@ class Status(object):
 
         # TODO: include test case for retweets
         urls = self.entities.get('urls', [])
-        # TODO: include test case with `media` entities, attribute
-        #  for `media` ?
         #urls.extend(self.entities.get('media', []))
         urls_attrs = map_attr(url, urls)
         attr_mappings.extend(urls_attrs)
+
+        media = self.entities.get('media', [])
+        #media.extend(self.entities.get('media', []))
+        media_attrs = map_attr(url, media)
+        attr_mappings.extend(media_attrs)
 
         # sort mappings to split the text in order
         attr_mappings.sort(key=lambda mapping: mapping[1][0])
