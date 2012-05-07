@@ -71,6 +71,16 @@ def _to_status(status):
     }
     return Status(**kwargs)
 
+def _to_status_from_search(status):
+    kwargs = {
+        'id': status.id,
+        'created_at': status.created_at,
+        'user': status.from_user,
+        'text': status.text,
+        'entities': getattr(status, 'entities', None),
+    }
+    return Status(**kwargs)
+
 def _to_direct_message(dm):
     kwargs = {
         'id': dm.id,
@@ -82,8 +92,12 @@ def _to_direct_message(dm):
     }
     return DirectMessage(**kwargs)
 
-to_status = partial(filter_with, filter_func=_to_status)
-to_direct_message = partial(filter_with, filter_func=_to_direct_message)
+to_status = partial(filter_with, 
+                    filter_func=_to_status)
+to_status_from_search_result = partial(filter_with, 
+                                       filter_func=_to_status_from_search)
+to_direct_message = partial(filter_with, 
+                            filter_func=_to_direct_message)
 
 
 class TweepyApi(BaseTweepyApi, Api):
@@ -184,21 +198,10 @@ class TweepyApi(BaseTweepyApi, Api):
 
         return filter(belongs_to_conversation, tweets)
 
+    @to_status_from_search_result
     @include_entities
     def get_search(self, text, **kwargs):
-        # `tweepy.API.search` returns `tweepy.models.SearchResult` objects instead
-        # `tweepy.models.Status` so we have to convert them differently
-        def to_status(status):
-            kwargs = {
-                'id': status.id,
-                'created_at': status.created_at,
-                'user': status.from_user,
-                'text': status.text,
-            }
-            return Status(**kwargs)
-
-        results = self._api.search(text, **kwargs)
-        return [to_status(result) for result in results]
+        return self._api.search(text, **kwargs)
 
     def update(self, text):
         return self._api.update_status(text)
