@@ -1,3 +1,8 @@
+0.1.10
+------
+- expanded URLs for search results
+- bugfix: crashed when expanded URLs were missing
+
 0.1.9
 -----
 - open focused status in a browser
