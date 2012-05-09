@@ -218,8 +218,20 @@ class Status(object):
         else:
             return "%d days ago" % (delta / (60 * 60 * 24))
 
+    # TODO: refactor this aberration 
     def map_attributes(self, hashtag, attag, url):
         """
+        Return a list of strings and tuples for hashtag, attag and url entities.
+
+        For a hashtag, its tuple would be (`hashtag`, text). 
+
+        >>> from datetime import datetime
+        >>> s = Status(id=0, 
+        ...            created_at=datetime.now(),
+        ...            user='dialelo',
+        ...            text='I love #Python',)
+        >>> s.map_attributes('hashtag', 'attag', 'url')
+        ['I love ', ('hashtag', '#Python')]
         """
         # Favorites don't include any entities so we parse the status
         # text manually.
@@ -233,6 +245,10 @@ class Status(object):
             return self.retweeted_status.map_attributes(hashtag, attag, url)
 
         def map_attr(attr, entity_list):
+            """
+            Return a list with (`attr`, string) tuples for each string in 
+            `entity_list`.
+            """
             attr_mappings = []
             for entity in entity_list:
                 # urls are a special case, we change the URL shortened by
@@ -249,6 +265,7 @@ class Status(object):
 
         attr_mappings = []
 
+        # TODO: dry
         usernames = self.entities.get('user_mentions', [])
         usernames_attrs = map_attr(attag, usernames)
         attr_mappings.extend(usernames_attrs)
@@ -257,14 +274,11 @@ class Status(object):
         hashtags_attrs = map_attr(hashtag, hashtags)
         attr_mappings.extend(hashtags_attrs)
 
-        # TODO: include test case for retweets
         urls = self.entities.get('urls', [])
-        #urls.extend(self.entities.get('media', []))
         urls_attrs = map_attr(url, urls)
         attr_mappings.extend(urls_attrs)
 
         media = self.entities.get('media', [])
-        #media.extend(self.entities.get('media', []))
         media_attrs = map_attr(url, media)
         attr_mappings.extend(media_attrs)
 
@@ -277,9 +291,9 @@ class Status(object):
         for mapping in attr_mappings:
             attr = mapping[0]
             starts, ends = mapping[1]
-            if attr == url:
-                ## if the text is a url, a third element is included in the
-                ## tuple, the original URL
+            if attr == url and len(mapping) == 3:
+                ## if the text is a url and a third element is included in the
+                ## tuple; the third element is the original URL
                 entity_text = mapping[2]
             else:
                 entity_text = status_text[starts:ends]
