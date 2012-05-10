@@ -13,7 +13,7 @@ from functools import wraps, partial
 from tweepy import API as BaseTweepyApi
 from tweepy import OAuthHandler as TweepyOAuthHandler
 
-from turses.models import (User, Status, DirectMessage, 
+from turses.models import (User, Status, DirectMessage,
                            get_authors_username, get_mentioned_usernames)
 from turses.api.base import Api, include_entities
 
@@ -92,11 +92,11 @@ def _to_direct_message(dm):
     }
     return DirectMessage(**kwargs)
 
-to_status = partial(filter_with, 
+to_status = partial(filter_with,
                     filter_func=_to_status)
-to_status_from_search_result = partial(filter_with, 
+to_status_from_search_result = partial(filter_with,
                                        filter_func=_to_status_from_search)
-to_direct_message = partial(filter_with, 
+to_direct_message = partial(filter_with,
                             filter_func=_to_direct_message)
 
 
@@ -170,6 +170,10 @@ class TweepyApi(BaseTweepyApi, Api):
         dms.extend(sent)
         return dms
 
+    # NOTE:
+    #  `get_thread` is not decorated with `to_status` because
+    #  it uses `TweepyApi.get_user_timeline` which is already
+    #  decorated
     @include_entities
     def get_thread(self, status, **kwargs):
         """
@@ -178,10 +182,6 @@ class TweepyApi(BaseTweepyApi, Api):
         It filters the last tweets by the participanting users and
         based on mentions to each other.
         """
-        # NOTE:
-        #  `get_thread` is not decorated with `to_status` because
-        #  it uses `TweepyApi.get_user_timeline` which is already
-        #  decorated
         author = get_authors_username(status)
         mentioned = get_mentioned_usernames(status)
         if author not in mentioned:
@@ -204,36 +204,29 @@ class TweepyApi(BaseTweepyApi, Api):
         return self._api.search(text, **kwargs)
 
     def update(self, text):
-        return self._api.update_status(text)
+        self._api.update_status(text)
 
-    @to_status
     def destroy_status(self, status):
-        return self._api.destroy_status(status.id)
+        self._api.destroy_status(status.id)
 
-    @to_status
     def retweet(self, status):
-        return self._api.retweet(status.id)
+        self._api.retweet(status.id)
 
-    @to_direct_message
     def direct_message(self, username, text):
-        return self._api.send_direct_message(user=username, text=text)
+        self._api.send_direct_message(user=username, text=text)
 
-    @to_direct_message
     def destroy_direct_message(self, dm):
-        return self._api.destroy_direct_message(dm.id)
+        self._api.destroy_direct_message(dm.id)
 
-    # TODO: convert to `turses.models.User`
     def create_friendship(self, screen_name):
         self._api.create_friendship(screen_name=screen_name)
 
     def destroy_friendship(self, screen_name):
         self._api.destroy_friendship(screen_name=screen_name)
 
-    @to_status
     def create_favorite(self, status):
         self._api.create_favorite(status.id)
 
-    @to_status
     def destroy_favorite(self, status):
         self._api.destroy_favorite(status.id)
 
