@@ -1,3 +1,7 @@
+0.1.11
+------
+- bugfix: exception when marking tweet as favorite
+
 0.1.10
 ------
 - expanded URLs for search results
