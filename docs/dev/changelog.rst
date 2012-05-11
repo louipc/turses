@@ -1,7 +1,7 @@
 Changelog
 =========
 
-.. include:: ../HISTORY.rst
+.. include:: ../../HISTORY.rst
 
 
 0.0.15
