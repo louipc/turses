@@ -26,3 +26,8 @@ of them with a comment explaining their goal.
         ├── models.py        # data structures
         ├── ui.py            # UI widgets
         └── utils.py         # misc funcions that don't fit elsewhere
+
+``turses.cli``
+--------------
+
+

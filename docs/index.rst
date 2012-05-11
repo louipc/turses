@@ -8,6 +8,12 @@ turses: a Twitter client with a sexy curses interface
 
 ``turses`` is a Twitter client for the console.
 
+.. image:: ./images/turses_urxvt.png
+    :width: 900px
+    :height: 600px
+    :align: center
+    :alt: turses running on urxvt terminal emulator
+
 Features
 --------
 
