@@ -179,6 +179,7 @@ class Status(object):
                  # for replies
                  in_reply_to_user='',
                  # for retweets
+                 retweeted_status=None,
                  retweet_count=0,
                  author='',
                  entities=None):
@@ -190,9 +191,9 @@ class Status(object):
         self.is_retweet = is_retweet
         self.is_favorite = is_favorite
         self.retweet_count = retweet_count
+        self.retweeted_status = retweeted_status
         self.author = author
         self.entities = {} if entities is None else entities
-
 
     def get_relative_created_at(self):
         """Return a human readable string representing the posting time."""
@@ -217,13 +218,105 @@ class Status(object):
         else:
             return "%d days ago" % (delta / (60 * 60 * 24))
 
-
+    # TODO: refactor this aberration 
     def map_attributes(self, hashtag, attag, url):
         """
+        Return a list of strings and tuples for hashtag, attag and url entities.
+
+        For a hashtag, its tuple would be (`hashtag`, text). 
+
+        >>> from datetime import datetime
+        >>> s = Status(id=0, 
+        ...            created_at=datetime.now(),
+        ...            user='dialelo',
+        ...            text='I love #Python',)
+        >>> s.map_attributes('hashtag', 'attag', 'url')
+        ['I love ', ('hashtag', '#Python')]
         """
         # Favorites don't include any entities so we parse the status
         # text manually.
-        words = self.text.split()
+        if not getattr(self, 'entities', False):
+            text = self.retweeted_status.text if self.is_retweet else self.text
+            return self.parse_attributes(text,
+                                         hashtag,
+                                         attag,
+                                         url)
+        elif getattr(self, 'is_retweet', False):
+            return self.retweeted_status.map_attributes(hashtag, attag, url)
+
+        def map_attr(attr, entity_list):
+            """
+            Return a list with (`attr`, string) tuples for each string in 
+            `entity_list`.
+            """
+            attr_mappings = []
+            for entity in entity_list:
+                # urls are a special case, we change the URL shortened by
+                # Twitter (`http://t.co/*`) by the URL returned in `display_url`
+                indices = entity.get('indices')
+                url = entity.get('display_url', False)
+
+                if url:
+                    mapping = (attr, indices, url)
+                else:
+                    mapping = (attr, indices)
+                attr_mappings.append(mapping)
+            return attr_mappings
+
+        attr_mappings = []
+
+        # TODO: dry
+        usernames = self.entities.get('user_mentions', [])
+        usernames_attrs = map_attr(attag, usernames)
+        attr_mappings.extend(usernames_attrs)
+
+        hashtags = self.entities.get('hashtags', [])
+        hashtags_attrs = map_attr(hashtag, hashtags)
+        attr_mappings.extend(hashtags_attrs)
+
+        urls = self.entities.get('urls', [])
+        urls_attrs = map_attr(url, urls)
+        attr_mappings.extend(urls_attrs)
+
+        media = self.entities.get('media', [])
+        media_attrs = map_attr(url, media)
+        attr_mappings.extend(media_attrs)
+
+        # sort mappings to split the text in order
+        attr_mappings.sort(key=lambda mapping: mapping[1][0])
+
+        text = []
+        status_text = unicode(self.text)
+        index = 0
+        for mapping in attr_mappings:
+            attr = mapping[0]
+            starts, ends = mapping[1]
+            if attr == url and len(mapping) == 3:
+                ## if the text is a url and a third element is included in the
+                ## tuple; the third element is the original URL
+                entity_text = mapping[2]
+            else:
+                entity_text = status_text[starts:ends]
+
+            # append normal text before special entity
+            normal_text = status_text[index:starts]
+            if normal_text:
+               text.append(normal_text)
+
+            # append text with attr
+            text_with_attr = (attr, entity_text)
+            text.append(text_with_attr)
+
+            # update index
+            index = ends
+        normal_text = status_text[index:]
+        if normal_text:
+            text.append(normal_text)
+
+        return text
+
+    def parse_attributes(self, text, hashtag, attag, url):
+        words = text.split()
 
         def apply_attribute(string):
             if is_hashtag(string):
@@ -236,6 +329,7 @@ class Status(object):
                 return  (url, string)
             else:
                 return string
+
         text = map(apply_attribute, words)
         tweet = []
         tweet.append(text[0])
@@ -243,7 +337,6 @@ class Status(object):
             tweet.append(' ')
             tweet.append(word)
         return tweet
-
 
     # magic
 
@@ -267,12 +360,14 @@ class DirectMessage(Status):
                  created_at,
                  sender_screen_name,
                  recipient_screen_name,
-                 text):
+                 text,
+                 entities=None):
         self.id = id
         self.created_at = created_at
         self.sender_screen_name = sender_screen_name
         self.recipient_screen_name = recipient_screen_name
         self.text = html_unescape(text)
+        self.entities = entities
 
 
 class List(object):

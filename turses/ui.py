@@ -22,8 +22,8 @@ from turses import version
 from turses.config import (MOTION_KEY_BINDINGS, BUFFERS_KEY_BINDINGS,
                            TWEETS_KEY_BINDINGS, TIMELINES_KEY_BINDINGS,
                            META_KEY_BINDINGS, TURSES_KEY_BINDINGS, )
-from turses.models import is_hashtag, is_username, is_DM, sanitize_username
-from turses.utils import encode, is_url
+from turses.models import is_DM
+from turses.utils import encode
 
 TWEET_MAX_CHARS = 140
 

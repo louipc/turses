@@ -1,5 +1,5 @@
 APPNAME=turses
-VERSION=0.1.8
+VERSION=0.1.11
 DISTPKG=dist/$(APPNAME)-$(VERSION).tar.gz
 
 PY=python
@@ -33,3 +33,6 @@ pyc:
 
 watch:
 	tdaemon . $(TESTRUNNER) --custom-args="$(WATCHTESTFLAGS)"
+
+bump:
+	$(EDITOR) HISTORY.rst turses/__init__.py Makefile 

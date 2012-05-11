@@ -33,6 +33,7 @@ from turses.models import (
         VisibleTimelineList,
         )
 
+
 #
 # Helpers
 #
@@ -44,9 +45,10 @@ def create_status(**kwargs):
         'user': 'testbot',
         'text': 'Status created at %s' % now,
     }
-    defaults.update(kwargs)
+    defaults.update(**kwargs)
 
     return Status(**defaults)
+
 
 def create_direct_message(**kwargs):
     now = datetime.now()
@@ -189,12 +191,165 @@ class StatusTest(unittest.TestCase):
     def test_map_attributes_with_no_entities(self):
         text = '@asdf http://t.co/asdf #asf'
         status = create_status(text=text)
-        expected_result = [('attag', '@asdf'), ' ', ('url', 'http://t.co/asdf'),
-                           ' ', ('hashtag', '#asf')]
+
+        expected_result = [('attag', u'@asdf'), u' ', ('url', u'http://t.co/asdf'),
+                           u' ', ('hashtag', u'#asf')]
         result = status.map_attributes(hashtag='hashtag',
                                        attag='attag',
                                        url='url')
+
         self.assertEqual(result, expected_result)
+
+    def test_map_attributes_with_mentions_hashtags_and_url(self):
+        text = u'@aaloy  QT @Pybonacci: \xa1Qu\xe9 pasada con Vim! #Python #IDE RT @dialelo uso un setup parecido a este: http://t.co/5lTGNzba'
+        entities = {
+            u'user_mentions': [
+                {u'id': 60840400,
+                 u'indices': [0, 6],
+                 u'id_str': u'60840400',
+                 u'screen_name': u'aaloy',
+                 u'name': u'Antoni Aloy'},
+                {u'id': 552951614,
+                 u'indices': [11, 21],
+                 u'id_str': u'552951614',
+                 u'screen_name': u'Pybonacci',
+                 u'name': u'Pybonacci'},
+                {u'id': 87322884,
+                 u'indices': [60, 68],
+                 u'id_str': u'87322884',
+                 u'screen_name': u'dialelo',
+                 u'name': u'Alejandro G\xf3mez'}
+            ],
+            u'hashtags': [
+                {u'indices': [44, 51],
+                 u'text': u'Python'},
+                {u'indices': [52, 56],
+                 u'text': u'IDE'}
+            ],
+            u'urls': [
+                {u'url': u'http://t.co/5lTGNzba',
+                 u'indices': [99, 119],
+                 u'expanded_url': u'http://sontek.net/turning-vim-into-a-modern-python-ide',
+                 u'display_url': u'sontek.net/turning-vim-in\u2026'}
+            ]}
+        status = create_status(text=text,
+                               entities=entities)
+        expected_result = [('attag', u'@aaloy'), u'  QT ', ('attag', u'@Pybonacci'),
+                           u': \xa1Qu\xe9 pasada con Vim! ',
+                           ('hashtag', u'#Python'), u' ', ('hashtag', u'#IDE'),
+                           u' RT ', ('attag', u'@dialelo'),
+                           u' uso un setup parecido a este: ',
+                           ('url', u'sontek.net/turning-vim-in\u2026')]
+        result = status.map_attributes(hashtag='hashtag',
+                                       attag='attag',
+                                       url='url')
+
+        self.assertEqual(result, expected_result)
+
+        text = u'New release of #Turses 0.1.6 with lots of improvements, ncurses twitter client. https://t.co/cciH85AG via @dialelo'
+        entities = {
+            u'hashtags': [{u'indices': [15, 22], u'text': u'Turses'}],
+            u'urls': [{u'display_url': u'github.com/alejandrogomez\u2026',
+                       u'expanded_url': u'https://github.com/alejandrogomez/turses',
+                       u'indices': [80, 101],
+                       u'url': u'https://t.co/cciH85AG'}],
+            u'user_mentions': [{u'id': 87322884,
+                                u'id_str': u'87322884',
+                                u'indices': [106, 114],
+                                u'name': u'Alejandro G\xf3mez',
+                                u'screen_name': u'dialelo'}]
+        }
+        status = create_status(user='nicosphere',
+                               text=text,
+                               entities=entities)
+
+        expected_result = [u'New release of ',
+                           ('hashtag', u'#Turses'),
+                           u' 0.1.6 with lots of improvements, ncurses twitter client. ',
+                           ('url', u'github.com/alejandrogomez\u2026'),
+                           u' via ',
+                           ('attag', u'@dialelo')]
+        result = status.map_attributes(hashtag='hashtag',
+                                        attag='attag',
+                                        url='url')
+
+        self.assertEqual(result, expected_result)
+
+    def test_map_attributes_to_retweet_with_hashtag(self):
+        original_author = 'dialelo'
+        original_text = 'I <3 #Python'
+        original_status = create_status(user=original_author,
+                                        text=original_text)
+
+        text = 'RT @%s: %s' % (original_author, original_text)
+        entities = {
+            u'user_mentions': [],
+            u'hashtags': [
+                {u'indices': [5, 11],
+                 u'text': u'Python'},
+            ],
+            u'urls': [],
+            }
+        retweet = create_status(text=text,
+                                entities=entities,
+                                is_retweet=True,
+                                retweeted_status=original_status)
+
+        # retweet text gets parsed because sometimes is not complete
+        expected_result = [u'I', u' ', u'<3', u' ',  ('hashtag', '#Python')]
+        result = retweet.map_attributes(hashtag='hashtag',
+                                        attag='attag',
+                                        url='url')
+
+        self.assertEqual(result, expected_result)
+
+    def test_map_attributes_to_retweet_with_mentions_hashtags_and_url(self):
+        text = u'@aaloy  QT @Pybonacci: \xa1Qu\xe9 pasada con Vim! #Python #IDE RT @dialelo uso un setup parecido a este: http://t.co/5lTGNzba'
+        entities = {
+            u'user_mentions': [
+                {u'id': 60840400,
+                 u'indices': [0, 6],
+                 u'id_str': u'60840400',
+                 u'screen_name': u'aaloy',
+                 u'name': u'Antoni Aloy'},
+                {u'id': 552951614,
+                 u'indices': [11, 21],
+                 u'id_str': u'552951614',
+                 u'screen_name': u'Pybonacci',
+                 u'name': u'Pybonacci'},
+                {u'id': 87322884,
+                 u'indices': [60, 68],
+                 u'id_str': u'87322884',
+                 u'screen_name': u'dialelo',
+                 u'name': u'Alejandro G\xf3mez'}
+            ],
+            u'hashtags': [
+                {u'indices': [44, 51],
+                 u'text': u'Python'},
+                {u'indices': [52, 56],
+                 u'text': u'IDE'}
+            ],
+            u'urls': [
+                {u'url': u'http://t.co/5lTGNzba',
+                 u'indices': [99, 119],
+                 u'expanded_url': u'http://sontek.net/turning-vim-into-a-modern-python-ide',
+                 u'display_url': u'sontek.net/turning-vim-in\u2026'}
+            ]}
+        status = create_status(text=text,
+                               entities=entities)
+        expected_result = [('attag', u'@aaloy'), u'  QT ', ('attag', u'@Pybonacci'),
+                           u': \xa1Qu\xe9 pasada con Vim! ',
+                           ('hashtag', u'#Python'), u' ', ('hashtag', u'#IDE'),
+                           u' RT ', ('attag', u'@dialelo'),
+                           u' uso un setup parecido a este: ',
+                           ('url', u'sontek.net/turning-vim-in\u2026')]
+        result = status.map_attributes(hashtag='hashtag',
+                                       attag='attag',
+                                       url='url')
+
+        self.assertEqual(result, expected_result)
+
+
 
 # TODO
 class UserTest(unittest.TestCase):

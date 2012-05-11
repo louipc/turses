@@ -8,13 +8,96 @@ This module contains implementations of `turses.api.base.Api` using multiple
 API backends.
 """
 
+from functools import wraps, partial
+
 from tweepy import API as BaseTweepyApi
 from tweepy import OAuthHandler as TweepyOAuthHandler
 
-from turses.models import (User, Status, DirectMessage, List,
+from turses.models import (User, Status, DirectMessage,
                            get_authors_username, get_mentioned_usernames)
-from turses.utils import datetime_from_twitter_datestring
 from turses.api.base import Api, include_entities
+
+
+# Decorators for converting data to `turses.models`
+
+def filter_with(func, filter_func=None):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        result = func(*args, **kwargs)
+
+        if isinstance(result, list):
+            return [filter_func(elem) for elem in result]
+        else:
+            return filter_func(result)
+    return wrapper
+
+def _to_status(status):
+    text = status.text
+
+    is_reply = False
+    in_reply_to_user = ''
+    is_retweet = False
+    retweet_count = 0
+    retweeted_status = None
+    is_favorite = False
+    author = ''
+
+    if getattr(status, 'retweeted_status', False):
+        is_retweet = True
+        retweeted_status = _to_status(status.retweeted_status)
+        retweet_count = status.retweet_count
+        author = status.retweeted_status.author.screen_name
+
+    if status.in_reply_to_screen_name:
+        is_reply = True
+        in_reply_to_user = status.in_reply_to_screen_name
+
+    if status.favorited:
+        is_favorite = True
+
+    kwargs = {
+        'id': status.id,
+        'created_at': status.created_at,
+        'user': status.user.screen_name,
+        'text': text,
+        'is_retweet': is_retweet,
+        'is_reply': is_reply,
+        'is_favorite': is_favorite,
+        'in_reply_to_user': in_reply_to_user,
+        'retweet_count': retweet_count,
+        'retweeted_status': retweeted_status,
+        'author': author,
+        'entities': getattr(status, 'entities', None),
+    }
+    return Status(**kwargs)
+
+def _to_status_from_search(status):
+    kwargs = {
+        'id': status.id,
+        'created_at': status.created_at,
+        'user': status.from_user,
+        'text': status.text,
+        'entities': getattr(status, 'entities', None),
+    }
+    return Status(**kwargs)
+
+def _to_direct_message(dm):
+    kwargs = {
+        'id': dm.id,
+        'created_at': dm.created_at,
+        'sender_screen_name': dm.sender_screen_name,
+        'recipient_screen_name': dm.recipient_screen_name,
+        'text': dm.text,
+        'entities': getattr(dm, 'entities', None),
+    }
+    return DirectMessage(**kwargs)
+
+to_status = partial(filter_with,
+                    filter_func=_to_status)
+to_status_from_search_result = partial(filter_with,
+                                       filter_func=_to_status_from_search)
+to_direct_message = partial(filter_with,
+                            filter_func=_to_direct_message)
 
 
 class TweepyApi(BaseTweepyApi, Api):
@@ -26,93 +109,6 @@ class TweepyApi(BaseTweepyApi, Api):
 
     def __init__(self, *args, **kwargs):
         Api.__init__(self, *args, **kwargs)
-
-    # conversion to `turses.models`
-
-    def _to_status(self, statuses):
-        def to_status(status):
-            text = status.text
-
-            is_reply = False
-            in_reply_to_user = ''
-            is_retweet = False
-            retweet_count = 0
-            is_favorite = False
-            author = ''
-
-            if getattr(status, 'retweeted_status', False):
-                is_retweet = True
-                text = status.retweeted_status.text
-                retweet_count = status.retweet_count
-                author = status.retweeted_status.author.screen_name
-
-            if status.in_reply_to_screen_name:
-                is_reply = True
-                in_reply_to_user = status.in_reply_to_screen_name
-
-            if status.favorited:
-                is_favorite = True
-
-            kwargs = {
-                'id': status.id,
-                'created_at': status.created_at,
-                'user': status.user.screen_name,
-                'text': text,
-                'is_retweet': is_retweet,
-                'is_reply': is_reply,
-                'is_favorite': is_favorite,
-                'in_reply_to_user': in_reply_to_user,
-                'retweet_count': retweet_count,
-                'author': author,
-                'entities': getattr(status, 'entities', None),
-            }
-            return Status(**kwargs)
-
-        if isinstance(statuses, list):
-            return [to_status(status) for status in statuses]
-        else:
-            return to_status(statuses)
-
-    def _to_direct_message(self, dms):
-        def to_direct_message(dm):
-            kwargs = {
-                'id': dm.id,
-                'created_at': dm.created_at,
-                'sender_screen_name': dm.sender_screen_name,
-                'recipient_screen_name': dm.recipient_screen_name,
-                'text': dm.text,
-            }
-            return DirectMessage(**kwargs)
-
-        if isinstance(dms, list):
-            return [to_direct_message(dm) for dm in dms]
-        else:
-            return to_direct_message(dms)
-
-    def _to_list(self, lists):
-        def to_list(l):
-            created_at = datetime_from_twitter_datestring(l.created_at)
-            if l.mode == u'private':
-                private = True
-            else:
-                private = False
-
-            kwargs = {
-                'id': l.id,
-                'owner': l.user.screen_name,
-                'created_at': created_at,
-                'name': l.name,
-                'description': l.description,
-                'member_count': l.member_count,
-                'subscriber_count': l.subscriber_count,
-                'private': private,
-            }
-            return List(**kwargs)
-
-        if isinstance(lists, list):
-            return [to_list(l) for l in lists]
-        else:
-            return to_list(lists)
 
     # from `turses.api.base.Api`
 
@@ -133,18 +129,20 @@ class TweepyApi(BaseTweepyApi, Api):
 
     # timelines
 
+    @to_status
     @include_entities
     def get_home_timeline(self, **kwargs):
         tweets = self._api.home_timeline(**kwargs)
         retweets = self._api.retweeted_to_me(**kwargs)
         tweets.extend(retweets)
-        return self._to_status(tweets)
+        return tweets
 
+    @to_status
     @include_entities
     def get_user_timeline(self, screen_name, **kwargs):
-        return self._to_status(self._api.user_timeline(screen_name,
-                                                       **kwargs))
+        return self._api.user_timeline(screen_name, **kwargs)
 
+    @to_status
     @include_entities
     def get_own_timeline(self, **kwargs):
         me = self.verify_credentials()
@@ -152,25 +150,38 @@ class TweepyApi(BaseTweepyApi, Api):
                                          **kwargs)
         retweets = self._api.retweeted_by_me(**kwargs)
         tweets.extend(retweets)
-        return self._to_status(tweets)
+        return tweets
 
+    @to_status
     @include_entities
     def get_mentions(self, **kwargs):
-        return self._to_status(self._api.mentions(**kwargs))
+        return self._api.mentions(**kwargs)
 
+    @to_status
     @include_entities
     def get_favorites(self, **kwargs):
-        return self._to_status(self._api.favorites(**kwargs))
+        return self._api.favorites(**kwargs)
 
+    @to_direct_message
     @include_entities
     def get_direct_messages(self, **kwargs):
         dms = self._api.direct_messages(**kwargs)
         sent = self._api.sent_direct_messages(**kwargs)
         dms.extend(sent)
-        return self._to_direct_message(dms)
+        return dms
 
+    # NOTE:
+    #  `get_thread` is not decorated with `to_status` because
+    #  it uses `TweepyApi.get_user_timeline` which is already
+    #  decorated
     @include_entities
     def get_thread(self, status, **kwargs):
+        """
+        Get the conversation to which `status` belongs.
+
+        It filters the last tweets by the participanting users and
+        based on mentions to each other.
+        """
         author = get_authors_username(status)
         mentioned = get_mentioned_usernames(status)
         if author not in mentioned:
@@ -187,39 +198,26 @@ class TweepyApi(BaseTweepyApi, Api):
 
         return filter(belongs_to_conversation, tweets)
 
+    @to_status_from_search_result
     @include_entities
     def get_search(self, text, **kwargs):
-        # `tweepy.API.search` returns `tweepy.models.SearchResult` objects instead
-        # `tweepy.models.Status` so we have to convert them differently
-        def to_status(status):
-            kwargs = {
-                'id': status.id,
-                'created_at': status.created_at,
-                'user': status.from_user,
-                'text': status.text,
-            }
-            return Status(**kwargs)
-
-        results = self._api.search(text, **kwargs)
-        return [to_status(result) for result in results]
+        return self._api.search(text, **kwargs)
 
     def update(self, text):
-        return self._api.update_status(text)
+        self._api.update_status(text)
 
     def destroy_status(self, status):
-        return self._to_status(self._api.destroy_status(status.id))
+        self._api.destroy_status(status.id)
 
     def retweet(self, status):
-        return self._to_status(self._api.retweet(status.id))
+        self._api.retweet(status.id)
 
     def direct_message(self, username, text):
-        return self._to_direct_message(self._api.send_direct_message(user=username,
-                                                                     text=text))
+        self._api.send_direct_message(user=username, text=text)
 
     def destroy_direct_message(self, dm):
-        return self._to_direct_message(self._api.destroy_direct_message(dm.id))
+        self._api.destroy_direct_message(dm.id)
 
-    # TODO: convert to `turses.models.User`
     def create_friendship(self, screen_name):
         self._api.create_friendship(screen_name=screen_name)
 
@@ -227,10 +225,10 @@ class TweepyApi(BaseTweepyApi, Api):
         self._api.destroy_friendship(screen_name=screen_name)
 
     def create_favorite(self, status):
-        self._to_status(self._api.create_favorite(status.id))
+        self._api.create_favorite(status.id)
 
     def destroy_favorite(self, status):
-        self._to_status(self._api.destroy_favorite(status.id))
+        self._api.destroy_favorite(status.id)
 
     # list methods
 

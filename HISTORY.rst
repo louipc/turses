@@ -1,3 +1,17 @@
+0.1.11
+------
+- bugfix: exception when marking tweet as favorite
+
+0.1.10
+------
+- expanded URLs for search results
+- bugfix: crashed when expanded URLs were missing
+
+0.1.9
+-----
+- open focused status in a browser
+- show expanded URLs
+
 0.1.8
 -----
 - bugfix: packaging error
