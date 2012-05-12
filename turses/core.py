@@ -925,7 +925,8 @@ class Controller(object):
         if status is None:
             return
 
-        rt_text = 'RT ' + status.text
+        rt_text = ''.join(['RT @%s: ' % get_authors_username(status),
+                           status.text])
         if is_valid_status_text(' ' + rt_text):
             self.tweet(content=rt_text)
         else:
