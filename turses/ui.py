@@ -68,7 +68,7 @@ class CursesInterface(Frame):
                        header=TabsWidget(),
                        footer=StatusBar(''))
         self._configuration = configuration
-        self._editor_mode = False
+        self._editor = None
 
     # -- Modes ----------------------------------------------------------------
 
@@ -96,19 +96,24 @@ class CursesInterface(Frame):
     # -- Footer ---------------------------------------------------------------
 
     def _visible_status_bar(self):
-        return isinstance(self.footer.__class__, StatusBar)
+        return isinstance(self.footer, StatusBar)
 
     def _can_write_status(self):
+        if self._is_editing():
+            return False
+
         if self.footer is None:
             self.footer = StatusBar('')
-        elif not self._visible_status_bar():
-            return False
         return True
+
+    def _is_editing(self):
+        if self._visible_status_bar():
+            return False
+        return bool(self._editor)
 
     def status_message(self, text):
         if self._can_write_status():
-            if isinstance(self.footer, StatusBar):
-                self.footer.message(text)
+            self.footer.message(text)
             self.set_footer(self.footer)
 
     def status_error_message(self, message):
@@ -120,6 +125,8 @@ class CursesInterface(Frame):
             self.footer.info_message(message)
 
     def clear_status(self):
+        if self._is_editing():
+            return
         self.footer = None
         self.set_footer(self.footer)
 
@@ -163,11 +170,11 @@ class CursesInterface(Frame):
                      content,
                      done_signal_handler,
                      **kwargs):
-        self.editor = editor_cls(prompt=prompt,
-                                 content=content,
-                                 done_signal_handler=done_signal_handler,
-                                 **kwargs)
-        self.footer = self.editor
+        self._editor = editor_cls(prompt=prompt,
+                                  content=content,
+                                  done_signal_handler=done_signal_handler,
+                                  **kwargs)
+        self.footer = self._editor
         self.set_footer(self.footer)
         self.set_focus('footer')
 
@@ -202,12 +209,12 @@ class CursesInterface(Frame):
 
     def remove_editor(self, done_signal_handler):
         try:
-            disconnect_signal(self.editor, 'done', done_signal_handler)
+            disconnect_signal(self._editor, 'done', done_signal_handler)
         except:
             # `disconnect_signal` raises an exception if no signal was
-            # connected from `self.editor`. We can safely ignore it.
+            # connected from `self._editor`. We can safely ignore it.
             pass
-        self.editor = None
+        self._editor = None
         self.clear_status()
 
 

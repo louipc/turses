@@ -375,7 +375,8 @@ class Controller(object):
         else:
             self.mode = self.INFO_MODE
             self.ui.show_info()
-        self.clear_status()
+        if self.is_in_help_mode():
+            self.clear_status()
         self.redraw_screen()
 
     def is_in_timeline_mode(self):
