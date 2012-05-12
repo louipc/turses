@@ -37,7 +37,7 @@ def is_DM(status):
     return status.__class__ == DirectMessage
 
 
-# methods for querying users
+# methods for querying statuses
 
 def get_mentioned_usernames(status):
     """
@@ -98,6 +98,14 @@ def get_dm_recipients_username(sender, status):
     elif status.user != sender:
         username = status.user
     return username
+
+
+def get_hashtags(status):
+    """
+    Return a list of hashtags encountered in `status`.
+    """
+    return filter(is_hashtag, status.text.split())
+
 
 # operations with strings
 

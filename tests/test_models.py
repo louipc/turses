@@ -19,6 +19,7 @@ from turses.models import (
         get_mentioned_for_reply,
         get_dm_recipients_username,
         get_authors_username,
+        get_hashtags,
 
         is_username,
         is_hashtag,
@@ -147,6 +148,20 @@ class HelperFunctionTest(unittest.TestCase):
         recipient_dm_user_is_recipient = get_dm_recipients_username(user, dm)
         self.assertEqual(recipient_dm_user_is_recipient, expected_recipient)
 
+    def test_get_hashtags(self):
+        user = 'turses'
+        hashtags = ('#turses', '#arch_linux', '#I<3Python')
+
+        expected_output = list(hashtags)
+
+        text = "%s %s %s" % hashtags
+        status = create_status(user=user,
+                               text=text)
+
+        expected = set(expected_output)
+        mentioned_hashtags = get_hashtags(status)
+        self.assertEqual(expected, set(mentioned_hashtags))
+
     def test_is_username(self):
         valid = ['dialelo', 'mental_floss', '4n_4Wfu1_US3RN4M3']
         for user in valid:
@@ -176,9 +191,6 @@ class HelperFunctionTest(unittest.TestCase):
         for dirty, clean in dirty_and_clean:
             sanitized = sanitize_username(dirty)
             self.assertEqual(sanitized, clean)
-
-    def test_get_hashtags(self):
-        pass
 
     def test_is_valid_status_text(self):
         pass
