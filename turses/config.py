@@ -239,6 +239,7 @@ META_KEY_BINDINGS = [
 TURSES_KEY_BINDINGS = [
     'quit',
     'openurl',
+		'open_status_url',
     'redraw',
 ]
 
