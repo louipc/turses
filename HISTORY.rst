@@ -1,3 +1,12 @@
+0.1.12
+------
+- bugfix: missing key binding in help (by @xekarfwtos)
+- bugfix: status messages cleared the editor
+- configurable status bar visibility
+- changes to manual retweet template
+- set console title to turses
+- `docs on readthedocs <http://readthedocs.org/docs/turses/en/latest/>`_
+
 0.1.11
 ------
 - bugfix: exception when marking tweet as favorite
