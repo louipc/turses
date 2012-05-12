@@ -181,20 +181,24 @@ class CursesInterface(Frame):
     def show_text_editor(self,
                          prompt='',
                          content='',
-                         done_signal_handler=None):
+                         done_signal_handler=None,
+                         cursor_position=None):
         self._show_editor(TextEditor,
                           prompt,
                           content,
-                          done_signal_handler,)
+                          done_signal_handler,
+                          cursor_position=cursor_position)
 
     def show_tweet_editor(self,
                           prompt='',
                           content='',
-                          done_signal_handler=None):
+                          done_signal_handler=None,
+                          cursor_position=None):
         self._show_editor(TweetEditor,
                           prompt,
                           content,
-                          done_signal_handler,)
+                          done_signal_handler,
+                          cursor_position=cursor_position)
 
     def show_dm_editor(self,
                        prompt='',
@@ -250,10 +254,13 @@ class TextEditor(WidgetWrap):
     def __init__(self,
                  prompt,
                  content,
-                 done_signal_handler):
+                 done_signal_handler,
+                 cursor_position=None):
         if content:
             content += ' '
-        self.editor = Edit(u'%s (twice enter key to validate or esc) \n>> ' % prompt, content)
+        self.editor = Edit(caption=u'%s (twice enter key to validate or esc) \n>> ' % prompt, 
+                           edit_text=content,
+                           edit_pos=cursor_position)
 
         widgets = [self.editor]
         w = AttrMap(Columns(widgets), 'editor')
@@ -287,10 +294,13 @@ class TweetEditor(WidgetWrap):
     def __init__(self,
                  prompt,
                  content,
-                 done_signal_handler):
+                 done_signal_handler,
+                 cursor_position=None):
         if content:
             content += ' '
-        self.editor = Edit(u'%s (twice enter key to validate or esc) \n>> ' % prompt, content)
+        self.editor = Edit(caption=u'%s (twice enter key to validate or esc) \n>> ' % prompt, 
+                           edit_text=content,
+                           edit_pos=cursor_position)
 
         self.counter = len(content)
         self.counter_widget = Text(str(self.counter))

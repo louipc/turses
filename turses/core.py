@@ -875,7 +875,7 @@ class Controller(object):
         text = '' if text is None else text
         self.ui.show_text_editor(prompt='Search',
                                  content=text,
-                                 done_signal_handler=self.search_handler)
+                                 done_signal_handler=self.search_handler,)
 
     def search_user(self):
         self.ui.show_text_editor(prompt=_('Search user (no need to prepend it with "@")'),
@@ -898,10 +898,12 @@ class Controller(object):
 
     def tweet(self,
               prompt=_('Tweet'),
-              content=''):
+              content='',
+              cursor_position=None):
         self.ui.show_tweet_editor(prompt=prompt,
                                   content=content,
-                                  done_signal_handler=self.tweet_handler)
+                                  done_signal_handler=self.tweet_handler,
+                                  cursor_position=cursor_position)
 
     def retweet(self):
         status = self.timelines.get_active_status()
@@ -926,10 +928,11 @@ class Controller(object):
         if status is None:
             return
 
-        rt_text = ''.join(['RT @%s: ' % get_authors_username(status),
+        rt_text = ''.join([' RT @%s: ' % get_authors_username(status),
                            status.text])
-        if is_valid_status_text(' ' + rt_text):
-            self.tweet(content=rt_text)
+        if is_valid_status_text(rt_text):
+            self.tweet(content=rt_text,
+                       cursor_position=0)
         else:
             self.error_message(_('Tweet too long for manual retweet'))
 
@@ -950,7 +953,7 @@ class Controller(object):
 
         self.ui.show_tweet_editor(prompt=_('Reply to %s' % author),
                                   content=' '.join(mentioned),
-                                  done_signal_handler=self.tweet_handler)
+                                  done_signal_handler=self.tweet_handler,)
 
     def direct_message(self):
         status = self.timelines.get_active_status()
@@ -971,10 +974,10 @@ class Controller(object):
             return
         hashtags = ' '.join(get_hashtags(status))
         if hashtags:
-            # TODO cursor in the begginig
             self.ui.show_tweet_editor(prompt=_('%s' % hashtags),
-                                      content=hashtags,
-                                      done_signal_handler=self.tweet_handler)
+                                      content=''.join([' ', hashtags]),
+                                      done_signal_handler=self.tweet_handler,
+                                      cursor_position=0)
 
     def delete_tweet(self):
         status = self.timelines.get_active_status()
@@ -988,8 +991,6 @@ class Controller(object):
         if author != self.user.screen_name:
             self.error_message(_('You can only delete your own tweets'))
             return
-
-        # TODO: check if DM and delete DM if is
 
         status_deleted = partial(self.info_message,
                                  _('Tweet deleted'))
