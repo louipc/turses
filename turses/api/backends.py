@@ -20,7 +20,10 @@ from turses.api.base import Api, include_entities
 
 # Decorators for converting data to `turses.models`
 
-def filter_with(func, filter_func=None):
+def filter_result(func, filter_func=None):
+    """
+    Decorator for filtering the output of `func` with `filter_func`.
+    """
     @wraps(func)
     def wrapper(*args, **kwargs):
         result = func(*args, **kwargs)
@@ -32,6 +35,9 @@ def filter_with(func, filter_func=None):
     return wrapper
 
 def _to_status(status):
+    """
+    Convert a `tweepy.Status` to a `turses.models.Status`.
+    """
     text = status.text
 
     is_reply = False
@@ -71,7 +77,10 @@ def _to_status(status):
     }
     return Status(**kwargs)
 
-def _to_status_from_search(status):
+def _to_status_from_search_result(status):
+    """
+    Convert a `tweepy.SearchResult` to a `turses.models.Status`.
+    """
     kwargs = {
         'id': status.id,
         'created_at': status.created_at,
@@ -82,6 +91,9 @@ def _to_status_from_search(status):
     return Status(**kwargs)
 
 def _to_direct_message(dm):
+    """
+    Convert a `tweepy.DirectMessage` to a `turses.models.DirectMessage`.
+    """
     kwargs = {
         'id': dm.id,
         'created_at': dm.created_at,
@@ -92,12 +104,23 @@ def _to_direct_message(dm):
     }
     return DirectMessage(**kwargs)
 
-to_status = partial(filter_with,
+def _to_user(user):
+    """
+    Convert a `tweepy.User` to a `turses.models.User`.
+    """
+    kwargs = {
+        'screen_name': user.screen_name,
+    }
+    return User(**kwargs)
+
+to_status = partial(filter_result,
                     filter_func=_to_status)
-to_status_from_search_result = partial(filter_with,
-                                       filter_func=_to_status_from_search)
-to_direct_message = partial(filter_with,
+to_status_from_search_result = partial(filter_result,
+                                       filter_func=_to_status_from_search_result)
+to_direct_message = partial(filter_result,
                             filter_func=_to_direct_message)
+to_user = partial(filter_result,
+                  filter_func=_to_user)
 
 
 class TweepyApi(BaseTweepyApi, Api):
@@ -119,13 +142,9 @@ class TweepyApi(BaseTweepyApi, Api):
                                        self._access_token_secret)
         self._api = BaseTweepyApi(oauth_handler)
 
+    @to_user
     def verify_credentials(self):
-        def to_user(user):
-            kwargs = {
-                'screen_name': user.screen_name,
-            }
-            return User(**kwargs)
-        return to_user(self._api.me())
+        return self._api.me()
 
     # timelines
 
