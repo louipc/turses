@@ -22,10 +22,8 @@ from turses import version
 from turses.config import (MOTION_KEY_BINDINGS, BUFFERS_KEY_BINDINGS,
                            TWEETS_KEY_BINDINGS, TIMELINES_KEY_BINDINGS,
                            META_KEY_BINDINGS, TURSES_KEY_BINDINGS, )
-from turses.models import is_DM
+from turses.models import is_DM, TWEET_MAXIMUM_CHARACTERS
 from turses.utils import encode
-
-TWEET_MAX_CHARS = 140
 
 BANNER = [
      "   _                             ",
@@ -304,7 +302,7 @@ class TweetEditor(WidgetWrap):
 
     def keypress(self, size, key):
         if key == 'enter' and self.last_key == 'enter':
-            if self.counter > TWEET_MAX_CHARS:
+            if self.counter > TWEET_MAXIMUM_CHARACTERS:
                 return
             else:
                 self.emit_done_signal(self.editor.get_edit_text())

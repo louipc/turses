@@ -9,11 +9,11 @@ This module contains the Twitter entities represented in `turses`.
 
 import time
 import re
-from functools import total_ordering
+from functools import partial, total_ordering
 from bisect import insort
 
 from turses.utils import (html_unescape, timestamp_from_datetime,
-                          wrap_exceptions, is_url)
+                          wrap_exceptions, is_url, matches_word)
 
 
 ##
@@ -26,6 +26,7 @@ hashtag_regex = re.compile(r'#.+')
 
 prepend_at = lambda username: '@%s' % username
 
+TWEET_MAXIMUM_CHARACTERS = 140
 STATUS_URL_TEMPLATE = 'https://twitter.com/#!/{user}/status/{id}'
 
 
@@ -36,6 +37,8 @@ def is_DM(status):
     return status.__class__ == DirectMessage
 
 
+# methods for querying users
+
 def get_mentioned_usernames(status):
     """
     Return mentioned usernames in `status` without '@'.
@@ -44,8 +47,8 @@ def get_mentioned_usernames(status):
     for word in status.text.split():
         if len(word) > 1 and word.startswith('@'):
             word.strip('@')
-            usernames.append(word)
-    return map(sanitize_username, usernames)
+            usernames.append(sanitize_username(word))
+    return usernames
 
 
 def get_mentioned_for_reply(status):
@@ -57,7 +60,7 @@ def get_mentioned_for_reply(status):
     mentioned = get_mentioned_usernames(status)
     mentioned.insert(0, author)
 
-    return map(prepend_at, mentioned)
+    return [prepend_at(username) for username in mentioned]
 
 
 def get_authors_username(status):
@@ -96,48 +99,17 @@ def get_dm_recipients_username(sender, status):
         username = status.user
     return username
 
+# operations with strings
 
-def is_username(username):
-    """
-    Return `True` if `username` is a valid Twitter username, `False`
-    otherwise.
-    """
-    match = username_regex.match(username)
-    if match:
-        return match.start() == 0 and match.end() == len(username)
-    return False
+is_username = partial(matches_word, username_regex)
+is_hashtag =  partial(matches_word, hashtag_regex)
 
-
-def is_hashtag(hashtag):
-    """
-    Return `True` if `hashtag` is a valid Twitter hashtag, `False`
-    otherwise.
-    """
-    match = hashtag_regex.match(hashtag)
-    if match:
-        return match.start() == 0 and match.end() == len(hashtag)
-    return False
-
-
-def sanitize_username(username):
-    """
-    Return `username` with illegal characters for a Twitter username
-    striped.
-    """
-    sanitized = filter(is_username, username)
-    return sanitized
-
-
-def get_hashtags(status):
-    """
-    Return a list of hashtags encountered in `status`.
-    """
-    return filter(is_hashtag, status.text.split())
+sanitize_username = partial(filter, is_username)
 
 
 def is_valid_status_text(text):
     """Checks the validity of a status text."""
-    return text and len(text) <= 140
+    return text and len(text) <= TWEET_MAXIMUM_CHARACTERS
 
 
 def is_valid_search_text(text):

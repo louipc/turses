@@ -19,7 +19,7 @@ from subprocess import call
 from sys import stdout
 from os import devnull
 from gettext import gettext as _
-from functools import wraps
+from functools import wraps, partial
 
 from turses import version as turses_version
 
@@ -89,7 +89,6 @@ def async(func):
         Thread(target=func, args=func_args).start()
     return wrapper
 
-
 def html_unescape(string):
     """Unescape HTML entities from `string`."""
     def entity_replacer(m):
@@ -101,13 +100,17 @@ def html_unescape(string):
 
     return sub(r'&([^;]+);', entity_replacer, string)
 
+def matches_word(regex, word):
+    """
+    Return `True` if the whole `word` is matched by `regex`, `False`
+    otherwise.
+    """
+    match = regex.match(word)
+    if match:
+        return match.start() == 0 and match.end() == len(word)
+    return False
 
-def is_url(string):
-    match = URL_REGEX.match(string)
-    if not match:
-        return False
-    return match.start() == 0 and match.end() == len(string)
-
+is_url = partial(matches_word, URL_REGEX)
 
 def get_urls(text):
     return findall(URL_REGEX, text)
