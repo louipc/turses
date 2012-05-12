@@ -310,6 +310,7 @@ STYLES = {
     'tab_template': '{timeline_name} [{unread}]',
     'box_around_status': True,
     'status_divider': False,
+    'status_bar': True,
     'status_divider_char': '─',
 }
 
@@ -665,7 +666,9 @@ class Configuration(object):
     def _parse_styles(self, conf):
         for style in self.styles:
             if conf.has_option(SECTION_STYLES, style):
-                if style == 'box_around_status' or style == 'status_divider':
+                if any([style == 'box_around_status', 
+                        style == 'status_divider',
+                        style == 'status_bar']):
                     self.styles[style] = conf.getboolean(SECTION_STYLES, style)
                 else:
                     self.styles[style] = unicode(conf.get(SECTION_STYLES, style),

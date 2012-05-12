@@ -63,10 +63,19 @@ class CursesInterface(Frame):
 
     def __init__(self,
                  configuration):
+        header = TabsWidget()
+        body = WelcomeBuffer()
+
+        self._status_bar = configuration.styles.get('status_bar', False)
+        if self._status_bar:
+            footer = StatusBar('')
+        else:
+            footer = None
+
         Frame.__init__(self,
-                       WelcomeBuffer(),
-                       header=TabsWidget(),
-                       footer=StatusBar(''))
+                       body,
+                       header=header,
+                       footer=footer)
         self._configuration = configuration
         self._editor = None
 
@@ -99,7 +108,8 @@ class CursesInterface(Frame):
         return isinstance(self.footer, StatusBar)
 
     def _can_write_status(self):
-        if self._is_editing():
+        if (self._is_editing() or
+            not self._status_bar):
             return False
 
         if self.footer is None:
