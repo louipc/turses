@@ -4,20 +4,20 @@
 turses.api.base
 ~~~~~~~~~~~~~~~
 
-This module contains an interface to the Twitter API that acts as a mediator
-for different implementations.
+This module contains an `ApiAdapter` abstract class that acts as an adapter
+for different Twitter API implementations.
 
-It also contains an asynchronous wrapper to `Api`.
+It also contains an asynchronous wrapper to `AdapterApi` and a function to
+authorize `turses` to use a Twitter account.
 """
 
+from abc import ABCMeta, abstractmethod
 import oauth2 as oauth
-from functools import wraps
-from threading import Thread
 from urlparse import parse_qsl
 from gettext import gettext as _
 
 from turses.models import is_DM
-from turses.utils import encode, wrap_exceptions
+from turses.utils import encode, wrap_exceptions, async
 
 
 TWITTER_CONSUMER_KEY = 'OEn4hrNGknVz9ozQytoR0A'
@@ -72,9 +72,8 @@ def authorization():
     request_token = dict(parse_qsl(content))
 
     print
-    message = _("""
-Please visit the following page to retrieve needed pin code
-to obtain an Authentication Token:""")
+    message = _('Please visit the following page to retrieve needed pin code'
+                'to obtain an Authentication Token:')
     print encode(message)
     print
     print '%s?oauth_token=%s' % (AUTHORIZATION_URL,
@@ -105,22 +104,12 @@ to obtain an Authentication Token:""")
         return None
 
 
-def include_entities(func):
+class ApiAdapter(object):
     """
-    Injects the `include_entities=True` keyword argument into `func`.
-    """
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        kwargs.update({'include_entities': True})
-        return func(*args, **kwargs)
-    return wrapper
-
-
-class Api(object):
-    """
-    A simplified version of the API to use as a mediator for a real
+    A simplified version of the API to use as an adapter for a real
     implementation.
     """
+    __metaclass__ = ABCMeta
 
     def __init__(self,
                  access_token_key,
@@ -133,9 +122,11 @@ class Api(object):
         self._access_token_secret = access_token_secret
         self.is_authenticated = False
 
+    @abstractmethod
     def init_api(self):
         raise NotImplementedError
 
+    @abstractmethod
     def verify_credentials(self):
         """
         Return a `turses.models.User` with the authenticating user if the given
@@ -145,47 +136,60 @@ class Api(object):
 
     # timelines
 
+    @abstractmethod
     def get_home_timeline(self):
         raise NotImplementedError
 
+    @abstractmethod
     def get_user_timeline(self, screen_name):
         raise NotImplementedError
 
+    @abstractmethod
     def get_own_timeline(self):
         raise NotImplementedError
 
+    @abstractmethod
     def get_mentions(self):
         raise NotImplementedError
 
+    @abstractmethod
     def get_favorites(self):
         raise NotImplementedError
 
+    @abstractmethod
     def get_direct_messages(self):
         raise NotImplementedError
 
+    @abstractmethod
     def get_thread(self, status):
         raise NotImplementedError
 
+    @abstractmethod
     def search(self, text):
         raise NotImplementedError
 
     # statuses
 
+    @abstractmethod
     def update(self, text):
         raise NotImplementedError
 
+    @abstractmethod
     def retweet(self, status):
         raise NotImplementedError
 
+    @abstractmethod
     def destroy_status(self, status):
         """
         Destroy the given `status` (must belong to authenticating user).
         """
         raise NotImplementedError
 
+    @abstractmethod
     def direct_message(self, screen_name, text):
         raise NotImplementedError
 
+    @abstractmethod
     def destroy_direct_message(self, dm):
         """
         Destroy the given `dm` (must be written by the authenticating user).
@@ -194,68 +198,82 @@ class Api(object):
 
     # friendship
 
+    @abstractmethod
     def create_friendship(self, screen_name):
         raise NotImplementedError
 
+    @abstractmethod
     def destroy_friendship(self, screen_name):
         raise NotImplementedError
 
     # favorite methods
 
+    @abstractmethod
     def create_favorite(self, status):
         raise NotImplementedError
 
+    @abstractmethod
     def destroy_favorite(self, status):
         raise NotImplementedError
 
     # list methods
 
+    @abstractmethod
     def get_lists(self, screen_name):
         raise NotImplementedError
 
+    @abstractmethod
     def get_own_lists(self):
         raise NotImplementedError
 
+    @abstractmethod
     def get_list_memberships(self):
         raise NotImplementedError
 
+    @abstractmethod
     def get_list_subscriptions(self):
         raise NotImplementedError
 
+    @abstractmethod
     def get_list_timeline(self, list):
         raise NotImplementedError
 
+    @abstractmethod
     def get_list_members(self, list):
         raise NotImplementedError
 
+    @abstractmethod
     def is_list_member(self, user, list):
         raise NotImplementedError
 
+    @abstractmethod
     def subscribe_to_list(self, list):
         raise NotImplementedError
 
+    @abstractmethod
     def get_list_subscribers(self, list):
         raise NotImplementedError
 
+    @abstractmethod
     def is_list_subscriber(self, user, list):
         raise NotImplementedError
 
 
-class AsyncApi(Api):
+class AsyncApi(ApiAdapter):
     """
-    Implementation of `Api` that executes most of the API calls in
-    background and provides `on_error` and `on_success` callbacks for every
-    method.
+    Wrap an `ApiAdapter` subclass and execute its methods in background
+    whenever possible (i.e. they don't return results).
+
+    The methods for creating, updating or deleting Twitter entities are
+    decorated with `turses.utils.wrap_exceptions`.
     """
 
     def __init__(self, api_cls, *args, **kwargs):
         """
-        It adds the `api_cls` argument to the `Api` object constructor.
-
         `api_cls` is the class used to instantiate the Twitter API,
-        it must implement the methods in `Api`.
+        it must implement the methods in `ApiAdapter`.
         """
-        Api.__init__(self, *args, **kwargs)
+        ApiAdapter.__init__(self, *args, **kwargs)
         self._api = api_cls(access_token_key=self._access_token_key,
                             access_token_secret=self._access_token_secret,)
 
@@ -289,64 +307,82 @@ class AsyncApi(Api):
     def get_thread(self, status, **kwargs):
         return self._api.get_thread(status, **kwargs)
 
-    def get_search(self, text, **kwargs):
-        return self._api.get_search(text, **kwargs)
+    def search(self, text, **kwargs):
+        return self._api.search(text, **kwargs)
 
+    @async
     @wrap_exceptions
     def update(self, text):
-        args = text,
-        update_thread = Thread(target=self._api.update, args=args)
-        update_thread.start()
+        self._api.update(text)
 
+    @async
     @wrap_exceptions
     def retweet(self, status):
-        args = status,
-        retweet_thread = Thread(target=self._api.retweet, args=args)
-        retweet_thread.start()
+        self._api.retweet(status)
 
+    @async
     @wrap_exceptions
     def destroy_status(self, status):
-        args = status,
-        destroy_thread = Thread(target=self._api.destroy_status, args=args)
-        destroy_thread.start()
+        self._api.destroy_status(status)
 
+    @async
     @wrap_exceptions
     def destroy_direct_message(self, status):
-        args = status,
-        destroy_thread = Thread(target=self._api.destroy_direct_message,
-                                args=args)
-        destroy_thread.start()
+        self._api.destroy_direct_message(status)
 
+    @async
     @wrap_exceptions
     def direct_message(self, screen_name, text):
-        args = (screen_name, text,)
-        dm_thread = Thread(target=self._api.direct_message, args=args)
-        dm_thread.start()
+        self._api.direct_message(screen_name, text)
 
+    @async
     @wrap_exceptions
     def create_friendship(self, screen_name):
-        args = screen_name,
-        follow_thread = Thread(target=self._api.create_friendship, args=args)
-        follow_thread.start()
+        self._api.create_friendship(screen_name)
 
+    @async
     @wrap_exceptions
     def destroy_friendship(self, screen_name):
-        args = screen_name,
-        unfollow_thread = Thread(target=self._api.destroy_friendship,
-                                 args=args)
-        unfollow_thread.start()
+        self._api.destroy_friendship(screen_name)
 
+    @async
     @wrap_exceptions
     def create_favorite(self, status):
         if is_DM(status) or status.is_favorite:
             raise Exception
-        args = status,
-        favorite_thread = Thread(target=self._api.create_favorite, args=args)
-        favorite_thread.start()
+        self._api.create_favorite(status)
 
+    @async
     @wrap_exceptions
     def destroy_favorite(self, status):
-        args = status,
-        unfavorite_thread = Thread(target=self._api.destroy_favorite,
-                                   args=args)
-        unfavorite_thread.start()
+        self._api.destroy_favorite(status)
+
+    def get_lists(self, screen_name):
+        raise NotImplementedError
+
+    def get_own_lists(self):
+        raise NotImplementedError
+
+    def get_list_memberships(self):
+        raise NotImplementedError
+
+    def get_list_subscriptions(self):
+        raise NotImplementedError
+
+    def get_list_timeline(self, list):
+        raise NotImplementedError
+
+    def get_list_members(self, list):
+        raise NotImplementedError
+
+    def is_list_member(self, user, list):
+        raise NotImplementedError
+
+    def subscribe_to_list(self, list):
+        raise NotImplementedError
+
+    def get_list_subscribers(self, list):
+        raise NotImplementedError
+
+    def is_list_subscriber(self, user, list):
+        raise NotImplementedError

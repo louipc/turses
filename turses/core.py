@@ -846,7 +846,7 @@ class Controller(object):
                                        error_message)
 
         self.append_timeline(name=_('Search: %s' % text),
-                             update_function=self.api.get_search,
+                             update_function=self.api.search,
                              update_args=text,
                              on_error=timeline_not_created,
                              on_success=timeline_created)

@@ -15,8 +15,18 @@ from tweepy import OAuthHandler as TweepyOAuthHandler
 
 from turses.models import (User, Status, DirectMessage,
                            get_authors_username, get_mentioned_usernames)
-from turses.api.base import Api, include_entities
+from turses.api.base import ApiAdapter
 
+
+def include_entities(func):
+    """
+    Injects the `include_entities=True` keyword argument into `func`.
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        kwargs.update({'include_entities': True})
+        return func(*args, **kwargs)
+    return wrapper
 
 # Decorators for converting data to `turses.models`
 
@@ -127,17 +137,17 @@ to_user = partial(filter_result,
                   filter_func=_to_user)
 
 
-class TweepyApi(BaseTweepyApi, Api):
+class TweepyApi(BaseTweepyApi, ApiAdapter):
     """
-    A `Api` implementation using `tweepy` library.
+    A `ApiAdapter` implementation using `tweepy` library.
 
         http://github.com/tweepy/tweepy/
     """
 
     def __init__(self, *args, **kwargs):
-        Api.__init__(self, *args, **kwargs)
+        ApiAdapter.__init__(self, *args, **kwargs)
 
-    # from `turses.api.base.Api`
+    # from `turses.api.base.ApiAdapter`
 
     def init_api(self):
         oauth_handler = TweepyOAuthHandler(self._consumer_key,
@@ -223,7 +233,7 @@ class TweepyApi(BaseTweepyApi, Api):
 
     @to_status_from_search_result
     @include_entities
-    def get_search(self, text, **kwargs):
+    def search(self, text, **kwargs):
         return self._api.search(text, **kwargs)
 
     def update(self, text):
