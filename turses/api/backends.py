@@ -34,6 +34,7 @@ def filter_result(func, filter_func=None):
             return filter_func(result)
     return wrapper
 
+
 def _to_status(status):
     """
     Convert a `tweepy.Status` to a `turses.models.Status`.
@@ -77,6 +78,7 @@ def _to_status(status):
     }
     return Status(**kwargs)
 
+
 def _to_status_from_search_result(status):
     """
     Convert a `tweepy.SearchResult` to a `turses.models.Status`.
@@ -89,6 +91,7 @@ def _to_status_from_search_result(status):
         'entities': getattr(status, 'entities', None),
     }
     return Status(**kwargs)
+
 
 def _to_direct_message(dm):
     """
@@ -103,6 +106,7 @@ def _to_direct_message(dm):
         'entities': getattr(dm, 'entities', None),
     }
     return DirectMessage(**kwargs)
+
 
 def _to_user(user):
     """

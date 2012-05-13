@@ -239,7 +239,7 @@ META_KEY_BINDINGS = [
 TURSES_KEY_BINDINGS = [
     'quit',
     'openurl',
-		'open_status_url',
+    'open_status_url',
     'redraw',
 ]
 
@@ -666,7 +666,7 @@ class Configuration(object):
     def _parse_styles(self, conf):
         for style in self.styles:
             if conf.has_option(SECTION_STYLES, style):
-                if any([style == 'box_around_status', 
+                if any([style == 'box_around_status',
                         style == 'status_divider',
                         style == 'status_bar']):
                     self.styles[style] = conf.getboolean(SECTION_STYLES, style)

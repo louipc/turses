@@ -266,9 +266,10 @@ class TextEditor(WidgetWrap):
                  content,
                  done_signal_handler,
                  cursor_position=None):
+        caption = u'%s (twice enter key to validate or esc) \n>> ' % prompt
         if content:
             content += ' '
-        self.editor = Edit(caption=u'%s (twice enter key to validate or esc) \n>> ' % prompt, 
+        self.editor = Edit(caption=caption,
                            edit_text=content,
                            edit_pos=cursor_position)
 
@@ -308,7 +309,8 @@ class TweetEditor(WidgetWrap):
                  cursor_position=None):
         if content:
             content += ' '
-        self.editor = Edit(caption=u'%s (twice enter key to validate or esc) \n>> ' % prompt, 
+        caption = u'%s (twice enter key to validate or esc) \n>> ' % prompt
+        self.editor = Edit(caption=caption,
                            edit_text=content,
                            edit_pos=cursor_position)
 
@@ -610,10 +612,9 @@ class TimelinesBuffer(WidgetWrap):
     """A widget that displays one or more `Timeline` objects."""
 
     def __init__(self, timelines=None, **kwargs):
-        if timelines:
-            timeline_widgets = [TimelineWidget(timeline, **kwargs) for timeline in timelines]
-        else:
-            timeline_widgets = []
+        timelines = [] if timelines is None else timelines
+        timeline_widgets = [TimelineWidget(timeline, **kwargs) for timeline
+                                                                in timelines]
         WidgetWrap.__init__(self, Columns(timeline_widgets))
 
     def scroll_up(self):
@@ -665,7 +666,8 @@ class TimelineWidget(ScrollableListBox):
 
     def __init__(self, timeline=None, configuration=None):
         statuses = timeline if timeline else []
-        status_widgets = [StatusWidget(status, configuration) for status in statuses]
+        status_widgets = [StatusWidget(status, configuration) for status
+                                                              in statuses]
         ScrollableListBox.__init__(self, status_widgets)
 
 
@@ -710,11 +712,12 @@ class StatusWidget(WidgetWrap):
             # use a divider
             # we focus the divider to change colors when this
             # widget is focused
-            status_divider = self.configuration.styles.get('status_divider_char',
-                                                           '·')
+            styles = self.configuration.styles
+            status_divider = styles.get('status_divider_char', '·')
 
             divider = AttrMap(Divider(status_divider),
-                              border_attr, 'focus')
+                              border_attr,
+                              'focus')
             widget = Pile([header, body, divider], focus_item=2)
         else:
             widget = Pile([header, body], focus_item=1)
@@ -727,7 +730,9 @@ class StatusWidget(WidgetWrap):
         return key
 
     def _create_header(self, status):
-        """Return the header text for the status associated with this widget."""
+        """
+        Return the header text for the status associated with this widget.
+        """
         if is_DM(status):
             return self._dm_header(status)
 
@@ -753,7 +758,8 @@ class StatusWidget(WidgetWrap):
             retweet_count = str(status.retweet_count)
 
         # create header
-        header_template = ' ' + self.configuration.styles['header_template'] + ' '
+        styles = self.configuration.styles
+        header_template = ' ' + styles.get('header_template') + ' '
         header = unicode(header_template).format(
             username=username,
             retweeted=retweeted,

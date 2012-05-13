@@ -62,7 +62,8 @@ class KeyHandler(object):
         Return True if `key` corresponds to the action specified by `name`.
         """
         try:
-            bound_key, bound_key_description = self.configuration.key_bindings[name]
+            bindings = self.configuration.key_bindings
+            bound_key, bound_key_description = bindings[name]
         except KeyError:
             return False
         else:
@@ -449,7 +450,8 @@ class Controller(object):
         if is_any:
             self.timeline_mode()
         else:
-            self.info_message(_('You don\'t have any default timelines activated'))
+            message = _('You don\'t have any default timelines activated')
+            self.info_message(message)
             return
 
         for timeline in timelines:
@@ -471,10 +473,12 @@ class Controller(object):
                              on_success=timeline_fetched,)
 
     def append_user_timeline(self, username):
+        success_message = _('@%s\'s tweets fetched' % username)
         timeline_fetched = partial(self.info_message,
-                                    _('@%s\'s tweets fetched' % username))
+                                   success_message)
+        error_message = _('Failed to fetch @%s\'s tweets' % username)
         timeline_not_fetched = partial(self.error_message,
-                                        _('Failed to fetch @%s\'s tweets' % username))
+                                       error_message)
 
         self.append_timeline(name='@%s' % username,
                              update_function=self.api.get_user_timeline,
@@ -546,7 +550,8 @@ class Controller(object):
             if author not in participants:
                 participants.insert(0, author)
 
-            self.append_timeline(name=_('thread: %s' % ', '.join(participants)),
+            name = _('thread: %s' % ', '.join(participants))
+            self.append_timeline(name=name,
                                  update_function=self.api.get_thread,
                                  update_args=status,
                                  on_error=timeline_not_fetched,
@@ -833,10 +838,12 @@ class Controller(object):
         else:
             self.info_message(_('Creating search timeline for "%s"' % text))
 
+        success_message = _('Search timeline for "%s" created' % text)
         timeline_created = partial(self.info_message,
-                                   _('Search timeline for "%s" created' % text))
+                                   success_message)
+        error_message = _('Error creating search timeline for "%s"' % text)
         timeline_not_created = partial(self.info_message,
-                                       _('Error creating search timeline for "%s"' % text))
+                                       error_message)
 
         self.append_timeline(name=_('Search: %s' % text),
                              update_function=self.api.get_search,
@@ -859,10 +866,12 @@ class Controller(object):
         else:
             self.info_message(_('Fetching latest tweets from @%s' % username))
 
+        success_message = _('@%s\'s timeline created' % username)
         timeline_created = partial(self.info_message,
-                                  _('@%s\'s timeline created' % username))
+                                   success_message)
+        error_message = _('Unable to create @%s\'s timeline' % username)
         timeline_not_created = partial(self.error_message,
-                                       _('Unable to create @%s\'s timeline' % username))
+                                       error_message)
 
         self.append_timeline(name='@%s' % username,
                              update_function=self.api.get_user_timeline,
@@ -879,7 +888,8 @@ class Controller(object):
                                  done_signal_handler=self.search_handler,)
 
     def search_user(self):
-        self.ui.show_text_editor(prompt=_('Search user (no need to prepend it with "@")'),
+        prompt = _('Search user (no need to prepend it with "@"')
+        self.ui.show_text_editor(prompt=prompt,
                                  content='',
                                  done_signal_handler=self.search_user_handler)
 
@@ -962,10 +972,11 @@ class Controller(object):
             return
         recipient = get_dm_recipients_username(self.user.screen_name, status)
         if recipient:
+            done_signal_handler = self.direct_message_handler
             self.ui.show_dm_editor(prompt=_('DM to %s' % recipient),
                                    content='',
                                    recipient=recipient,
-                                   done_signal_handler=self.direct_message_handler)
+                                   done_signal_handler=done_signal_handler)
         else:
             self.error_message(_('What do you mean?'))
 
@@ -1028,10 +1039,16 @@ class Controller(object):
         if username == self.user.screen_name:
             self.error_message(_('You can\'t follow yourself'))
             return
+
+        success_message = _('You are now following @%s' % username)
         follow_done = partial(self.info_message,
-                              _('You are now following @%s' % username))
+                              success_message)
+
+        error_template = _('We can not ensure that you are following @%s')
+        error_message = error_template % username
         follow_error = partial(self.error_message,
-                               _('We can not ensure that you are following @%s' % username))
+                               error_message)
+
         self.api.create_friendship(screen_name=username,
                                    on_error=follow_error,
                                    on_success=follow_done)
@@ -1044,10 +1061,16 @@ class Controller(object):
         if username == self.user.screen_name:
             self.error_message(_('That doesn\'t make any sense'))
             return
+
+        success_message = _('You are no longer following %s' % username)
         unfollow_done = partial(self.info_message,
-                                _('You are no longer following %s' % username))
+                                success_message)
+
+        error_template = _('We can not ensure that you are not following %s')
+        error_message = error_template % username
         unfollow_error = partial(self.error_message,
-                               _('We can not ensure that you are not following %s' % username))
+                                 error_message)
+
         self.api.destroy_friendship(screen_name=username,
                                     on_error=unfollow_error,
                                     on_success=unfollow_done)
@@ -1103,7 +1126,8 @@ class Controller(object):
             return
 
         if is_DM(status):
-            self.info_message(_('You only can open regular statuses in a browser'))
+            message = _('You only can open regular statuses in a browser')
+            self.info_message(message)
             return
 
         url = get_status_url(status)
@@ -1112,7 +1136,9 @@ class Controller(object):
     def open_urls_in_browser(self, urls):
         command = self.configuration.browser
         if not command:
-            self.error_message(_('You have to set the BROWSER environment variable to open URLs'))
+            message = _('You have to set the BROWSER environment variable'
+                        ' to open URLs')
+            self.error_message(message)
             return
 
         try:
@@ -1135,11 +1161,12 @@ class Turses(Controller):
     def main_loop(self):
         if not hasattr(self, 'loop'):
             self.key_handler = KeyHandler(self.configuration, self)
+            handler = self.key_handler.handle
             self.loop = urwid.MainLoop(self.ui,
                                        self.configuration.palette,
                                        handle_mouse=False,
                                        #input_filter=self.input_filter,
-                                       unhandled_input=self.key_handler.handle,)
+                                       unhandled_input=handler)
         self.loop.run()
 
     def exit(self):

@@ -33,6 +33,7 @@ STATUS_URL_TEMPLATE = 'https://twitter.com/#!/{user}/status/{id}'
 def get_status_url(status):
     return STATUS_URL_TEMPLATE.format(user=status.user, id=status.id)
 
+
 def is_DM(status):
     return status.__class__ == DirectMessage
 
@@ -110,7 +111,7 @@ def get_hashtags(status):
 # operations with strings
 
 is_username = partial(matches_word, username_regex)
-is_hashtag =  partial(matches_word, hashtag_regex)
+is_hashtag = partial(matches_word, hashtag_regex)
 
 sanitize_username = partial(filter, is_username)
 
@@ -198,15 +199,16 @@ class Status(object):
         else:
             return "%d days ago" % (delta / (60 * 60 * 24))
 
-    # TODO: refactor this aberration 
+    # TODO: refactor this aberration
     def map_attributes(self, hashtag, attag, url):
         """
-        Return a list of strings and tuples for hashtag, attag and url entities.
+        Return a list of strings and tuples for hashtag, attag and
+        url entities.
 
-        For a hashtag, its tuple would be (`hashtag`, text). 
+        For a hashtag, its tuple would be (`hashtag`, text).
 
         >>> from datetime import datetime
-        >>> s = Status(id=0, 
+        >>> s = Status(id=0,
         ...            created_at=datetime.now(),
         ...            user='dialelo',
         ...            text='I love #Python',)
@@ -226,13 +228,14 @@ class Status(object):
 
         def map_attr(attr, entity_list):
             """
-            Return a list with (`attr`, string) tuples for each string in 
+            Return a list with (`attr`, string) tuples for each string in
             `entity_list`.
             """
             attr_mappings = []
             for entity in entity_list:
                 # urls are a special case, we change the URL shortened by
-                # Twitter (`http://t.co/*`) by the URL returned in `display_url`
+                # Twitter (`http://t.co/*`) by the URL returned in
+                # `display_url`
                 indices = entity.get('indices')
                 url = entity.get('display_url', False)
 
@@ -281,7 +284,7 @@ class Status(object):
             # append normal text before special entity
             normal_text = status_text[index:starts]
             if normal_text:
-               text.append(normal_text)
+                text.append(normal_text)
 
             # append text with attr
             text_with_attr = (attr, entity_text)
@@ -433,11 +436,15 @@ class UnsortedActiveList(ActiveList):
         raise NotImplementedError
 
     def shift_active_beggining(self):
-        """Shifts the active timeline (if any) to the begginning of the list."""
+        """
+        Shifts the active timeline (if any) to the begginning of the list.
+        """
         raise NotImplementedError
 
     def shift_active_end(self):
-        """Shifts the active timeline (if any) to the begginning of the list."""
+        """
+        Shifts the active timeline (if any) to the begginning of the list.
+        """
         raise NotImplementedError
 
 
@@ -789,14 +796,16 @@ class TimelineList(UnsortedActiveList):
     def shift_active_beggining(self):
         if self.has_timelines():
             first_index = 0
-            self.timelines.insert(first_index, self.timelines[self.active_index])
+            active_timeline = self.get_active_timeline()
+            self.timelines.insert(first_index, active_timeline)
             del self.timelines[self.active_index + 1]
             self.active_index = first_index
 
     def shift_active_end(self):
         if self.has_timelines():
             last_index = len(self.timelines)
-            self.timelines.insert(last_index, self.timelines[self.active_index])
+            active_timeline = self.get_active_timeline()
+            self.timelines.insert(last_index, active_timeline)
             self.delete_active_timeline()
             self.active_index = last_index - 1
 
@@ -861,7 +870,8 @@ class VisibleTimelineList(TimelineList):
     # from `TimelineList`
 
     def append_timeline(self, timeline):
-        # when appending a timeline is visible only if the `TimelineList` was empty
+        # when appending a timeline is visible only if the `TimelineList`
+        # was empty
         if self.active_index == self.NULL_INDEX:
             self.visible = [0]
         TimelineList.append_timeline(self, timeline)

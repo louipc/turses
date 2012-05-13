@@ -23,13 +23,15 @@ from functools import wraps, partial
 
 from turses import version as turses_version
 
-URL_REGEX = re.compile('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
+URL_REGEX = re.compile('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|'
+                       '(?:%[0-9a-fA-F][0-9a-fA-F]))+')
 
 
 def parse_arguments():
     """Parse arguments from the command line."""
 
-    parser = ArgumentParser("turses: Twitter client featuring a sexy curses interface.")
+    parser_title = "turses: Twitter client featuring a sexy curses interface."
+    parser = ArgumentParser(parser_title)
 
     parser.add_argument("-a", "--account",
             help=_("Use account with the specified username."))
@@ -37,8 +39,9 @@ def parse_arguments():
     parser.add_argument("-c", "--config",
             help=_("Use the specified configuration file."))
 
+    help = _("Generate a default configuration file is the specified path.")
     parser.add_argument("-g", "--generate-config",
-            help=_("Generate a default configuration file is the specified path."))
+                        help=help)
 
     version = "turses %s" % turses_version
     parser.add_argument("-v", "--version", action="version", version=version,
@@ -47,13 +50,15 @@ def parse_arguments():
     args = parser.parse_args()
     return args
 
+
 def wrap_exceptions(func):
     """
     Augments the function arguments with the `on_error` and `on_success`
     keyword arguments.
 
-    Executes the decorated function in a try except block and calls `on_success`
-    (if given) if no exception was raised, otherwise calls `on_error` (if given).
+    Executes the decorated function in a try except block and calls
+    `on_success` (if given) if no exception was raised, otherwise calls
+    `on_error` (if given).
     """
     @wraps(func)
     def wrapper(self=None, *args, **kwargs):
@@ -72,6 +77,7 @@ def wrap_exceptions(func):
 
     return wrapper
 
+
 def async(func):
     """
     Decorator for executing a function asynchronously.
@@ -89,6 +95,7 @@ def async(func):
         Thread(target=func, args=func_args).start()
     return wrapper
 
+
 def html_unescape(string):
     """Unescape HTML entities from `string`."""
     def entity_replacer(m):
@@ -99,6 +106,7 @@ def html_unescape(string):
             return m.group(0)
 
     return sub(r'&([^;]+);', entity_replacer, string)
+
 
 def matches_word(regex, word):
     """
@@ -112,8 +120,10 @@ def matches_word(regex, word):
 
 is_url = partial(matches_word, URL_REGEX)
 
+
 def get_urls(text):
     return findall(URL_REGEX, text)
+
 
 def encode(string):
     try:
@@ -121,8 +131,10 @@ def encode(string):
     except AttributeError:
         return string
 
+
 def timestamp_from_datetime(datetime):
     return timegm(datetime.utctimetuple())
+
 
 def datetime_from_twitter_datestring(datestring):
     """
@@ -135,6 +147,7 @@ def datetime_from_twitter_datestring(datestring):
     time_tuple = parsedate_tz(datestring.strip())
     dt = datetime(*time_tuple[:6])
     return dt - timedelta(seconds=time_tuple[-1])
+
 
 def spawn_process(command, args):
     """

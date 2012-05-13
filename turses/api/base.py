@@ -25,6 +25,7 @@ TWITTER_CONSUMER_SECRET = 'viud49uVgdVO9dnOGxSQJRo7jphTioIlEn3OdpkZI'
 
 BASE_URL = 'https://api.twitter.com'
 
+
 def authorization():
     """
     Authorize `turses` to use a Twitter account.
@@ -49,44 +50,52 @@ def authorization():
     # limitations under the License.
     print 'base_url:{0}'.format(BASE_URL)
 
-
     REQUEST_TOKEN_URL = BASE_URL + '/oauth/request_token'
-    ACCESS_TOKEN_URL  = BASE_URL + '/oauth/access_token'
+    ACCESS_TOKEN_URL = BASE_URL + '/oauth/access_token'
     AUTHORIZATION_URL = BASE_URL + '/oauth/authorize'
-    consumer_key      = TWITTER_CONSUMER_KEY
-    consumer_secret   = TWITTER_CONSUMER_SECRET
-    oauth_consumer    = oauth.Consumer(key=consumer_key, secret=consumer_secret)
-    oauth_client      = oauth.Client(oauth_consumer)
+
+    consumer_key = TWITTER_CONSUMER_KEY
+    consumer_secret = TWITTER_CONSUMER_SECRET
+    oauth_consumer = oauth.Consumer(key=consumer_key, secret=consumer_secret)
+    oauth_client = oauth.Client(oauth_consumer)
 
     print encode(_('Requesting temp token from Twitter'))
 
     resp, content = oauth_client.request(REQUEST_TOKEN_URL, 'GET')
 
     if resp['status'] != '200':
-        print encode(_('Invalid respond, requesting temp token: %s')) % str(resp['status'])
+        response = str(resp['status'])
+        message = _('Invalid respond, requesting temp token: %s') % response
+        print encode(message)
         return
 
     request_token = dict(parse_qsl(content))
 
-    print ''
-    print encode(_('Please visit the following page to retrieve needed pin code'))
-    print encode(_('to obtain an Authentication Token:'))
-    print ''
-    print '%s?oauth_token=%s' % (AUTHORIZATION_URL, request_token['oauth_token'])
-    print ''
+    print
+    message = _("""
+Please visit the following page to retrieve needed pin code
+to obtain an Authentication Token:""")
+    print encode(message)
+    print
+    print '%s?oauth_token=%s' % (AUTHORIZATION_URL,
+                                 request_token['oauth_token'])
+    print
 
     pincode = raw_input('Pin code? ')
 
-    token = oauth.Token(request_token['oauth_token'], request_token['oauth_token_secret'])
+    token = oauth.Token(request_token['oauth_token'],
+                        request_token['oauth_token_secret'])
     token.set_verifier(pincode)
 
     print ''
     print encode(_('Generating and signing request for an access token'))
     print ''
 
-    oauth_client  = oauth.Client(oauth_consumer, token)
-    resp, content = oauth_client.request(ACCESS_TOKEN_URL, method='POST', body='oauth_verifier=%s' % pincode)
-    access_token  = dict(parse_qsl(content))
+    oauth_client = oauth.Client(oauth_consumer, token)
+    resp, content = oauth_client.request(ACCESS_TOKEN_URL,
+                                         method='POST',
+                                         body='oauth_verifier=%s' % pincode)
+    access_token = dict(parse_qsl(content))
 
     if resp['status'] == '200':
         return access_token
@@ -304,7 +313,8 @@ class AsyncApi(Api):
     @wrap_exceptions
     def destroy_direct_message(self, status):
         args = status,
-        destroy_thread = Thread(target=self._api.destroy_direct_message, args=args)
+        destroy_thread = Thread(target=self._api.destroy_direct_message,
+                                args=args)
         destroy_thread.start()
 
     @wrap_exceptions
@@ -322,7 +332,8 @@ class AsyncApi(Api):
     @wrap_exceptions
     def destroy_friendship(self, screen_name):
         args = screen_name,
-        unfollow_thread = Thread(target=self._api.destroy_friendship, args=args)
+        unfollow_thread = Thread(target=self._api.destroy_friendship,
+                                 args=args)
         unfollow_thread.start()
 
     @wrap_exceptions
@@ -336,5 +347,6 @@ class AsyncApi(Api):
     @wrap_exceptions
     def destroy_favorite(self, status):
         args = status,
-        unfavorite_thread = Thread(target=self._api.destroy_favorite, args=args)
+        unfavorite_thread = Thread(target=self._api.destroy_favorite,
+                                   args=args)
         unfavorite_thread.start()

@@ -25,6 +25,7 @@ def set_title(string):
     except:
         pass
 
+
 def main():
     try:
         set_title(__name__)
