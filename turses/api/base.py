@@ -7,7 +7,7 @@ turses.api.base
 This module contains an `ApiAdapter` abstract class that acts as an adapter
 for different Twitter API implementations.
 
-It also contains an asynchronous wrapper to `AdapterApi` and a function to
+It also contains an asynchronous wrapper to `ApiAdapter` and a function to
 authorize `turses` to use a Twitter account.
 """
 
@@ -261,17 +261,16 @@ class ApiAdapter(object):
 
 class AsyncApi(ApiAdapter):
     """
-    Wrap an `ApiAdapter` subclass and execute its methods in background
-    whenever possible (i.e. they don't return results).
-
-    The methods for creating, updating or deleting Twitter entities are
-    decorated with `turses.utils.wrap_exceptions`.
+    Wrap an `ApiAdapter` subclass and execute the methods for creating,
+    updating and deleting Twitter entities in background. Those methods
+    are decorated with `turses.utils.wrap_exceptions`.
     """
 
     def __init__(self, api_cls, *args, **kwargs):
         """
-        `api_cls` is the class used to instantiate the Twitter API,
-        it must implement the methods in `ApiAdapter`.
+        Args:
+            api_cls -- the class used to instantiate the Twitter API,
+                       it must implement the methods in `ApiAdapter`.
         """
         ApiAdapter.__init__(self, *args, **kwargs)
         self._api = api_cls(access_token_key=self._access_token_key,
