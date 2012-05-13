@@ -9,6 +9,10 @@ based on `Tyrs`_ by `Nicolas Paris`_.
 .. _`Tyrs`: http://tyrs.nicosphere.net
 .. _`Nicolas Paris`: http://github.com/Nic0
 
+A ``turses`` session with multiple columns running on ``urxvt``:
+
+.. image:: http://dialelo.com/img/turses_screenshot.png
+
 The goal of the project is to build a full-featured, lightweight, and extremely 
 configurable Twitter client.
 
@@ -75,14 +79,6 @@ Roadmap
 - Multiple sessions
 - Geo
 - Blocking
-
-Screenshots
------------
-
-A ``turses`` session with multiple columns running on ``urxvt``:
-
-.. image:: http://dialelo.com/img/turses_screenshot.png
-
 
 License
 -------
