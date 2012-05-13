@@ -563,8 +563,9 @@ class Controller(object):
     # -- Timeline mode --------------------------------------------------------
 
     def draw_timelines(self):
-        self.update_header()
-        self.draw_timeline_buffer()
+        if self.is_in_timeline_mode():
+            self.update_header()
+            self.draw_timeline_buffer()
 
     def update_header(self):
         # update tabs with buffer names and unread count
@@ -714,7 +715,7 @@ class Controller(object):
             active_timeline = self.timelines.get_active_timeline()
             # update with newer tweets when scrolling down being at the bottom
             if active_timeline.active_index == 0:
-               self.update_active_timeline_with_newer_statuses()
+                self.update_active_timeline_with_newer_statuses()
             active_timeline.activate_previous()
             self.draw_timelines()
 
@@ -724,7 +725,7 @@ class Controller(object):
             active_timeline = self.timelines.get_active_timeline()
             # update with older tweets when scrolling down being at the bottom
             if active_timeline.active_index == len(active_timeline) - 1:
-               self.update_active_timeline_with_older_statuses()
+                self.update_active_timeline_with_older_statuses()
             active_timeline.activate_next()
             self.draw_timelines()
 
@@ -832,16 +833,16 @@ class Controller(object):
         else:
             self.info_message(_('Creating search timeline for "%s"' % text))
 
-        timeline_created =  partial(self.info_message,
-                                    _('Search timeline for "%s" created' % text))
-        timeline_not_created =  partial(self.info_message,
-                                        _('Error creating search timeline for "%s"' % text))
+        timeline_created = partial(self.info_message,
+                                   _('Search timeline for "%s" created' % text))
+        timeline_not_created = partial(self.info_message,
+                                       _('Error creating search timeline for "%s"' % text))
 
         self.append_timeline(name=_('Search: %s' % text),
-                            update_function=self.api.get_search,
-                            update_args=text,
-                            on_error=timeline_not_created,
-                            on_success=timeline_created)
+                             update_function=self.api.get_search,
+                             update_args=text,
+                             on_error=timeline_not_created,
+                             on_success=timeline_created)
 
     def search_user_handler(self, username):
         """
