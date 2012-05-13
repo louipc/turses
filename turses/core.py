@@ -1000,7 +1000,8 @@ class Controller(object):
             return
 
         author = get_authors_username(status)
-        if author != self.user.screen_name:
+        if (author != self.user.screen_name and
+            status.user != self.user.screen_name):
             self.error_message(_('You can only delete your own tweets'))
             return
 
