@@ -2,7 +2,7 @@
 
 import os
 import sys
-from distutils.core import setup
+from setuptools import setup, find_packages
 
 import turses
 
@@ -34,27 +34,21 @@ setup(name="turses",
       url="http://github.com/alejandrogomez/turses",
       description="A Twitter client with a curses interface.",
       long_description=long_description,
-      keywords="twitter client curses",
-      packages=[
-          "turses",
-          "turses.api",
-      ],
-      package_data={'': ['LICENSE']},
-      include_package_data=True,
-      package_dir={
-          "turses":  "turses"
+      keywords="twitter client, curses, console",
+      packages=find_packages(),
+      entry_points={
+          'console_scripts':
+            ['turses = turses.cli:main']
       },
-      scripts=['bin/turses'],
-      platforms=["linux"],
       classifiers=[
           "Development Status :: 4 - Beta",
           "Environment :: Console :: Curses",
           "Intended Audience :: End Users/Desktop",
-          "License :: OSI Approved :: GNU General Public License (GPL)",
+          "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
           "Natural Language :: English",
           "Operating System :: POSIX :: Linux",
+          "Operating System :: MacOS",
           "Programming Language :: Python :: 2.7",
-          "Topic :: Communications"
+          "Topic :: Communications",
       ],
-      install_requires=requirements,
-      tests_require=test_requirements,)
+      install_requires=requirements,)

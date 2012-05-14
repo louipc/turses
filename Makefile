@@ -19,8 +19,8 @@ turses: clean test dist install
 dist: clean
 	$(DIST)
 
-install: dist $(DISTPKG)
-	$(PIPI) $(PIPFLAGS) $(DISTPKG)
+install: 
+	$(PY) setup.py develop
 
 clean: pyc
 	rm -rf dist/
