@@ -84,15 +84,7 @@ def async(func):
     """
     @wraps(func)
     def wrapper(*args, **kwargs):
-        if args and kwargs:
-            func_args = args, kwargs
-        elif args:
-            func_args = args
-        elif kwargs:
-            func_args = kwargs
-        else:
-            Thread(target=func).start()
-        Thread(target=func, args=func_args).start()
+        return Thread(target=func, args=args, kwargs=kwargs).start()
     return wrapper
 
 
