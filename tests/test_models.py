@@ -415,7 +415,7 @@ class TimelineTest(unittest.TestCase):
         self.assertEqual(len(self.timeline), 2)
 
     def assert_active(self, status):
-        active_status = self.timeline.get_active()
+        active_status = self.timeline.active
         if active_status:
             self.assertEqual(status, active_status)
         else:
@@ -699,29 +699,17 @@ class TimelineListTest(unittest.TestCase):
         self.timeline_list.activate_previous()
         self.assertEqual(self.timeline_list.active_index, 0)
 
-    def test_get_active_timeline_name_returns_first_appended(self):
+    def test_active_returns_first_appended(self):
         # append
         name = 'Timeline'
         timeline = Timeline(name)
         self.timeline_list.append_timeline(timeline)
         # assert
-        active_timeline_name = self.timeline_list.get_active_timeline_name()
-        self.assertEqual(name, active_timeline_name)
-
-    def test_get_active_timeline_name_raises_exception_when_empty(self):
-        self.assertRaises(Exception, self.timeline_list.get_active_timeline_name)
-
-    def test_get_active_timeline_returns_first_appended(self):
-        # append
-        name = 'Timeline'
-        timeline = Timeline(name)
-        self.timeline_list.append_timeline(timeline)
-        # assert
-        active_timeline = self.timeline_list.get_active_timeline()
+        active_timeline = self.timeline_list.active
         self.assertEqual(timeline, active_timeline)
 
-    def test_get_active_timeline_raises_exception_when_empty(self):
-        self.assertRaises(Exception, self.timeline_list.get_active_timeline)
+    def test_active_returns_None_when_empty(self):
+        self.assertIsNone(self.timeline_list.active)
 
     def test_append_timeline_increases_timeline_size(self):
         self.assertEqual(len(self.timeline_list), 0)

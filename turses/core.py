@@ -533,7 +533,7 @@ class Controller(object):
                              on_success=timeline_fetched,)
 
     def append_thread_timeline(self):
-        status = self.timelines.get_active_status()
+        status = self.timelines.active_status
         if status is None:
             return
 
@@ -598,7 +598,7 @@ class Controller(object):
         visible_timelines = self.timelines.get_visible_timelines()
         self.ui.draw_timelines(visible_timelines)
         # focus active timeline
-        active_timeline = self.timelines.get_active_timeline()
+        active_timeline = self.timelines.active
         active_pos = self.timelines.get_visible_timeline_relative_index()
         # focus active status
         self.ui.focus_timeline(active_pos)
@@ -606,7 +606,7 @@ class Controller(object):
 
     def mark_all_as_read(self):
         """Mark all statuses in active timeline as read."""
-        active_timeline = self.timelines.get_active_timeline()
+        active_timeline = self.timelines.active
         for tweet in active_timeline:
             tweet.read = True
         self.update_header()
@@ -615,7 +615,7 @@ class Controller(object):
     def update_active_timeline(self):
         """Updates the timeline and renders the active timeline."""
         if self.timelines.has_timelines():
-            active_timeline = self.timelines.get_active_timeline()
+            active_timeline = self.timelines.active
             try:
                 newest = active_timeline[0]
             except IndexError:
@@ -630,8 +630,8 @@ class Controller(object):
         """
         Updates the active timeline with newer tweets than the active.
         """
-        active_timeline = self.timelines.get_active_timeline()
-        active_status = active_timeline.get_active()
+        active_timeline = self.timelines.active
+        active_status = active_timeline.active
         if active_status:
             active_timeline.update_with_extra_kwargs(since_id=active_status.id)
 
@@ -640,8 +640,8 @@ class Controller(object):
         """
         Updates the active timeline with older tweets than the active.
         """
-        active_timeline = self.timelines.get_active_timeline()
-        active_status = active_timeline.get_active()
+        active_timeline = self.timelines.active
+        active_status = active_timeline.active
         if active_status:
             active_timeline.update_with_extra_kwargs(max_id=active_status.id)
 
@@ -717,7 +717,7 @@ class Controller(object):
     def scroll_up(self):
         self.ui.focus_previous()
         if self.is_in_timeline_mode():
-            active_timeline = self.timelines.get_active_timeline()
+            active_timeline = self.timelines.active
             # update with newer tweets when scrolling down being at the bottom
             if active_timeline.active_index == 0:
                 self.update_active_timeline_with_newer_statuses()
@@ -727,7 +727,7 @@ class Controller(object):
     def scroll_down(self):
         self.ui.focus_next()
         if self.is_in_timeline_mode():
-            active_timeline = self.timelines.get_active_timeline()
+            active_timeline = self.timelines.active
             # update with older tweets when scrolling down being at the bottom
             if active_timeline.active_index == len(active_timeline) - 1:
                 self.update_active_timeline_with_older_statuses()
@@ -737,14 +737,14 @@ class Controller(object):
     def scroll_top(self):
         self.ui.focus_first()
         if self.is_in_timeline_mode():
-            active_timeline = self.timelines.get_active_timeline()
+            active_timeline = self.timelines.active
             active_timeline.activate_first()
             self.draw_timelines()
 
     def scroll_bottom(self):
         self.ui.focus_last()
         if self.is_in_timeline_mode():
-            active_timeline = self.timelines.get_active_timeline()
+            active_timeline = self.timelines.active
             active_timeline.activate_last()
             self.draw_timelines()
 
@@ -894,14 +894,14 @@ class Controller(object):
                                  done_signal_handler=self.search_user_handler)
 
     def search_hashtags(self):
-        status = self.timelines.get_active_status()
+        status = self.timelines.active_status
         if status is None:
             return
         hashtags = ' '.join(get_hashtags(status))
         self.search_handler(text=hashtags)
 
     def focused_status_author_timeline(self):
-        status = self.timelines.get_active_status()
+        status = self.timelines.active_status
         if status is None:
             return
         author = get_authors_username(status)
@@ -917,7 +917,7 @@ class Controller(object):
                                   cursor_position=cursor_position)
 
     def retweet(self):
-        status = self.timelines.get_active_status()
+        status = self.timelines.active_status
         if status is None:
             return
 
@@ -934,7 +934,7 @@ class Controller(object):
                          status=status,)
 
     def manual_retweet(self):
-        status = self.timelines.get_active_status()
+        status = self.timelines.active_status
 
         if status is None:
             return
@@ -948,7 +948,7 @@ class Controller(object):
             self.error_message(_('Tweet too long for manual retweet'))
 
     def reply(self):
-        status = self.timelines.get_active_status()
+        status = self.timelines.active_status
         if status is None:
             return
         if is_DM(status):
@@ -967,7 +967,7 @@ class Controller(object):
                                   done_signal_handler=self.tweet_handler,)
 
     def direct_message(self):
-        status = self.timelines.get_active_status()
+        status = self.timelines.active_status
         if status is None:
             return
         recipient = get_dm_recipients_username(self.user.screen_name, status)
@@ -981,7 +981,7 @@ class Controller(object):
             self.error_message(_('What do you mean?'))
 
     def tweet_with_hashtags(self):
-        status = self.timelines.get_active_status()
+        status = self.timelines.active_status
         if status is None:
             return
         hashtags = ' '.join(get_hashtags(status))
@@ -992,7 +992,7 @@ class Controller(object):
                                       cursor_position=0)
 
     def delete_tweet(self):
-        status = self.timelines.get_active_status()
+        status = self.timelines.active_status
         if status is None:
             return
         if is_DM(status):
@@ -1015,7 +1015,7 @@ class Controller(object):
                                 on_success=status_deleted)
 
     def delete_dm(self):
-        dm = self.timelines.get_active_status()
+        dm = self.timelines.active_status
         if dm is None:
             return
 
@@ -1033,7 +1033,7 @@ class Controller(object):
                                         on_success=dm_deleted)
 
     def follow_selected(self):
-        status = self.timelines.get_active_status()
+        status = self.timelines.active_status
         if status is None:
             return
         username = get_authors_username(status)
@@ -1055,7 +1055,7 @@ class Controller(object):
                                    on_success=follow_done)
 
     def unfollow_selected(self):
-        status = self.timelines.get_active_status()
+        status = self.timelines.active_status
         if status is None:
             return
         username = get_authors_username(status)
@@ -1077,7 +1077,7 @@ class Controller(object):
                                     on_success=unfollow_done)
 
     def favorite(self):
-        status = self.timelines.get_active_status()
+        status = self.timelines.active_status
         if status is None:
             return
         favorite_error = partial(self.error_message,
@@ -1089,7 +1089,7 @@ class Controller(object):
                                  status=status,)
 
     def unfavorite(self):
-        status = self.timelines.get_active_status()
+        status = self.timelines.active_status
         if status is None:
             return
         unfavorite_error = partial(self.error_message,
@@ -1106,7 +1106,7 @@ class Controller(object):
         """
         Open the URLs contained on the focused tweets in a browser.
         """
-        status = self.timelines.get_active_status()
+        status = self.timelines.active_status
         if status is None:
             return
         urls = get_urls(status.text)
@@ -1122,7 +1122,7 @@ class Controller(object):
         """
         Open the focused tweet in a browser.
         """
-        status = self.timelines.get_active_status()
+        status = self.timelines.active_status
         if status is None:
             return
 
