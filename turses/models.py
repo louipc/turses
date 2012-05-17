@@ -255,15 +255,6 @@ class TimelineList(UnsortedActiveList):
         self.active_index = -1
         self.timelines = []
 
-    def get_timelines(self):
-        return self.timelines
-
-    def get_timeline_names(self):
-        return [timeline.name for timeline in self.timelines]
-
-    def get_unread_counts(self):
-        return [timeline.get_unread_count() for timeline in self.timelines]
-
     # magic
 
     def __iter__(self):
@@ -331,7 +322,7 @@ class TimelineList(UnsortedActiveList):
     def shift_active_beggining(self):
         if self.has_timelines():
             first_index = 0
-            active_timeline = self.get_active_timeline()
+            active_timeline = self.active
             self.timelines.insert(first_index, active_timeline)
             del self.timelines[self.active_index + 1]
             self.active_index = first_index
@@ -339,7 +330,7 @@ class TimelineList(UnsortedActiveList):
     def shift_active_end(self):
         if self.has_timelines():
             last_index = len(self.timelines)
-            active_timeline = self.get_active_timeline()
+            active_timeline = self.active
             self.timelines.insert(last_index, active_timeline)
             self.delete_active_timeline()
             self.active_index = last_index - 1
@@ -354,6 +345,19 @@ class VisibleTimelineList(TimelineList):
     def __init__(self, *args, **kwargs):
         TimelineList.__init__(self, *args, **kwargs)
         self.visible = []
+
+    @property
+    def visible_timelines(self):
+        return [self.timelines[i] for i in self.visible]
+
+    # TODO: test
+    @property
+    def active_index_relative_to_visible(self):
+        return self.visible.index(self.timelines.index(self.active))
+
+    def _set_active_as_visible(self):
+        if self.active_index not in self.visible:
+            self.visible = [self.active_index]
 
     def expand_visible_previous(self):
         if not self.visible:
@@ -395,13 +399,6 @@ class VisibleTimelineList(TimelineList):
         except IndexError:
             pass
 
-    def get_visible_indexes(self):
-        return self.visible
-
-    # TODO: rename this
-    def get_visible_timeline_relative_index(self):
-        return self.visible.index(self.active_index)
-
     # from `TimelineList`
 
     def append_timeline(self, timeline):
@@ -419,13 +416,6 @@ class VisibleTimelineList(TimelineList):
         finally:
             TimelineList.delete_active_timeline(self)
         self._set_active_as_visible()
-
-    def get_visible_timelines(self):
-        return [self.timelines[i] for i in self.visible]
-
-    def _set_active_as_visible(self):
-        if self.active_index not in self.visible:
-            self.visible = [self.active_index]
 
     def activate_previous(self):
         TimelineList.activate_previous(self)
@@ -801,11 +791,6 @@ class Timeline(ActiveList):
         self.active_index = self.NULL_INDEX
         self.statuses = []
 
-    def get_newer_than(self, datetime):
-        """Return the statuses that are more recent than `datetime`."""
-        newer = lambda status: status.created_at > datetime
-        return filter(newer, self.statuses)
-
     @wrap_exceptions
     def update(self):
         # TODO: use a generator (?)
@@ -858,7 +843,8 @@ class Timeline(ActiveList):
 
         self.add_statuses(new_statuses)
 
-    def get_unread_count(self):
+    @property
+    def unread_count(self):
         def one_if_unread(tweet):
             if hasattr(tweet, 'read') and tweet.read:
                 return 0
@@ -876,6 +862,7 @@ class Timeline(ActiveList):
 
     def __getitem__(self, i):
         return self.statuses[i]
+
 
     # from `ActiveList`
 

@@ -573,13 +573,9 @@ class Controller(object):
             self.draw_timeline_buffer()
 
     def update_header(self):
-        # update tabs with buffer names and unread count
-        timeline_names = self.timelines.get_timeline_names()
-        unread_tweets = self.timelines.get_unread_counts()
-
         template = self.configuration.styles['tab_template']
-
-        name_and_unread = zip(timeline_names, map(str, unread_tweets))
+        name_and_unread = [(timeline.name, timeline.unread_count) for timeline
+                                                                in self.timelines]
 
         tabs = [template.format(timeline_name=name, unread=unread)
                 for (name, unread) in name_and_unread]
@@ -590,16 +586,16 @@ class Controller(object):
         self.ui.activate_tab(active_index)
 
         # colorize the visible tabs
-        visible_indexes = self.timelines.get_visible_indexes()
+        visible_indexes = self.timelines.visible
         self.ui.header.set_visible_tabs(visible_indexes)
 
     def draw_timeline_buffer(self):
         # draw visible timelines
-        visible_timelines = self.timelines.get_visible_timelines()
+        visible_timelines = self.timelines.visible_timelines
         self.ui.draw_timelines(visible_timelines)
         # focus active timeline
         active_timeline = self.timelines.active
-        active_pos = self.timelines.get_visible_timeline_relative_index()
+        active_pos = self.timelines.active_index_relative_to_visible
         # focus active status
         self.ui.focus_timeline(active_pos)
         self.ui.focus_status(active_timeline.active_index)
