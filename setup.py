@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import os
-import sys
 from setuptools import setup, find_packages
 
 import turses
-
 
 name = "turses"
 
@@ -22,10 +19,6 @@ try:
 except IOError:
     long_description = ""
 
-# Publish Helper.
-if sys.argv[-1] == 'publish':
-    os.system('python setup.py sdist upload')
-    sys.exit()
 
 setup(name="turses",
       version=turses.version,

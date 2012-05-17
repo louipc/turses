@@ -36,3 +36,6 @@ watch:
 
 bump:
 	$(EDITOR) HISTORY.rst turses/__init__.py Makefile 
+
+publish:
+	$(PY) setup.py sdist upload
