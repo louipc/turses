@@ -742,7 +742,7 @@ class StatusWidget(WidgetWrap):
         retweet_count = ''
         retweeter = ''
         username = status.user
-        relative_created_at = status.get_relative_created_at()
+        relative_created_at = status.relative_created_at
 
         # reply
         if status.is_reply:
@@ -773,7 +773,7 @@ class StatusWidget(WidgetWrap):
 
     def _dm_header(self, dm):
         dm_template = ' ' + self.configuration.styles['dm_template'] + ' '
-        relative_created_at = dm.get_relative_created_at()
+        relative_created_at = dm.relative_created_at
         header = unicode(dm_template).format(
             sender_screen_name=dm.sender_screen_name,
             recipient_screen_name=dm.recipient_screen_name,

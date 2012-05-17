@@ -13,8 +13,7 @@ from functools import wraps, partial
 from tweepy import API as BaseTweepyApi
 from tweepy import OAuthHandler as TweepyOAuthHandler
 
-from turses.models import (User, Status, DirectMessage,
-                           get_authors_username, get_mentioned_usernames)
+from turses.models import User, Status, DirectMessage
 from turses.api.base import ApiAdapter
 
 
@@ -215,8 +214,8 @@ class TweepyApi(BaseTweepyApi, ApiAdapter):
         It filters the last tweets by the participanting users and
         based on mentions to each other.
         """
-        author = get_authors_username(status)
-        mentioned = get_mentioned_usernames(status)
+        author = status.authors_username
+        mentioned = status.mentioned_usernames
         if author not in mentioned:
             mentioned.append(author)
 

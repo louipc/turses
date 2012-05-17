@@ -34,11 +34,6 @@ from turses.models import (
         is_valid_search_text,
         sanitize_username,
 
-        get_authors_username,
-        get_mentioned_for_reply,
-        get_dm_recipients_username,
-        get_mentioned_usernames,
-        get_hashtags,
         Timeline,
         VisibleTimelineList,
 )
@@ -544,8 +539,8 @@ class Controller(object):
         if is_DM(status):
             self.error_message(_('Doesn\'t look like a public conversation'))
         else:
-            participants = get_mentioned_usernames(status)
-            author = get_authors_username(status)
+            participants = status.mentioned_usernames
+            author = status.authors_username
             if author not in participants:
                 participants.insert(0, author)
 
@@ -892,14 +887,14 @@ class Controller(object):
         status = self.timelines.active_status
         if status is None:
             return
-        hashtags = ' '.join(get_hashtags(status))
+        hashtags = ' '.join(status.hashtags)
         self.search_handler(text=hashtags)
 
     def focused_status_author_timeline(self):
         status = self.timelines.active_status
         if status is None:
             return
-        author = get_authors_username(status)
+        author = status.authors_username
         self.append_user_timeline(author)
 
     def tweet(self,
@@ -934,7 +929,7 @@ class Controller(object):
         if status is None:
             return
 
-        rt_text = ''.join([' RT @%s: ' % get_authors_username(status),
+        rt_text = ''.join([' RT @%s: ' % status.authors_username,
                            status.text])
         if is_valid_status_text(rt_text):
             self.tweet(content=rt_text,
@@ -950,8 +945,8 @@ class Controller(object):
             self.direct_message()
             return
 
-        author = get_authors_username(status)
-        mentioned = get_mentioned_for_reply(status)
+        author = status.authors_username
+        mentioned = status.mentioned_for_reply
         try:
             mentioned.remove('@%s' % self.user.screen_name)
         except ValueError:
@@ -965,7 +960,7 @@ class Controller(object):
         status = self.timelines.active_status
         if status is None:
             return
-        recipient = get_dm_recipients_username(self.user.screen_name, status)
+        recipient = status.dm_recipients_username(self.user.screen_name)
         if recipient:
             done_signal_handler = self.direct_message_handler
             self.ui.show_dm_editor(prompt=_('DM to %s' % recipient),
@@ -979,7 +974,7 @@ class Controller(object):
         status = self.timelines.active_status
         if status is None:
             return
-        hashtags = ' '.join(get_hashtags(status))
+        hashtags = ' '.join(status.hashtags)
         if hashtags:
             self.ui.show_tweet_editor(prompt=_('%s' % hashtags),
                                       content=''.join([' ', hashtags]),
@@ -994,7 +989,7 @@ class Controller(object):
             self.delete_dm()
             return
 
-        author = get_authors_username(status)
+        author = status.authors_username
         if (author != self.user.screen_name and
             status.user != self.user.screen_name):
             self.error_message(_('You can only delete your own tweets'))
@@ -1031,7 +1026,7 @@ class Controller(object):
         status = self.timelines.active_status
         if status is None:
             return
-        username = get_authors_username(status)
+        username = status.authors_username
         if username == self.user.screen_name:
             self.error_message(_('You can\'t follow yourself'))
             return
@@ -1053,7 +1048,7 @@ class Controller(object):
         status = self.timelines.active_status
         if status is None:
             return
-        username = get_authors_username(status)
+        username = status.authors_username
         if username == self.user.screen_name:
             self.error_message(_('That doesn\'t make any sense'))
             return

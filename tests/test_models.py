@@ -11,33 +11,12 @@ from datetime import datetime
 
 from mock import MagicMock
 
-from turses.models import (
-        prepend_at,
-
-        is_DM,
-        get_mentioned_usernames,
-        get_mentioned_for_reply,
-        get_dm_recipients_username,
-        get_authors_username,
-        get_hashtags,
-
-        is_username,
-        is_hashtag,
-        sanitize_username,
-
-        Status,
-        DirectMessage,
-
-        ActiveList,
-        Timeline,
-        TimelineList,
-        VisibleTimelineList,
-        )
+from turses.models import (prepend_at, sanitize_username,
+                           is_DM, is_username, is_hashtag, 
+                           Status, DirectMessage, Timeline,
+                           ActiveList, TimelineList, VisibleTimelineList,)
 
 
-#
-# Helpers
-#
 def create_status(**kwargs):
     now = datetime.now()
     defaults = {
@@ -73,94 +52,6 @@ class HelperFunctionTest(unittest.TestCase):
 
         dm = create_direct_message()
         self.failUnless(is_DM(dm))
-
-    def test_get_mentioned_usernames(self):
-        user = 'turses'
-        mentioned = ('dialelo', 'mental_floss', '4n_4Wfu1_US3RN4M3')
-
-        expected_output = list(mentioned)
-
-        text = "@%s, @%s and @%s" % mentioned
-        status = create_status(user=user,
-                               text=text)
-
-        expected = set(expected_output)
-        mentioned_usernames = get_mentioned_usernames(status)
-        self.assertEqual(expected, set(mentioned_usernames))
-
-    def test_get_mentioned_for_reply(self):
-        user = 'turses'
-        mentioned = ('dialelo', 'mental_floss', '4n_4Wfu1_US3RN4M3')
-
-        expected_output = list(mentioned)
-        expected_output.append(user)
-        expected_output = map(prepend_at, expected_output)
-
-        text = "@%s, @%s and @%s" % mentioned
-        status = create_status(user=user,
-                               text=text)
-
-        expected = set(filter(prepend_at, expected_output))
-        mentioned_for_reply = get_mentioned_for_reply(status)
-        self.assertEqual(expected, set(mentioned_for_reply))
-
-    def test_get_authors_username(self):
-        user = 'turses'
-
-        # tweet
-        status = create_status(user=user)
-        author = get_authors_username(status)
-        self.assertEqual(user, author)
-
-        # retweet
-        retweeter = 'bot'
-        retweet = create_status(user=retweeter,
-                                is_retweet=True,
-                                author=user)
-        author = get_authors_username(retweet)
-        self.assertEqual(user, author)
-
-        # direct message
-        dm = create_direct_message(sender_screen_name=user,)
-        author = get_authors_username(dm)
-        self.assertEqual(user, author)
-
-    def test_get_dm_recipients_username(self):
-        # authenticating user
-        user = 'turses'
-
-        # given a status in which the author is the authenticated author
-        # must return `None`
-        status = create_status(user=user)
-        recipient_own_tweet = get_dm_recipients_username(user, status)
-        self.failIf(recipient_own_tweet)
-
-        # @user -> @another_user messages should return 'another_user'
-        expected_recipient = 'dialelo'
-        dm = create_direct_message(sender_screen_name=user,
-                                   recipient_screen_name=expected_recipient,)
-        recipient_dm_user_is_sender = get_dm_recipients_username(user, dm)
-        self.assertEqual(recipient_dm_user_is_sender, expected_recipient)
-
-        # @another_user -> @user messages should return 'another_user'
-        dm = create_direct_message(sender_screen_name=expected_recipient,
-                                   recipient_screen_name=user,)
-        recipient_dm_user_is_recipient = get_dm_recipients_username(user, dm)
-        self.assertEqual(recipient_dm_user_is_recipient, expected_recipient)
-
-    def test_get_hashtags(self):
-        user = 'turses'
-        hashtags = ('#turses', '#arch_linux', '#I<3Python')
-
-        expected_output = list(hashtags)
-
-        text = "%s %s %s" % hashtags
-        status = create_status(user=user,
-                               text=text)
-
-        expected = set(expected_output)
-        mentioned_hashtags = get_hashtags(status)
-        self.assertEqual(expected, set(mentioned_hashtags))
 
     def test_is_username(self):
         valid = ['dialelo', 'mental_floss', '4n_4Wfu1_US3RN4M3']
@@ -361,26 +252,106 @@ class StatusTest(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
+    def test_mentioned_usernames(self):
+        user = 'turses'
+        mentioned = ('dialelo', 'mental_floss', '4n_4Wfu1_US3RN4M3')
+
+        expected_output = list(mentioned)
+
+        text = "@%s, @%s and @%s" % mentioned
+        status = create_status(user=user,
+                               text=text)
+
+        expected = set(expected_output)
+        mentioned_usernames = status.mentioned_usernames
+        self.assertEqual(expected, set(mentioned_usernames))
+
+    def test_mentioned_for_reply(self):
+        user = 'turses'
+        mentioned = ('dialelo', 'mental_floss', '4n_4Wfu1_US3RN4M3')
+
+        expected_output = list(mentioned)
+        expected_output.append(user)
+        expected_output = map(prepend_at, expected_output)
+
+        text = "@%s, @%s and @%s" % mentioned
+        status = create_status(user=user,
+                               text=text)
+
+        expected = set(filter(prepend_at, expected_output))
+        mentioned_for_reply = status.mentioned_for_reply
+        self.assertEqual(expected, set(mentioned_for_reply))
+
+    def test_authors_username_tweet(self):
+        user = 'turses'
+        status = create_status(user=user)
+
+        author = status.authors_username
+
+        self.assertEqual(user, author)
 
 
-# TODO
-class UserTest(unittest.TestCase):
-    pass
+    def test_authors_username_retweet(self):
+        user = 'turses'
+        status = create_status(user=user)
+        retweeter = 'bot'
+        retweet = create_status(user=retweeter,
+                                is_retweet=True,
+                                retweeted_status=status,
+                                author=user)
 
+        author = retweet.authors_username
 
-# TODO
-class DirectMessageTest(unittest.TestCase):
-    pass
+        self.assertEqual(user, author)
 
+    def test_authors_username_dm(self):
+        user = 'turses'
+        dm = create_direct_message(sender_screen_name=user,)
 
-# TODO
-class ListTest(unittest.TestCase):
-    pass
+        author = dm.authors_username
 
+        self.assertEqual(user, author)
 
-# TODO
-class UnsortedActiveListTest(unittest.TestCase):
-    pass
+    def test_dm_recipients_username_tweet(self):
+        # authenticating user
+        user = 'turses'
+
+        # given a status in which the author is the authenticated author
+        # must return `None`
+        status = create_status(user=user)
+        recipient_own_tweet = status.dm_recipients_username(user)
+        self.failIf(recipient_own_tweet)
+
+    def test_dm_recipients_username_dm(self):
+        # authenticating user
+        user = 'turses'
+
+        # @user -> @another_user messages should return 'another_user'
+        expected_recipient = 'dialelo'
+        dm = create_direct_message(sender_screen_name=user,
+                                   recipient_screen_name=expected_recipient,)
+        recipient_dm_user_is_sender = dm.dm_recipients_username(user)
+        self.assertEqual(recipient_dm_user_is_sender, expected_recipient)
+
+        # @another_user -> @user messages should return 'another_user'
+        dm = create_direct_message(sender_screen_name=expected_recipient,
+                                   recipient_screen_name=user,)
+        recipient_dm_user_is_recipient = dm.dm_recipients_username(user)
+        self.assertEqual(recipient_dm_user_is_recipient, expected_recipient)
+
+    def test_hashtags(self):
+        user = 'turses'
+        hashtags = ('#turses', '#arch_linux', '#I<3Python')
+
+        expected_output = list(hashtags)
+
+        text = "%s %s %s" % hashtags
+        status = create_status(user=user,
+                               text=text)
+
+        expected = set(expected_output)
+        mentioned_hashtags = status.hashtags
+        self.assertEqual(expected, set(mentioned_hashtags))
 
 
 class TimelineTest(unittest.TestCase):

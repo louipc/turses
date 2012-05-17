@@ -22,95 +22,19 @@ STATUS_URL_TEMPLATE = 'https://twitter.com/#!/{user}/status/{id}'
 
 # -- Helpers ------------------------------------------------------------------
 
-# regexes
+# username
 username_regex = re.compile(r'[A-Za-z0-9_]+')
-hashtag_regex = re.compile(r'#.+')
-
-# operations with strings
+is_username = partial(matches_word, username_regex)
+sanitize_username = partial(filter, is_username)
 prepend_at = lambda username: '@%s' % username
 
+# hashtag
+hashtag_regex = re.compile(r'#.+')
+is_hashtag = partial(matches_word, hashtag_regex)
 
 
 def is_DM(status):
     return status.__class__ == DirectMessage
-
-
-# methods for querying statuses
-
-def get_mentioned_usernames(status):
-    """
-    Return mentioned usernames in `status` without '@'.
-    """
-    usernames = []
-    for word in status.text.split():
-        if len(word) > 1 and word.startswith('@'):
-            word.strip('@')
-            usernames.append(sanitize_username(word))
-    return usernames
-
-
-def get_mentioned_for_reply(status):
-    """
-    Return a list containing the author of `status` and all the mentioned
-    usernames prepended with '@'.
-    """
-    author = get_authors_username(status)
-    mentioned = get_mentioned_usernames(status)
-    mentioned.insert(0, author)
-
-    return [prepend_at(username) for username in mentioned]
-
-
-def get_authors_username(status):
-    """Return the original author's username of the given status."""
-    if is_DM(status):
-        username = status.sender_screen_name
-    elif status.is_retweet:
-        username = status.author
-    else:
-        username = status.user
-
-    return username
-
-
-def get_dm_recipients_username(sender, status):
-    """
-    Return the recipient for a Direct Message depending on what `status`
-    is.
-
-    If is a `turses.models.Status` and sender != `status.user` I will return
-    `status.user`.
-
-    If is a `turses.models.DirectMessage` I will return the username that
-    is not `sender` looking at the DMs sender and recipient.
-
-    Otherwise I return `None`.
-    """
-    username = None
-    if is_DM(status):
-        users = [status.sender_screen_name,
-                 status.recipient_screen_name]
-        if sender in users:
-            users.pop(users.index(sender))
-            username = users.pop()
-    elif status.user != sender:
-        username = status.user
-    return username
-
-
-def get_hashtags(status):
-    """
-    Return a list of hashtags encountered in `status`.
-    """
-    return filter(is_hashtag, status.text.split())
-
-
-# operations with strings
-
-is_username = partial(matches_word, username_regex)
-is_hashtag = partial(matches_word, hashtag_regex)
-
-sanitize_username = partial(filter, is_username)
 
 
 def is_valid_status_text(text):
@@ -130,12 +54,13 @@ class ActiveList(object):
     """
     A list that contains an 'active' element.
 
-    This class implements some functions but the subclasses must define
-    `active` property, as well as `is_valid_index` and `activate_last` 
+    This abstract class implements some functions but the subclasses must
+    define `active` property, as well as `is_valid_index` and `activate_last`
     methods.
     """
-    NULL_INDEX = -1
     __metaclass__ = ABCMeta
+
+    NULL_INDEX = -1
 
     def __init__(self):
         self.active_index = self.NULL_INDEX
@@ -149,20 +74,22 @@ class ActiveList(object):
         pass
 
     def activate_previous(self):
-        """Marks as active the previous `Timeline` if it exists."""
+        """Mark as active the previous element if it exists."""
         new_index = self.active_index - 1
         if self.is_valid_index(new_index):
             self.active_index = new_index
 
     def activate_next(self):
-        """Marks as active the next `Timeline` if it exists."""
+        """Mark as active the next element if it exists."""
         new_index = self.active_index + 1
         if self.is_valid_index(new_index):
             self.active_index = new_index
 
     def activate_first(self):
-        if self.is_valid_index(0):
-            self.active_index = 0
+        """Mark the first element as the 'active' if it exists."""
+        first = 0
+        if self.is_valid_index(first):
+            self.active_index = first
         else:
             self.active_index = self.NULL_INDEX
 
@@ -176,28 +103,32 @@ class UnsortedActiveList(ActiveList):
     An `ActiveList` in which the 'active' element can be shifted position by
     position, to the begging and to the end.
 
-    Subclasses must implement all the provided methods.
+    All the methods that this class contains are abstract.
     """
 
+    @abstractmethod
     def shift_active_previous(self):
-        """Shifts the active timeline one position to the left."""
-        raise NotImplementedError
+        """Shift the active element one position to the left."""
+        pass
 
+    @abstractmethod
     def shift_active_next(self):
-        """Shifts the active timeline one position to the right."""
-        raise NotImplementedError
+        """Shift the active element one position to the right."""
+        pass
 
+    @abstractmethod
     def shift_active_beggining(self):
         """
-        Shifts the active timeline (if any) to the begginning of the list.
+        Shift the active element (if any) to the begginning of the list.
         """
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def shift_active_end(self):
         """
-        Shifts the active timeline (if any) to the begginning of the list.
+        Shift the active element (if any) to the begginning of the list.
         """
-        raise NotImplementedError
+        pass
 
 
 class TimelineList(UnsortedActiveList):
@@ -221,7 +152,7 @@ class TimelineList(UnsortedActiveList):
 
     def append_timeline(self, timeline):
         """Appends a new `Timeline` to the end of the list."""
-        if self.active_index == -1:
+        if self.active_index == self.NULL_INDEX:
             self.active_index = 0
             # `timeline` becomes the active
             self.timelines.append(timeline)
@@ -239,17 +170,14 @@ class TimelineList(UnsortedActiveList):
             if self.is_valid_index(self.active_index):
                 pass
             else:
+                # Shift cursor to left when we don't have any element
+                # in the right. When deleting the last timeline in the
+                # list, the `active_index` becomes -1 (NULL_INDEX).
                 self.active_index -= 1
 
     def update_active_timeline(self):
         if self.has_timelines():
-            timeline = self.timelines[self.active_index]
-            timeline.update()
-
-    def delete_all(self):
-        """Deletes every `Timeline`."""
-        self.active_index = -1
-        self.timelines = []
+            self.active.update()
 
     # magic
 
@@ -264,8 +192,7 @@ class TimelineList(UnsortedActiveList):
     @property
     def active(self):
         if self.has_timelines():
-            timeline = self.timelines[self.active_index]
-            return timeline
+            return self.timelines[self.active_index]
 
     def is_valid_index(self, index):
         return index >= 0 and index < len(self.timelines)
@@ -284,7 +211,8 @@ class TimelineList(UnsortedActiveList):
 
     def activate_last(self):
         if self.has_timelines():
-            self.active_index = len(self.timelines) - 1
+            last_index = len(self.timelines) - 1 
+            self.active_index = last_index
         self._mark_read()
 
     def _swap_timelines(self, one, other):
@@ -335,7 +263,7 @@ class TimelineList(UnsortedActiveList):
 class VisibleTimelineList(TimelineList):
     """
     A `TimelineList` that tracks a number of `visible` timelines. It also has
-    an `active` timeline, which has to be within the visible ones.
+    an 'active' timeline, which has to be within the visible ones.
     """
 
     def __init__(self, *args, **kwargs):
@@ -346,7 +274,6 @@ class VisibleTimelineList(TimelineList):
     def visible_timelines(self):
         return [self.timelines[i] for i in self.visible]
 
-    # TODO: test
     @property
     def active_index_relative_to_visible(self):
         return self.visible.index(self.timelines.index(self.active))
@@ -451,8 +378,7 @@ class VisibleTimelineList(TimelineList):
 
 class User(object):
     """
-    Programs representation of a Twitter user. Api adapters must convert
-    their representations to instances of this class.
+    A Twitter user. 
     """
 
     def __init__(self,
@@ -464,9 +390,8 @@ class User(object):
 class Status(object):
     """
     A Twitter status.
-
-    Api adapters must convert their representations to instances of this class.
     """
+
     def __init__(self,
                  id,
                  created_at,
@@ -493,29 +418,6 @@ class Status(object):
         self.retweeted_status = retweeted_status
         self.author = author
         self.entities = {} if entities is None else entities
-
-    def get_relative_created_at(self):
-        """Return a human readable string representing the posting time."""
-        # This code is borrowed from `python-twitter` library
-        fudge = 1.25
-        delta = long(time.time()) - timestamp_from_datetime(self.created_at)
-
-        if delta < (1 * fudge):
-            return "a second ago"
-        elif delta < (60 * (1 / fudge)):
-            return "%d seconds ago" % (delta)
-        elif delta < (60 * fudge):
-            return "a minute ago"
-        elif delta < (60 * 60 * (1 / fudge)):
-            return "%d minutes ago" % (delta / 60)
-        elif delta < (60 * 60 * fudge) or delta / (60 * 60) == 1:
-            return "an hour ago"
-        elif delta < (60 * 60 * 24 * (1 / fudge)):
-            return "%d hours ago" % (delta / (60 * 60))
-        elif delta < (60 * 60 * 24 * fudge) or delta / (60 * 60 * 24) == 1:
-            return "a day ago"
-        else:
-            return "%d days ago" % (delta / (60 * 60 * 24))
 
     # TODO: refactor this aberration
     def map_attributes(self, hashtag, attag, url):
@@ -640,8 +542,97 @@ class Status(object):
         return tweet
 
     @property
+    def relative_created_at(self):
+        """Return a human readable string representing the posting time."""
+        # This code is borrowed from `python-twitter` library
+        fudge = 1.25
+        delta = long(time.time()) - timestamp_from_datetime(self.created_at)
+
+        if delta < (1 * fudge):
+            return "a second ago"
+        elif delta < (60 * (1 / fudge)):
+            return "%d seconds ago" % (delta)
+        elif delta < (60 * fudge):
+            return "a minute ago"
+        elif delta < (60 * 60 * (1 / fudge)):
+            return "%d minutes ago" % (delta / 60)
+        elif delta < (60 * 60 * fudge) or delta / (60 * 60) == 1:
+            return "an hour ago"
+        elif delta < (60 * 60 * 24 * (1 / fudge)):
+            return "%d hours ago" % (delta / (60 * 60))
+        elif delta < (60 * 60 * 24 * fudge) or delta / (60 * 60 * 24) == 1:
+            return "a day ago"
+        else:
+            return "%d days ago" % (delta / (60 * 60 * 24))
+
+    @property
     def url(self):
         return STATUS_URL_TEMPLATE.format(user=self.user, id=self.id)
+
+    @property
+    def mentioned_for_reply(self):
+        """
+        Return a list containing the author of `status` and all the mentioned
+        usernames prepended with '@'.
+        """
+        author = self.authors_username
+        mentioned = self.mentioned_usernames
+        mentioned.insert(0, author)
+
+        return [prepend_at(username) for username in mentioned]
+
+    @property
+    def authors_username(self):
+        """Return the original author's username of the given status."""
+        if is_DM(self):
+            return self.sender_screen_name
+        elif self.is_retweet:
+            return self.retweeted_status.authors_username
+        else:
+            return self.user
+
+    @property
+    def mentioned_usernames(self):
+        """
+        Return mentioned usernames in `status` without '@'.
+        """
+        # TODO: use self.entities if available
+        usernames = []
+        for word in self.text.split():
+            if len(word) > 1 and word.startswith('@'):
+                word.strip('@')
+                usernames.append(sanitize_username(word))
+        return usernames
+
+    @property
+    def hashtags(self):
+        """
+        Return a list of hashtags encountered in `status`.
+        """
+        # TODO: use self.entities
+        return filter(is_hashtag, self.text.split())
+
+    def dm_recipients_username(self, sender):
+        """
+        Return the recipient for a Direct Message depending on what `self`
+        is.
+
+        If is a `turses.models.Status` and sender != `status.user` I will
+        return `status.user`.
+
+        If is a `turses.models.DirectMessage` I will return the username that
+        is not `sender` looking at the DMs sender and recipient.
+
+        Otherwise I return `None`.
+        """
+        if is_DM(self):
+            users = [self.sender_screen_name,
+                     self.recipient_screen_name]
+            if sender in users:
+                users.pop(users.index(sender))
+                return users.pop()
+        elif self.user != sender:
+            return self.user
 
     # magic
 
@@ -656,8 +647,6 @@ class Status(object):
 class DirectMessage(Status):
     """
     A Twitter direct message.
-
-    Api adapters must convert their representations to instances of this class.
     """
 
     def __init__(self,
@@ -682,8 +671,6 @@ class DirectMessage(Status):
 class List(object):
     """
     A Twitter list.
-
-    Api adapters must convert their representations to instances of this class.
     """
 
     def __init__(self,
@@ -797,7 +784,6 @@ class Timeline(ActiveList):
 
     @wrap_exceptions
     def update(self):
-        # TODO: use a generator (?)
         if not self.update_function:
             return
 
@@ -866,7 +852,6 @@ class Timeline(ActiveList):
 
     def __getitem__(self, i):
         return self.statuses[i]
-
 
     # from `ActiveList`
 
