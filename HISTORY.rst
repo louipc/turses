@@ -1,3 +1,8 @@
+0.1.13
+------
+- bugfix: could not remove own retweets
+- bugfix: inconsistencies with help
+
 0.1.12
 ------
 - bugfix: missing key binding in help (by @xekarfwtos)
