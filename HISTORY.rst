@@ -1,5 +1,9 @@
 0.1.13
 ------
+- bugfix: crash when shifting buffers to the beginning or end
+
+0.1.13
+------
 - bugfix: could not remove own retweets
 - bugfix: inconsistencies with help
 
