@@ -17,22 +17,18 @@ from turses.utils import (html_unescape, timestamp_from_datetime,
                           wrap_exceptions, is_url, matches_word)
 
 
-##
-#  Helpers
-##
-
-username_regex = re.compile(r'[A-Za-z0-9_]+')
-
-hashtag_regex = re.compile(r'#.+')
-
-prepend_at = lambda username: '@%s' % username
-
 TWEET_MAXIMUM_CHARACTERS = 140
 STATUS_URL_TEMPLATE = 'https://twitter.com/#!/{user}/status/{id}'
 
+# -- Helpers ------------------------------------------------------------------
 
-def get_status_url(status):
-    return STATUS_URL_TEMPLATE.format(user=status.user, id=status.id)
+# regexes
+username_regex = re.compile(r'[A-Za-z0-9_]+')
+hashtag_regex = re.compile(r'#.+')
+
+# operations with strings
+prepend_at = lambda username: '@%s' % username
+
 
 
 def is_DM(status):
@@ -643,6 +639,10 @@ class Status(object):
             tweet.append(word)
         return tweet
 
+    @property
+    def url(self):
+        return STATUS_URL_TEMPLATE.format(user=self.user, id=self.id)
+
     # magic
 
     def __eq__(self, other):
@@ -673,6 +673,10 @@ class DirectMessage(Status):
         self.recipient_screen_name = recipient_screen_name
         self.text = html_unescape(text)
         self.entities = entities
+
+    @property
+    def url(self):
+        return None
 
 
 class List(object):

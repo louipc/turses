@@ -35,7 +35,6 @@ from turses.models import (
         sanitize_username,
 
         get_authors_username,
-        get_status_url,
         get_mentioned_for_reply,
         get_dm_recipients_username,
         get_mentioned_usernames,
@@ -1127,8 +1126,7 @@ class Controller(object):
             self.info_message(message)
             return
 
-        url = get_status_url(status)
-        self.open_urls_in_browser(url)
+        self.open_urls_in_browser(status.url)
 
     def open_urls_in_browser(self, urls):
         command = self.configuration.browser
