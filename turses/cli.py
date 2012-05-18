@@ -8,7 +8,7 @@ Handle the invocation of `turses` from the command line.
 """
 
 from sys import stdout
-from os import environ
+from os import getenv
 
 from urwid import set_encoding
 
@@ -22,7 +22,7 @@ from turses.core import Turses
 
 def set_title(string):
     try:
-        if environ['TERM'].startswith("screen"):
+        if getenv('TERM').startswith("screen"):
             stdout.write("\033k%s\033\\" % string)
         else:
             stdout.write("\x1b]2;%s\x07" % string)
