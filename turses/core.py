@@ -255,9 +255,15 @@ class KeyHandler(object):
         # Follow Selected
         elif self.is_bound(key, 'follow_selected'):
             self.controller.follow_selected()
+        # Follow User using `text`
+        elif self.is_bound(key, 'follow_user'):
+            self.controller.follow_user()
         # Unfollow Selected
         elif self.is_bound(key, 'unfollow_selected'):
             self.controller.unfollow_selected()
+        # Unfollow User using `text`
+        elif self.is_bound(key, 'unfollow_user'):
+            self.controller.unfollow_user()
         # Send Direct Message
         elif self.is_bound(key, 'send_dm'):
             self.controller.direct_message()
@@ -869,6 +875,70 @@ class Controller(object):
                              on_success=timeline_created,
                              on_error=timeline_not_created)
 
+    def follow_user_handler(self, username):
+        """
+        Handles following the user given in `text`.
+        """
+        self.ui.remove_editor(self.follow_user_handler)
+        self.ui.set_focus('body')
+
+        username = sanitize_username(username)
+        if username == self.user.screen_name:
+            self.error_message(_('You can\'t follow yourself'))
+            return
+
+        # TODO make sure that the user EXISTS and THEN follow
+        if not is_username(username):
+            self.info_message(_('Invalid username'))
+            return
+        else:
+            self.info_message(_('Following @%s' % username))
+        
+        success_message = _('You are now following @%s' % username)
+        follow_done = partial(self.info_message,
+                              success_message)
+
+        error_template = _('We can not ensure that you are following @%s')
+        error_message = error_template % username
+        follow_error = partial(self.error_message,
+                               error_message)
+
+        self.api.create_friendship(screen_name=username,
+                                   on_error=follow_error,
+                                   on_success=follow_done)
+
+    def unfollow_user_handler(self, username):
+        """
+        Handles unfollowing the user given in `text`.
+        """
+        self.ui.remove_editor(self.follow_user_handler)
+        self.ui.set_focus('body')
+
+        username = sanitize_username(username)
+        if username == self.user.screen_name:
+            self.error_message(_('That doesn\'t make any sense'))
+            return
+
+        # TODO make sure that the user EXISTS and THEN follow
+        if not is_username(username):
+            self.info_message(_('Invalid username'))
+            return
+        else:
+            self.info_message(_('Unfollowing @%s' % username))
+        
+        success_message = _('You are no longer following %s' % username)
+        unfollow_done = partial(self.info_message,
+                                success_message)
+
+        error_template = _('We can not ensure that you are not following %s')
+        error_message = error_template % username
+        unfollow_error = partial(self.error_message,
+                                 error_message)
+
+        self.api.destroy_friendship(screen_name=username,
+                                    on_error=unfollow_error,
+                                    on_success=unfollow_done)
+
     # -- Twitter --------------------------------------------------------------
 
     def search(self, text=None):
@@ -1043,6 +1113,24 @@ class Controller(object):
         self.api.create_friendship(screen_name=username,
                                    on_error=follow_error,
                                    on_success=follow_done)
+
+    def follow_user(self,
+                    prompt=_('Follow user (no need to prepend it with "@"'),
+                    content='',
+                    cursor_position=None):
+        self.ui.show_text_editor(prompt=prompt,
+                                 content=content,
+                                 done_signal_handler=self.follow_user_handler,
+                                 cursor_position=cursor_position)
+
+    def unfollow_user(self,
+                      prompt=_('Unfollow user (no need to prepend it with "@"'),
+                      content='',
+                      cursor_position=None):
+        self.ui.show_text_editor(prompt=prompt,
+                                 content=content,
+                                 done_signal_handler=self.unfollow_user_handler,
+                                 cursor_position=cursor_position)
 
     def unfollow_selected(self):
         status = self.timelines.active_status
