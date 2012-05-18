@@ -911,7 +911,7 @@ class Controller(object):
         """
         Handles unfollowing the user given in `text`.
         """
-        self.ui.remove_editor(self.follow_user_handler)
+        self.ui.remove_editor(self.unfollow_user_handler)
         self.ui.set_focus('body')
 
         username = sanitize_username(username)
