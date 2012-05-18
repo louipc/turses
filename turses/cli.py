@@ -23,7 +23,10 @@ from turses.core import Turses
 def set_title(string):
     try:
         if getenv('TERM').startswith("screen"):
-            stdout.write("\033k%s\033\\" % string)
+            if getenv('TMUX'):
+                stdout.write("\033k%s\033\\" % string)  # for tmux
+            else:
+                stdout.write("\033_%s\033\\" % string)  # for GNU screen
         else:
             stdout.write("\x1b]2;%s\x07" % string)
     except:
