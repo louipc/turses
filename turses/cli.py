@@ -35,6 +35,8 @@ def set_title(string):
 
 def main():
     try:
+        if getenv('TMUX'):
+            orig_title = getenv('SHELL').split('/')[-1]
         set_title(__name__)
         set_encoding('utf8')
 
@@ -49,4 +51,8 @@ def main():
             ui=ui,
             api_backend=TweepyApi)
     except KeyboardInterrupt:
+        pass
+    finally:
+        if getenv('TMUX'):
+            set_title(orig_title)
         exit(0)
