@@ -126,7 +126,6 @@ KEY_BINDINGS = {
         ('u', _('refresh the active timeline')),
     'update_all':
         ('S', _('refresh all the timelines')),
-
     'tweet_hashtag':
         ('H', _('compose a tweet with the same hashtags as the focused status')),
     'fav':
@@ -135,6 +134,8 @@ KEY_BINDINGS = {
         ('ctrl b', _('remove tweet from favorites')),
     'follow_selected':
         ('f', _('follow selected status\' author')),
+    'follow_user':
+        ('F', _('follow user given in an editor')),
     'unfollow_selected':
         ('U', _('unfollow selected status\' author')),
 
@@ -215,6 +216,7 @@ TWEETS_KEY_BINDINGS = [
     'fav',
     'delete_fav',
     'follow_selected',
+    'follow_user',
     'unfollow_selected',
 ]
 
