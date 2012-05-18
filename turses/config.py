@@ -138,7 +138,9 @@ KEY_BINDINGS = {
         ('F', _('follow user given in an editor')),
     'unfollow_selected':
         ('U', _('unfollow selected status\' author')),
-
+    'unfollow_user':
+        ('ctrl u', _('unfollow user given in an editor')),
+ 
     # timelines
     'home':
         ('.', _('open a home timeline')),
@@ -218,6 +220,7 @@ TWEETS_KEY_BINDINGS = [
     'follow_selected',
     'follow_user',
     'unfollow_selected',
+    'unfollow_user',
 ]
 
 TIMELINES_KEY_BINDINGS = [
