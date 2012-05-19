@@ -1213,6 +1213,9 @@ class Controller(object):
         self.open_urls_in_browser(status.url)
 
     def open_urls_in_browser(self, urls):
+        """
+        Open `urls` in $BROWSER if the environment variable is set.
+        """
         command = self.configuration.browser
         if not command:
             message = _('You have to set the BROWSER environment variable'
