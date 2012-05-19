@@ -35,8 +35,6 @@ def set_title(string):
 
 def main():
     try:
-        if getenv('TMUX'):
-            orig_title = getenv('SHELL').split('/')[-1]
         set_title(__name__)
         set_encoding('utf8')
 
@@ -53,6 +51,7 @@ def main():
     except KeyboardInterrupt:
         pass
     finally:
+        # restore original window title
         if getenv('TMUX'):
-            set_title(orig_title)
+            set_title(getenv('SHELL').split('/')[-1])
         exit(0)
