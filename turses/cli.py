@@ -38,6 +38,9 @@ def main():
         set_title(__name__)
         set_encoding('utf8')
 
+        # save current shell screen
+        print "\033[?1049h\033[H"
+
         args = parse_arguments()
 
         configuration = Configuration(args)
@@ -54,4 +57,6 @@ def main():
         # restore original window title
         if getenv('TMUX'):
             set_title(getenv('SHELL').split('/')[-1])
+        # restore original shell screen
+        print "\033[?1049l"
         exit(0)
