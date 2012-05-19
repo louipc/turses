@@ -4,7 +4,8 @@
 turses.models
 ~~~~~~~~~~~~~
 
-This module contains the Twitter entities represented in `turses`.
+This module contains the data structures that power `turses` and
+all the Twitter entities.
 """
 
 import time
@@ -710,18 +711,13 @@ class Timeline(ActiveList):
         ActiveList.__init__(self)
         self.name = name
 
+        self.statuses = []
         if statuses:
-            # sort when first inserting statuses
-            key = lambda status: status.created_at
-            self.statuses = sorted(statuses,
-                                   key=key,
-                                   reverse=True)
-            self.active_index = 0
-            self._mark_read()
-        else:
-            self.statuses = []
-        self.update_function = update_function
+            self.add_statuses(statuses)
+            self.activate_first()
+            self.mark_active_as_read()
 
+        self.update_function = update_function
         self.update_function_args = None
         self.update_function_kwargs = None
 

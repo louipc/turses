@@ -351,87 +351,88 @@ class StatusTest(unittest.TestCase):
 
 
 class TimelineTest(unittest.TestCase):
+
     def setUp(self):
         self.timeline = Timeline()
-        self.timeline.clear()
-        self.assertEqual(len(self.timeline), 0)
         self.assertEqual(self.timeline.active_index, ActiveList.NULL_INDEX)
 
+    # unique elements
+
     def test_unique_statuses_in_timeline(self):
-        self.assertEqual(len(self.timeline), 0)
-        # create and add the status
         status = create_status()
+
         self.timeline.add_status(status)
-        self.assertEqual(len(self.timeline), 1)
-        # check that adding more than once does not duplicate element
         self.timeline.add_status(status)
+
         self.assertEqual(len(self.timeline), 1)
+
+    # active index
+
+    def test_active_index_is_0_when_creating_timeline_with_statuses(self):
+        status = create_status()
+
+        self.timeline = Timeline(statuses=[status])
+
+        self.assertEqual(self.timeline.active_index, 0)
 
     def test_active_index_becomes_0_when_adding_first_status(self):
         status = create_status()
+
         self.timeline.add_status(status)
-        self.assertEqual(self.timeline.active_index, 0)
-        # check that adding than once does not move the active
-        self.timeline.add_status(status)
+
         self.assertEqual(self.timeline.active_index, 0)
 
-    def test_insert_different_statuses(self):
-        old_status = create_status(created_at=datetime(1988, 12, 19))
-        new_status = create_status(id=2)
-        self.timeline.add_statuses([old_status, new_status])
-        self.assertEqual(len(self.timeline), 2)
+    def test_active_index_does_not_change_when_adding_various_statuses(self):
+        a_status = create_status(id=1)
+        another_status = create_status(id=2)
 
-    def assert_active(self, status):
-        active_status = self.timeline.active
-        if active_status:
-            self.assertEqual(status, active_status)
-        else:
-            raise Exception("There is no active status")
+        # first
+        self.timeline.add_status(a_status)
+        self.assertEqual(self.timeline.active_index, 0)
 
-    def test_active_is_the_same_when_inserting_statuses(self):
-        """
-        Test that when inserting new statuses the active doesn't change.
-        """
-        active_status = create_status(created_at=datetime(1988, 12, 19))
-        self.timeline.add_status(active_status)
-        self.assert_active(active_status)
+        # second
+        self.timeline.add_status(another_status)
+        self.assertEqual(self.timeline.active_index, 0)
 
-        older_status = create_status(id=2,
-                                     created_at=datetime(1978, 12, 19))
-        self.timeline.add_status(older_status)
-        self.assert_active(active_status)
-
-        newer_status = create_status(id=2)
-        self.timeline.add_status(newer_status)
-        self.assert_active(active_status)
+    # insertion
 
     def test_insert_different_statuses_individually(self):
         old_status = create_status(created_at=datetime(1988, 12, 19))
         new_status = create_status(id=2)
+
+        # first
         self.timeline.add_status(old_status)
         self.assertEqual(len(self.timeline), 1)
+
+        # second
         self.timeline.add_status(new_status)
         self.assertEqual(len(self.timeline), 2)
+
+    def test_insert_different_statuses(self):
+        old_status = create_status(created_at=datetime(1988, 12, 19))
+        new_status = create_status(id=2)
+
+        self.timeline.add_statuses([old_status, new_status])
+        
+        self.assertEqual(len(self.timeline), 2)
+
+    # order
 
     def test_statuses_ordered_reversely_by_date(self):
         old_status = create_status(created_at=datetime(1988, 12, 19))
         new_status = create_status(id=2)
-        self.timeline.add_statuses([old_status, new_status])
+
+        # ordered
+        self.timeline = Timeline(statuses=[new_status, old_status])
         self.assertEqual(self.timeline[0], new_status)
         self.assertEqual(self.timeline[1], old_status)
 
-    def test_clear(self):
-        old_created_at = datetime(1988, 12, 19)
-        old_status = create_status(created_at=old_created_at)
-        new_created_at = datetime.now()
-        new_status = create_status(id=2,
-                                   created_at=new_created_at)
-        self.timeline.add_statuses([old_status, new_status])
-        self.timeline.clear()
-        self.assertEqual(len(self.timeline), 0)
-        # add them again and check that they are inserted back
-        self.timeline.add_statuses([old_status, new_status])
-        self.assertEqual(len(self.timeline), 2)
+        # unordered
+        self.timeline = Timeline(statuses=[old_status, new_status])
+        self.assertEqual(self.timeline[0], new_status)
+        self.assertEqual(self.timeline[1], old_status)
+
+    # unread
 
     def test_unread_count(self):
         self.assertEqual(self.timeline.unread_count, 0)
@@ -451,6 +452,21 @@ class TimelineTest(unittest.TestCase):
 
         self.timeline.mark_all_as_read()
         self.assertEqual(self.timeline.unread_count, 0)
+
+    # clear
+
+    def test_clear(self):
+        old_created_at = datetime(1988, 12, 19)
+        old_status = create_status(created_at=old_created_at)
+        new_created_at = datetime.now()
+        new_status = create_status(id=2,
+                                   created_at=new_created_at)
+
+        self.timeline.add_statuses([old_status, new_status])
+
+        self.timeline.clear()
+
+        self.assertEqual(len(self.timeline), 0)
 
     # update function related
 
