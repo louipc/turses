@@ -772,9 +772,7 @@ class Controller(object):
 
     def tweet_handler(self, text):
         """Handle the post as a tweet of the given `text`."""
-        self.timeline_mode()
-        self.ui.remove_editor(self.tweet_handler)
-        self.ui.set_focus('body')
+        self.ui.hide_editor(self.tweet_handler)
 
         self.info_message(_('Sending tweet'))
 
@@ -793,9 +791,7 @@ class Controller(object):
 
     def direct_message_handler(self, username, text):
         """Handle the post as a DM of the given `text` to `username`."""
-        self.timeline_mode()
-        self.ui.remove_editor(self.direct_message_handler)
-        self.ui.set_focus('body')
+        self.ui.hide_editor(self.direct_message_handler)
 
         self.info_message(_('Sending DM'))
 
@@ -814,73 +810,11 @@ class Controller(object):
                                 on_success=dm_sent,
                                 on_error=dm_not_sent,)
 
-    def search_handler(self, text):
-        """
-        Handles creating a timeline tracking the search term given in
-        `text`.
-        """
-        self.timeline_mode()
-        self.ui.remove_editor(self.search_handler)
-        self.ui.set_focus('body')
-
-        if text is None:
-            self.info_message(_('Search cancelled'))
-            return
-
-        text = text.strip()
-        if not is_valid_search_text(text):
-            self.error_message(_('Invalid search'))
-            return
-        else:
-            self.info_message(_('Creating search timeline for "%s"' % text))
-
-        success_message = _('Search timeline for "%s" created' % text)
-        timeline_created = partial(self.info_message,
-                                   success_message)
-        error_message = _('Error creating search timeline for "%s"' % text)
-        timeline_not_created = partial(self.info_message,
-                                       error_message)
-
-        self.append_timeline(name=_('Search: %s' % text),
-                             update_function=self.api.search,
-                             update_args=text,
-                             on_error=timeline_not_created,
-                             on_success=timeline_created)
-
-    def search_user_handler(self, username):
-        """
-        Handles creating a timeline tracking the searched user's tweets.
-        """
-        self.ui.remove_editor(self.search_user_handler)
-        self.ui.set_focus('body')
-
-        # TODO make sure that the user EXISTS and THEN fetch its tweets
-        username = sanitize_username(username)
-        if not is_username(username):
-            self.info_message(_('Invalid username'))
-            return
-        else:
-            self.info_message(_('Fetching latest tweets from @%s' % username))
-
-        success_message = _('@%s\'s timeline created' % username)
-        timeline_created = partial(self.info_message,
-                                   success_message)
-        error_message = _('Unable to create @%s\'s timeline' % username)
-        timeline_not_created = partial(self.error_message,
-                                       error_message)
-
-        self.append_timeline(name='@%s' % username,
-                             update_function=self.api.get_user_timeline,
-                             update_args=username,
-                             on_success=timeline_created,
-                             on_error=timeline_not_created)
-
     def follow_user_handler(self, username):
         """
         Handles following the user given in `text`.
         """
-        self.ui.remove_editor(self.follow_user_handler)
-        self.ui.set_focus('body')
+        self.ui.hide_editor(self.follow_user_handler)
 
         username = sanitize_username(username)
         if username == self.user.screen_name:
@@ -911,8 +845,7 @@ class Controller(object):
         """
         Handles unfollowing the user given in `text`.
         """
-        self.ui.remove_editor(self.unfollow_user_handler)
-        self.ui.set_focus('body')
+        self.ui.hide_editor(self.unfollow_user_handler)
 
         username = sanitize_username(username)
         if username == self.user.screen_name:
@@ -938,6 +871,74 @@ class Controller(object):
         self.api.destroy_friendship(screen_name=username,
                                     on_error=unfollow_error,
                                     on_success=unfollow_done)
+
+    # NOTE:
+    # `search_handler` and `search_user_handler` create timelines when
+    # they are called. That's why, if we are in INFO mode, the TIMELINE
+    # mode is activated.
+
+    def search_handler(self, text):
+        """
+        Handles creating a timeline tracking the search term given in
+        `text`.
+        """
+        if self.is_in_info_mode():
+            self.timeline_mode()
+        self.ui.hide_editor(self.search_handler)
+
+        if text is None:
+            self.info_message(_('Search cancelled'))
+            return
+
+        text = text.strip()
+        if not is_valid_search_text(text):
+            self.error_message(_('Invalid search'))
+            return
+        else:
+            self.info_message(_('Creating search timeline for "%s"' % text))
+
+        success_message = _('Search timeline for "%s" created' % text)
+        timeline_created = partial(self.info_message,
+                                   success_message)
+        error_message = _('Error creating search timeline for "%s"' % text)
+        timeline_not_created = partial(self.info_message,
+                                       error_message)
+
+        self.append_timeline(name=_('Search: %s' % text),
+                             update_function=self.api.search,
+                             update_args=text,
+                             on_error=timeline_not_created,
+                             on_success=timeline_created)
+
+    def search_user_handler(self, username):
+        """
+        Handles creating a timeline tracking the searched user's tweets.
+        """
+        if self.is_in_info_mode():
+            self.timeline_mode()
+        self.ui.hide_editor(self.search_user_handler)
+
+        # TODO make sure that the user EXISTS and THEN fetch its tweets
+        username = sanitize_username(username)
+        if not is_username(username):
+            self.info_message(_('Invalid username'))
+            return
+        else:
+            self.info_message(_('Fetching latest tweets from @%s' % username))
+
+        success_message = _('@%s\'s timeline created' % username)
+        timeline_created = partial(self.info_message,
+                                   success_message)
+        error_message = _('Unable to create @%s\'s timeline' % username)
+        timeline_not_created = partial(self.error_message,
+                                       error_message)
+
+        self.append_timeline(name='@%s' % username,
+                             update_function=self.api.get_user_timeline,
+                             update_args=username,
+                             on_success=timeline_created,
+                             on_error=timeline_not_created)
+
 
     # -- Twitter --------------------------------------------------------------
 
@@ -1178,7 +1179,7 @@ class Controller(object):
                                   on_success=unfavorite_done,
                                   status=status,)
 
-    # -------------------------------------------------------------------------
+    # - Browser ---------------------------------------------------------------
 
     def open_urls(self):
         """

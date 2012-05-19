@@ -221,7 +221,7 @@ class CursesInterface(Frame):
                           done_signal_handler,
                           recipient=recipient,)
 
-    def remove_editor(self, done_signal_handler):
+    def hide_editor(self, done_signal_handler):
         try:
             disconnect_signal(self._editor, 'done', done_signal_handler)
         except:
@@ -230,6 +230,7 @@ class CursesInterface(Frame):
             pass
         self._editor = None
         self.clear_status()
+        self.set_focus('body')
 
 
 class WelcomeBuffer(WidgetWrap):
