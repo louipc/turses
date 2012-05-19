@@ -180,6 +180,11 @@ KEY_BINDINGS = {
         ('ctrl l', _('redraw the screen')),
 }
 
+# NOTE:
+# The key binding categories are declared to order them in the configuration
+# and in the help buffer. If you add a key binding, don't forget to include
+# it in one of these categories. 
+
 MOTION_KEY_BINDINGS = [
     'up',
     'down',
