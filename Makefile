@@ -39,3 +39,16 @@ bump:
 
 publish:
 	$(PY) setup.py sdist upload
+
+stats:
+	@echo "pep8"
+	@echo "===="
+	@echo
+	@echo "Warnings: " `pep8 . | grep -o "W[0-9]*.*"  | wc -l`
+	@echo "Errors: " `pep8 . | grep -o "E[0-9]*.*"  | wc -l`
+	@echo
+	@echo "pyflakes"
+	@echo "========"
+	@echo 
+	@echo "Errors: `pyflakes . | wc -l`"
+
