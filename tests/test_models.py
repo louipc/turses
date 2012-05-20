@@ -10,7 +10,7 @@ from mock import MagicMock
 from turses.models import (prepend_at, sanitize_username,
                            is_DM, is_username, is_hashtag, 
                            Status, DirectMessage, Timeline,
-                           ActiveList, TimelineList, VisibleTimelineList,)
+                           ActiveList, TimelineList)
 
 
 def create_status(**kwargs):
@@ -612,11 +612,19 @@ class TimelineTest(unittest.TestCase):
 
 
 class TimelineListTest(unittest.TestCase):
-    def setUp(self):
-        self.timeline_list = TimelineList()
-
+    
+    # - Helpers --------------------------------------------------------------- 
+    
     def append_timeline(self):
         self.timeline_list.append_timeline(Timeline('Timeline'))
+
+    def assert_visible(self, visible_list):
+        self.assertEqual(self.timeline_list.visible, visible_list)
+
+    # - Tests ----------------------------------------------------------------- 
+
+    def setUp(self):
+        self.timeline_list = TimelineList()
 
     def test_has_timelines_false_if_empty(self):
         self.failIf(self.timeline_list.has_timelines())
@@ -746,9 +754,9 @@ class TimelineListTest(unittest.TestCase):
         self.assertEqual(self.timeline_list.active_index, 2)
 
 
-class VisibleTimelineListTest(TimelineListTest):
+class TimelineListTest(TimelineListTest):
     def setUp(self):
-        self.timeline_list = VisibleTimelineList()
+        self.timeline_list = TimelineList()
 
     def assert_visible(self, visible_list):
         self.assertEqual(self.timeline_list.visible, visible_list)

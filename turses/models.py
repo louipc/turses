@@ -135,12 +135,14 @@ class UnsortedActiveList(ActiveList):
 class TimelineList(UnsortedActiveList):
     """
     A list of `Timeline` objects in which only one is the 'active'
-    timeline.
+    timeline. It tracks the indexes of `visible` timelines. The
+    'active' element is always within the 'active' timelines.
     """
 
     def __init__(self):
         UnsortedActiveList.__init__(self)
         self.timelines = []
+        self.visible = []
 
     def has_timelines(self):
         return self.active_index != self.NULL_INDEX and self.timelines
@@ -154,8 +156,9 @@ class TimelineList(UnsortedActiveList):
     def append_timeline(self, timeline):
         """Appends a new `Timeline` to the end of the list."""
         if self.active_index == self.NULL_INDEX:
+            # `timeline` becomes the active and the only visible
             self.active_index = 0
-            # `timeline` becomes the active
+            self.visible = [0]
             self.timelines.append(timeline)
             self._mark_read()
             return
@@ -166,110 +169,30 @@ class TimelineList(UnsortedActiveList):
         Deletes the active timeline (if any) and shifts the active index
         to the right.
         """
-        if self.has_timelines():
-            del self.timelines[self.active_index]
-            if self.is_valid_index(self.active_index):
-                pass
-            else:
-                # Shift cursor to left when we don't have any element
-                # in the right. When deleting the last timeline in the
-                # list, the `active_index` becomes -1 (NULL_INDEX).
-                self.active_index -= 1
+        if not self.has_timelines():
+            return
+
+        # delete timeline
+        del self.timelines[self.active_index]
+        if self.is_valid_index(self.active_index):
+            pass
+        else:
+            # Shift cursor to left when we don't have any element
+            # in the right. When deleting the last timeline in the
+            # list, the `active_index` becomes -1 (NULL_INDEX).
+            self.active_index -= 1
+
+        # remove from visible
+        try:
+            self.visible.remove(self.active_index)
+        except ValueError:
+            pass
+        finally:
+            self._set_active_as_visible()
 
     def update_active_timeline(self):
         if self.has_timelines():
             self.active.update()
-
-    # magic
-
-    def __iter__(self):
-        return self.timelines.__iter__()
-
-    def __len__(self):
-        return self.timelines.__len__()
-
-    # from `UnsortedActiveList`
-
-    @property
-    def active(self):
-        if self.has_timelines():
-            return self.timelines[self.active_index]
-
-    def is_valid_index(self, index):
-        return index >= 0 and index < len(self.timelines)
-
-    def activate_previous(self):
-        UnsortedActiveList.activate_previous(self)
-        self._mark_read()
-
-    def activate_next(self):
-        UnsortedActiveList.activate_next(self)
-        self._mark_read()
-
-    def activate_first(self):
-        UnsortedActiveList.activate_first(self)
-        self._mark_read()
-
-    def activate_last(self):
-        if self.has_timelines():
-            last_index = len(self.timelines) - 1 
-            self.active_index = last_index
-        self._mark_read()
-
-    def _swap_timelines(self, one, other):
-        """
-        Given the indexes of two timelines `one` and `other`, it swaps the
-        `Timeline` objects contained in those positions.
-        """
-        if self.is_valid_index(one) and self.is_valid_index(other):
-            self.timelines[one], self.timelines[other] = \
-                    self.timelines[other], self.timelines[one]
-
-    def _mark_read(self):
-        if self.has_timelines():
-            active_timeline = self.active
-            active_timeline.mark_active_as_read()
-
-    def shift_active_previous(self):
-        active_index = self.active_index
-        previous_index = active_index - 1
-        if self.is_valid_index(previous_index):
-            self._swap_timelines(previous_index, active_index)
-            self.active_index = previous_index
-
-    def shift_active_next(self):
-        active_index = self.active_index
-        next_index = active_index + 1
-        if self.is_valid_index(next_index):
-            self._swap_timelines(active_index, next_index)
-            self.active_index = next_index
-
-    def shift_active_beggining(self):
-        if self.has_timelines():
-            first_index = 0
-            active_timeline = self.active
-            self.timelines.insert(first_index, active_timeline)
-            del self.timelines[self.active_index + 1]
-            self.active_index = first_index
-
-    def shift_active_end(self):
-        if self.has_timelines():
-            last_index = len(self.timelines)
-            active_timeline = self.active
-            self.timelines.insert(last_index, active_timeline)
-            self.delete_active_timeline()
-            self.active_index = last_index - 1
-
-
-class VisibleTimelineList(TimelineList):
-    """
-    A `TimelineList` that tracks a number of `visible` timelines. It also has
-    an 'active' timeline, which has to be within the visible ones.
-    """
-
-    def __init__(self, *args, **kwargs):
-        TimelineList.__init__(self, *args, **kwargs)
-        self.visible = []
 
     @property
     def visible_timelines(self):
@@ -323,55 +246,93 @@ class VisibleTimelineList(TimelineList):
         except IndexError:
             pass
 
-    # from `TimelineList`
+    # magic
 
-    def append_timeline(self, timeline):
-        # when appending a timeline is visible only if the `TimelineList`
-        # was empty
-        if self.active_index == self.NULL_INDEX:
-            self.visible = [0]
-        TimelineList.append_timeline(self, timeline)
+    def __iter__(self):
+        return self.timelines.__iter__()
 
-    def delete_active_timeline(self):
-        try:
-            self.visible.remove(self.active_index)
-        except ValueError:
-            pass
-        finally:
-            TimelineList.delete_active_timeline(self)
-        self._set_active_as_visible()
+    def __len__(self):
+        return self.timelines.__len__()
+
+    # from `UnsortedActiveList`
+
+    @property
+    def active(self):
+        if self.has_timelines():
+            return self.timelines[self.active_index]
+
+    def is_valid_index(self, index):
+        return index >= 0 and index < len(self.timelines)
 
     def activate_previous(self):
-        TimelineList.activate_previous(self)
+        UnsortedActiveList.activate_previous(self)
+        self._mark_read()
         self._set_active_as_visible()
 
     def activate_next(self):
-        TimelineList.activate_next(self)
+        UnsortedActiveList.activate_next(self)
+        self._mark_read()
         self._set_active_as_visible()
 
     def activate_first(self):
-        TimelineList.activate_first(self)
+        UnsortedActiveList.activate_first(self)
+        self._mark_read()
         self._set_active_as_visible()
 
     def activate_last(self):
-        TimelineList.activate_last(self)
+        if self.has_timelines():
+            last_index = len(self.timelines) - 1 
+            self.active_index = last_index
+        self._mark_read()
         self._set_active_as_visible()
+
+    def _swap_timelines(self, one, other):
+        """
+        Given the indexes of two timelines `one` and `other`, it swaps the
+        `Timeline` objects contained in those positions.
+        """
+        if self.is_valid_index(one) and self.is_valid_index(other):
+            self.timelines[one], self.timelines[other] = \
+                    self.timelines[other], self.timelines[one]
+
+    def _mark_read(self):
+        if self.has_timelines():
+            active_timeline = self.active
+            active_timeline.mark_active_as_read()
 
     def shift_active_previous(self):
-        TimelineList.shift_active_previous(self)
-        self._set_active_as_visible()
+        active_index = self.active_index
+        previous_index = active_index - 1
+        if self.is_valid_index(previous_index):
+            self._swap_timelines(previous_index, active_index)
+            self.active_index = previous_index
+            self._set_active_as_visible()
 
     def shift_active_next(self):
-        TimelineList.shift_active_next(self)
-        self._set_active_as_visible()
+        active_index = self.active_index
+        next_index = active_index + 1
+        if self.is_valid_index(next_index):
+            self._swap_timelines(active_index, next_index)
+            self.active_index = next_index
+            self._set_active_as_visible()
 
     def shift_active_beggining(self):
-        TimelineList.shift_active_beggining(self)
-        self._set_active_as_visible()
+        if self.has_timelines():
+            first_index = 0
+            active_timeline = self.active
+            self.timelines.insert(first_index, active_timeline)
+            del self.timelines[self.active_index + 1]
+            self.active_index = first_index
+            self._set_active_as_visible()
 
     def shift_active_end(self):
-        TimelineList.shift_active_end(self)
-        self._set_active_as_visible()
+        if self.has_timelines():
+            last_index = len(self.timelines)
+            active_timeline = self.active
+            self.timelines.insert(last_index, active_timeline)
+            self.delete_active_timeline()
+            self.active_index = last_index - 1
+            self._set_active_as_visible()
 
 
 # -- Twitter entities ---------------------------------------------------------

@@ -35,7 +35,7 @@ from turses.models import (
         sanitize_username,
 
         Timeline,
-        VisibleTimelineList,
+        TimelineList,
 )
 from turses.api.base import AsyncApi
 
@@ -341,7 +341,7 @@ class Controller(object):
             pass
         self.user = self.api.verify_credentials()
         self.info_message(_('Initializing timelines'))
-        self.timelines = VisibleTimelineList()
+        self.timelines = TimelineList()
         self.append_default_timelines()
         seconds = self.configuration.update_frequency
         self.loop.set_alarm_in(seconds, self.update_alarm)
