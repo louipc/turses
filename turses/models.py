@@ -14,8 +14,9 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 from functools import partial, total_ordering
 from bisect import insort
 
+from turses.meta import wrap_exceptions
 from turses.utils import (html_unescape, timestamp_from_datetime,
-                          wrap_exceptions, is_url, matches_word)
+                          is_url, matches_word)
 
 
 TWEET_MAXIMUM_CHARACTERS = 140

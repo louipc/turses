@@ -17,7 +17,8 @@ from urlparse import parse_qsl
 from gettext import gettext as _
 
 from turses.models import is_DM
-from turses.utils import encode, wrap_exceptions, async
+from turses.utils import encode
+from turses.meta import async, wrap_exceptions
 
 
 TWITTER_CONSUMER_KEY = 'OEn4hrNGknVz9ozQytoR0A'

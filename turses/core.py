@@ -17,9 +17,8 @@ from tweepy import TweepError
 from turses.utils import (
         get_urls,
         spawn_process,
-        wrap_exceptions,
-        async,
 )
+from turses.meta import async, wrap_exceptions
 from turses.config import (
         HOME_TIMELINE,
         MENTIONS_TIMELINE,
