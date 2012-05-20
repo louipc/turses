@@ -10,10 +10,11 @@ This module contains the UI widgets.
 from gettext import gettext as _
 
 from urwid import (AttrMap, WidgetWrap, Padding, Divider, SolidFill,
-                   WidgetDecoration,
+                   WidgetDecoration, 
 
                    # widgets
                    Text, Edit, Frame, Columns, Pile, ListBox, SimpleListWalker,
+                   #Overlay,
 
                    # signals
                    signals, emit_signal, connect_signal, disconnect_signal)
@@ -64,8 +65,8 @@ class CursesInterface(Frame):
     def __init__(self,
                  configuration):
         header = TabsWidget()
-        body = WelcomeBuffer()
 
+        body =  WelcomeBuffer()
         self._status_bar = configuration.styles.get('status_bar', False)
         if self._status_bar:
             footer = StatusBar('')
@@ -614,42 +615,62 @@ class TimelinesBuffer(WidgetWrap):
 
     def __init__(self, timelines=None, **kwargs):
         timelines = [] if timelines is None else timelines
+
+        widget = self._create_widget(timelines, **kwargs)
+                
+        WidgetWrap.__init__(self, widget)
+
+    def _create_widget(self, timelines, **kwargs):
         timeline_widgets = [TimelineWidget(timeline, **kwargs) for timeline
                                                                 in timelines]
-        WidgetWrap.__init__(self, Columns(timeline_widgets))
+        return Columns(timeline_widgets) 
+        #overlay = Overlay(top_w=Pile([Text("Loren ipsum")]),
+                          #bottom_w=columns,
+                          #align='center',
+                          #width=0,
+                          #valign='middle',
+                          #height=0)
+
+    def render_timelines(self, timelines, **kwargs):
+        """Render the given statuses."""
+        self._w = self._create_widget(timelines, **kwargs)
+
+    @property
+    def columns(self):
+        """
+        The `Columns` widget.
+        """
+        return self._w
+
+    @property
+    def active_widget(self):
+        """
+        The active widget.
+        """
+        return self.columns.get_focus()
 
     def scroll_up(self):
-        active_widget = self._w.get_focus()
-        active_widget.focus_previous()
+        self.active_widget.focus_previous()
 
     def scroll_down(self):
-        active_widget = self._w.get_focus()
-        active_widget.focus_next()
+        self.active_widget.focus_next()
 
     def scroll_top(self):
-        active_widget = self._w.get_focus()
-        active_widget.focus_first()
+        self.active_widget.focus_first()
 
     def scroll_bottom(self):
-        active_widget = self._w.get_focus()
-        active_widget.focus_last()
+        self.active_widget.focus_last()
 
     def clear(self):
         """Clears the buffer."""
         # FIXME
         pass
 
-    def render_timelines(self, timelines):
-        """Renders the given statuses."""
-        timeline_widgets = [TimelineWidget(timeline) for timeline in timelines]
-        self._w = Columns(timeline_widgets)
-
     def set_focus(self, index):
-        active_widget = self._w.get_focus()
-        active_widget.set_focus(index)
+        self.active_widget.set_focus(index)
 
     def focus_timeline(self, index):
-        self._w.set_focus_column(index)
+        self.columns.set_focus_column(index)
 
     # XXX:
     #  All keypresses are ignored so `turses.core.KeyHandler` can handle
