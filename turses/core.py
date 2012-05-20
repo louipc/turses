@@ -616,7 +616,7 @@ class Controller(object):
                 newest = active_timeline[0]
             except IndexError:
                 return
-            active_timeline.update_with_extra_kwargs(since_id=newest.id)
+            active_timeline.update(since_id=newest.id)
             if self.is_in_timeline_mode():
                 self.draw_timelines()
             self.info_message('%s updated' % active_timeline.name)
@@ -629,7 +629,7 @@ class Controller(object):
         active_timeline = self.timelines.active
         active_status = active_timeline.active
         if active_status:
-            active_timeline.update_with_extra_kwargs(since_id=active_status.id)
+            active_timeline.update(since_id=active_status.id)
 
     @async
     def update_active_timeline_with_older_statuses(self):
@@ -639,7 +639,7 @@ class Controller(object):
         active_timeline = self.timelines.active
         active_status = active_timeline.active
         if active_status:
-            active_timeline.update_with_extra_kwargs(max_id=active_status.id)
+            active_timeline.update(max_id=active_status.id)
 
     def previous_timeline(self):
         if self.timelines.has_timelines():

@@ -51,6 +51,58 @@ def is_valid_search_text(text):
 # -- Base ---------------------------------------------------------------------
 
 
+class Updatable:
+    """
+    An abstract class that for making a class 'updatable'.
+    """
+
+    __metaclass__ = ABCMeta
+
+    def __init__(self,
+                 update_function=None,
+                 update_function_args=None,
+                 update_function_kwargs=None,):
+        """
+        `update_function` is the function used to update the class, with
+        the args `update_function_args` and `update_function_kwargs` if
+        they are provided.
+        """
+        self.update_function = update_function
+
+        if isinstance(update_function_args, tuple):
+            self._args = list(update_function_args)
+        elif update_function_args:
+            self._args = [update_function_args]
+        else:
+            self._args = []
+
+        if update_function_kwargs:
+            self._kwargs = dict(update_function_kwargs)
+        else:
+            self._kwargs = {}
+
+    @wrap_exceptions
+    def update(self, **extra_kwargs):
+        """
+        Update the object, after receiving the result it is passed to the 
+        `update_callback` function.
+        """
+        if not self.update_function:
+            return
+
+        args = self._args
+        kwargs = self._kwargs
+        kwargs.update(extra_kwargs)
+
+        result = self.update_function(*args, **kwargs)
+
+        self.update_callback(result)
+
+    @abstractmethod
+    def update_callback(self, result):
+        pass
+
+
 class ActiveList(object):
     """
     A list that contains an 'active' element.
@@ -654,7 +706,7 @@ class List(object):
         self.private = private
 
 
-class Timeline(ActiveList):
+class Timeline(ActiveList, Updatable):
     """
     List of Twitter statuses ordered reversely by date. Optionally with
     a name, a function that updates the current timeline and its arguments.
@@ -666,10 +718,9 @@ class Timeline(ActiveList):
     def __init__(self,
                  name='',
                  statuses=None,
-                 update_function=None,
-                 update_function_args=None,
-                 update_function_kwargs=None):
+                 **kwargs):
         ActiveList.__init__(self)
+        Updatable.__init__(self, **kwargs)
         self.name = name
 
         self.statuses = []
@@ -677,31 +728,6 @@ class Timeline(ActiveList):
             self.add_statuses(statuses)
             self.activate_first()
             self.mark_active_as_read()
-
-        self.update_function = update_function
-        self.update_function_args = None
-        self.update_function_kwargs = None
-
-        if update_function_args or update_function_kwargs:
-            self._extract_args_and_kwargs(update_function_args,
-                                          update_function_kwargs)
-
-    def _extract_args_and_kwargs(self, update_args, update_kwargs):
-        is_dict = lambda d: isinstance(d, dict)
-        is_tuple = lambda t: isinstance(t, tuple)
-        is_list = lambda l: isinstance(l, list)
-
-        if is_tuple(update_args):
-            # multiple arguments in a tuple
-            args = list(update_args)
-            self.update_function_args = args
-        elif is_list(update_args) or update_args:
-            # list of args or one arg
-            self.update_function_args = update_args
-
-        if is_dict(update_kwargs):
-            # dict with kwargs
-            self.update_function_kwargs = update_kwargs
 
     def add_status(self, new_status):
         """
@@ -739,57 +765,6 @@ class Timeline(ActiveList):
         self.active_index = self.NULL_INDEX
         self.statuses = []
 
-    @wrap_exceptions
-    def update(self):
-        if not self.update_function:
-            return
-
-        args = self.update_function_args
-        kwargs = self.update_function_kwargs
-
-        if args is not None and kwargs is not None:
-            if not isinstance(args, list):
-                args = [self.update_function_args]
-
-            new_statuses = self.update_function(*args, **kwargs)
-
-        elif args:
-            if not isinstance(args, list):
-                args = [self.update_function_args]
-            new_statuses = self.update_function(*args)
-        elif kwargs:
-            new_statuses = self.update_function(**kwargs)
-        else:
-            new_statuses = self.update_function()
-        self.add_statuses(new_statuses)
-
-    def update_with_extra_kwargs(self, **extra_kwargs):
-        if not self.update_function:
-            return
-
-        update_args = self.update_function_args
-        update_kwargs = self.update_function_kwargs
-
-        if isinstance(update_args, list):
-            args = update_args
-        elif update_args:
-            args = [update_args]
-
-        if update_kwargs:
-            kwargs = update_kwargs.copy()
-            kwargs.update(extra_kwargs)
-        else:
-            kwargs = extra_kwargs
-
-        if update_args:
-            # both args and kwargs
-            new_statuses = self.update_function(*args, **kwargs)
-        else:
-            # kwargs only
-            new_statuses = self.update_function(**kwargs)
-
-        self.add_statuses(new_statuses)
-
     @property
     def unread_count(self):
         def one_if_unread(tweet):
@@ -799,6 +774,14 @@ class Timeline(ActiveList):
 
         return sum([one_if_unread(tweet) for tweet in self.statuses])
 
+    def mark_active_as_read(self):
+        """Set active status' `read` attribute to `True`."""
+        if self.active:
+            self.active.read = True
+
+    def mark_all_as_read(self):
+        for status in self.statuses:
+            status.read = True
     # magic
 
     def __len__(self):
@@ -843,13 +826,7 @@ class Timeline(ActiveList):
         else:
             self.active_index = self.NULL_INDEX
 
-    # utils
+    # from `Updatable`
 
-    def mark_active_as_read(self):
-        """Set active status' `read` attribute to `True`."""
-        if self.active:
-            self.active.read = True
-
-    def mark_all_as_read(self):
-        for status in self.statuses:
-            status.read = True
+    def update_callback(self, result):
+        self.add_statuses(result)
