@@ -66,6 +66,11 @@ class KeyHandler(object):
     def handle(self, key):
         """Handle keyboard input."""
         # Global commands
+        if self.controller.is_editing():
+            size = 20, 
+            self.controller.editor.keypress(size, key)
+            return
+
         handled = not self._turses_key_handler(key)
         if handled:
             return
@@ -301,6 +306,7 @@ class Controller(object):
     def __init__(self, configuration, ui, api_backend):
         self.configuration = configuration
         self.ui = ui
+        self.editor = None
 
         # Mode
         self.mode = self.INFO_MODE
@@ -361,6 +367,9 @@ class Controller(object):
         self.loop.set_alarm_in(seconds, self.update_alarm)
 
     # -- Modes ----------------------------------------------------------------
+
+    def is_editing(self):
+        return bool(self.editor)
 
     def timeline_mode(self):
         """
@@ -773,6 +782,7 @@ class Controller(object):
     def tweet_handler(self, text):
         """Handle the post as a tweet of the given `text`."""
         self.ui.hide_editor(self.tweet_handler)
+        self.editor = None
 
         self.info_message(_('Sending tweet'))
 
@@ -792,6 +802,7 @@ class Controller(object):
     def direct_message_handler(self, username, text):
         """Handle the post as a DM of the given `text` to `username`."""
         self.ui.hide_editor(self.direct_message_handler)
+        self.editor = None
 
         self.info_message(_('Sending DM'))
 
@@ -815,6 +826,7 @@ class Controller(object):
         Handles following the user given in `text`.
         """
         self.ui.hide_editor(self.follow_user_handler)
+        self.editor = None
 
         username = sanitize_username(username)
         if username == self.user.screen_name:
@@ -846,6 +858,7 @@ class Controller(object):
         Handles unfollowing the user given in `text`.
         """
         self.ui.hide_editor(self.unfollow_user_handler)
+        self.editor = None
 
         username = sanitize_username(username)
         if username == self.user.screen_name:
@@ -885,6 +898,7 @@ class Controller(object):
         if self.is_in_info_mode():
             self.timeline_mode()
         self.ui.hide_editor(self.search_handler)
+        self.editor = None
 
         if text is None:
             self.info_message(_('Search cancelled'))
@@ -917,6 +931,7 @@ class Controller(object):
         if self.is_in_info_mode():
             self.timeline_mode()
         self.ui.hide_editor(self.search_user_handler)
+        self.editor = None
 
         # TODO make sure that the user EXISTS and THEN fetch its tweets
         username = sanitize_username(username)
@@ -944,13 +959,13 @@ class Controller(object):
 
     def search(self, text=None):
         text = '' if text is None else text
-        self.ui.show_text_editor(prompt='Search',
+        self.editor = self.ui.show_text_editor(prompt='Search',
                                  content=text,
                                  done_signal_handler=self.search_handler,)
 
     def search_user(self):
         prompt = _('Search user (no need to prepend it with "@"')
-        self.ui.show_text_editor(prompt=prompt,
+        self.editor = self.ui.show_text_editor(prompt=prompt,
                                  content='',
                                  done_signal_handler=self.search_user_handler)
 
@@ -972,7 +987,7 @@ class Controller(object):
               prompt=_('Tweet'),
               content='',
               cursor_position=None):
-        self.ui.show_tweet_editor(prompt=prompt,
+        self.editor = self.ui.show_tweet_editor(prompt=prompt,
                                   content=content,
                                   done_signal_handler=self.tweet_handler,
                                   cursor_position=cursor_position)
@@ -1023,7 +1038,7 @@ class Controller(object):
         except ValueError:
             pass
 
-        self.ui.show_tweet_editor(prompt=_('Reply to %s' % author),
+        self.editor = self.ui.show_tweet_editor(prompt=_('Reply to %s' % author),
                                   content=' '.join(mentioned),
                                   done_signal_handler=self.tweet_handler,)
 
@@ -1047,7 +1062,7 @@ class Controller(object):
             return
         hashtags = ' '.join(status.hashtags)
         if hashtags:
-            self.ui.show_tweet_editor(prompt=_('%s' % hashtags),
+            self.editor = self.ui.show_tweet_editor(prompt=_('%s' % hashtags),
                                       content=''.join([' ', hashtags]),
                                       done_signal_handler=self.tweet_handler,
                                       cursor_position=0)
@@ -1119,7 +1134,7 @@ class Controller(object):
                     prompt=_('Follow user (no need to prepend it with "@"'),
                     content='',
                     cursor_position=None):
-        self.ui.show_text_editor(prompt=prompt,
+        self.editor = self.ui.show_text_editor(prompt=prompt,
                                  content=content,
                                  done_signal_handler=self.follow_user_handler,
                                  cursor_position=cursor_position)
@@ -1128,7 +1143,7 @@ class Controller(object):
                       prompt=_('Unfollow user (no need to prepend it with "@"'),
                       content='',
                       cursor_position=None):
-        self.ui.show_text_editor(prompt=prompt,
+        self.editor = self.ui.show_text_editor(prompt=prompt,
                                  content=content,
                                  done_signal_handler=self.unfollow_user_handler,
                                  cursor_position=cursor_position)

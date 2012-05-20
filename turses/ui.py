@@ -10,11 +10,11 @@ This module contains the UI widgets.
 from gettext import gettext as _
 
 from urwid import (AttrMap, WidgetWrap, Padding, Divider, SolidFill,
-                   WidgetDecoration, 
+                   WidgetDecoration, Filler,
 
                    # widgets
                    Text, Edit, Frame, Columns, Pile, ListBox, SimpleListWalker,
-                   #Overlay,
+                   Overlay,
 
                    # signals
                    signals, emit_signal, connect_signal, disconnect_signal)
@@ -185,42 +185,43 @@ class CursesInterface(Frame):
                                   content=content,
                                   done_signal_handler=done_signal_handler,
                                   **kwargs)
-        self.footer = self._editor
-        self.set_footer(self.footer)
-        self.set_focus('footer')
+        self.body.show_widget_on_top(widget=self._editor,
+                                     width=50,
+                                     height=5)
+        return self._editor
 
     def show_text_editor(self,
                          prompt='',
                          content='',
                          done_signal_handler=None,
                          cursor_position=None):
-        self._show_editor(TextEditor,
-                          prompt,
-                          content,
-                          done_signal_handler,
-                          cursor_position=cursor_position)
+        return self._show_editor(TextEditor,
+                                 prompt,
+                                 content,
+                                 done_signal_handler,
+                                 cursor_position=cursor_position)
 
     def show_tweet_editor(self,
                           prompt='',
                           content='',
                           done_signal_handler=None,
                           cursor_position=None):
-        self._show_editor(TweetEditor,
-                          prompt,
-                          content,
-                          done_signal_handler,
-                          cursor_position=cursor_position)
+        return self._show_editor(TweetEditor,
+                                 prompt,
+                                 content,
+                                 done_signal_handler,
+                                 cursor_position=cursor_position)
 
     def show_dm_editor(self,
                        prompt='',
                        content='',
                        recipient='',
                        done_signal_handler=None):
-        self._show_editor(DmEditor,
-                          prompt,
-                          content,
-                          done_signal_handler,
-                          recipient=recipient,)
+        return self._show_editor(DmEditor,
+                                 prompt,
+                                 content,
+                                 done_signal_handler,
+                                 recipient=recipient,)
 
     def hide_editor(self, done_signal_handler):
         try:
@@ -230,8 +231,7 @@ class CursesInterface(Frame):
             # connected from `self._editor`. We can safely ignore it.
             pass
         self._editor = None
-        self.clear_status()
-        self.set_focus('body')
+        self.body.hide_top_widget()
 
 
 class WelcomeBuffer(WidgetWrap):
@@ -623,13 +623,18 @@ class TimelinesBuffer(WidgetWrap):
     def _create_widget(self, timelines, **kwargs):
         timeline_widgets = [TimelineWidget(timeline, **kwargs) for timeline
                                                                 in timelines]
-        return Columns(timeline_widgets) 
-        #overlay = Overlay(top_w=Pile([Text("Loren ipsum")]),
-                          #bottom_w=columns,
-                          #align='center',
-                          #width=0,
-                          #valign='middle',
-                          #height=0)
+        columns = Columns(timeline_widgets) 
+
+        return self._create_overlay(columns)
+
+    def _create_overlay(self, top_w):
+        dummy_widget = ListBox(SimpleListWalker([]))
+        return Overlay(top_w=top_w,
+                       bottom_w=dummy_widget,
+                       align='center',
+                       width=200,
+                       valign='middle',
+                       height=200)
 
     def render_timelines(self, timelines, **kwargs):
         """Render the given statuses."""
@@ -640,7 +645,9 @@ class TimelinesBuffer(WidgetWrap):
         """
         The `Columns` widget.
         """
-        return self._w
+        top = self._w.top_w
+        bottom = self._w.bottom_w
+        return top if isinstance(top, Columns) else bottom
 
     @property
     def active_widget(self):
@@ -648,6 +655,20 @@ class TimelinesBuffer(WidgetWrap):
         The active widget.
         """
         return self.columns.get_focus()
+
+    def show_widget_on_top(self,
+                           widget,
+                           width,
+                           height,):
+        widget = Filler(widget)
+        self._w.bottom_w, self._w.top_w = self._w.top_w, widget
+        self._w.set_overlay_parameters(align='center',
+                                       width=width,
+                                       valign='middle',
+                                       height=height)
+
+    def hide_top_widget(self):
+        self._w = self._create_overlay(self._w.bottom_w)
 
     def scroll_up(self):
         self.active_widget.focus_previous()
