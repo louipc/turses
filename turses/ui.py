@@ -159,9 +159,14 @@ class CursesInterface(Frame):
                                   content=content,
                                   done_signal_handler=done_signal_handler,
                                   **kwargs)
+        styles = self._configuration.styles
+        horizontal_align = styles['editor_horizontal_align']
+        vertical_align = styles['editor_vertical_align']
         self.body.show_widget_on_top(widget=self._editor,
                                      width=50,
-                                     height=5)
+                                     height=5,
+                                     align=horizontal_align,
+                                     valign=vertical_align)
         return self._editor
 
     def show_text_editor(self,
@@ -704,12 +709,14 @@ class TimelinesBuffer(WidgetWrap):
     def show_widget_on_top(self,
                            widget,
                            width,
-                           height,):
+                           height,
+                           align='center',
+                           valign='middle'):
         widget = Filler(widget)
         self._w.bottom_w, self._w.top_w = self._w.top_w, widget
-        self._w.set_overlay_parameters(align='center',
+        self._w.set_overlay_parameters(align=align,
                                        width=width,
-                                       valign='middle',
+                                       valign=valign,
                                        height=height)
 
     def hide_top_widget(self):

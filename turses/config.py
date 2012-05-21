@@ -323,6 +323,8 @@ STYLES = {
     'status_divider': False,
     'status_bar': True,
     'status_divider_char': '─',
+    'editor_horizontal_align': 'center',
+    'editor_vertical_align': 'bottom',
 }
 
 # Debug
@@ -681,6 +683,12 @@ class Configuration(object):
                         style == 'status_divider',
                         style == 'status_bar']):
                     self.styles[style] = conf.getboolean(SECTION_STYLES, style)
+                elif (style == 'editor_horizontal_align' and 
+                      style not in ['left', 'center', 'right']):
+                    pass
+                elif (style == 'editor_vertical_align' and 
+                      style not in ['top', 'middle', 'bottom']):
+                    pass
                 else:
                     self.styles[style] = unicode(conf.get(SECTION_STYLES, style),
                                                  'utf-8')
