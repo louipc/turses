@@ -38,9 +38,16 @@ class CursesInterface(Frame):
 
     def __init__(self,
                  configuration):
+        self._configuration = configuration
+        self._editor = None
+
+        # header
         header = TabsWidget()
 
+        # body
         body = Banner(configuration)
+
+        # footer
         self._status_bar = configuration.styles.get('status_bar', False)
         if self._status_bar:
             footer = StatusBar('')
@@ -51,8 +58,6 @@ class CursesInterface(Frame):
                        body,
                        header=header,
                        footer=footer)
-        self._configuration = configuration
-        self._editor = None
 
     # -- Modes ----------------------------------------------------------------
 
@@ -205,9 +210,12 @@ class CursesInterface(Frame):
     # - Pop ups ---------------------------------------------------------------
     
     def show_user_info(self, user):
-        widget = UserInfo(user=user)
+        widget = UserInfo(user=user,
+                          configuration=self._configuration)
 
-        self.body.show_widget_on_top(widget, 20, 10)
+        self.body.show_widget_on_top(widget,
+                                     width=40, 
+                                     height=18)
                   
 
     def hide_user_info(self):
@@ -954,9 +962,37 @@ class UserInfo(WidgetWrap):
     __metaclass__ = signals.MetaSignals
     signals = ['done']
 
-    def __init__(self, user):
+    def __init__(self, user, configuration):
         """
         """
-        widget = Text('@%s' % user.screen_name) 
-        WidgetWrap.__init__(self, LineBox(title=user.screen_name,
+        name = Text('%s (@%s)' % (user.name, user.screen_name))
+        description = Text('%s' % user.description)
+
+        url_text_with_attr = ('url', user.url)
+        url = Text(url_text_with_attr)
+
+        following = Text(_('following:\n%s' % user.friends_count))
+        followers = Text(_('followers:\n%s' % user.followers_count))
+        favorites = Text(_('favorites:\n%s' % user.favorites_count))
+        stats = Columns([following, followers, favorites])
+
+        status = StatusWidget(user.status, configuration)
+
+        WHITESPACE = Divider(' ')
+
+        widget = Pile([name,
+                       WHITESPACE,
+
+                       description,
+                       WHITESPACE,
+
+                       url,
+                       WHITESPACE,
+
+                       stats,
+                       WHITESPACE,
+
+                       status,
+                       ])
+        WidgetWrap.__init__(self, LineBox(title='@%s' % user.screen_name,
                                           original_widget=widget))

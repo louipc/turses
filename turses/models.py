@@ -263,8 +263,26 @@ class User(object):
     """
 
     def __init__(self,
-                 screen_name):
+                 id,
+                 name,
+                 screen_name,
+                 description,
+                 url,
+                 created_at,
+                 friends_count,
+                 followers_count,
+                 favorites_count,
+                 status):
+        self.id = id
+        self.name = name
         self.screen_name = screen_name
+        self.description = description
+        self.url = url
+        self.created_at = created_at
+        self.friends_count = friends_count
+        self.followers_count = followers_count
+        self.favorites_count = favorites_count
+        self.status = status
 
 
 @total_ordering

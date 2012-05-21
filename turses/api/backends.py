@@ -44,7 +44,7 @@ def filter_result(func, filter_func=None):
     return wrapper
 
 
-def _to_status(status):
+def _to_status(status, **extra_kwargs):
     """
     Convert a `tweepy.Status` to a `turses.models.Status`.
     """
@@ -58,23 +58,30 @@ def _to_status(status):
     is_favorite = False
     author = ''
 
-    if getattr(status, 'retweeted_status', False):
+    # when fetching an individual user her last status is included and
+    # does not include a `user` attribute
+    if getattr(status, 'user', None):
+        user = status.user.screen_name
+    else:
+        user = None
+
+    if hasattr(status, 'retweeted_status'):
         is_retweet = True
         retweeted_status = _to_status(status.retweeted_status)
         retweet_count = status.retweet_count
         author = status.retweeted_status.author.screen_name
 
-    if status.in_reply_to_screen_name:
+    if hasattr(status, 'in_reply_to_screen_name'):
         is_reply = True
         in_reply_to_user = status.in_reply_to_screen_name
 
-    if status.favorited:
-        is_favorite = True
+    if hasattr(status, 'favorited'):
+        is_favorite = status.favorited
 
     kwargs = {
         'id': status.id,
         'created_at': status.created_at,
-        'user': status.user.screen_name,
+        'user': user,
         'text': text,
         'is_retweet': is_retweet,
         'is_reply': is_reply,
@@ -85,6 +92,8 @@ def _to_status(status):
         'author': author,
         'entities': getattr(status, 'entities', None),
     }
+    kwargs.update(**extra_kwargs)
+
     return Status(**kwargs)
 
 
@@ -122,7 +131,16 @@ def _to_user(user):
     Convert a `tweepy.User` to a `turses.models.User`.
     """
     kwargs = {
+        'id': user.id,
+        'name': user.name,
         'screen_name': user.screen_name,
+        'description': user.description,
+        'url': user.url,
+        'created_at': user.created_at,
+        'friends_count': user.friends_count,
+        'followers_count': user.followers_count,
+        'favorites_count': user.favourites_count,
+        'status': _to_status(user.status, user=user.screen_name),
     }
     return User(**kwargs)
 
