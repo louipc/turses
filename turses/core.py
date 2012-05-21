@@ -833,6 +833,10 @@ class Controller(object):
         self.ui.hide_editor(self.follow_user_handler)
         self.timeline_mode()
 
+        if username is None:
+            self.info_message(_('Search cancelled'))
+            return
+
         username = sanitize_username(username)
         if username == self.user.screen_name:
             self.error_message(_('You can\'t follow yourself'))
@@ -864,6 +868,10 @@ class Controller(object):
         """
         self.ui.hide_editor(self.unfollow_user_handler)
         self.timeline_mode()
+
+        if username is None:
+            self.info_message(_('Search cancelled'))
+            return
 
         username = sanitize_username(username)
         if username == self.user.screen_name:
