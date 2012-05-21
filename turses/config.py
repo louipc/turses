@@ -684,11 +684,11 @@ class Configuration(object):
                         style == 'status_bar']):
                     self.styles[style] = conf.getboolean(SECTION_STYLES, style)
                 elif (style == 'editor_horizontal_align' and 
-                      style not in ['left', 'center', 'right']):
-                    pass
+                      style in ['left', 'center', 'right']):
+                    self.styles[style] = conf.get(SECTION_STYLES, style)
                 elif (style == 'editor_vertical_align' and 
-                      style not in ['top', 'middle', 'bottom']):
-                    pass
+                      style in ['top', 'middle', 'bottom']):
+                    self.styles[style] = conf.get(SECTION_STYLES, style)
                 else:
                     self.styles[style] = unicode(conf.get(SECTION_STYLES, style),
                                                  'utf-8')

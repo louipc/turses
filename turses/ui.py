@@ -159,9 +159,11 @@ class CursesInterface(Frame):
                                   content=content,
                                   done_signal_handler=done_signal_handler,
                                   **kwargs)
+
         styles = self._configuration.styles
         horizontal_align = styles['editor_horizontal_align']
         vertical_align = styles['editor_vertical_align']
+
         self.body.show_widget_on_top(widget=self._editor,
                                      width=80,
                                      height=3,
@@ -661,7 +663,11 @@ class HelpBuffer(ScrollableListBoxWrapper):
 
 
 class TimelinesBuffer(WidgetWrap):
-    """A widget that displays one or more `Timeline` objects."""
+    """
+    A widget that displays one or more `Timeline` objects.
+    
+    Another widget can be placed on top of it.
+    """
 
     def __init__(self, timelines=None, **kwargs):
         timelines = [] if timelines is None else timelines
