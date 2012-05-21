@@ -27,6 +27,9 @@ from turses.models import is_DM, TWEET_MAXIMUM_CHARACTERS
 from turses.utils import encode
 
 
+# - Main UI -------------------------------------------------------------------
+
+
 class CursesInterface(Frame):
     """
     Creates a curses interface for the program, providing functions to draw
@@ -205,6 +208,9 @@ class CursesInterface(Frame):
         self.body.hide_top_widget()
 
 
+# - Program info --------------------------------------------------------------
+
+
 class Banner(WidgetWrap):
     """Displays information about the program."""
 
@@ -256,7 +262,66 @@ class Banner(WidgetWrap):
         self.text.append(text)
 
 
-class TextEditor(WidgetWrap):
+# - Editors -------------------------------------------------------------------
+
+
+class BaseEditor(WidgetWrap):
+    """Base class for editors."""
+
+    __metaclass__ = signals.MetaSignals
+    signals = ['done']
+
+    def __init__(self,
+                 prompt,
+                 content,
+                 done_signal_handler,
+                 cursor_position=None):
+        """
+        Initializes editor, connects 'done' signal. 
+        
+        When pressing 'enter' twice the `submit` method is called, which by 
+        default calls `emit_done_signal` with the text that has been 
+        introduced.
+
+        When pressing 'esc' the `cancel` method is called, which by default
+        calls `emit_done_signal` with no arguments.
+
+        The subclasses must call the WidgetWrap constructor to create the
+        actual widget.
+        """
+        caption = _(u'%s (twice enter key to validate or esc) \n>> ') % prompt
+        if content:
+            content += ' '
+        self.content = content
+        self.editor = Edit(caption=caption,
+                           edit_text=content,
+                           edit_pos=cursor_position)
+
+        connect_signal(self, 'done', done_signal_handler)
+
+    def keypress(self, size, key):
+        if key == 'enter' and self.last_key == 'enter':
+            self.submit()
+            return
+        elif key == 'esc':
+            self.cancel()
+            return
+
+        self.last_key = key
+        size = size,
+        self.editor.keypress(size, key)
+
+    def submit(self):
+        self.emit_done_signal(self.editor.get_edit_text())
+
+    def cancel(self):
+        self.emit_done_signal()
+
+    def emit_done_signal(self, content=None):
+        emit_signal(self, 'done', content)
+
+
+class TextEditor(BaseEditor):
     """Editor for creating arbitrary text."""
 
     __metaclass__ = signals.MetaSignals
@@ -267,37 +332,19 @@ class TextEditor(WidgetWrap):
                  content,
                  done_signal_handler,
                  cursor_position=None):
-        caption = u'%s (twice enter key to validate or esc) \n>> ' % prompt
-        if content:
-            content += ' '
-        self.editor = Edit(caption=caption,
-                           edit_text=content,
-                           edit_pos=cursor_position)
+        BaseEditor.__init__(self, 
+                            prompt, 
+                            content, 
+                            done_signal_handler,
+                            cursor_position)
 
         widgets = [self.editor]
         w = AttrMap(Columns(widgets), 'editor')
 
-        connect_signal(self, 'done', done_signal_handler)
-
-        self.__super.__init__(w)
-
-    def keypress(self, size, key):
-        if key == 'enter' and self.last_key == 'enter':
-            self.emit_done_signal(self.editor.get_edit_text())
-            return
-        elif key == 'esc':
-            self.emit_done_signal()
-            return
-
-        self.last_key = key
-        size = size,
-        self.editor.keypress(size, key)
-
-    def emit_done_signal(self, content=None):
-        emit_signal(self, 'done', content)
+        WidgetWrap.__init__(self, w)
 
 
-class TweetEditor(WidgetWrap):
+class TweetEditor(BaseEditor):
     """Editor for creating tweets."""
 
     __metaclass__ = signals.MetaSignals
@@ -308,44 +355,31 @@ class TweetEditor(WidgetWrap):
                  content,
                  done_signal_handler,
                  cursor_position=None):
-        if content:
-            content += ' '
-        caption = u'%s (twice enter key to validate or esc) \n>> ' % prompt
-        self.editor = Edit(caption=caption,
-                           edit_text=content,
-                           edit_pos=cursor_position)
+        BaseEditor.__init__(self, 
+                            prompt, 
+                            content, 
+                            done_signal_handler,
+                            cursor_position)
 
-        self.counter = len(content)
+        self.counter = len(self.content)
         self.counter_widget = Text(str(self.counter))
 
         widgets = [('fixed', 4, self.counter_widget), self.editor]
         w = AttrMap(Columns(widgets), 'editor')
 
-        connect_signal(self, 'done', done_signal_handler)
         connect_signal(self.editor, 'change', self.update_counter)
 
-        self.__super.__init__(w)
+        WidgetWrap.__init__(self, w)
 
     def update_counter(self, edit, new_edit_text):
         self.counter = len(new_edit_text)
         self.counter_widget.set_text(str(self.counter))
 
-    def keypress(self, size, key):
-        if key == 'enter' and self.last_key == 'enter':
-            if self.counter > TWEET_MAXIMUM_CHARACTERS:
-                return
-            else:
-                self.emit_done_signal(self.editor.get_edit_text())
-        elif key == 'esc':
-            self.emit_done_signal()
+    def submit(self):
+        if self.counter > TWEET_MAXIMUM_CHARACTERS:
             return
-
-        self.last_key = key
-        size = size,
-        self.editor.keypress(size, key)
-
-    def emit_done_signal(self, content=None):
-        emit_signal(self, 'done', content)
+        else:
+            self.emit_done_signal(self.editor.get_edit_text())
 
 
 class DmEditor(TweetEditor):
@@ -367,6 +401,9 @@ class DmEditor(TweetEditor):
 
     def emit_done_signal(self, content=None):
         emit_signal(self, 'done', self.recipient, content)
+
+
+# - Header and footer ---------------------------------------------------------
 
 
 class TabsWidget(WidgetWrap):
@@ -459,6 +496,9 @@ class StatusBar(WidgetWrap):
         self._w.set_text('')
 
 
+# - Base list widgets ---------------------------------------------------------
+
+
 class ScrollableListBox(ListBox):
     """
     A `ListBox` subclass with additional methods for scrolling the
@@ -535,6 +575,9 @@ class ScrollableListBoxWrapper(WidgetWrap):
         self._w.focus_last()
 
 
+# - Help ----------------------------------------------------------------------
+
+
 class HelpBuffer(ScrollableListBoxWrapper):
     """
     A widget that displays all the keybindings of the given configuration.
@@ -607,6 +650,9 @@ class HelpBuffer(ScrollableListBoxWrapper):
 
     def scroll_top(self):
         self._w.focus_first()
+
+
+# - Timelines -----------------------------------------------------------------
 
 
 class TimelinesBuffer(WidgetWrap):
