@@ -10,7 +10,7 @@ This module contains the UI widgets.
 from gettext import gettext as _
 
 from urwid import (AttrMap, WidgetWrap, Padding, Divider, SolidFill,
-                   WidgetDecoration, 
+                   WidgetDecoration,
 
                    # widgets
                    Text, Edit, Frame, Columns, Pile, ListBox, SimpleListWalker,
@@ -26,35 +26,6 @@ from turses.config import (MOTION_KEY_BINDINGS, BUFFERS_KEY_BINDINGS,
 from turses.models import is_DM, TWEET_MAXIMUM_CHARACTERS
 from turses.utils import encode
 
-BANNER = [
-     "   _                             ",
-     " _| |_ _   _ _ __ ___  ___  ____ ",
-     "|_   _| | | | '__/ __|/   \/ ___|",
-     "  | | | | | | |  |   \  ~ ||   \\ ",
-     "  | |_| |_| | |  \__ |  __/\__ | ",
-     "  \___|\____|_| |____/\___||___/ ",
-     "  ······························ ",
-     "%s" % version,
-     "",
-     "",
-     _("Press '?' for help"),
-     _("Press 'q' to quit turses"),
-     "",
-     "",
-     _("Configuration and token files reside under"),
-     _("your $HOME directory"),
-     #"",
-     "",
-     "    ~                                              ",
-     "    |+.turses/                                     ",
-     "    | |-config                                     ",
-     _("    | |-token       # default account's token      "),
-     _("    | `-bob.token   # another account's token      "),
-     "    |+...                                          ",
-     "",
-     "",
-]
-
 
 class CursesInterface(Frame):
     """
@@ -66,7 +37,7 @@ class CursesInterface(Frame):
                  configuration):
         header = TabsWidget()
 
-        body =  WelcomeBuffer()
+        body = Banner(configuration)
         self._status_bar = configuration.styles.get('status_bar', False)
         if self._status_bar:
             footer = StatusBar('')
@@ -89,7 +60,7 @@ class CursesInterface(Frame):
 
     def show_info(self):
         self.header.clear()
-        self.body = WelcomeBuffer()
+        self.body = Banner(self._configuration)
         self.set_body(self.body)
 
     def show_help(self, configuration):
@@ -234,20 +205,48 @@ class CursesInterface(Frame):
         self.set_focus('body')
 
 
-class WelcomeBuffer(WidgetWrap):
+class Banner(WidgetWrap):
     """Displays information about the program."""
 
-    # width, in columns, of the banner
-    col_width = 30
-
-    def __init__(self):
+    def __init__(self, configuration):
         self.text = []
+
+        help_key = configuration.key_bindings['help'][0]
+        quit_key = configuration.key_bindings['quit'][0]
+        self.BANNER = [
+             "   _                             ",
+             " _| |_ _   _ _ __ ___  ___  ____ ",
+             "|_   _| | | | '__/ __|/   \/ ___|",
+             "  | | | | | | |  |   \  ~ ||   \\ ",
+             "  | |_| |_| | |  \__ |  __/\__ | ",
+             "  \___|\____|_| |____/\___||___/ ",
+             "  ······························ ",
+             "%s" % version,
+             "",
+             "",
+             _("Press '%s' for help") % help_key,
+             _("Press '%s' to quit turses") % quit_key,
+             "",
+             "",
+             _("Configuration and token files reside under"),
+             _("your $HOME directory"),
+             #"",
+             "",
+             "    ~                                              ",
+             "    |+.turses/                                     ",
+             "    | |-config                                     ",
+             _("    | |-token       # default account's token      "),
+             _("    | `-bob.token   # another account's token      "),
+             "    |+...                                          ",
+             "",
+             "",
+        ]
         self.__super.__init__(self._create_text())
 
     def _create_text(self):
-        """Creates the text to display in the welcome buffer."""
+        """Create the text to display in the welcome buffer."""
         self.text = []
-        for line in BANNER:
+        for line in self.BANNER:
             self._insert_line(line)
 
         return ScrollableListBox(self.text)
@@ -617,19 +616,13 @@ class TimelinesBuffer(WidgetWrap):
         timelines = [] if timelines is None else timelines
 
         widget = self._create_widget(timelines, **kwargs)
-                
+
         WidgetWrap.__init__(self, widget)
 
     def _create_widget(self, timelines, **kwargs):
         timeline_widgets = [TimelineWidget(timeline, **kwargs) for timeline
                                                                 in timelines]
-        return Columns(timeline_widgets) 
-        #overlay = Overlay(top_w=Pile([Text("Loren ipsum")]),
-                          #bottom_w=columns,
-                          #align='center',
-                          #width=0,
-                          #valign='middle',
-                          #height=0)
+        return Columns(timeline_widgets)
 
     def render_timelines(self, timelines, **kwargs):
         """Render the given statuses."""
@@ -840,19 +833,19 @@ class BoxDecoration(WidgetDecoration, WidgetWrap):
             ('fixed', 1, trcorner)
         ])
 
-        middle = Columns([
-            ('fixed', 1, lline),
-            original_widget,
-            ('fixed', 1, rline),
-        ], box_columns = [0,2], focus_column=1)
+        middle = Columns([('fixed', 1, lline),
+                          original_widget,
+                          ('fixed', 1, rline)],
+                         box_columns=[0, 2],
+                         focus_column=1)
 
-        bottom = Columns([
-            ('fixed', 1, blcorner), bline, ('fixed', 1, brcorner)
-        ])
+        bottom = Columns([('fixed', 1, blcorner),
+                          bline,
+                          ('fixed', 1, brcorner)])
 
-        pile = Pile([('flow', top), 
-                     middle, 
-                     ('flow', bottom)], 
+        pile = Pile([('flow', top),
+                     middle,
+                     ('flow', bottom)],
                      focus_item=1)
 
         WidgetDecoration.__init__(self, original_widget)
