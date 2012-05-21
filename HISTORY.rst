@@ -1,4 +1,12 @@
-0.1.13
+0.1.15
+------
+- configurable editor alignment
+- make `turses` play nicely with terminal multiplexers (Joe Di Castro)
+- follow and unfollow users typing their nick in an editor (Giannis Damigos)
+- bugfix: pressing <Esc> in search user editor made `turses` crash
+- bugfix: avoid duplicate usernames in replies
+
+0.1.14
 ------
 - bugfix: crash when shifting buffers to the beginning or end
 
@@ -9,7 +17,7 @@
 
 0.1.12
 ------
-- bugfix: missing key binding in help (by @xekarfwtos)
+- bugfix: missing key binding in help (Giannis Damigos)
 - bugfix: status messages cleared the editor
 - configurable status bar visibility
 - changes to manual retweet template
