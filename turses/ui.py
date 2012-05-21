@@ -79,22 +79,12 @@ class CursesInterface(Frame):
 
     # -- Footer ---------------------------------------------------------------
 
-    def _visible_status_bar(self):
-        return isinstance(self.footer, StatusBar)
-
     def _can_write_status(self):
-        if (self._is_editing() or
-            not self._status_bar):
-            return False
-
-        if self.footer is None:
-            self.footer = StatusBar('')
-        return True
-
-    def _is_editing(self):
-        if self._visible_status_bar():
-            return False
-        return bool(self._editor)
+        if self._status_bar:
+            if self.footer is None:
+                self.footer = StatusBar('')
+            return True
+        return False
 
     def status_message(self, text):
         if self._can_write_status():
@@ -110,8 +100,6 @@ class CursesInterface(Frame):
             self.footer.info_message(message)
 
     def clear_status(self):
-        if self._is_editing():
-            return
         self.footer = None
         self.set_footer(self.footer)
 
