@@ -64,12 +64,13 @@ class KeyHandler(object):
 
     def handle(self, key):
         """Handle keyboard input."""
-        # Global commands
-        if self.controller.is_editing():
-            size = 20, 
+        # Editor has priority
+        if self.controller.is_in_editor_mode():
+            size = 20,
             self.controller.editor.keypress(size, key)
             return
 
+        # Global commands
         handled = not self._turses_key_handler(key)
         if handled:
             return
@@ -299,6 +300,7 @@ class Controller(object):
     INFO_MODE = 0
     TIMELINE_MODE = 1
     HELP_MODE = 2
+    EDITOR_MODE = 3
 
     # -- Initialization -------------------------------------------------------
 
@@ -367,9 +369,6 @@ class Controller(object):
 
     # -- Modes ----------------------------------------------------------------
 
-    def is_editing(self):
-        return bool(self.editor)
-
     def timeline_mode(self):
         """
         Activates the Timeline mode if there are Timelines.
@@ -409,6 +408,14 @@ class Controller(object):
 
     def is_in_help_mode(self):
         return self.mode == self.HELP_MODE
+
+    def editor_mode(self, editor):
+        """Activate editor mode."""
+        self.editor = editor
+        self.mode = self.EDITOR_MODE
+
+    def is_in_editor_mode(self):
+        return self.mode == self.EDITOR_MODE
 
     # -- Timelines ------------------------------------------------------------
 
@@ -582,8 +589,7 @@ class Controller(object):
 
     def update_header(self):
         template = self.configuration.styles['tab_template']
-        name_and_unread = [(timeline.name, timeline.unread_count) for timeline
-                                                                in self.timelines]
+        name_and_unread = [(tl.name, tl.unread_count) for tl in self.timelines]
 
         tabs = [template.format(timeline_name=name, unread=unread)
                 for (name, unread) in name_and_unread]
@@ -781,7 +787,7 @@ class Controller(object):
     def tweet_handler(self, text):
         """Handle the post as a tweet of the given `text`."""
         self.ui.hide_editor(self.tweet_handler)
-        self.editor = None
+        self.timeline_mode()
 
         self.info_message(_('Sending tweet'))
 
@@ -801,7 +807,7 @@ class Controller(object):
     def direct_message_handler(self, username, text):
         """Handle the post as a DM of the given `text` to `username`."""
         self.ui.hide_editor(self.direct_message_handler)
-        self.editor = None
+        self.timeline_mode()
 
         self.info_message(_('Sending DM'))
 
@@ -825,7 +831,7 @@ class Controller(object):
         Handles following the user given in `text`.
         """
         self.ui.hide_editor(self.follow_user_handler)
-        self.editor = None
+        self.timeline_mode()
 
         username = sanitize_username(username)
         if username == self.user.screen_name:
@@ -838,7 +844,7 @@ class Controller(object):
             return
         else:
             self.info_message(_('Following @%s' % username))
-        
+
         success_message = _('You are now following @%s' % username)
         follow_done = partial(self.info_message,
                               success_message)
@@ -857,7 +863,7 @@ class Controller(object):
         Handles unfollowing the user given in `text`.
         """
         self.ui.hide_editor(self.unfollow_user_handler)
-        self.editor = None
+        self.timeline_mode()
 
         username = sanitize_username(username)
         if username == self.user.screen_name:
@@ -870,7 +876,7 @@ class Controller(object):
             return
         else:
             self.info_message(_('Unfollowing @%s' % username))
-        
+
         success_message = _('You are no longer following %s' % username)
         unfollow_done = partial(self.info_message,
                                 success_message)
@@ -897,7 +903,7 @@ class Controller(object):
         if self.is_in_info_mode():
             self.timeline_mode()
         self.ui.hide_editor(self.search_handler)
-        self.editor = None
+        self.timeline_mode()
 
         if text is None:
             self.info_message(_('Search cancelled'))
@@ -930,7 +936,7 @@ class Controller(object):
         if self.is_in_info_mode():
             self.timeline_mode()
         self.ui.hide_editor(self.search_user_handler)
-        self.editor = None
+        self.timeline_mode()
 
         if username is None:
             self.info_message(_('Search cancelled'))
@@ -957,20 +963,23 @@ class Controller(object):
                              on_success=timeline_created,
                              on_error=timeline_not_created)
 
-
     # -- Twitter --------------------------------------------------------------
 
     def search(self, text=None):
         text = '' if text is None else text
-        self.editor = self.ui.show_text_editor(prompt='Search',
-                                 content=text,
-                                 done_signal_handler=self.search_handler,)
+        handler = self.search_handler
+        editor = self.ui.show_text_editor(prompt='Search',
+                                          content=text,
+                                          done_signal_handler=handler)
+        self.editor_mode(editor)
 
     def search_user(self):
         prompt = _('Search user (no need to prepend it with "@"')
-        self.editor = self.ui.show_text_editor(prompt=prompt,
+        handler = self.search_user_handler
+        editor = self.ui.show_text_editor(prompt=prompt,
                                  content='',
-                                 done_signal_handler=self.search_user_handler)
+                                 done_signal_handler=handler)
+        self.editor_mode(editor)
 
     def search_hashtags(self):
         status = self.timelines.active_status
@@ -990,10 +999,12 @@ class Controller(object):
               prompt=_('Tweet'),
               content='',
               cursor_position=None):
-        self.editor = self.ui.show_tweet_editor(prompt=prompt,
-                                  content=content,
-                                  done_signal_handler=self.tweet_handler,
-                                  cursor_position=cursor_position)
+        handler = self.tweet_handler
+        editor = self.ui.show_tweet_editor(prompt=prompt,
+                                           content=content,
+                                           done_signal_handler=handler,
+                                           cursor_position=cursor_position)
+        self.editor_mode(editor)
 
     def retweet(self):
         status = self.timelines.active_status
@@ -1041,9 +1052,11 @@ class Controller(object):
         except ValueError:
             pass
 
-        self.editor = self.ui.show_tweet_editor(prompt=_('Reply to %s' % author),
-                                  content=' '.join(mentioned),
-                                  done_signal_handler=self.tweet_handler,)
+        handler = self.tweet_handler
+        editor = self.ui.show_tweet_editor(prompt=_('Reply to %s' % author),
+                                           content=' '.join(mentioned),
+                                           done_signal_handler=handler)
+        self.editor_mode(editor)
 
     def direct_message(self):
         status = self.timelines.active_status
@@ -1051,11 +1064,12 @@ class Controller(object):
             return
         recipient = status.dm_recipients_username(self.user.screen_name)
         if recipient:
-            done_signal_handler = self.direct_message_handler
-            self.ui.show_dm_editor(prompt=_('DM to %s' % recipient),
-                                   content='',
-                                   recipient=recipient,
-                                   done_signal_handler=done_signal_handler)
+            handler = self.direct_message_handler
+            editor = self.ui.show_dm_editor(prompt=_('DM to %s' % recipient),
+                                            content='',
+                                            recipient=recipient,
+                                            done_signal_handler=handler)
+            self.editor_mode(editor)
         else:
             self.error_message(_('What do you mean?'))
 
@@ -1065,10 +1079,13 @@ class Controller(object):
             return
         hashtags = ' '.join(status.hashtags)
         if hashtags:
-            self.editor = self.ui.show_tweet_editor(prompt=_('%s' % hashtags),
-                                      content=''.join([' ', hashtags]),
-                                      done_signal_handler=self.tweet_handler,
-                                      cursor_position=0)
+            handler = self.tweet_handler
+            content = ''.join([' ', hashtags])
+            editor = self.ui.show_tweet_editor(prompt=_('%s' % hashtags),
+                                               content=content,
+                                               done_signal_handler=handler,
+                                               cursor_position=0)
+            self.editor_mode(editor)
 
     def delete_tweet(self):
         status = self.timelines.active_status
@@ -1137,19 +1154,22 @@ class Controller(object):
                     prompt=_('Follow user (no need to prepend it with "@"'),
                     content='',
                     cursor_position=None):
+        handler = self.follow_user_handler
         self.editor = self.ui.show_text_editor(prompt=prompt,
-                                 content=content,
-                                 done_signal_handler=self.follow_user_handler,
-                                 cursor_position=cursor_position)
+                                               content=content,
+                                               done_signal_handler=handler,
+                                               cursor_position=cursor_position)
 
     def unfollow_user(self,
                       prompt=_('Unfollow user (no need to prepend it with "@"'),
                       content='',
                       cursor_position=None):
-        self.editor = self.ui.show_text_editor(prompt=prompt,
-                                 content=content,
-                                 done_signal_handler=self.unfollow_user_handler,
-                                 cursor_position=cursor_position)
+        handler = self.unfollow_user_handler
+        editor = self.ui.show_text_editor(prompt=prompt,
+                                          content=content,
+                                          done_signal_handler=handler,
+                                          cursor_position=cursor_position)
+        self.editor_mode(editor)
 
     def unfollow_selected(self):
         status = self.timelines.active_status
