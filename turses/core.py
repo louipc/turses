@@ -1163,10 +1163,11 @@ class Controller(object):
                     content='',
                     cursor_position=None):
         handler = self.follow_user_handler
-        self.editor = self.ui.show_text_editor(prompt=prompt,
-                                               content=content,
-                                               done_signal_handler=handler,
-                                               cursor_position=cursor_position)
+        editor = self.ui.show_text_editor(prompt=prompt,
+                                          content=content,
+                                          done_signal_handler=handler,
+                                          cursor_position=cursor_position)
+        self.editor_mode(editor)
 
     def unfollow_user(self,
                       prompt=_('Unfollow user (no need to prepend it with "@"'),
