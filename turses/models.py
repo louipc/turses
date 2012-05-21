@@ -459,6 +459,8 @@ class Status(object):
         author = self.authors_username
         mentioned = self.mentioned_usernames
         mentioned.insert(0, author)
+        # avoid repetitions
+        mentioned = list(set(mentioned))
 
         return [prepend_at(username) for username in mentioned]
 
@@ -483,7 +485,7 @@ class Status(object):
             if len(word) > 1 and word.startswith('@'):
                 word.strip('@')
                 usernames.append(sanitize_username(word))
-        return usernames
+        return list(set(usernames))
 
     @property
     def hashtags(self):

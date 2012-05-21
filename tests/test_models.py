@@ -87,6 +87,9 @@ class HelperFunctionTest(unittest.TestCase):
 
 
 class StatusTest(unittest.TestCase):
+
+    # map attributes
+
     def test_map_attributes_with_no_entities(self):
         text = '@asdf http://t.co/asdf #asf'
         status = create_status(text=text)
@@ -248,6 +251,8 @@ class StatusTest(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
+    # properties
+
     def test_mentioned_usernames(self):
         user = 'turses'
         mentioned = ('dialelo', 'mental_floss', '4n_4Wfu1_US3RN4M3')
@@ -285,7 +290,6 @@ class StatusTest(unittest.TestCase):
         author = status.authors_username
 
         self.assertEqual(user, author)
-
 
     def test_authors_username_retweet(self):
         user = 'turses'
