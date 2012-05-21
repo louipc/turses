@@ -684,6 +684,10 @@ class TimelinesBuffer(WidgetWrap):
         return self._create_overlay(columns)
 
     def _create_overlay(self, top_w):
+        # NOTE:
+        # This is an ugly hack for being able to show a widget on top when
+        # needed. I create the Overlay with a dummy_widget on the bottom that
+        # will never be visible (making the top widget big enough).
         dummy_widget = ListBox(SimpleListWalker([]))
         return Overlay(top_w=top_w,
                        bottom_w=dummy_widget,
@@ -723,10 +727,12 @@ class TimelinesBuffer(WidgetWrap):
         self._w.set_overlay_parameters(align=align,
                                        width=width,
                                        valign=valign,
-                                       height=height)
+                                       height=height,
+                                       min_width=width,
+                                       min_height=height)
 
     def hide_top_widget(self):
-        self._w = self._create_overlay(self._w.bottom_w)
+        self._w = self._create_overlay(self.columns)
 
     def scroll_up(self):
         self.active_widget.focus_previous()
