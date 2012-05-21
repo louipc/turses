@@ -26,35 +26,6 @@ from turses.config import (MOTION_KEY_BINDINGS, BUFFERS_KEY_BINDINGS,
 from turses.models import is_DM, TWEET_MAXIMUM_CHARACTERS
 from turses.utils import encode
 
-BANNER = [
-     "   _                             ",
-     " _| |_ _   _ _ __ ___  ___  ____ ",
-     "|_   _| | | | '__/ __|/   \/ ___|",
-     "  | | | | | | |  |   \  ~ ||   \\ ",
-     "  | |_| |_| | |  \__ |  __/\__ | ",
-     "  \___|\____|_| |____/\___||___/ ",
-     "  ······························ ",
-     "%s" % version,
-     "",
-     "",
-     _("Press '?' for help"),
-     _("Press 'q' to quit turses"),
-     "",
-     "",
-     _("Configuration and token files reside under"),
-     _("your $HOME directory"),
-     #"",
-     "",
-     "    ~                                              ",
-     "    |+.turses/                                     ",
-     "    | |-config                                     ",
-     _("    | |-token       # default account's token      "),
-     _("    | `-bob.token   # another account's token      "),
-     "    |+...                                          ",
-     "",
-     "",
-]
-
 
 class CursesInterface(Frame):
     """
@@ -66,7 +37,7 @@ class CursesInterface(Frame):
                  configuration):
         header = TabsWidget()
 
-        body =  WelcomeBuffer()
+        body = Banner(configuration)
         self._status_bar = configuration.styles.get('status_bar', False)
         if self._status_bar:
             footer = StatusBar('')
@@ -89,7 +60,7 @@ class CursesInterface(Frame):
 
     def show_info(self):
         self.header.clear()
-        self.body = WelcomeBuffer()
+        self.body = Banner(self._configuration)
         self.set_body(self.body)
 
     def show_help(self, configuration):
@@ -234,20 +205,48 @@ class CursesInterface(Frame):
         self.body.hide_top_widget()
 
 
-class WelcomeBuffer(WidgetWrap):
+class Banner(WidgetWrap):
     """Displays information about the program."""
 
-    # width, in columns, of the banner
-    col_width = 30
-
-    def __init__(self):
+    def __init__(self, configuration):
         self.text = []
+
+        help_key = configuration.key_bindings['help'][0]
+        quit_key = configuration.key_bindings['quit'][0]
+        self.BANNER = [
+             "   _                             ",
+             " _| |_ _   _ _ __ ___  ___  ____ ",
+             "|_   _| | | | '__/ __|/   \/ ___|",
+             "  | | | | | | |  |   \  ~ ||   \\ ",
+             "  | |_| |_| | |  \__ |  __/\__ | ",
+             "  \___|\____|_| |____/\___||___/ ",
+             "  ······························ ",
+             "%s" % version,
+             "",
+             "",
+             _("Press '%s' for help") % help_key,
+             _("Press '%s' to quit turses") % quit_key,
+             "",
+             "",
+             _("Configuration and token files reside under"),
+             _("your $HOME directory"),
+             #"",
+             "",
+             "    ~                                              ",
+             "    |+.turses/                                     ",
+             "    | |-config                                     ",
+             _("    | |-token       # default account's token      "),
+             _("    | `-bob.token   # another account's token      "),
+             "    |+...                                          ",
+             "",
+             "",
+        ]
         self.__super.__init__(self._create_text())
 
     def _create_text(self):
-        """Creates the text to display in the welcome buffer."""
+        """Create the text to display in the welcome buffer."""
         self.text = []
-        for line in BANNER:
+        for line in self.BANNER:
             self._insert_line(line)
 
         return ScrollableListBox(self.text)
@@ -617,7 +616,7 @@ class TimelinesBuffer(WidgetWrap):
         timelines = [] if timelines is None else timelines
 
         widget = self._create_widget(timelines, **kwargs)
-                
+
         WidgetWrap.__init__(self, widget)
 
     def _create_widget(self, timelines, **kwargs):
@@ -829,62 +828,52 @@ class StatusWidget(WidgetWrap):
 class BoxDecoration(WidgetDecoration, WidgetWrap):
     """Draw a box around `original_widget`."""
 
-    def __init__(self, original_widget, title=''):
-        def use_attr(a, t):
-            if a:
-                t = AttrMap(t, a)
-            return t
+    def __init__(self, original_widget, title="",
+                 tlcorner=u'┌', tline=u'─', lline=u'│',
+                 trcorner=u'┐', blcorner=u'└', rline=u'│',
+                 bline=u'─', brcorner=u'┘'):
+        """
+        Use 'title' to set an initial title text with will be centered
+        on top of the box.
 
-        # top line
-        tline = None
-        tline_attr = Columns([('fixed', 2,
-                                        Divider(u"\u2500")),
-                                    ('fixed', len(title),
-                                        AttrMap(Text(title), 'header')),
-                                    Divider(u"\u2500")])
-        tline = use_attr(tline, tline_attr)
-        # bottom line
-        bline = None
-        bline = use_attr(bline, Divider(u"\u2500"))
-        # left line
-        lline = None
-        lline = use_attr(lline, SolidFill(u"\u2502"))
-        # right line
-        rline = None
-        rline = use_attr(rline, SolidFill(u"\u2502"))
-        # top left corner
-        tlcorner = None
-        tlcorner = use_attr(tlcorner, Text(u"\u250c"))
-        # top right corner
-        trcorner = None
-        trcorner = use_attr(trcorner, Text(u"\u2510"))
-        # bottom left corner
-        blcorner = None
-        blcorner = use_attr(blcorner, Text(u"\u2514"))
-        # bottom right corner
-        brcorner = None
-        brcorner = use_attr(brcorner, Text(u"\u2518"))
+        You can also override the widgets used for the lines/corners:
+            tline: top line
+            bline: bottom line
+            lline: left line
+            rline: right line
+            tlcorner: top left corner
+            trcorner: top right corner
+            blcorner: bottom left corner
+            brcorner: bottom right corner
+        """
 
-        # top
-        top = Columns([('fixed', 1, tlcorner),
-                             tline,
-                             ('fixed', 1, trcorner)])
-        # middle
+        tline, bline = Divider(tline), Divider(bline)
+        lline, rline = SolidFill(lline), SolidFill(rline)
+        tlcorner, trcorner = Text(tlcorner), Text(trcorner)
+        blcorner, brcorner = Text(blcorner), Text(brcorner)
+
+        title_widget = ('fixed', len(title), AttrMap(Text(title), 'header'))
+        top = Columns([
+            ('fixed', 1, tlcorner),
+            title_widget,
+            tline,
+            ('fixed', 1, trcorner)
+        ])
+
         middle = Columns([('fixed', 1, lline),
                           original_widget,
                           ('fixed', 1, rline)],
-                          box_columns=[0, 2],
-                          focus_column=1)
-        # bottom
-        bottom = Columns([('fixed', 1, blcorner),
-                                bline,
-                                ('fixed', 1, brcorner)])
+                         box_columns=[0, 2],
+                         focus_column=1)
 
-        # widget decoration
+        bottom = Columns([('fixed', 1, blcorner),
+                          bline,
+                          ('fixed', 1, brcorner)])
+
         pile = Pile([('flow', top),
-                    middle,
-                    ('flow', bottom)],
-                    focus_item=1)
+                     middle,
+                     ('flow', bottom)],
+                     focus_item=1)
 
         WidgetDecoration.__init__(self, original_widget)
         WidgetWrap.__init__(self, pile)

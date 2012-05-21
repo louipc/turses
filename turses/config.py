@@ -43,7 +43,8 @@ from ConfigParser import RawConfigParser
 from os import getenv, path, mkdir, remove
 from gettext import gettext as _
 
-from turses.utils import encode, wrap_exceptions
+from turses.utils import encode
+from turses.meta import wrap_exceptions
 from turses.api.base import authorization
 
 # -- Defaults -----------------------------------------------------------------

@@ -4,18 +4,18 @@
 turses.models
 ~~~~~~~~~~~~~
 
-This module contains the data structures that power `turses` and
-all the Twitter entities.
+This module contains the data structures that powers `turses` and
+the Twitter entities.
 """
 
 import time
 import re
-from abc import ABCMeta, abstractmethod, abstractproperty
 from functools import partial, total_ordering
 from bisect import insort
 
+from turses.meta import ActiveList, UnsortedActiveList, Updatable
 from turses.utils import (html_unescape, timestamp_from_datetime,
-                          wrap_exceptions, is_url, matches_word)
+                          is_url, matches_word)
 
 
 TWEET_MAXIMUM_CHARACTERS = 140
@@ -48,140 +48,7 @@ def is_valid_search_text(text):
     return bool(text)
 
 
-# -- Base ---------------------------------------------------------------------
-
-
-class Updatable:
-    """
-    An abstract class that for making a class 'updatable'.
-    """
-
-    __metaclass__ = ABCMeta
-
-    def __init__(self,
-                 update_function=None,
-                 update_function_args=None,
-                 update_function_kwargs=None,):
-        """
-        `update_function` is the function used to update the class, with
-        the args `update_function_args` and `update_function_kwargs` if
-        they are provided.
-        """
-        self.update_function = update_function
-
-        if isinstance(update_function_args, tuple):
-            self._args = list(update_function_args)
-        elif update_function_args:
-            self._args = [update_function_args]
-        else:
-            self._args = []
-
-        if update_function_kwargs:
-            self._kwargs = dict(update_function_kwargs)
-        else:
-            self._kwargs = {}
-
-    @wrap_exceptions
-    def update(self, **extra_kwargs):
-        """
-        Update the object, after receiving the result it is passed to the 
-        `update_callback` function.
-        """
-        if not self.update_function:
-            return
-
-        args = self._args
-        kwargs = self._kwargs
-        kwargs.update(extra_kwargs)
-
-        result = self.update_function(*args, **kwargs)
-
-        self.update_callback(result)
-
-    @abstractmethod
-    def update_callback(self, result):
-        pass
-
-
-class ActiveList(object):
-    """
-    A list that contains an 'active' element.
-
-    This abstract class implements some functions but the subclasses must
-    define `active` property, as well as `is_valid_index` and `activate_last`
-    methods.
-    """
-    __metaclass__ = ABCMeta
-
-    NULL_INDEX = -1
-
-    def __init__(self):
-        self.active_index = self.NULL_INDEX
-
-    @abstractproperty
-    def active(self):
-        pass
-
-    @abstractmethod
-    def is_valid_index(self, index):
-        pass
-
-    def activate_previous(self):
-        """Mark as active the previous element if it exists."""
-        new_index = self.active_index - 1
-        if self.is_valid_index(new_index):
-            self.active_index = new_index
-
-    def activate_next(self):
-        """Mark as active the next element if it exists."""
-        new_index = self.active_index + 1
-        if self.is_valid_index(new_index):
-            self.active_index = new_index
-
-    def activate_first(self):
-        """Mark the first element as the 'active' if it exists."""
-        first = 0
-        if self.is_valid_index(first):
-            self.active_index = first
-        else:
-            self.active_index = self.NULL_INDEX
-
-    @abstractmethod
-    def activate_last(self):
-        pass
-
-
-class UnsortedActiveList(ActiveList):
-    """
-    An `ActiveList` in which the 'active' element can be shifted position by
-    position, to the begging and to the end.
-
-    All the methods that this class contains are abstract.
-    """
-
-    @abstractmethod
-    def shift_active_previous(self):
-        """Shift the active element one position to the left."""
-        pass
-
-    @abstractmethod
-    def shift_active_next(self):
-        """Shift the active element one position to the right."""
-        pass
-
-    @abstractmethod
-    def shift_active_beggining(self):
-        """
-        Shift the active element (if any) to the begginning of the list.
-        """
-        pass
-
-    @abstractmethod
-    def shift_active_end(self):
-        """
-        Shift the active element (if any) to the begginning of the list.
-        """
-        pass
+# -- Model ---------------------------------------------------------------------
 
 
 class TimelineList(UnsortedActiveList):

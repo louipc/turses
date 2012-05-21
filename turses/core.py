@@ -17,9 +17,8 @@ from tweepy import TweepError
 from turses.utils import (
         get_urls,
         spawn_process,
-        wrap_exceptions,
-        async,
 )
+from turses.meta import async, wrap_exceptions
 from turses.config import (
         HOME_TIMELINE,
         MENTIONS_TIMELINE,
@@ -932,6 +931,10 @@ class Controller(object):
             self.timeline_mode()
         self.ui.hide_editor(self.search_user_handler)
         self.editor = None
+
+        if username is None:
+            self.info_message(_('Search cancelled'))
+            return
 
         # TODO make sure that the user EXISTS and THEN fetch its tweets
         username = sanitize_username(username)
