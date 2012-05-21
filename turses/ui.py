@@ -163,8 +163,8 @@ class CursesInterface(Frame):
         horizontal_align = styles['editor_horizontal_align']
         vertical_align = styles['editor_vertical_align']
         self.body.show_widget_on_top(widget=self._editor,
-                                     width=50,
-                                     height=5,
+                                     width=80,
+                                     height=3,
                                      align=horizontal_align,
                                      valign=vertical_align)
         return self._editor
