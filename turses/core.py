@@ -918,6 +918,10 @@ class Controller(object):
             self.timeline_mode()
         self.ui.hide_editor(self.search_user_handler)
 
+        if username is None:
+            self.info_message(_('Search cancelled'))
+            return
+
         # TODO make sure that the user EXISTS and THEN fetch its tweets
         username = sanitize_username(username)
         if not is_username(username):
