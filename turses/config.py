@@ -164,6 +164,10 @@ KEY_BINDINGS = {
     'hashtags':
         ('L', _('open a search timeline with the hashtags of the focused status')),
 
+    # info
+    'user_info':
+        ('i', _('show user\'s info')),
+
     # meta
     'help':
         ('?', _('show program help')),

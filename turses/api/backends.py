@@ -159,6 +159,10 @@ class TweepyApi(BaseTweepyApi, ApiAdapter):
     def verify_credentials(self):
         return self._api.me()
 
+    @to_user
+    def get_user(self, screen_name):
+        return self._api.get_user(screen_name)
+
     # timelines
 
     @to_status

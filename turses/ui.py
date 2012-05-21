@@ -10,7 +10,7 @@ This module contains the UI widgets.
 from gettext import gettext as _
 
 from urwid import (AttrMap, WidgetWrap, Padding, Divider, SolidFill,
-                   WidgetDecoration, Filler,
+                   WidgetDecoration, Filler, LineBox,
 
                    # widgets
                    Text, Edit, Frame, Columns, Pile, ListBox, SimpleListWalker,
@@ -200,6 +200,17 @@ class CursesInterface(Frame):
             # connected from `self._editor`. We can safely ignore it.
             pass
         self._editor = None
+        self.body.hide_top_widget()
+
+    # - Pop ups ---------------------------------------------------------------
+    
+    def show_user_info(self, user):
+        widget = UserInfo(user=user)
+
+        self.body.show_widget_on_top(widget, 20, 10)
+                  
+
+    def hide_user_info(self):
         self.body.hide_top_widget()
 
 
@@ -930,3 +941,22 @@ class BoxDecoration(WidgetDecoration, WidgetWrap):
 
         WidgetDecoration.__init__(self, original_widget)
         WidgetWrap.__init__(self, pile)
+
+
+# - User ----------------------------------------------------------------------
+
+
+class UserInfo(WidgetWrap):
+    """
+    A widget for displaying a Twitter user info.
+    """
+
+    __metaclass__ = signals.MetaSignals
+    signals = ['done']
+
+    def __init__(self, user):
+        """
+        """
+        widget = Text('@%s' % user.screen_name) 
+        WidgetWrap.__init__(self, LineBox(title=user.screen_name,
+                                          original_widget=widget))

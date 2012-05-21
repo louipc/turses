@@ -125,7 +125,7 @@ class ApiAdapter(object):
 
     @abstractmethod
     def init_api(self):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def verify_credentials(self):
@@ -133,131 +133,137 @@ class ApiAdapter(object):
         Return a `turses.models.User` with the authenticating user if the given
         credentials are valid.
         """
-        raise NotImplementedError
+        pass
+
+    # users
+
+    @abstractmethod
+    def get_user(self, screen_name):
+        pass
 
     # timelines
 
     @abstractmethod
     def get_home_timeline(self):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def get_user_timeline(self, screen_name):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def get_own_timeline(self):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def get_mentions(self):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def get_favorites(self):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def get_direct_messages(self):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def get_thread(self, status):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def search(self, text):
-        raise NotImplementedError
+        pass
 
     # statuses
 
     @abstractmethod
     def update(self, text):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def retweet(self, status):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def destroy_status(self, status):
         """
         Destroy the given `status` (must belong to authenticating user).
         """
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def direct_message(self, screen_name, text):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def destroy_direct_message(self, dm):
         """
         Destroy the given `dm` (must be written by the authenticating user).
         """
-        raise NotImplementedError
+        pass
 
     # friendship
 
     @abstractmethod
     def create_friendship(self, screen_name):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def destroy_friendship(self, screen_name):
-        raise NotImplementedError
+        pass
 
     # favorite methods
 
     @abstractmethod
     def create_favorite(self, status):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def destroy_favorite(self, status):
-        raise NotImplementedError
+        pass
 
     # list methods
 
     @abstractmethod
     def get_lists(self, screen_name):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def get_own_lists(self):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def get_list_memberships(self):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def get_list_subscriptions(self):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def get_list_timeline(self, list):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def get_list_members(self, list):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def is_list_member(self, user, list):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def subscribe_to_list(self, list):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def get_list_subscribers(self, list):
-        raise NotImplementedError
+        pass
 
     @abstractmethod
     def is_list_subscriber(self, user, list):
-        raise NotImplementedError
+        pass
 
 
 class AsyncApi(ApiAdapter):
@@ -310,6 +316,9 @@ class AsyncApi(ApiAdapter):
     def search(self, text, **kwargs):
         return self._api.search(text, **kwargs)
 
+    def get_user(self, screen_name):
+        return self._api.get_user(screen_name)
+
     @async
     @wrap_exceptions
     def update(self, text):
@@ -358,31 +367,31 @@ class AsyncApi(ApiAdapter):
         self._api.destroy_favorite(status)
 
     def get_lists(self, screen_name):
-        raise NotImplementedError
+        pass
 
     def get_own_lists(self):
-        raise NotImplementedError
+        pass
 
     def get_list_memberships(self):
-        raise NotImplementedError
+        pass
 
     def get_list_subscriptions(self):
-        raise NotImplementedError
+        pass
 
     def get_list_timeline(self, list):
-        raise NotImplementedError
+        pass
 
     def get_list_members(self, list):
-        raise NotImplementedError
+        pass
 
     def is_list_member(self, user, list):
-        raise NotImplementedError
+        pass
 
     def subscribe_to_list(self, list):
-        raise NotImplementedError
+        pass
 
     def get_list_subscribers(self, list):
-        raise NotImplementedError
+        pass
 
     def is_list_subscriber(self, user, list):
-        raise NotImplementedError
+        pass

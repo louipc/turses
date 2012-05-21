@@ -64,6 +64,10 @@ class KeyHandler(object):
 
     def handle(self, key):
         """Handle keyboard input."""
+        # remove user widget when receiving input
+        if self.controller.is_in_user_info_mode():
+            self.controller.timeline_mode()
+
         # Editor has priority
         if self.controller.is_in_editor_mode():
             size = 20,
@@ -225,7 +229,7 @@ class KeyHandler(object):
             self.controller.append_thread_timeline()
         # User info
         elif self.is_bound(key, 'user_info'):
-            self.controller.info_message('Still to implement!')
+            self.controller.user_info()
         # Follow hashtags
         elif self.is_bound(key, 'hashtags'):
             self.controller.search_hashtags()
@@ -301,6 +305,7 @@ class Controller(object):
     TIMELINE_MODE = 1
     HELP_MODE = 2
     EDITOR_MODE = 3
+    USER_INFO_MODE = 4
 
     # -- Initialization -------------------------------------------------------
 
@@ -375,6 +380,8 @@ class Controller(object):
 
         If not, shows program info.
         """
+        if self.has_popup():
+            self.clear_popup()
         if self.is_in_timeline_mode():
             return
         elif self.timelines.has_timelines():
@@ -416,6 +423,25 @@ class Controller(object):
 
     def is_in_editor_mode(self):
         return self.mode == self.EDITOR_MODE
+
+    def user_info_mode(self, user):
+        """Activate user info mode."""
+        self._user_info = user
+        self.mode = self.USER_INFO_MODE
+
+    def is_in_user_info_mode(self):
+        return self.mode == self.USER_INFO_MODE
+
+    # helpers
+
+    def has_popup(self):
+        return self.is_in_editor_mode() or self.is_in_user_info_mode()
+
+    def clear_popup(self):
+        if self.is_in_editor_mode():
+            pass
+        elif self.is_in_user_info_mode():
+            self.ui.hide_user_info()
 
     # -- Timelines ------------------------------------------------------------
 
@@ -1217,6 +1243,14 @@ class Controller(object):
                                   on_success=unfavorite_done,
                                   status=status,)
 
+    def user_info(self):
+        status = self.timelines.active_status
+        if status is None:
+            return
+        user = self.api.get_user(status.authors_username)
+        self.ui.show_user_info(user)
+        self.user_info_mode(user)
+
     # - Browser ---------------------------------------------------------------
 
     def open_urls(self):
@@ -1269,14 +1303,6 @@ class Controller(object):
 
 class Turses(Controller):
     """Controller for the curses implementation."""
-
-    #def input_filter(self, key_input, raw):
-        #valid_keys = [key for (key, desc)
-                          #in self.configuration.key_bindings.values()]
-        #if key in valid_keys or getattr(self.ui, 'editor', False):
-            #return key_input
-        #else:
-            #return []
 
     def main_loop(self):
         if not hasattr(self, 'loop'):
