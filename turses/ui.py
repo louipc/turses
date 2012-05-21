@@ -808,62 +808,52 @@ class StatusWidget(WidgetWrap):
 class BoxDecoration(WidgetDecoration, WidgetWrap):
     """Draw a box around `original_widget`."""
 
-    def __init__(self, original_widget, title=''):
-        def use_attr(a, t):
-            if a:
-                t = AttrMap(t, a)
-            return t
+    def __init__(self, original_widget, title="",
+                 tlcorner=u'┌', tline=u'─', lline=u'│',
+                 trcorner=u'┐', blcorner=u'└', rline=u'│',
+                 bline=u'─', brcorner=u'┘'):
+        """
+        Use 'title' to set an initial title text with will be centered
+        on top of the box.
 
-        # top line
-        tline = None
-        tline_attr = Columns([('fixed', 2,
-                                        Divider(u"\u2500")),
-                                    ('fixed', len(title),
-                                        AttrMap(Text(title), 'header')),
-                                    Divider(u"\u2500")])
-        tline = use_attr(tline, tline_attr)
-        # bottom line
-        bline = None
-        bline = use_attr(bline, Divider(u"\u2500"))
-        # left line
-        lline = None
-        lline = use_attr(lline, SolidFill(u"\u2502"))
-        # right line
-        rline = None
-        rline = use_attr(rline, SolidFill(u"\u2502"))
-        # top left corner
-        tlcorner = None
-        tlcorner = use_attr(tlcorner, Text(u"\u250c"))
-        # top right corner
-        trcorner = None
-        trcorner = use_attr(trcorner, Text(u"\u2510"))
-        # bottom left corner
-        blcorner = None
-        blcorner = use_attr(blcorner, Text(u"\u2514"))
-        # bottom right corner
-        brcorner = None
-        brcorner = use_attr(brcorner, Text(u"\u2518"))
+        You can also override the widgets used for the lines/corners:
+            tline: top line
+            bline: bottom line
+            lline: left line
+            rline: right line
+            tlcorner: top left corner
+            trcorner: top right corner
+            blcorner: bottom left corner
+            brcorner: bottom right corner
+        """
 
-        # top
-        top = Columns([('fixed', 1, tlcorner),
-                             tline,
-                             ('fixed', 1, trcorner)])
-        # middle
-        middle = Columns([('fixed', 1, lline),
-                          original_widget,
-                          ('fixed', 1, rline)],
-                          box_columns=[0, 2],
-                          focus_column=1)
-        # bottom
-        bottom = Columns([('fixed', 1, blcorner),
-                                bline,
-                                ('fixed', 1, brcorner)])
+        tline, bline = Divider(tline), Divider(bline)
+        lline, rline = SolidFill(lline), SolidFill(rline)
+        tlcorner, trcorner = Text(tlcorner), Text(trcorner)
+        blcorner, brcorner = Text(blcorner), Text(brcorner)
 
-        # widget decoration
-        pile = Pile([('flow', top),
-                    middle,
-                    ('flow', bottom)],
-                    focus_item=1)
+        title_widget = ('fixed', len(title), AttrMap(Text(title), 'header'))
+        top = Columns([
+            ('fixed', 1, tlcorner),
+            title_widget,
+            tline,
+            ('fixed', 1, trcorner)
+        ])
+
+        middle = Columns([
+            ('fixed', 1, lline),
+            original_widget,
+            ('fixed', 1, rline),
+        ], box_columns = [0,2], focus_column=1)
+
+        bottom = Columns([
+            ('fixed', 1, blcorner), bline, ('fixed', 1, brcorner)
+        ])
+
+        pile = Pile([('flow', top), 
+                     middle, 
+                     ('flow', bottom)], 
+                     focus_item=1)
 
         WidgetDecoration.__init__(self, original_widget)
         WidgetWrap.__init__(self, pile)
