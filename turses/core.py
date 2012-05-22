@@ -850,6 +850,10 @@ class Controller(object):
         self.ui.hide_editor(self.follow_user_handler)
         self.timeline_mode()
 
+        if username is None:
+            self.info_message(_('Search cancelled'))
+            return
+
         username = sanitize_username(username)
         if username == self.user.screen_name:
             self.error_message(_('You can\'t follow yourself'))
@@ -881,6 +885,10 @@ class Controller(object):
         """
         self.ui.hide_editor(self.unfollow_user_handler)
         self.timeline_mode()
+
+        if username is None:
+            self.info_message(_('Search cancelled'))
+            return
 
         username = sanitize_username(username)
         if username == self.user.screen_name:
@@ -1172,10 +1180,11 @@ class Controller(object):
                     content='',
                     cursor_position=None):
         handler = self.follow_user_handler
-        self.editor = self.ui.show_text_editor(prompt=prompt,
-                                               content=content,
-                                               done_signal_handler=handler,
-                                               cursor_position=cursor_position)
+        editor = self.ui.show_text_editor(prompt=prompt,
+                                          content=content,
+                                          done_signal_handler=handler,
+                                          cursor_position=cursor_position)
+        self.editor_mode(editor)
 
     def unfollow_user(self,
                       prompt=_('Unfollow user (no need to prepend it with "@"'),

@@ -7,7 +7,7 @@ from datetime import datetime
 
 from mock import MagicMock
 
-from turses.models import (prepend_at, sanitize_username,
+from turses.models import (prepend_at, sanitize_username, parse_attributes,
                            is_DM, is_username, is_hashtag, 
                            Status, DirectMessage, Timeline,
                            ActiveList, TimelineList)
@@ -79,6 +79,19 @@ class HelperFunctionTest(unittest.TestCase):
             sanitized = sanitize_username(dirty)
             self.assertEqual(sanitized, clean)
 
+    def test_parse_attributes(self):
+        text = '@asdf http://www.dialelo.com #asf'
+
+        expected_result = [('attag', u'@asdf'), u' ', 
+                           ('url', u'http://www.dialelo.com'), u' ',
+                           ('hashtag', u'#asf')]
+
+        result = parse_attributes(text=text,
+                                  hashtag='hashtag',
+                                  attag='attag',
+                                  url='url')
+        self.assertEqual(result, expected_result)
+
     def test_is_valid_status_text(self):
         pass
 
@@ -87,20 +100,7 @@ class HelperFunctionTest(unittest.TestCase):
 
 
 class StatusTest(unittest.TestCase):
-
     # map attributes
-
-    def test_map_attributes_with_no_entities(self):
-        text = '@asdf http://t.co/asdf #asf'
-        status = create_status(text=text)
-
-        expected_result = [('attag', u'@asdf'), u' ', ('url', u'http://t.co/asdf'),
-                           u' ', ('hashtag', u'#asf')]
-        result = status.map_attributes(hashtag='hashtag',
-                                       attag='attag',
-                                       url='url')
-
-        self.assertEqual(result, expected_result)
 
     def test_map_attributes_with_mentions_hashtags_and_url(self):
         text = u'@aaloy  QT @Pybonacci: \xa1Qu\xe9 pasada con Vim! #Python #IDE RT @dialelo uso un setup parecido a este: http://t.co/5lTGNzba'
@@ -198,7 +198,7 @@ class StatusTest(unittest.TestCase):
                                 retweeted_status=original_status)
 
         # retweet text gets parsed because sometimes is not complete
-        expected_result = [u'I', u' ', u'<3', u' ',  ('hashtag', '#Python')]
+        expected_result = [u'I ', u'<3 ', ('hashtag', '#Python')]
         result = retweet.map_attributes(hashtag='hashtag',
                                         attag='attag',
                                         url='url')
