@@ -94,6 +94,10 @@ def parse_attributes(text,
     ['I love ', ('hashtag', '#Python')]
     """
 
+    # nothing to do
+    if not text:
+        return u''
+
     words = text.split()
     parsed_text = [apply_attribute(word) for word in words]
 

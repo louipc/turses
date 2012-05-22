@@ -968,11 +968,14 @@ class UserInfo(WidgetWrap):
         whitespace = Divider(' ')
         widgets = []
 
-        # name and bio 
+        # name 
         name = Text('%s' % user.name)
-        description = Text(parse_attributes(user.description))
+        widgets.extend([name, whitespace])
 
-        widgets.extend([name, whitespace, description, whitespace])
+        # bio
+        if user.description:
+            description = Text(parse_attributes(user.description))
+            widgets.extend([description, whitespace])
 
         # URL
         if user.url:

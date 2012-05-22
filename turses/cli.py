@@ -49,8 +49,8 @@ def main():
 
         # start `turses`
         Turses(configuration=configuration,
-            ui=ui,
-            api_backend=TweepyApi)
+               ui=ui,
+               api_backend=TweepyApi)
     except KeyboardInterrupt:
         pass
     finally:

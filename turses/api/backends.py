@@ -182,13 +182,9 @@ class TweepyApi(BaseTweepyApi, ApiAdapter):
         return self._api.me()
 
     @to_user
-    def get_user(self, screen_name):
-        # fetch the original instance of the last status for completeness
-        user = self._api.get_user(screen_name)
-        last_status = self._api.get_status(user.status.id,  
-                                           with_entities=True)
-        user.status = last_status
-        return user
+    @include_entities
+    def get_user(self, screen_name, **kwargs):
+        return self._api.get_user(screen_name=screen_name, **kwargs)
 
     # timelines
 
