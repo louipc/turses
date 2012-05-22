@@ -1,3 +1,7 @@
+0.1.16
+------
+- show a popup with user info when pressing `i`
+
 0.1.15
 ------
 - configurable editor alignment
