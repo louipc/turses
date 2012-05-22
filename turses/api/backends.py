@@ -58,7 +58,7 @@ def _to_status(status, **extra_kwargs):
     is_favorite = False
     author = ''
 
-    # when fetching an individual user her last status is included and
+    # When fetching an individual user her last status is included and
     # does not include a `user` attribute
     if getattr(status, 'user', None):
         user = status.user.screen_name
@@ -69,7 +69,11 @@ def _to_status(status, **extra_kwargs):
         is_retweet = True
         retweeted_status = _to_status(status.retweeted_status)
         retweet_count = status.retweet_count
-        author = status.retweeted_status.author.screen_name
+
+        # the `retweeted_status` could not have a `user` attribute
+        # (e.g. when fetching a user and her last status is a retweet)
+        if hasattr(status.retweeted_status, 'user'):
+            author = status.retweeted_status.user.screen_name
 
     if hasattr(status, 'in_reply_to_screen_name'):
         is_reply = True
@@ -179,7 +183,12 @@ class TweepyApi(BaseTweepyApi, ApiAdapter):
 
     @to_user
     def get_user(self, screen_name):
-        return self._api.get_user(screen_name)
+        # fetch the original instance of the last status for completeness
+        user = self._api.get_user(screen_name)
+        last_status = self._api.get_status(user.status.id,  
+                                           with_entities=True)
+        user.status = last_status
+        return user
 
     # timelines
 
