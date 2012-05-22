@@ -965,34 +965,36 @@ class UserInfo(WidgetWrap):
     def __init__(self, user, configuration):
         """
         """
+        whitespace = Divider(' ')
+        widgets = []
+
+        # name and bio 
         name = Text('%s (@%s)' % (user.name, user.screen_name))
         description = Text('%s' % user.description)
 
-        url_text_with_attr = ('url', user.url)
-        url = Text(url_text_with_attr)
+        widgets.extend([name, whitespace, description, whitespace])
 
+        # URL
+        if user.url:
+            url_text_with_attr = ('url', user.url)
+            url = Text(url_text_with_attr)
+
+            widgets.extend([url, whitespace])
+
+        # statistics: following, followers and favorites 
         following = Text(_('following:\n%s' % user.friends_count))
         followers = Text(_('followers:\n%s' % user.followers_count))
         favorites = Text(_('favorites:\n%s' % user.favorites_count))
         stats = Columns([following, followers, favorites])
 
-        status = StatusWidget(user.status, configuration)
+        widgets.extend([stats, whitespace])
 
-        WHITESPACE = Divider(' ')
+        # last status
+        if user.status:
+            status = StatusWidget(user.status, configuration)
+            widgets.append(status)
+    
+        pile = Pile(widgets)
 
-        widget = Pile([name,
-                       WHITESPACE,
-
-                       description,
-                       WHITESPACE,
-
-                       url,
-                       WHITESPACE,
-
-                       stats,
-                       WHITESPACE,
-
-                       status,
-                       ])
         WidgetWrap.__init__(self, LineBox(title='@%s' % user.screen_name,
-                                          original_widget=widget))
+                                          original_widget=pile))

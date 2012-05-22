@@ -380,10 +380,12 @@ class Controller(object):
 
         If not, shows program info.
         """
-        if self.has_popup():
-            self.clear_popup()
+        if self.is_in_user_info_mode():
+            self.ui.hide_user_info()
+
         if self.is_in_timeline_mode():
             return
+
         elif self.timelines.has_timelines():
             self.mode = self.TIMELINE_MODE
             self.draw_timelines()
@@ -431,17 +433,6 @@ class Controller(object):
 
     def is_in_user_info_mode(self):
         return self.mode == self.USER_INFO_MODE
-
-    # helpers
-
-    def has_popup(self):
-        return self.is_in_editor_mode() or self.is_in_user_info_mode()
-
-    def clear_popup(self):
-        if self.is_in_editor_mode():
-            pass
-        elif self.is_in_user_info_mode():
-            self.ui.hide_user_info()
 
     # -- Timelines ------------------------------------------------------------
 
