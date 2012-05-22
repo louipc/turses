@@ -231,6 +231,7 @@ TWEETS_KEY_BINDINGS = [
     'follow_user',
     'unfollow_selected',
     'unfollow_user',
+    'user_info',
 ]
 
 TIMELINES_KEY_BINDINGS = [
