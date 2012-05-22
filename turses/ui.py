@@ -208,15 +208,14 @@ class CursesInterface(Frame):
         self.body.hide_top_widget()
 
     # - Pop ups ---------------------------------------------------------------
-    
+
     def show_user_info(self, user):
         widget = UserInfo(user=user,
                           configuration=self._configuration)
 
         self.body.show_widget_on_top(widget,
-                                     width=40, 
+                                     width=40,
                                      height=18)
-                  
 
     def hide_user_info(self):
         self.body.hide_top_widget()
@@ -291,10 +290,10 @@ class BaseEditor(WidgetWrap):
                  done_signal_handler,
                  cursor_position=None):
         """
-        Initializes editor, connects 'done' signal. 
-        
-        When pressing 'enter' twice the `submit` method is called, which by 
-        default calls `emit_done_signal` with the text that has been 
+        Initializes editor, connects 'done' signal.
+
+        When pressing 'enter' twice the `submit` method is called, which by
+        default calls `emit_done_signal` with the text that has been
         introduced.
 
         When pressing 'esc' the `cancel` method is called, which by default
@@ -346,9 +345,9 @@ class TextEditor(BaseEditor):
                  content,
                  done_signal_handler,
                  cursor_position=None):
-        BaseEditor.__init__(self, 
-                            prompt, 
-                            content, 
+        BaseEditor.__init__(self,
+                            prompt,
+                            content,
                             done_signal_handler,
                             cursor_position)
 
@@ -369,9 +368,9 @@ class TweetEditor(BaseEditor):
                  content,
                  done_signal_handler,
                  cursor_position=None):
-        BaseEditor.__init__(self, 
-                            prompt, 
-                            content, 
+        BaseEditor.__init__(self,
+                            prompt,
+                            content,
                             done_signal_handler,
                             cursor_position)
 
@@ -605,7 +604,7 @@ class HelpBuffer(ScrollableListBoxWrapper):
         self.items = []
         self.create_help_buffer()
 
-        offset = int(len(self.items) / 2)
+        offset = int(len(self.items) / 5)
         ScrollableListBoxWrapper.__init__(self,
                                           ScrollableListBox(self.items,
                                                             offset=offset,))
@@ -644,11 +643,12 @@ class HelpBuffer(ScrollableListBoxWrapper):
 
     def insert_header(self):
         widgets = [
-            ('fixed', self.col[0], Text('  Name')),
-            ('fixed', self.col[1], Text('Key')),
-            Text('Description')
+            ('fixed', self.col[0], Text(_('  NAME'))),
+            ('fixed', self.col[1], Text(_('KEY'))),
+            Text(_('DESCRIPTION')),
         ]
         self.items.append(Columns(widgets))
+        self.items.append(Divider('·'))
 
     def insert_title(self, title):
         self.items.append(Divider(' '))
@@ -672,7 +672,7 @@ class HelpBuffer(ScrollableListBoxWrapper):
 class TimelinesBuffer(WidgetWrap):
     """
     A widget that displays one or more `Timeline` objects.
-    
+
     Another widget can be placed on top of it.
     """
 
@@ -686,7 +686,7 @@ class TimelinesBuffer(WidgetWrap):
     def _create_widget(self, timelines, **kwargs):
         timeline_widgets = [TimelineWidget(timeline, **kwargs) for timeline
                                                                 in timelines]
-        columns = Columns(timeline_widgets) 
+        columns = Columns(timeline_widgets)
 
         return self._create_overlay(columns)
 
@@ -968,7 +968,7 @@ class UserInfo(WidgetWrap):
         whitespace = Divider(' ')
         widgets = []
 
-        # name 
+        # name
         name = Text('%s' % user.name)
         widgets.extend([name, whitespace])
 
@@ -984,7 +984,7 @@ class UserInfo(WidgetWrap):
 
             widgets.extend([url, whitespace])
 
-        # statistics: following, followers and favorites 
+        # statistics: following, followers and favorites
         following = Text(_('following:\n%s' % user.friends_count))
         followers = Text(_('followers:\n%s' % user.followers_count))
         favorites = Text(_('favorites:\n%s' % user.favorites_count))
@@ -996,7 +996,7 @@ class UserInfo(WidgetWrap):
         if user.status:
             status = StatusWidget(user.status, configuration)
             widgets.append(status)
-    
+
         pile = Pile(widgets)
 
         WidgetWrap.__init__(self, LineBox(title='@%s' % user.screen_name,
