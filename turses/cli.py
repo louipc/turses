@@ -20,17 +20,36 @@ from turses.api.backends import TweepyApi
 from turses.core import Turses
 
 
+def save_stdout():
+    """Save shell screen."""
+    print "\033[?1049h\033[H"
+
+
+def restore_stdout():
+    """Restore saved shell screen."""
+    print "\033[?1049l"
+
+
 def set_title(string):
+    """Set window title."""
     try:
         if getenv('TERM').startswith("screen"):
+            # terminal multiplexors
             if getenv('TMUX'):
                 stdout.write("\033k%s\033\\" % string)  # for tmux
             else:
                 stdout.write("\033_%s\033\\" % string)  # for GNU screen
         else:
+            # terminal
             stdout.write("\x1b]2;%s\x07" % string)
     except:
         pass
+
+
+def restore_title():
+    # restore original window title
+    if getenv('TMUX'):
+        set_title(getenv('SHELL').split('/')[-1])
 
 
 def main():
@@ -38,25 +57,23 @@ def main():
         set_title(__name__)
         set_encoding('utf8')
 
-        # save current shell screen
-        print "\033[?1049h\033[H"
+        save_stdout()
 
         args = parse_arguments()
 
         configuration = Configuration(args)
         configuration.load()
-        ui = CursesInterface(configuration)
 
-        # start `turses`
-        Turses(configuration=configuration,
-               ui=ui,
-               api_backend=TweepyApi)
+        curses_interface = CursesInterface(configuration)
+
+        turses = Turses(configuration=configuration,
+                        ui=curses_interface,
+                        api_backend=TweepyApi)
+        turses.start()
     except KeyboardInterrupt:
         pass
     finally:
-        # restore original window title
-        if getenv('TMUX'):
-            set_title(getenv('SHELL').split('/')[-1])
-        # restore original shell screen
-        print "\033[?1049l"
+        restore_stdout()
+        restore_title()
+
         exit(0)

@@ -324,6 +324,8 @@ class Controller(object):
         self.api = AsyncApi(api_backend,
                             access_token_key=oauth_token,
                             access_token_secret=oauth_token_secret,)
+
+    def start(self):
         self.api.init_api(on_error=self.api_init_error,
                           on_success=self.init_timelines,)
 
