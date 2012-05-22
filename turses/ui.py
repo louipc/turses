@@ -23,7 +23,7 @@ from turses import version
 from turses.config import (MOTION_KEY_BINDINGS, BUFFERS_KEY_BINDINGS,
                            TWEETS_KEY_BINDINGS, TIMELINES_KEY_BINDINGS,
                            META_KEY_BINDINGS, TURSES_KEY_BINDINGS, )
-from turses.models import is_DM, TWEET_MAXIMUM_CHARACTERS
+from turses.models import is_DM, TWEET_MAXIMUM_CHARACTERS, parse_attributes
 from turses.utils import encode
 
 
@@ -969,8 +969,8 @@ class UserInfo(WidgetWrap):
         widgets = []
 
         # name and bio 
-        name = Text('%s (@%s)' % (user.name, user.screen_name))
-        description = Text('%s' % user.description)
+        name = Text('%s' % user.name)
+        description = Text(parse_attributes(user.description))
 
         widgets.extend([name, whitespace, description, whitespace])
 

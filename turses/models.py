@@ -80,7 +80,10 @@ def apply_attribute(string,
         return string
 
 
-def parse_attributes(text, hashtag, attag, url):
+def parse_attributes(text, 
+                     hashtag='hashtag',
+                     attag='attag',
+                     url='url'):
     """
     Parse the attributes in `text` and isolate the hashtags, usernames
     and URLs with the provided attributes.
