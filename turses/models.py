@@ -48,6 +48,82 @@ def is_valid_search_text(text):
     return bool(text)
 
 
+def apply_attribute(string,
+                    hashtag='hashtag',
+                    attag='attag',
+                    url='url'):
+    """
+    Apply an attribute to `string` dependending on wether it is
+    a hashtag, a Twitter username or an URL. 
+    
+    >>> apply_attribute('#Python')
+    ('hashtag', u'#Python')
+    >>> apply_attribute('@dialelo')
+    ('attag', u'@dialelo')
+    >>> apply_attribute('@dialelo',
+                        attag='username')
+    ('username', u'@dialelo')
+    >>> apply_attribute('http://www.dialelo.com')
+    ('url', u'http://www.dialelo.com')
+    >>> apply_attribute('turses')
+    u'turses'
+    """
+    string = unicode(string)
+
+    if is_hashtag(string):
+        return (hashtag, string)
+    elif string.startswith('@') and is_username(string[1:]):
+        return (attag, string)
+    elif is_url(string):
+        return  (url, string)
+    else:
+        return string
+
+
+def parse_attributes(text, hashtag, attag, url):
+    """
+    Parse the attributes in `text` and isolate the hashtags, usernames
+    and URLs with the provided attributes.
+
+    >>> text = 'I love #Python'
+    >>> parse_attributes(text=text,
+    ...                  hashtag='hashtag')
+    ['I love ', ('hashtag', '#Python')]
+    """
+
+    words = text.split()
+    parsed_text = [apply_attribute(word) for word in words]
+
+    def add_withespace(parsed_word):
+        if isinstance(parsed_word, tuple):
+            # is an (attr, word) tuple
+            return parsed_word
+        else:
+            return parsed_word + ' '
+
+    tweet = [add_withespace(parsed_word) for parsed_word
+                                         in parsed_text]
+
+    # insert spaces between attributes
+    indices = []
+    for i, word in enumerate(tweet[:-1]):
+        next_word = tweet[i + 1]
+        if (isinstance(word, tuple) and 
+            isinstance(next_word, tuple)):
+            # two consecutive attributes, we save the index in which
+            # a u' ' will be inserted
+            indices.append(i + 1 + len(indices))
+
+    for index in indices:
+        tweet.insert(index, u' ')
+
+    # remove trailing withespace
+    if tweet and isinstance(tweet[-1], basestring):
+        tweet[-1] = tweet[-1][:-1]
+
+    return tweet
+
+
 # -- Model ---------------------------------------------------------------------
 
 
@@ -300,7 +376,6 @@ class Status(object):
         self.author = author
         self.entities = {} if entities is None else entities
 
-    # TODO: refactor this aberration
     def map_attributes(self, hashtag, attag, url):
         """
         Return a list of strings and tuples for hashtag, attag and
@@ -320,10 +395,8 @@ class Status(object):
         # text manually.
         if not getattr(self, 'entities', False):
             text = self.retweeted_status.text if self.is_retweet else self.text
-            return self.parse_attributes(text,
-                                         hashtag,
-                                         attag,
-                                         url)
+            return parse_attributes(text, hashtag, attag, url)
+
         elif getattr(self, 'is_retweet', False):
             return self.retweeted_status.map_attributes(hashtag, attag, url)
 
@@ -349,7 +422,6 @@ class Status(object):
 
         attr_mappings = []
 
-        # TODO: dry
         usernames = self.entities.get('user_mentions', [])
         usernames_attrs = map_attr(attag, usernames)
         attr_mappings.extend(usernames_attrs)
@@ -398,29 +470,6 @@ class Status(object):
             text.append(normal_text)
 
         return text
-
-    def parse_attributes(self, text, hashtag, attag, url):
-        words = text.split()
-
-        def apply_attribute(string):
-            if is_hashtag(string):
-                return (hashtag, string)
-            elif string.startswith('@') and is_username(string[1:-1]):
-                # FIXME: we can lose some characters here..
-                username = sanitize_username(string)
-                return (attag, '@' + username)
-            elif is_url(string):
-                return  (url, string)
-            else:
-                return string
-
-        text = map(apply_attribute, words)
-        tweet = []
-        tweet.append(text[0])
-        for word in text[1:]:
-            tweet.append(' ')
-            tweet.append(word)
-        return tweet
 
     @property
     def relative_created_at(self):
