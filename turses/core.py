@@ -138,6 +138,10 @@ class KeyHandler(object):
         if self.controller.is_in_help_mode() and key == 'esc':
             return self.controller.timeline_mode()
 
+        # Editor mode -- don't interpret keypress as command
+        if self.controller.is_in_editor_mode():
+            return self.controller.forward_to_editor(key)
+
         command = self.command(key)
         if command is None:
             return key
@@ -146,10 +150,6 @@ class KeyHandler(object):
         #  we remove the user widget when receiving input
         if self.controller.is_in_user_info_mode():
             self.controller.timeline_mode()
-
-        # Editor mode -- has priority
-        if self.controller.is_in_editor_mode():
-            return self.controller.forward_to_editor(key)
 
         # `TURSES_COMMANDS` are callable in all modes
         if command in self.TURSES_COMMANDS:
