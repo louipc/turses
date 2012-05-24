@@ -159,9 +159,10 @@ class CursesInterface(Frame):
 
         self.body.show_widget_on_top(widget=self._editor,
                                      width=80,
-                                     height=3,
+                                     height=10,
                                      align=horizontal_align,
-                                     valign=vertical_align)
+                                     valign=vertical_align,
+                                     min_height=5,)
         return self._editor
 
     def show_text_editor(self,
@@ -313,6 +314,13 @@ class BaseEditor(WidgetWrap):
 
         connect_signal(self, 'done', done_signal_handler)
 
+    def _wrap(self, widgets):
+        widgets = widgets if isinstance(widgets, list) else [widgets]
+        composed_widget = Columns(widgets)
+
+        widget = AttrMap(LineBox(composed_widget), 'editor')
+        WidgetWrap.__init__(self, widget)
+
     def keypress(self, size, key):
         if key == 'enter' and self.last_key == 'enter':
             self.submit()
@@ -352,10 +360,7 @@ class TextEditor(BaseEditor):
                             done_signal_handler,
                             cursor_position)
 
-        widgets = [self.editor]
-        w = AttrMap(Columns(widgets), 'editor')
-
-        WidgetWrap.__init__(self, w)
+        self._wrap(self.editor)
 
 
 class TweetEditor(BaseEditor):
@@ -378,12 +383,10 @@ class TweetEditor(BaseEditor):
         self.counter = len(self.content)
         self.counter_widget = Text(str(self.counter))
 
-        widgets = [('fixed', 4, self.counter_widget), self.editor]
-        w = AttrMap(Columns(widgets), 'editor')
-
         connect_signal(self.editor, 'change', self.update_counter)
 
-        WidgetWrap.__init__(self, w)
+        widgets = [('fixed', 4, self.counter_widget), self.editor]
+        self._wrap(widgets)
 
     def update_counter(self, edit, new_edit_text):
         self.counter = len(new_edit_text)
@@ -729,15 +732,17 @@ class TimelinesBuffer(WidgetWrap):
                            width,
                            height,
                            align='center',
-                           valign='middle'):
+                           valign='middle',
+                           min_height=None,
+                           min_width=None):
         widget = Filler(widget)
         self._w.bottom_w, self._w.top_w = self._w.top_w, widget
         self._w.set_overlay_parameters(align=align,
                                        width=width,
                                        valign=valign,
                                        height=height,
-                                       min_width=width,
-                                       min_height=height)
+                                       min_width=min_width,
+                                       min_height=min_height)
 
     def hide_top_widget(self):
         self._w = self._create_overlay(self.columns)
