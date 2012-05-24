@@ -73,7 +73,7 @@ class KeyHandler(object):
             'shift_buffer_beggining': self.controller.shift_buffer_beggining,
             'shift_buffer_end':       self.controller.shift_buffer_end,
 
-            'expand_buffer_left':     self.controller.expand_buffer_left,
+            'expand_visible_left':    self.controller.expand_buffer_left,
             'expand_visible_right':   self.controller.expand_buffer_right,
             'shrink_visible_left':    self.controller.shrink_buffer_left,
             'shrink_visible_right':   self.controller.shrink_buffer_right,
@@ -182,6 +182,7 @@ class KeyHandler(object):
         TIMELINE_MODE_COMMANDS.update(self.BUFFER_COMMANDS)
         TIMELINE_MODE_COMMANDS.update(self.TWITTER_COMMANDS)
         TIMELINE_MODE_COMMANDS.update(self.TIMELINE_COMMANDS)
+        TIMELINE_MODE_COMMANDS.update(self.EXTERNAL_PROGRAM_COMMANDS)
 
         if command in TIMELINE_MODE_COMMANDS:
             handler = TIMELINE_MODE_COMMANDS[command]
