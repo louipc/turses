@@ -304,13 +304,15 @@ class Controller(object):
         if self.is_in_timeline_mode():
             return
 
+        if self.is_in_help_mode():
+            self.clear_status()
+
         if self.timelines.has_timelines():
             self.mode = self.TIMELINE_MODE
             self.draw_timelines()
         else:
             self.mode = self.INFO_MODE
             self.ui.show_info()
-            self.clear_status()
 
         self.redraw_screen()
 
@@ -1208,10 +1210,8 @@ class Turses(Controller):
             self.loop = urwid.MainLoop(self.ui,
                                        self.configuration.palette,
                                        handle_mouse=False,
-                                       #input_filter=self.input_filter,
                                        unhandled_input=handler)
         try:
-            # start main loop
             self.loop.run()
         except TweepError:
             self.error_message(_('API error'))
