@@ -199,7 +199,7 @@ def has_active_status(func):
     def wrapper(self, *args, **kwargs):
         status = self.timelines.active_status
         if status != None:
-            return func(*args, **kwargs)
+            return func(self, *args, **kwargs)
     return wrapper
 
 
@@ -208,7 +208,7 @@ def text_from_editor(func):
     def wrapper(self, *args, **kwargs):
         self.ui.hide_editor(wrapper)
         self.timeline_mode()
-        return func(*args, **kwargs)
+        return func(self, *args, **kwargs)
 
     return wrapper
 
