@@ -318,7 +318,6 @@ class Controller(object):
         self.mode = self.INFO_MODE
 
         # API
-        self.info_message(_('Initializing API'))
         oauth_token = self.configuration.oauth_token
         oauth_token_secret = self.configuration.oauth_token_secret
         self.api = AsyncApi(api_backend,
@@ -326,6 +325,8 @@ class Controller(object):
                             access_token_secret=oauth_token_secret,)
 
     def start(self):
+        self.info_message(_('Initializing API'))
+
         self.api.init_api(on_error=self.api_init_error,
                           on_success=self.init_timelines,)
 
@@ -335,6 +336,10 @@ class Controller(object):
         except TweepError:
             self.error_message(_('API error'))
         except:
+            if self.configuration.debug:
+                import pdb
+                pdb.post_mortem()
+
             exit(1)
 
     def main_loop(self):

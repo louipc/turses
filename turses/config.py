@@ -418,6 +418,10 @@ class Configuration(object):
         else:
             # loads the default `token' if no account was specified
             token_file = DEFAULT_TOKEN_FILE
+
+        # debug mode
+        self.debug = getattr(cli_args, 'debug', False)
+
         self.token_file = token_file
 
     def load(self):

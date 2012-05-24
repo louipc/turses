@@ -7,7 +7,6 @@ turses.utils
 This module contains functions used across different modules.
 """
 
-from argparse import ArgumentParser
 from datetime import datetime, timedelta
 from email.utils import parsedate_tz
 from htmlentitydefs import entitydefs
@@ -17,37 +16,11 @@ from re import sub, findall
 from subprocess import call
 from sys import stdout
 from os import devnull
-from gettext import gettext as _
 from functools import partial
 
-from turses import version as turses_version
 
 URL_REGEX = re.compile('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|'
                        '(?:%[0-9a-fA-F][0-9a-fA-F]))+')
-
-
-def parse_arguments():
-    """Parse arguments from the command line."""
-
-    parser_title = "turses: Twitter client featuring a sexy curses interface."
-    parser = ArgumentParser(parser_title)
-
-    parser.add_argument("-a", "--account",
-            help=_("Use account with the specified username."))
-
-    parser.add_argument("-c", "--config",
-            help=_("Use the specified configuration file."))
-
-    help = _("Generate a default configuration file is the specified path.")
-    parser.add_argument("-g", "--generate-config",
-                        help=help)
-
-    version = "turses %s" % turses_version
-    parser.add_argument("-v", "--version", action="version", version=version,
-            help=_("Show the current version of turses"))
-
-    args = parser.parse_args()
-    return args
 
 
 def html_unescape(string):
