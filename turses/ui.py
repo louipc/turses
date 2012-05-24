@@ -309,6 +309,7 @@ class BaseEditor(WidgetWrap):
         self.editor = Edit(caption=caption,
                            edit_text=content,
                            edit_pos=cursor_position)
+        self.last_key = None
 
         connect_signal(self, 'done', done_signal_handler)
 
