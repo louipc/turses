@@ -18,6 +18,7 @@ from turses import __name__
 from turses import version as turses_version
 from turses.config import Configuration
 from turses.ui import CursesInterface
+from turses.api.debug import MockApi
 from turses.api.backends import TweepyApi
 from turses.core import Turses
 
@@ -49,7 +50,7 @@ def set_title(string):
 
 
 def restore_title():
-    # restore original window title
+    """Restore original window title."""
     if getenv('TMUX'):
         set_title(getenv('SHELL').split('/')[-1])
 
@@ -91,6 +92,12 @@ def parse_arguments():
                         action="store_true",
                         help=_("Start turses in debug mode."))
 
+    # offline debug mode
+    parser.add_argument("-o", 
+                        "--offline",
+                        action="store_true",
+                        help=_("Start turses in offline debug mode."))
+
 
     args = parser.parse_args()
     return args
@@ -104,6 +111,7 @@ def main():
 
     # stdout
     if any([args.debug,
+            args.offline,
             getattr(args, 'help', False),    
             getattr(args, 'version', False)]):
         # we are going to print information to stdout
@@ -121,16 +129,22 @@ def main():
     # view
     curses_interface = CursesInterface(configuration)
 
+    # API
+    if args.offline:
+        api_backend = MockApi
+    else:
+        api_backend = TweepyApi
+
     # controller
     turses = Turses(configuration=configuration,
                     ui=curses_interface,
-                    api_backend=TweepyApi)
+                    api_backend=api_backend)
     try:
         turses.start()
     except KeyboardInterrupt:
         pass
     except:
-        if args.debug:
+        if args.debug or args.offline:
             import pdb
             pdb.post_mortem()
     finally:
