@@ -34,8 +34,17 @@ pyc:
 watch:
 	tdaemon . $(TESTRUNNER) --custom-args="$(WATCHTESTFLAGS)"
 
+release: bump merge publish
+
 bump:
 	$(EDITOR) HISTORY.rst turses/__init__.py Makefile 
+	git add -u
+	git commit
+
+merge:
+	git stash
+	git checkout master
+	git merge develop
 
 publish:
 	$(PY) setup.py sdist upload
@@ -51,4 +60,3 @@ stats:
 	@echo "========"
 	@echo 
 	@echo "Errors: `pyflakes . | wc -l`"
-
