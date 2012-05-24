@@ -246,15 +246,7 @@ class Controller(object):
 
     def start(self):
         self.authenticate_api()
-
-        # start main loop
-        try:
-            self.main_loop()
-        except TweepError:
-            self.error_message(_('API error'))
-        finally:
-            # continue after an API error
-            self.main_loop()
+        self.main_loop()
 
     def authenticate_api(self):
         self.info_message(_('Authenticating API'))
@@ -1218,7 +1210,12 @@ class Turses(Controller):
                                        handle_mouse=False,
                                        #input_filter=self.input_filter,
                                        unhandled_input=handler)
-        self.loop.run()
+        try:
+            # start main loop
+            self.loop.run()
+        except TweepError:
+            self.error_message(_('API error'))
+            self.main_loop()
 
     def exit(self):
         raise urwid.ExitMainLoop()
