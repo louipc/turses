@@ -50,252 +50,142 @@ class KeyHandler(object):
         self.configuration = configuration
         self.controller = controller
 
-    def is_bound(self, key, name):
+        self.TURSES_COMMANDS = {
+            'quit':          self.controller.exit,
+            'redraw':        self.controller.redraw_screen,
+            'help':          self.controller.help_mode,
+            'reload_config': self.controller.reload_configuration,
+        }
+
+        self.MOTION_COMMANDS = {
+            'up':               self.controller.scroll_up,
+            'down':             self.controller.scroll_down,
+            'scroll_to_top':    self.controller.scroll_top,
+            'scroll_to_bottom': self.controller.scroll_bottom,
+        }
+
+        self.BUFFER_COMMANDS = {
+            'right':                  self.controller.next_timeline,
+            'left':                   self.controller.previous_timeline,
+
+            'shift_buffer_left':      self.controller.shift_buffer_left,
+            'shift_buffer_right':     self.controller.shift_buffer_right,
+            'shift_buffer_beggining': self.controller.shift_buffer_beggining,
+            'shift_buffer_end':       self.controller.shift_buffer_end,
+
+            'expand_buffer_left':     self.controller.expand_buffer_left,
+            'expand_visible_right':   self.controller.expand_buffer_right,
+            'shrink_visible_left':    self.controller.shrink_buffer_left,
+            'shrink_visible_right':   self.controller.shrink_buffer_right,
+
+            'activate_first_buffer':  self.controller.activate_first_buffer,
+            'activate_last_buffer':   self.controller.activate_last_buffer,
+
+            'delete_buffer':          self.controller.delete_buffer,
+            'clear':                  self.controller.clear_status,
+            'mark_all_as_read':       self.controller.mark_all_as_read,
+        }
+
+        self.TIMELINE_COMMANDS = {
+            'home':          self.controller.append_home_timeline,
+            'own_tweets':    self.controller.append_own_tweets_timeline,
+            'favorites':     self.controller.append_favorites_timeline,
+            'mentions':      self.controller.append_mentions_timeline,
+            'DMs':           self.controller.append_direct_messages_timeline,
+            'search':        self.controller.search,
+            'search_user':   self.controller.search_user,
+            'thread':        self.controller.append_thread_timeline,
+            'user_info':     self.controller.user_info,
+            'hashtags':      self.controller.search_hashtags,
+            'user_timeline': self.controller.focused_status_author_timeline,
+        }
+
+        self.TWITTER_COMMANDS = {
+            'update':            self.controller.update_active_timeline,
+            'update_all':        self.controller.update_all_timelines,
+            'tweet':             self.controller.tweet,
+            'reply':             self.controller.reply,
+            'retweet':           self.controller.retweet,
+            'retweet_and_edit':  self.controller.manual_retweet,
+            'delete_tweet':      self.controller.delete_tweet,
+            'follow_selected':   self.controller.follow_selected,
+            'follow_user':       self.controller.follow_user,
+            'unfollow_selected': self.controller.unfollow_selected,
+            'unfollow_user':     self.controller.unfollow_user,
+            'send_dm':           self.controller.direct_message,
+            'fav':               self.controller.favorite,
+            'delete_fav':        self.controller.unfavorite,
+            'tweet_hashtag':     self.controller.tweet_with_hashtags,
+        }
+
+        self.EXTERNAL_PROGRAM_COMMANDS = {
+            'openurl':         self.controller.open_urls,
+            'open_status_url': self.controller.open_status_url,
+        }
+
+    def command(self, key):
         """
-        Return True if `key` corresponds to the action specified by `name`.
+        Return the command name that corresponds to `key` (if any).
         """
-        try:
-            bindings = self.configuration.key_bindings
-            bound_key, bound_key_description = bindings[name]
-        except KeyError:
-            return False
-        else:
-            return key == bound_key
+        for command_name in self.configuration.key_bindings:
+            bound_key, _ = self.configuration.key_bindings[command_name]
+            if key == bound_key:
+                return command_name
 
     def handle(self, key):
         """Handle keyboard input."""
-        # remove user widget when receiving input
+        # <Esc> in Help mode is not associated with a command
+        if self.controller.is_in_help_mode() and key == 'esc':
+            return self.controller.timeline_mode()
+
+        command = self.command(key)
+        if command is None:
+            return key
+
+        # User info mode
+        #  we remove the user widget when receiving input
         if self.controller.is_in_user_info_mode():
             self.controller.timeline_mode()
 
-        # Editor has priority
+        # Editor mode -- has priority
         if self.controller.is_in_editor_mode():
-            size = 20,
-            self.controller.editor.keypress(size, key)
-            return
+            return self.controller.forward_to_editor(key)
 
-        # Global commands
-        handled = not self._turses_key_handler(key)
-        if handled:
-            return
+        # `TURSES_COMMANDS` are callable in all modes
+        if command in self.TURSES_COMMANDS:
+            handler = self.TURSES_COMMANDS[command]
+            return handler()
 
-        # Timeline commands
+        # `TIMELINE_COMMANDS` are callable in all modes except help mode
         if not self.controller.is_in_help_mode():
-            handled = not self._timeline_key_handler(key)
-            if handled:
-                return
+            if command in self.TIMELINE_COMMANDS:
+                handler = self.TIMELINE_COMMANDS[command]
+                return handler()
 
+        # Info mode does not support more commands
         if self.controller.is_in_info_mode():
             return
 
-        # Motion commands
-        handled = not self._motion_key_handler(key)
-        if handled:
-            return
+        # `MOTION_COMMANDS` are callable in  all modes except info mode
+        if command in self.MOTION_COMMANDS:
+            handler = self.MOTION_COMMANDS[command]
+            return handler()
 
-        # Help mode commands
-        #  only accepts motion commands, timeline commands and <Esc>
-        if self.controller.is_in_help_mode() and key == 'esc':
-            self.controller.timeline_mode()
-            self.controller.clear_status()
-            return
+        # Help mode does not support more commands
+        if self.controller.is_in_help_mode():
+            return 
 
-        # Timeline mode commands
+        # Timeline mode
+        assert self.controller.is_in_timeline_mode()
 
-        # Buffer commands
-        handled = not self._buffer_key_handler(key)
-        if handled:
-            return
+        TIMELINE_MODE_COMMANDS = {}
+        TIMELINE_MODE_COMMANDS.update(self.BUFFER_COMMANDS)
+        TIMELINE_MODE_COMMANDS.update(self.TWITTER_COMMANDS)
+        TIMELINE_MODE_COMMANDS.update(self.TIMELINE_COMMANDS)
 
-        # Twitter commands
-        handled = not self._twitter_key_handler(key)
-        if handled:
-            return
-
-        # External programs
-        handled = not self._external_program_handler(key)
-        if handled:
-            return
-        else:
-            return key
-
-    def _turses_key_handler(self, key):
-        # quit
-        if self.is_bound(key, 'quit'):
-            self.controller.exit()
-        # redraw screen
-        elif self.is_bound(key, 'redraw'):
-            self.controller.redraw_screen()
-        # help
-        elif self.is_bound(key, 'help'):
-            self.controller.help_mode()
-        # reload configuration
-        elif self.is_bound(key, 'reload_config'):
-            self.controller.reload_configuration()
-        else:
-            return key
-
-    def _motion_key_handler(self, key):
-        ## up
-        if self.is_bound(key, 'up') or key == 'up':
-            self.controller.scroll_up()
-        # down
-        elif self.is_bound(key, 'down') or key == 'down':
-            self.controller.scroll_down()
-        # scroll to top
-        elif self.is_bound(key, 'scroll_to_top'):
-            self.controller.scroll_top()
-        # scroll to bottom
-        elif self.is_bound(key, 'scroll_to_bottom'):
-            self.controller.scroll_bottom()
-        else:
-            return key
-
-    def _buffer_key_handler(self, key):
-        # Right
-        if self.is_bound(key, 'right') or key == 'right':
-            self.controller.next_timeline()
-        # Left
-        elif self.is_bound(key, 'left') or key == 'left':
-            self.controller.previous_timeline()
-        # Shift active buffer left
-        elif self.is_bound(key, 'shift_buffer_left'):
-            self.controller.shift_buffer_left()
-        # Shift active buffer right
-        elif self.is_bound(key, 'shift_buffer_right'):
-            self.controller.shift_buffer_right()
-        # Shift active buffer beggining
-        elif self.is_bound(key, 'shift_buffer_beggining'):
-            self.controller.shift_buffer_beggining()
-        # Shift active buffer end
-        elif self.is_bound(key, 'shift_buffer_end'):
-            self.controller.shift_buffer_end()
-        # Expand visible buffer left
-        elif self.is_bound(key, 'expand_visible_left'):
-            self.controller.expand_buffer_left()
-        # Expand visible buffer right
-        elif self.is_bound(key, 'expand_visible_right'):
-            self.controller.expand_buffer_right()
-        # Shrink visible buffer left
-        elif self.is_bound(key, 'shrink_visible_left'):
-            self.controller.shrink_buffer_left()
-        # Shrink visible buffer right
-        elif self.is_bound(key, 'shrink_visible_right'):
-            self.controller.shrink_buffer_right()
-        # Activate first buffer
-        elif self.is_bound(key, 'activate_first_buffer'):
-            self.controller.activate_first_buffer()
-        # Activate last buffer
-        elif self.is_bound(key, 'activate_last_buffer'):
-            self.controller.activate_last_buffer()
-        # Delete buffer
-        elif self.is_bound(key, 'delete_buffer'):
-            self.controller.delete_buffer()
-        # Clear status
-        elif self.is_bound(key, 'clear'):
-            # TODO: clear active buffer
-            #self.controller.clear_body()
-            self.controller.clear_status()
-        # Mark all as read
-        elif self.is_bound(key, 'mark_all_as_read'):
-            self.controller.mark_all_as_read()
-        else:
-            return key
-
-    def _timeline_key_handler(self, key):
-        # Show home Timeline
-        if self.is_bound(key, 'home'):
-            self.controller.append_home_timeline()
-        # Own tweets
-        elif self.is_bound(key, 'own_tweets'):
-            self.controller.append_own_tweets_timeline()
-        # Favorites timeline
-        elif self.is_bound(key, 'favorites'):
-            self.controller.append_favorites_timeline()
-        # Mention timeline
-        elif self.is_bound(key, 'mentions'):
-            self.controller.append_mentions_timeline()
-        # Direct Message timeline
-        elif self.is_bound(key, 'DMs'):
-            self.controller.append_direct_messages_timeline()
-        # Search
-        elif self.is_bound(key, 'search'):
-            self.controller.search()
-        # Search User
-        elif self.is_bound(key, 'search_user'):
-            self.controller.search_user()
-        # Thread
-        elif self.is_bound(key, 'thread'):
-            self.controller.append_thread_timeline()
-        # User info
-        elif self.is_bound(key, 'user_info'):
-            self.controller.user_info()
-        # Follow hashtags
-        elif self.is_bound(key, 'hashtags'):
-            self.controller.search_hashtags()
-        # Authors timeline
-        elif self.is_bound(key, 'user_timeline'):
-            self.controller.focused_status_author_timeline()
-        else:
-            return key
-
-    def _twitter_key_handler(self, key):
-        # Update timeline
-        if self.is_bound(key, 'update'):
-            self.controller.update_active_timeline()
-        # Update all timelines
-        if self.is_bound(key, 'update_all'):
-            self.controller.update_all_timelines()
-        # Tweet
-        elif self.is_bound(key, 'tweet'):
-            self.controller.tweet()
-        # Reply
-        elif self.is_bound(key, 'reply'):
-            self.controller.reply()
-        # Retweet
-        elif self.is_bound(key, 'retweet'):
-            self.controller.retweet()
-        # Retweet and Edit
-        elif self.is_bound(key, 'retweet_and_edit'):
-            self.controller.manual_retweet()
-        # Delete (own) tweet
-        elif self.is_bound(key, 'delete_tweet'):
-            self.controller.delete_tweet()
-        # Follow Selected
-        elif self.is_bound(key, 'follow_selected'):
-            self.controller.follow_selected()
-        # Follow User using `text`
-        elif self.is_bound(key, 'follow_user'):
-            self.controller.follow_user()
-        # Unfollow Selected
-        elif self.is_bound(key, 'unfollow_selected'):
-            self.controller.unfollow_selected()
-        # Unfollow User using `text`
-        elif self.is_bound(key, 'unfollow_user'):
-            self.controller.unfollow_user()
-        # Send Direct Message
-        elif self.is_bound(key, 'send_dm'):
-            self.controller.direct_message()
-        # Create favorite
-        elif self.is_bound(key, 'fav'):
-            self.controller.favorite()
-        # Destroy favorite
-        elif self.is_bound(key, 'delete_fav'):
-            self.controller.unfavorite()
-        # Tweet with hashtags
-        elif self.is_bound(key, 'tweet_hashtag'):
-            self.controller.tweet_with_hashtags()
-        else:
-            return key
-
-    def _external_program_handler(self, key):
-        # Open URL
-        if self.is_bound(key, 'openurl'):
-            self.controller.open_urls()
-        if self.is_bound(key, 'open_status_url'):
-            self.controller.open_status_url()
-        else:
-            return key
+        if command in TIMELINE_MODE_COMMANDS:
+            handler = TIMELINE_MODE_COMMANDS[command]
+            return handler()
 
 
 # Decorators
@@ -341,6 +231,7 @@ class Controller(object):
         self.configuration = configuration
         self.ui = ui
         self.editor = None
+        self.timelines = TimelineList()
 
         # Mode
         self.mode = self.INFO_MODE
@@ -388,7 +279,6 @@ class Controller(object):
             pass
         self.user = self.api.verify_credentials()
         self.info_message(_('Initializing timelines'))
-        self.timelines = TimelineList()
         self.append_default_timelines()
         seconds = self.configuration.update_frequency
         self.loop.set_alarm_in(seconds, self.update_alarm)
@@ -421,14 +311,14 @@ class Controller(object):
         if self.is_in_timeline_mode():
             return
 
-        elif self.timelines.has_timelines():
+        if self.timelines.has_timelines():
             self.mode = self.TIMELINE_MODE
             self.draw_timelines()
         else:
             self.mode = self.INFO_MODE
             self.ui.show_info()
-        if self.is_in_help_mode():
             self.clear_status()
+
         self.redraw_screen()
 
     def is_in_timeline_mode(self):
@@ -833,7 +723,12 @@ class Controller(object):
     def redraw_screen(self):
         raise NotImplementedError
 
-    # -- Editor event handlers ------------------------------------------------
+    # -- Editor ---------------------------------------------------------------
+
+    def forward_to_editor(self, key):
+        if self.editor:
+            size = 20,
+            self.editor.keypress(size, key)
 
     @text_from_editor
     def tweet_handler(self, text):
