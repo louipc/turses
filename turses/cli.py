@@ -88,6 +88,7 @@ def parse_arguments():
     # debug mode
     parser.add_argument("-d", 
                         "--debug",
+                        action="store_true",
                         help=_("Start turses in debug mode."))
 
 
@@ -102,9 +103,9 @@ def main():
     args = parse_arguments()
 
     # stdout
-    if any([getattr(args, 'help', False), 
-            getattr(args, 'version', False),
-            getattr(args, 'debug', False)]):
+    if any([args.debug,
+            getattr(args, 'help', False),    
+            getattr(args, 'version', False)]):
         # we are going to print information to stdout
         save_and_restore_stdout = False
     else:
@@ -128,6 +129,10 @@ def main():
         turses.start()
     except KeyboardInterrupt:
         pass
+    except:
+        if args.debug:
+            import pdb
+            pdb.post_mortem()
     finally:
         if save_and_restore_stdout:
             restore_stdout()

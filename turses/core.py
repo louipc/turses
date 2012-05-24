@@ -325,22 +325,22 @@ class Controller(object):
                             access_token_secret=oauth_token_secret,)
 
     def start(self):
-        self.info_message(_('Initializing API'))
-
-        self.api.init_api(on_error=self.api_init_error,
-                          on_success=self.init_timelines,)
+        self.authenticate_api()
 
         # start main loop
         try:
             self.main_loop()
         except TweepError:
             self.error_message(_('API error'))
-        except:
-            if self.configuration.debug:
-                import pdb
-                pdb.post_mortem()
+        finally:
+            # continue after an API error
+            self.main_loop()
 
-            exit(1)
+    def authenticate_api(self):
+        self.info_message(_('Authenticating API'))
+
+        self.api.init_api(on_error=self.api_init_error,
+                          on_success=self.init_timelines,)
 
     def main_loop(self):
         """
