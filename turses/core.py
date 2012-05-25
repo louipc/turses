@@ -274,6 +274,9 @@ class Controller(object):
         self.info_message(_('Initializing timelines'))
         self.append_default_timelines()
         seconds = self.configuration.update_frequency
+        # The main loop must have started 
+        while (not hasattr(self, 'loop')):
+            pass
         self.loop.set_alarm_in(seconds, self.update_alarm)
 
     def reload_configuration(self):
