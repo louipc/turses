@@ -39,6 +39,18 @@ from turses.models import (
 from turses.api.base import AsyncApi
 
 
+def merge_dicts(*args):
+    """
+    Merge all dictionaries given as positional arguments in a single
+    dictionary.
+    """
+    result = {}
+    for arg in args:
+        if isinstance(arg, dict):
+            result.update(arg)
+    return result
+
+
 class KeyHandler(object):
     """
     Maps key bindings from configuration to calls to controllers' functions.
@@ -123,6 +135,25 @@ class KeyHandler(object):
             'open_status_url': self.controller.open_status_url,
         }
 
+        # commands grouped by modes
+        all_commands = [self.TURSES_COMMANDS,
+                        self.MOTION_COMMANDS,
+                        self.BUFFER_COMMANDS,
+                        self.TIMELINE_COMMANDS,
+                        self.TWITTER_COMMANDS,
+                        self.EXTERNAL_PROGRAM_COMMANDS]
+
+        # Timeline mode
+        self.TIMELINE_MODE_COMMANDS = merge_dicts(*all_commands)
+
+        # Info mode
+        self.INFO_MODE_COMMANDS = merge_dicts(self.TURSES_COMMANDS,
+                                              self.TIMELINE_COMMANDS)
+
+        # Help mode
+        self.HELP_MODE_COMMANDS = merge_dicts(self.TURSES_COMMANDS,
+                                              self.MOTION_COMMANDS)
+
     def command(self, key):
         """
         Return the command name that corresponds to `key` (if any).
@@ -134,59 +165,38 @@ class KeyHandler(object):
 
     def handle(self, key):
         """Handle keyboard input."""
-        # <Esc> in Help mode is not associated with a command
-        if self.controller.is_in_help_mode() and key == 'esc':
-            return self.controller.timeline_mode()
+        command = self.command(key)
 
         # Editor mode -- don't interpret keypress as command
         if self.controller.is_in_editor_mode():
             return self.controller.forward_to_editor(key)
 
-        command = self.command(key)
-        if command is None:
-            return key
-
         # User info mode
-        #  we remove the user widget when receiving input
+        #  we remove the user widget and activate timeline mode when
+        #  receiving input
         if self.controller.is_in_user_info_mode():
             self.controller.timeline_mode()
 
-        # `TURSES_COMMANDS` are callable in all modes
-        if command in self.TURSES_COMMANDS:
-            handler = self.TURSES_COMMANDS[command]
-            return handler()
-
-        # `TIMELINE_COMMANDS` are callable in all modes except help mode
-        if not self.controller.is_in_help_mode():
-            if command in self.TIMELINE_COMMANDS:
-                handler = self.TIMELINE_COMMANDS[command]
+        # Help mode
+        if self.controller.is_in_help_mode():
+            # <Esc> in Help mode is not associated with a command
+            if key == 'esc':
+                return self.controller.timeline_mode()
+            elif command in self.HELP_MODE_COMMANDS:
+                handler = self.HELP_MODE_COMMANDS[command]
+                return handler()
+        # Info mode
+        elif self.controller.is_in_info_mode():
+            if command in self.INFO_MODE_COMMANDS:
+                handler = self.INFO_MODE_COMMANDS[command]
+                return handler()
+        # Timeline mode
+        elif self.controller.is_in_timeline_mode():
+            if command in self.TIMELINE_MODE_COMMANDS:
+                handler = self.TIMELINE_MODE_COMMANDS[command]
                 return handler()
 
-        # Info mode does not support more commands
-        if self.controller.is_in_info_mode():
-            return
-
-        # `MOTION_COMMANDS` are callable in  all modes except info mode
-        if command in self.MOTION_COMMANDS:
-            handler = self.MOTION_COMMANDS[command]
-            return handler()
-
-        # Help mode does not support more commands
-        if self.controller.is_in_help_mode():
-            return
-
-        # Timeline mode
-        assert self.controller.is_in_timeline_mode()
-
-        TIMELINE_MODE_COMMANDS = {}
-        TIMELINE_MODE_COMMANDS.update(self.BUFFER_COMMANDS)
-        TIMELINE_MODE_COMMANDS.update(self.TWITTER_COMMANDS)
-        TIMELINE_MODE_COMMANDS.update(self.TIMELINE_COMMANDS)
-        TIMELINE_MODE_COMMANDS.update(self.EXTERNAL_PROGRAM_COMMANDS)
-
-        if command in TIMELINE_MODE_COMMANDS:
-            handler = TIMELINE_MODE_COMMANDS[command]
-            return handler()
+        return key
 
 
 # Decorators
@@ -274,7 +284,7 @@ class Controller(object):
         self.info_message(_('Initializing timelines'))
         self.append_default_timelines()
         seconds = self.configuration.update_frequency
-        # The main loop must have started 
+        # The main loop must have started
         while (not hasattr(self, 'loop')):
             pass
         self.loop.set_alarm_in(seconds, self.update_alarm)
