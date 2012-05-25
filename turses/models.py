@@ -54,8 +54,8 @@ def apply_attribute(string,
                     url='url'):
     """
     Apply an attribute to `string` dependending on wether it is
-    a hashtag, a Twitter username or an URL. 
-    
+    a hashtag, a Twitter username or an URL.
+
     >>> apply_attribute('#Python')
     ('hashtag', u'#Python')
     >>> apply_attribute('@dialelo')
@@ -80,7 +80,7 @@ def apply_attribute(string,
         return string
 
 
-def parse_attributes(text, 
+def parse_attributes(text,
                      hashtag='hashtag',
                      attag='attag',
                      url='url'):
@@ -115,7 +115,7 @@ def parse_attributes(text,
     indices = []
     for i, word in enumerate(tweet[:-1]):
         next_word = tweet[i + 1]
-        if (isinstance(word, tuple) and 
+        if (isinstance(word, tuple) and
             isinstance(next_word, tuple)):
             # two consecutive attributes, we save the index in which
             # a u' ' will be inserted
@@ -131,7 +131,7 @@ def parse_attributes(text,
     return tweet
 
 
-# -- Model ---------------------------------------------------------------------
+# -- Model --------------------------------------------------------------------
 
 
 class TimelineList(UnsortedActiveList):
@@ -283,7 +283,7 @@ class TimelineList(UnsortedActiveList):
 
     def activate_last(self):
         if self.has_timelines():
-            last_index = len(self.timelines) - 1 
+            last_index = len(self.timelines) - 1
             self.active_index = last_index
         self._mark_read()
         self._set_active_as_visible()
@@ -342,7 +342,7 @@ class TimelineList(UnsortedActiveList):
 
 class User(object):
     """
-    A Twitter user. 
+    A Twitter user.
     """
 
     def __init__(self,

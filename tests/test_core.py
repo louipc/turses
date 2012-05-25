@@ -40,7 +40,7 @@ class KeyHandlerTest(unittest.TestCase):
 
     def key(self, command):
         key, _ = self.configuration.key_bindings[command]
-        return key 
+        return key
 
     # - Tests -----------------------------------------------------------------
 

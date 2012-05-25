@@ -141,7 +141,7 @@ KEY_BINDINGS = {
         ('U', _('unfollow selected status\' author')),
     'unfollow_user':
         ('ctrl u', _('unfollow user given in an editor')),
- 
+
     # timelines
     'home':
         ('.', _('open a home timeline')),
@@ -188,7 +188,7 @@ KEY_BINDINGS = {
 # NOTE:
 # The key binding categories are declared to order them in the configuration
 # and in the help buffer. If you add a key binding, don't forget to include
-# it in one of these categories. 
+# it in one of these categories.
 
 MOTION_KEY_BINDINGS = [
     'up',
@@ -692,10 +692,10 @@ class Configuration(object):
                         style == 'status_divider',
                         style == 'status_bar']):
                     self.styles[style] = conf.getboolean(SECTION_STYLES, style)
-                elif (style == 'editor_horizontal_align' and 
+                elif (style == 'editor_horizontal_align' and
                       style in ['left', 'center', 'right']):
                     self.styles[style] = conf.get(SECTION_STYLES, style)
-                elif (style == 'editor_vertical_align' and 
+                elif (style == 'editor_vertical_align' and
                       style in ['top', 'middle', 'bottom']):
                     self.styles[style] = conf.get(SECTION_STYLES, style)
                 else:

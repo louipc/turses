@@ -66,7 +66,7 @@ class ConfigurationTest(unittest.TestCase):
 
         palette = [
             ['first', 'cyan', 'black', 'default', ''],
-            ['second', 'green', 'black',]
+            ['second', 'green', 'black']
         ]
         modified_color = ['first', 'black', 'cyan', 'default', '']
         palette[0] = modified_color

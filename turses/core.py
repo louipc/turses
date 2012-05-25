@@ -173,7 +173,7 @@ class KeyHandler(object):
 
         # Help mode does not support more commands
         if self.controller.is_in_help_mode():
-            return 
+            return
 
         # Timeline mode
         assert self.controller.is_in_timeline_mode()

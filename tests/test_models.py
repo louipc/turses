@@ -7,10 +7,10 @@ from datetime import datetime
 
 from mock import MagicMock
 
+from tests.test_meta import ActiveListTest
 from turses.models import (prepend_at, sanitize_username, parse_attributes,
-                           is_DM, is_username, is_hashtag, 
-                           Status, DirectMessage, Timeline,
-                           ActiveList, TimelineList)
+                           is_DM, is_username, is_hashtag,
+                           Status, DirectMessage, Timeline, TimelineList)
 
 
 def create_status(**kwargs):
@@ -82,7 +82,7 @@ class HelperFunctionTest(unittest.TestCase):
     def test_parse_attributes(self):
         text = '@asdf http://www.dialelo.com #asf'
 
-        expected_result = [('attag', u'@asdf'), u' ', 
+        expected_result = [('attag', u'@asdf'), u' ',
                            ('url', u'http://www.dialelo.com'), u' ',
                            ('hashtag', u'#asf')]
 
@@ -100,10 +100,13 @@ class HelperFunctionTest(unittest.TestCase):
 
 
 class StatusTest(unittest.TestCase):
+
     # map attributes
 
     def test_map_attributes_with_mentions_hashtags_and_url(self):
-        text = u'@aaloy  QT @Pybonacci: \xa1Qu\xe9 pasada con Vim! #Python #IDE RT @dialelo uso un setup parecido a este: http://t.co/5lTGNzba'
+        text = (u'@aaloy  QT @Pybonacci: \xa1Qu\xe9 pasada con Vim!'
+                u' #Python #IDE RT @dialelo uso un setup parecido a este: '
+                u'http://t.co/5lTGNzba')
         entities = {
             u'user_mentions': [
                 {u'id': 60840400,
@@ -131,28 +134,33 @@ class StatusTest(unittest.TestCase):
             u'urls': [
                 {u'url': u'http://t.co/5lTGNzba',
                  u'indices': [99, 119],
-                 u'expanded_url': u'http://sontek.net/turning-vim-into-a-modern-python-ide',
+                 u'expanded_url':
+                    u'http://sontek.net/turning-vim-into-a-modern-python-ide',
                  u'display_url': u'sontek.net/turning-vim-in\u2026'}
             ]}
-        status = create_status(text=text,
-                               entities=entities)
-        expected_result = [('attag', u'@aaloy'), u'  QT ', ('attag', u'@Pybonacci'),
+        expected_result = [('attag', u'@aaloy'), u'  QT ',
+                           ('attag', u'@Pybonacci'),
                            u': \xa1Qu\xe9 pasada con Vim! ',
                            ('hashtag', u'#Python'), u' ', ('hashtag', u'#IDE'),
                            u' RT ', ('attag', u'@dialelo'),
                            u' uso un setup parecido a este: ',
                            ('url', u'sontek.net/turning-vim-in\u2026')]
+
+        status = create_status(text=text,
+                               entities=entities)
         result = status.map_attributes(hashtag='hashtag',
                                        attag='attag',
                                        url='url')
 
         self.assertEqual(result, expected_result)
 
-        text = u'New release of #Turses 0.1.6 with lots of improvements, ncurses twitter client. https://t.co/cciH85AG via @dialelo'
+        text = (u'New release of #Turses 0.1.6 with lots of improvements, '
+                u'ncurses twitter client. https://t.co/cciH85AG via @dialelo')
         entities = {
             u'hashtags': [{u'indices': [15, 22], u'text': u'Turses'}],
             u'urls': [{u'display_url': u'github.com/alejandrogomez\u2026',
-                       u'expanded_url': u'https://github.com/alejandrogomez/turses',
+                       u'expanded_url':
+                            u'https://github.com/alejandrogomez/turses',
                        u'indices': [80, 101],
                        u'url': u'https://t.co/cciH85AG'}],
             u'user_mentions': [{u'id': 87322884,
@@ -161,16 +169,17 @@ class StatusTest(unittest.TestCase):
                                 u'name': u'Alejandro G\xf3mez',
                                 u'screen_name': u'dialelo'}]
         }
-        status = create_status(user='nicosphere',
-                               text=text,
-                               entities=entities)
-
         expected_result = [u'New release of ',
                            ('hashtag', u'#Turses'),
-                           u' 0.1.6 with lots of improvements, ncurses twitter client. ',
+                           (u' 0.1.6 with lots of improvements, '
+                           u'ncurses twitter client. '),
                            ('url', u'github.com/alejandrogomez\u2026'),
                            u' via ',
                            ('attag', u'@dialelo')]
+
+        status = create_status(user='nicosphere',
+                               text=text,
+                               entities=entities)
         result = status.map_attributes(hashtag='hashtag',
                                         attag='attag',
                                         url='url')
@@ -202,52 +211,6 @@ class StatusTest(unittest.TestCase):
         result = retweet.map_attributes(hashtag='hashtag',
                                         attag='attag',
                                         url='url')
-
-        self.assertEqual(result, expected_result)
-
-    def test_map_attributes_to_retweet_with_mentions_hashtags_and_url(self):
-        text = u'@aaloy  QT @Pybonacci: \xa1Qu\xe9 pasada con Vim! #Python #IDE RT @dialelo uso un setup parecido a este: http://t.co/5lTGNzba'
-        entities = {
-            u'user_mentions': [
-                {u'id': 60840400,
-                 u'indices': [0, 6],
-                 u'id_str': u'60840400',
-                 u'screen_name': u'aaloy',
-                 u'name': u'Antoni Aloy'},
-                {u'id': 552951614,
-                 u'indices': [11, 21],
-                 u'id_str': u'552951614',
-                 u'screen_name': u'Pybonacci',
-                 u'name': u'Pybonacci'},
-                {u'id': 87322884,
-                 u'indices': [60, 68],
-                 u'id_str': u'87322884',
-                 u'screen_name': u'dialelo',
-                 u'name': u'Alejandro G\xf3mez'}
-            ],
-            u'hashtags': [
-                {u'indices': [44, 51],
-                 u'text': u'Python'},
-                {u'indices': [52, 56],
-                 u'text': u'IDE'}
-            ],
-            u'urls': [
-                {u'url': u'http://t.co/5lTGNzba',
-                 u'indices': [99, 119],
-                 u'expanded_url': u'http://sontek.net/turning-vim-into-a-modern-python-ide',
-                 u'display_url': u'sontek.net/turning-vim-in\u2026'}
-            ]}
-        status = create_status(text=text,
-                               entities=entities)
-        expected_result = [('attag', u'@aaloy'), u'  QT ', ('attag', u'@Pybonacci'),
-                           u': \xa1Qu\xe9 pasada con Vim! ',
-                           ('hashtag', u'#Python'), u' ', ('hashtag', u'#IDE'),
-                           u' RT ', ('attag', u'@dialelo'),
-                           u' uso un setup parecido a este: ',
-                           ('url', u'sontek.net/turning-vim-in\u2026')]
-        result = status.map_attributes(hashtag='hashtag',
-                                       attag='attag',
-                                       url='url')
 
         self.assertEqual(result, expected_result)
 
@@ -354,11 +317,14 @@ class StatusTest(unittest.TestCase):
         self.assertEqual(expected, set(mentioned_hashtags))
 
 
-class TimelineTest(unittest.TestCase):
+class TimelineTest(ActiveListTest):
 
     def setUp(self):
         self.timeline = Timeline()
-        self.assertEqual(self.timeline.active_index, ActiveList.NULL_INDEX)
+        self.assert_null_index()
+
+    def active_index(self):
+        return self.timeline.active_index
 
     # unique elements
 
@@ -417,7 +383,7 @@ class TimelineTest(unittest.TestCase):
         new_status = create_status(id=2)
 
         self.timeline.add_statuses([old_status, new_status])
-        
+
         self.assertEqual(len(self.timeline), 2)
 
     # order
@@ -629,17 +595,20 @@ class TimelineTest(unittest.TestCase):
         mock.assert_called_once_with(*args, **kwargs)
 
 
-class TimelineListTest(unittest.TestCase):
-    
-    # - Helpers --------------------------------------------------------------- 
-    
+class TimelineListTest(ActiveListTest):
+
+    def active_index(self):
+        return self.timeline_list.active_index
+
+    # - Helpers ---------------------------------------------------------------
+
     def append_timeline(self):
         self.timeline_list.append_timeline(Timeline('Timeline'))
 
     def assert_visible(self, visible_list):
         self.assertEqual(self.timeline_list.visible, visible_list)
 
-    # - Tests ----------------------------------------------------------------- 
+    # - Tests -----------------------------------------------------------------
 
     def setUp(self):
         self.timeline_list = TimelineList()
@@ -652,7 +621,7 @@ class TimelineListTest(unittest.TestCase):
         self.failUnless(self.timeline_list.has_timelines())
 
     def test_null_index_with_no_timelines(self):
-        self.assertEqual(self.timeline_list.active_index, ActiveList.NULL_INDEX)
+        self.assert_null_index()
 
     def test_active_index_0_when_appending_first_timeline(self):
         self.append_timeline()
@@ -661,7 +630,7 @@ class TimelineListTest(unittest.TestCase):
     def test_activate_previous(self):
         # null index when there are no timelines
         self.timeline_list.activate_previous()
-        self.assertEqual(self.timeline_list.active_index, ActiveList.NULL_INDEX)
+        self.assert_null_index()
         # does not change if its the first
         self.append_timeline()
         self.assertEqual(self.timeline_list.active_index, 0)
@@ -671,7 +640,7 @@ class TimelineListTest(unittest.TestCase):
     def test_activate_next(self):
         # null index when there are no timelines
         self.timeline_list.activate_next()
-        self.assertEqual(self.timeline_list.active_index, ActiveList.NULL_INDEX)
+        self.assert_null_index()
         # does not change if its the last
         self.append_timeline()
         self.assertEqual(self.timeline_list.active_index, 0)
@@ -715,7 +684,7 @@ class TimelineListTest(unittest.TestCase):
     def test_activate_first(self):
         # null index when there are no timelines
         self.timeline_list.activate_first()
-        self.assertEqual(self.timeline_list.active_index, ActiveList.NULL_INDEX)
+        self.assert_null_index()
         # does not change if its the first
         self.append_timeline()
         self.assertEqual(self.timeline_list.active_index, 0)
@@ -732,7 +701,7 @@ class TimelineListTest(unittest.TestCase):
     def test_activate_last(self):
         # null index when there are no timelines
         self.timeline_list.activate_last()
-        self.assertEqual(self.timeline_list.active_index, ActiveList.NULL_INDEX)
+        self.assert_null_index()
         # does not change if its the last
         self.append_timeline()
         self.assertEqual(self.timeline_list.active_index, 0)
@@ -747,7 +716,7 @@ class TimelineListTest(unittest.TestCase):
     def test_shift_active_previous(self):
         # null index when there are no timelines
         self.timeline_list.shift_active_previous()
-        self.assertEqual(self.timeline_list.active_index, ActiveList.NULL_INDEX)
+        self.assert_null_index()
         # does not change if its the first
         self.append_timeline()
         self.timeline_list.shift_active_previous()
@@ -756,7 +725,7 @@ class TimelineListTest(unittest.TestCase):
     def test_shift_active_next(self):
         # null index when there are no timelines
         self.timeline_list.shift_active_next()
-        self.assertEqual(self.timeline_list.active_index, ActiveList.NULL_INDEX)
+        self.assert_null_index()
         # does not change if its the last
         self.append_timeline()
         self.timeline_list.shift_active_next()
@@ -771,13 +740,7 @@ class TimelineListTest(unittest.TestCase):
         self.timeline_list.shift_active_next()
         self.assertEqual(self.timeline_list.active_index, 2)
 
-
-class TimelineListTest(TimelineListTest):
-    def setUp(self):
-        self.timeline_list = TimelineList()
-
-    def assert_visible(self, visible_list):
-        self.assertEqual(self.timeline_list.visible, visible_list)
+    # visibility
 
     def test_no_visible_when_newly_created(self):
         self.assert_visible([])

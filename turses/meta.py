@@ -11,7 +11,9 @@ from abc import ABCMeta, abstractmethod, abstractproperty
 from functools import wraps
 from threading import Thread
 
+
 # - Decorators ----------------------------------------------------------------
+
 
 def wrap_exceptions(func):
     """
@@ -48,6 +50,22 @@ def async(func):
     def wrapper(*args, **kwargs):
         return Thread(target=func, args=args, kwargs=kwargs).start()
     return wrapper
+
+
+def filter_result(func, filter_func=None):
+    """
+    Decorator for filtering the output of `func` with `filter_func`.
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        result = func(*args, **kwargs)
+
+        if isinstance(result, list):
+            return [filter_func(elem) for elem in result]
+        else:
+            return filter_func(result)
+    return wrapper
+
 
 # - Abstract classes ----------------------------------------------------------
 
@@ -165,7 +183,7 @@ class Updatable:
     @wrap_exceptions
     def update(self, **extra_kwargs):
         """
-        Update the object, after receiving the result it is passed to the 
+        Update the object, after receiving the result it is passed to the
         `update_callback` function.
         """
         if not self.update_function:
@@ -182,5 +200,3 @@ class Updatable:
     @abstractmethod
     def update_callback(self, result):
         pass
-
-

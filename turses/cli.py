@@ -62,42 +62,41 @@ def parse_arguments():
     parser = ArgumentParser(parser_title)
 
     # load account
-    parser.add_argument("-a", 
+    parser.add_argument("-a",
                         "--account",
                         help=_("Use account with the specified username."))
 
     # load non-default configuration
-    parser.add_argument("-c", 
+    parser.add_argument("-c",
                         "--config",
                         help=_("Use the specified configuration file."))
 
     # generate configuration
     generate_config_help = _("Generate a default configuration file is "
                              "the specified path.")
-    parser.add_argument("-g", 
+    parser.add_argument("-g",
                         "--generate-config",
                         help=generate_config_help)
 
     # version
     version = "turses %s" % turses_version
-    parser.add_argument("-v", 
-                        "--version", 
-                        action="version", 
+    parser.add_argument("-v",
+                        "--version",
+                        action="version",
                         version=version,
                         help=_("Show the current version of turses"))
 
     # debug mode
-    parser.add_argument("-d", 
+    parser.add_argument("-d",
                         "--debug",
                         action="store_true",
                         help=_("Start turses in debug mode."))
 
     # offline debug mode
-    parser.add_argument("-o", 
+    parser.add_argument("-o",
                         "--offline",
                         action="store_true",
                         help=_("Start turses in offline debug mode."))
-
 
     args = parser.parse_args()
     return args
@@ -112,7 +111,7 @@ def main():
     # stdout
     if any([args.debug,
             args.offline,
-            getattr(args, 'help', False),    
+            getattr(args, 'help', False),
             getattr(args, 'version', False)]):
         # we are going to print information to stdout
         save_and_restore_stdout = False

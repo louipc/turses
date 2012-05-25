@@ -13,6 +13,7 @@ from functools import wraps, partial
 from tweepy import API as BaseTweepyApi
 from tweepy import OAuthHandler as TweepyOAuthHandler
 
+from turses.meta import filter_result
 from turses.models import User, Status, DirectMessage
 from turses.api.base import ApiAdapter
 
@@ -29,97 +30,73 @@ def include_entities(func):
 
 # Decorators for converting data to `turses.models`
 
-def filter_result(func, filter_func=None):
-    """
-    Decorator for filtering the output of `func` with `filter_func`.
-    """
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        result = func(*args, **kwargs)
 
-        if isinstance(result, list):
-            return [filter_func(elem) for elem in result]
-        else:
-            return filter_func(result)
-    return wrapper
-
-
-def _to_status(status, **extra_kwargs):
+def _to_status(status, **kwargs):
     """
     Convert a `tweepy.Status` to a `turses.models.Status`.
     """
-    text = status.text
-
-    is_reply = False
-    in_reply_to_user = ''
-    is_retweet = False
-    retweet_count = 0
-    retweeted_status = None
-    is_favorite = False
-    author = ''
+    defaults = {
+        'id': status.id,
+        'created_at': status.created_at,
+        'user': None,
+        'text': status.text,
+        'is_reply': False,
+        'is_retweet': False,
+        'is_favorite': False,
+        'in_reply_to_user': '',
+        'retweeted_status': None,
+        'retweet_count': 0,
+        'author': '',
+        'entities': None
+    }
 
     # When fetching an individual user her last status is included and
     # does not include a `user` attribute
     if getattr(status, 'user', None):
-        user = status.user.screen_name
-    else:
-        user = None
+        defaults['user'] = status.user.screen_name
 
     if hasattr(status, 'retweeted_status'):
-        is_retweet = True
-        retweeted_status = _to_status(status.retweeted_status)
-        retweet_count = status.retweet_count
+        defaults['is_retweet'] = True
+        defaults['retweeted_status'] = _to_status(status.retweeted_status)
+        defaults['retweet_count'] = status.retweet_count
 
         # the `retweeted_status` could not have a `user` attribute
         # (e.g. when fetching a user and her last status is a retweet)
         if hasattr(status.retweeted_status, 'user'):
-            author = status.retweeted_status.user.screen_name
+            defaults['author'] = status.retweeted_status.user.screen_name
 
     if hasattr(status, 'in_reply_to_screen_name'):
-        is_reply = True
-        in_reply_to_user = status.in_reply_to_screen_name
+        defaults['is_reply'] = True
+        defaults['in_reply_to_user'] = status.in_reply_to_screen_name
 
     if hasattr(status, 'favorited'):
-        is_favorite = status.favorited
+        defaults['is_favorite'] = status.favorited
 
-    kwargs = {
-        'id': status.id,
-        'created_at': status.created_at,
-        'user': user,
-        'text': text,
-        'is_retweet': is_retweet,
-        'is_reply': is_reply,
-        'is_favorite': is_favorite,
-        'in_reply_to_user': in_reply_to_user,
-        'retweet_count': retweet_count,
-        'retweeted_status': retweeted_status,
-        'author': author,
-        'entities': getattr(status, 'entities', None),
-    }
-    kwargs.update(**extra_kwargs)
-
-    return Status(**kwargs)
+    defaults.update(**kwargs)
+    return Status(**defaults)
 
 
-def _to_status_from_search_result(status):
+def _to_status_from_search(status, **kwargs):
     """
     Convert a `tweepy.SearchResult` to a `turses.models.Status`.
     """
-    kwargs = {
+    defaults = {
         'id': status.id,
         'created_at': status.created_at,
         'user': status.from_user,
         'text': status.text,
         'entities': getattr(status, 'entities', None),
     }
-    return Status(**kwargs)
+
+    defaults.update(**kwargs)
+    return Status(**defaults)
 
 
-def _to_direct_message(dm):
+def _to_direct_message(dm, **kwargs):
     """
     Convert a `tweepy.DirectMessage` to a `turses.models.DirectMessage`.
     """
-    kwargs = {
+    defaults = {
         'id': dm.id,
         'created_at': dm.created_at,
         'sender_screen_name': dm.sender_screen_name,
@@ -127,14 +104,16 @@ def _to_direct_message(dm):
         'text': dm.text,
         'entities': getattr(dm, 'entities', None),
     }
-    return DirectMessage(**kwargs)
+
+    defaults.update(**kwargs)
+    return DirectMessage(**defaults)
 
 
-def _to_user(user):
+def _to_user(user, **kwargs):
     """
     Convert a `tweepy.User` to a `turses.models.User`.
     """
-    kwargs = {
+    defaults = {
         'id': user.id,
         'name': user.name,
         'screen_name': user.screen_name,
@@ -146,12 +125,14 @@ def _to_user(user):
         'favorites_count': user.favourites_count,
         'status': _to_status(user.status, user=user.screen_name),
     }
-    return User(**kwargs)
+
+    defaults.update(**kwargs)
+    return User(**defaults)
 
 to_status = partial(filter_result,
                     filter_func=_to_status)
-to_status_from_search_result = partial(filter_result,
-                                       filter_func=_to_status_from_search_result)
+to_status_from_search = partial(filter_result,
+                                filter_func=_to_status_from_search)
 to_direct_message = partial(filter_result,
                             filter_func=_to_direct_message)
 to_user = partial(filter_result,
@@ -257,7 +238,7 @@ class TweepyApi(BaseTweepyApi, ApiAdapter):
 
         return filter(belongs_to_conversation, tweets)
 
-    @to_status_from_search_result
+    @to_status_from_search
     @include_entities
     def search(self, text, **kwargs):
         return self._api.search(text, **kwargs)

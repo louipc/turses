@@ -6,7 +6,7 @@ turses.api.debug
 
 Contains `MockApi`, a fake `turses.api.ApiAdapter` implementation for debugging
 purposes.
-""" 
+"""
 
 import random
 from time import sleep
