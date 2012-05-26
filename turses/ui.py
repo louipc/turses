@@ -300,8 +300,9 @@ class BaseEditor(WidgetWrap):
         When pressing 'esc' the `cancel` method is called, which by default
         calls `emit_done_signal` with no arguments.
 
-        The subclasses must call the WidgetWrap constructor to create the
-        actual widget.
+        The subclasses must call the `_wrap` method with the editor widgets 
+        and `BaseEditor` will wrap it in a `urwid.Colums` widget, calling to
+        `urwid.WidgetWrap.__init__` with the wrapped widget.
         """
         caption = _(u'%s (twice enter key to validate or esc) \n>> ') % prompt
         if content:
@@ -699,13 +700,22 @@ class TimelinesBuffer(WidgetWrap):
         # This is an ugly hack for being able to show a widget on top when
         # needed. I create the Overlay with a dummy_widget on the bottom that
         # will never be visible (making the top widget big enough).
+
+        # TODO: move this to a `urwid.Overlay` subclass with a simple API
+        COVER_ALL_SCREEN = 999
+
+        width = COVER_ALL_SCREEN
+        height = COVER_ALL_SCREEN
         dummy_widget = ListBox(SimpleListWalker([]))
+
         return Overlay(top_w=top_w,
                        bottom_w=dummy_widget,
                        align='center',
-                       width=200,
+                       width=width,
                        valign='middle',
-                       height=200)
+                       height=height,
+                       min_width=width,
+                       min_height=height)
 
     def render_timelines(self, timelines, **kwargs):
         """Render the given statuses."""
