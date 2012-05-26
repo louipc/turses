@@ -214,6 +214,30 @@ class StatusTest(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
+    def test_map_attributes_mention(self):
+        text = '@pypi is down!'
+
+        entities = {
+            u'user_mentions': [
+                {u'id': 60840400,
+                 u'indices': [0, 5],
+                 u'id_str': u'60840400',
+                 u'screen_name': u'pypi',
+                 u'name': u'PYthon Package Index'},
+            ],
+            u'hashtags': [],
+            u'urls': [],
+            }
+        tweet = create_status(text=text,
+                              entities=entities,)
+
+        expected_result = [('attag', u'@pypi'), u' is down!']
+        result = tweet.map_attributes(hashtag='hashtag',
+                                      attag='attag',
+                                      url='url')
+
+        self.assertEqual(result, expected_result)
+
     # properties
 
     def test_mentioned_usernames(self):

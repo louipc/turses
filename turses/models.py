@@ -4,8 +4,8 @@
 turses.models
 ~~~~~~~~~~~~~
 
-This module contains the data structures that powers `turses` and
-the Twitter entities.
+This module contains the data structures that power ``turses`` and
+the Twitter entities represented into it.
 """
 
 import time
@@ -111,14 +111,12 @@ def parse_attributes(text,
     tweet = [add_withespace(parsed_word) for parsed_word
                                          in parsed_text]
 
-    # insert spaces between attributes
+    # insert spaces after an attribute
     indices = []
     for i, word in enumerate(tweet[:-1]):
-        next_word = tweet[i + 1]
-        if (isinstance(word, tuple) and
-            isinstance(next_word, tuple)):
-            # two consecutive attributes, we save the index in which
-            # a u' ' will be inserted
+        word_is_attribute = isinstance(word, tuple)
+
+        if word_is_attribute:
             indices.append(i + 1 + len(indices))
 
     for index in indices:
@@ -418,19 +416,67 @@ class Status(object):
         """
         # Favorites don't include any entities so we parse the status
         # text manually.
-        if not getattr(self, 'entities', False):
+        if not self.entities:
             text = self.retweeted_status.text if self.is_retweet else self.text
             return parse_attributes(text, hashtag, attag, url)
-
-        elif getattr(self, 'is_retweet', False):
+        elif self.is_retweet:
             return self.retweeted_status.map_attributes(hashtag, attag, url)
+
+        # we have entities, extract the (attr, string[, replacement]) tuples
+        attribute_mappings = self._extract_attributes(hashtag=hashtag,
+                                                      attag=attag,
+                                                      url=url)
+
+        text = []
+        status_text = unicode(self.text)
+        # start from the beggining
+        index = 0
+        for mapping in attribute_mappings:
+            attribute = mapping[0]
+            starts, ends = mapping[1]
+
+            # this text has an attribute associated
+            entity_text = status_text[starts:ends]
+
+            if attribute == url and len(mapping) == 3:
+                ## if the text is a url and a third element is included in the
+                ## tuple; the third element is the original URL
+                entity_text = mapping[2]
+
+            # append normal text before the text with an attribute
+            normal_text = status_text[index:starts]
+            if normal_text:
+                text.append(normal_text)
+
+            # append text with attribute
+            text_with_attribute = (attribute, entity_text)
+            text.append(text_with_attribute)
+
+            # update index, continue from where the attribute text ends
+            index = ends
+
+        # after parsing all attributes we can have some text left
+        normal_text = status_text[index:]
+        if normal_text:
+            text.append(normal_text)
+
+        return text
+
+    def _extract_attributes(self, hashtag, attag, url):
+        """
+        Extract attributes from entities.
+        
+        Return a list with (`attr`, string[, replacement]) tuples for each 
+        entity in the status.
+        """
+        assert self.entities
 
         def map_attr(attr, entity_list):
             """
             Return a list with (`attr`, string) tuples for each string in
             `entity_list`.
             """
-            attr_mappings = []
+            attributes = []
             for entity in entity_list:
                 # urls are a special case, we change the URL shortened by
                 # Twitter (`http://t.co/*`) by the URL returned in
@@ -442,59 +488,25 @@ class Status(object):
                     mapping = (attr, indices, url)
                 else:
                     mapping = (attr, indices)
-                attr_mappings.append(mapping)
-            return attr_mappings
+                attributes.append(mapping)
+            return attributes
 
-        attr_mappings = []
+        entity_names_and_attributes = [
+            ('user_mentions', attag),
+            ('hashtags', hashtag),
+            ('urls', url),
+            ('media', url),
+        ]
 
-        usernames = self.entities.get('user_mentions', [])
-        usernames_attrs = map_attr(attag, usernames)
-        attr_mappings.extend(usernames_attrs)
-
-        hashtags = self.entities.get('hashtags', [])
-        hashtags_attrs = map_attr(hashtag, hashtags)
-        attr_mappings.extend(hashtags_attrs)
-
-        urls = self.entities.get('urls', [])
-        urls_attrs = map_attr(url, urls)
-        attr_mappings.extend(urls_attrs)
-
-        media = self.entities.get('media', [])
-        media_attrs = map_attr(url, media)
-        attr_mappings.extend(media_attrs)
+        attributes = []
+        for entity_name, entity_attribute in entity_names_and_attributes:
+            entity_list = self.entities.get(entity_name, [])
+            attributes.extend(map_attr(entity_attribute, entity_list))
 
         # sort mappings to split the text in order
-        attr_mappings.sort(key=lambda mapping: mapping[1][0])
+        attributes.sort(key=lambda mapping: mapping[1][0])
 
-        text = []
-        status_text = unicode(self.text)
-        index = 0
-        for mapping in attr_mappings:
-            attr = mapping[0]
-            starts, ends = mapping[1]
-            if attr == url and len(mapping) == 3:
-                ## if the text is a url and a third element is included in the
-                ## tuple; the third element is the original URL
-                entity_text = mapping[2]
-            else:
-                entity_text = status_text[starts:ends]
-
-            # append normal text before special entity
-            normal_text = status_text[index:starts]
-            if normal_text:
-                text.append(normal_text)
-
-            # append text with attr
-            text_with_attr = (attr, entity_text)
-            text.append(text_with_attr)
-
-            # update index
-            index = ends
-        normal_text = status_text[index:]
-        if normal_text:
-            text.append(normal_text)
-
-        return text
+        return attributes
 
     @property
     def relative_created_at(self):
