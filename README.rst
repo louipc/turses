@@ -4,12 +4,6 @@ turses
 A Twitter client for the console
 --------------------------------
 
-``turses`` is a Twitter client with a sexy curses interface written in Python. It's 
-based on `Tyrs`_ by `Nicolas Paris`_.
-
-.. _`Tyrs`: http://tyrs.nicosphere.net
-.. _`Nicolas Paris`: http://github.com/Nic0
-
 A ``turses`` session with multiple columns running on ``urxvt``:
 
 .. image:: http://dialelo.com/img/turses_screenshot.png
@@ -67,10 +61,10 @@ If you feel hackish, reading the `dev docs
 
 To contribute code:
  1. Create a branch from ``develop``
- 2. Code following `pep8 rules<http://www.python.org/dev/peps/pep-0008/>`_.
+ 2. Code following `pep8 rules <http://www.python.org/dev/peps/pep-0008/>`_.
  3. Commit your changes
  4. Add yourself to ``AUTHORS``
- 5. Send a pull request to ``develop``
+ 5. Send a pull request to the ``develop`` branch
 
 Any feedback is very much appreciated.
 
@@ -89,5 +83,10 @@ License
 
 Authors
 -------
+
+``turses`` is based on `Tyrs`_ by `Nicolas Paris`_.
+
+.. _`Tyrs`: http://tyrs.nicosphere.net
+.. _`Nicolas Paris`: http://github.com/Nic0
 
 See ``AUTHORS`` for a full list of contributors.
