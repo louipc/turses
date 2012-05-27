@@ -1,3 +1,13 @@
+0.1.17
+------
+- `developer docs`_
+- border around editor
+- bugfix: help and version were removed by stdout replacement
+- debug mode
+- offline debugging
+
+.. _`developer docs`: http://turses.readthedocs.org/en/latest/dev/internals.html
+
 0.1.16
 ------
 - show a popup with user info when pressing `i`
