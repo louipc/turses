@@ -1,5 +1,6 @@
 turses
 ======
+
 A Twitter client for the console
 --------------------------------
 
@@ -61,26 +62,32 @@ requests or participate in ongoing discussions.
 
 .. _`issue tracker`: http://github.com/alejandrogomez/turses/issues
 
+If you feel hackish, reading the `dev docs
+<http://turses.readthedocs.org/en/latest/dev/internals.html>`_ is recommended.
+
 To contribute code:
  1. Create a branch from ``develop``
- 2. Commit your changes
- 3. Add yourself to ``AUTHORS``
- 4. Send a pull request to ``develop``
+ 2. Code following `pep8 rules<http://www.python.org/dev/peps/pep-0008/>`_.
+ 3. Commit your changes
+ 4. Add yourself to ``AUTHORS``
+ 5. Send a pull request to ``develop``
 
 Any feedback is very much appreciated.
 
 Roadmap
 -------
 
-- Documentation
 - Lists
 - Streaming
 - Notifications
-- Multiple sessions
-- Geo
-- Blocking
+- Sessions
 
 License
 -------
 
-``turses`` is licensed under a GPLv3 license, see LICENSE for details.
+``turses`` is licensed under a GPLv3 license, see ``LICENSE`` for details.
+
+Authors
+-------
+
+See ``AUTHORS`` for a full list of contributors.
