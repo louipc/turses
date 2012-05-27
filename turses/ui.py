@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-turses.ui
-~~~~~~~~~
-
-This module contains the UI widgets.
+This module contains the curses UI widgets.
 """
 
 from gettext import gettext as _
@@ -300,7 +297,7 @@ class BaseEditor(WidgetWrap):
         When pressing 'esc' the `cancel` method is called, which by default
         calls `emit_done_signal` with no arguments.
 
-        The subclasses must call the `_wrap` method with the editor widgets 
+        The subclasses must call the `_wrap` method with the editor widgets
         and `BaseEditor` will wrap it in a `urwid.Colums` widget, calling to
         `urwid.WidgetWrap.__init__` with the wrapped widget.
         """
@@ -517,10 +514,25 @@ class StatusBar(WidgetWrap):
 # - Base list widgets ---------------------------------------------------------
 
 
-class ScrollableListBox(ListBox):
+class Scrollable:
+    """A interface that makes widgets *scrollable*."""
+    def scroll_up(self):
+        raise NotImplementedError
+
+    def scroll_down(self):
+        raise NotImplementedError
+
+    def scroll_top(self):
+        raise NotImplementedError
+
+    def scroll_bottom(self):
+        raise NotImplementedError
+
+
+class ScrollableListBox(ListBox, Scrollable):
     """
-    A `ListBox` subclass with additional methods for scrolling the
-    focus up and down, to the bottom and to the top.
+    A ``urwid.ListBox`` subclass that implements the
+    :attr:`~turses.ui.Scrollable` interface.
     """
     def __init__(self,
                  contents,
@@ -539,8 +551,7 @@ class ScrollableListBox(ListBox):
         ListBox.__init__(self,
                          SimpleListWalker(contents))
 
-    def focus_previous(self):
-        """Sets the focus in the previous element (if any) of the listbox."""
+    def scroll_up(self):
         focus_status, pos = self.get_focus()
         if pos is None:
             return
@@ -550,8 +561,7 @@ class ScrollableListBox(ListBox):
             new_pos = 0
         self.set_focus(new_pos)
 
-    def focus_next(self):
-        """Sets the focus in the next element (if any) of the listbox."""
+    def scroll_down(self):
         focus_status, pos = self.get_focus()
         if pos is None:
             return
@@ -561,42 +571,42 @@ class ScrollableListBox(ListBox):
             new_pos = len(self.body) - 1
         self.set_focus(new_pos)
 
-    def focus_first(self):
-        """Sets the focus in the first element (if any) of the listbox."""
+    def scroll_top(self):
         if len(self.body):
             self.set_focus(0)
 
-    def focus_last(self):
-        """Sets the focus in the last element (if any) of the listbox."""
+    def scroll_bottom(self):
         last = len(self.body) - 1
         if last:
             self.set_focus(last)
 
 
-class ScrollableListBoxWrapper(WidgetWrap):
+class ScrollableWidgetWrap(WidgetWrap, Scrollable):
     """
+    A ``urwid.WidgetWrap`` for :attr:`~turses.ui.Scrollable`, list-like
+    widgets.
     """
     def __init__(self, contents=None):
         columns = [] if contents is None else contents
         WidgetWrap.__init__(self, columns)
 
     def scroll_up(self):
-        self._w.focus_previous()
+        self._w.scroll_up()
 
     def scroll_down(self):
-        self._w.focus_next()
+        self._w.scroll_down()
 
     def scroll_top(self):
-        self._w.focus_first()
+        self._w.scroll_top()
 
     def scroll_bottom(self):
-        self._w.focus_last()
+        self._w.scroll_bottom()
 
 
 # - Help ----------------------------------------------------------------------
 
 
-class HelpBuffer(ScrollableListBoxWrapper):
+class HelpBuffer(ScrollableWidgetWrap):
     """
     A widget that displays all the keybindings of the given configuration.
     """
@@ -610,9 +620,9 @@ class HelpBuffer(ScrollableListBoxWrapper):
         self.create_help_buffer()
 
         offset = int(len(self.items) / 5)
-        ScrollableListBoxWrapper.__init__(self,
-                                          ScrollableListBox(self.items,
-                                                            offset=offset,))
+        ScrollableWidgetWrap.__init__(self,
+                                      ScrollableListBox(self.items,
+                                                        offset=offset,))
 
     def _insert_bindings(self, bindings):
         for label in bindings:
@@ -659,22 +669,11 @@ class HelpBuffer(ScrollableListBoxWrapper):
         self.items.append(Divider(' '))
         self.items.append(Padding(AttrMap(Text(title), 'focus'), left=4))
 
-    # from `ScrollableListBoxWrapper`
-
-    def scroll_up(self):
-        self._w.focus_previous()
-
-    def scroll_down(self):
-        self._w.focus_next()
-
-    def scroll_top(self):
-        self._w.focus_first()
-
 
 # - Timelines -----------------------------------------------------------------
 
 
-class TimelinesBuffer(WidgetWrap):
+class TimelinesBuffer(ScrollableWidgetWrap):
     """
     A widget that displays one or more `Timeline` objects.
 
@@ -686,7 +685,7 @@ class TimelinesBuffer(WidgetWrap):
 
         widget = self._create_widget(timelines, **kwargs)
 
-        WidgetWrap.__init__(self, widget)
+        ScrollableWidgetWrap.__init__(self, widget)
 
     def _create_widget(self, timelines, **kwargs):
         timeline_widgets = [TimelineWidget(timeline, **kwargs) for timeline
@@ -758,16 +757,16 @@ class TimelinesBuffer(WidgetWrap):
         self._w = self._create_overlay(self.columns)
 
     def scroll_up(self):
-        self.active_widget.focus_previous()
+        self.active_widget.scroll_up()
 
     def scroll_down(self):
-        self.active_widget.focus_next()
+        self.active_widget.scroll_down()
 
     def scroll_top(self):
-        self.active_widget.focus_first()
+        self.active_widget.scroll_top()
 
     def scroll_bottom(self):
-        self.active_widget.focus_last()
+        self.active_widget.scroll_bottom()
 
     def clear(self):
         """Clears the buffer."""

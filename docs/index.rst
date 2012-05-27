@@ -3,16 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-turses: a Twitter client with a sexy curses interface
-=====================================================
+.. automodule:: turses
 
-``turses`` is a Twitter client for the console.
-
-.. image:: ./images/turses_urxvt.png
-    :width: 900px
-    :height: 600px
-    :align: center
-    :alt: turses running on urxvt terminal emulator
 
 Features
 --------
@@ -27,9 +19,10 @@ Features
 - Thread view
 - Unread count
 - Search
-- View any user's tweets
+- View user's tweets
 - Fully customizable
 - Multiple accounts
+- View user profile
 
 User Guide
 ----------
@@ -40,7 +33,6 @@ This part of the documentation will help you using ``turses``.
    :maxdepth: 2
 
    user/install
-   user/usage
    user/configuration
 
 Dev Guide
@@ -53,6 +45,15 @@ you.
    :maxdepth: 1
 
    dev/internals
-   dev/todo
    dev/authors
    dev/changelog
+
+Screenshots
+-----------
+
+.. image:: ./images/turses_urxvt.png
+    :width: 900px
+    :height: 600px
+    :align: center
+    :alt: turses running on urxvt terminal emulator
+

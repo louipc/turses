@@ -4,8 +4,10 @@
 turses
 ~~~~~~
 
-:copyright: (c) 2012 turses contributors. See AUTHORS.
-:license: GPL3, see LICENSE for more details.
+A Twitter client with a sexy curses interface.
+
+:copyright: © 2012 turses contributors. See ``AUTHORS``.
+:license: GPL3
 
 """
 

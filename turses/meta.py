@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 
 """
-turses.meta
-~~~~~~~~~~~
-
 This module contains abstract classes and decorators.
 """
 
@@ -44,7 +41,7 @@ def wrap_exceptions(func):
 
 def async(func):
     """
-    Decorator for executing a function asynchronously.
+    Decorator for executing a function in a separate :attr:`~threading.Thread`.
     """
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -54,7 +51,7 @@ def async(func):
 
 def filter_result(func, filter_func=None):
     """
-    Decorator for filtering the output of `func` with `filter_func`.
+    Decorator for filtering the output of ``func`` with ``filter_func``.
     """
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -71,10 +68,12 @@ def filter_result(func, filter_func=None):
 
 class ActiveList(object):
     """
-    A list that contains an 'active' element.
+    A list that contains an *active* element.
 
     This abstract class implements some functions but the subclasses must
-    define `active` property, as well as `is_valid_index` and `activate_last`
+    define the :attr:`~turses.meta.ActiveList.active` property, as well as 
+    :attr:`~turses.meta.ActiveList.is_valid_index` and
+    :attr:`~turses.meta.ActiveList.activate_last`.
     methods.
     """
     __metaclass__ = ABCMeta
@@ -119,7 +118,7 @@ class ActiveList(object):
 
 class UnsortedActiveList(ActiveList):
     """
-    An `ActiveList` in which the 'active' element can be shifted position by
+    A :attr:`~turses.meta.ActiveList` in which the *active* element can be shifted position by
     position, to the begging and to the end.
 
     All the methods that this class contains are abstract.
@@ -152,7 +151,14 @@ class UnsortedActiveList(ActiveList):
 
 class Updatable:
     """
-    An abstract class that for making a class 'updatable'.
+    An abstract class that for making a class *updatable*.
+
+    The constructor takes update function and arguments used to update the
+    subclasses of :attr:`~turses.meta.Updatable`.
+
+    When :attr:`~turses.meta.Updatable.update` is executed,
+    :attr:`~turses.meta.Updatable.update_callback` is called passing it the
+    result.
     """
 
     __metaclass__ = ABCMeta

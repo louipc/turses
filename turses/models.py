@@ -1,21 +1,20 @@
 # -*- coding: utf-8 -*-
 
 """
-turses.models
-~~~~~~~~~~~~~
-
 This module contains the data structures that power ``turses`` and
 the Twitter entities represented into it.
 """
 
 import time
-import re
-from functools import partial, total_ordering
+from re import sub
+from re import compile as compile_regex
 from bisect import insort
+from calendar import timegm
+from functools import partial, total_ordering
+from htmlentitydefs import entitydefs
 
 from turses.meta import ActiveList, UnsortedActiveList, Updatable
-from turses.utils import (html_unescape, timestamp_from_datetime,
-                          is_url, matches_word)
+from turses.utils import is_url, matches_word
 
 
 TWEET_MAXIMUM_CHARACTERS = 140
@@ -24,13 +23,13 @@ STATUS_URL_TEMPLATE = 'https://twitter.com/#!/{user}/status/{id}'
 # -- Helpers ------------------------------------------------------------------
 
 # username
-username_regex = re.compile(r'[A-Za-z0-9_]+')
+username_regex = compile_regex(r'[A-Za-z0-9_]+')
 is_username = partial(matches_word, username_regex)
 sanitize_username = partial(filter, is_username)
 prepend_at = lambda username: '@%s' % username
 
 # hashtag
-hashtag_regex = re.compile(r'#.+')
+hashtag_regex = compile_regex(r'#.+')
 is_hashtag = partial(matches_word, hashtag_regex)
 
 
@@ -46,6 +45,23 @@ def is_valid_status_text(text):
 def is_valid_search_text(text):
     """Checks the validity of a search text."""
     return bool(text)
+
+
+def timestamp_from_datetime(datetime):
+    return timegm(datetime.utctimetuple())
+
+
+def html_unescape(string):
+    """Unescape HTML entities from ``string``."""
+    def entity_replacer(m):
+        entity = m.group(1)
+        if entity in entitydefs:
+            return entitydefs[entity]
+        else:
+            return m.group(0)
+
+    return sub(r'&([^;]+);', entity_replacer, string)
+
 
 
 def apply_attribute(string,
@@ -134,9 +150,9 @@ def parse_attributes(text,
 
 class TimelineList(UnsortedActiveList):
     """
-    A list of `Timeline` objects in which only one is the 'active'
-    timeline. It tracks the indexes of `visible` timelines. The
-    'active' element is always within the 'active' timelines.
+    A list of :attr:`~turses.models.Timeline` instances that implements the
+    :attr:`~turses.meta.UnsortedActiveList` interface, thus having an *active*
+    element and a group of adjacent *visible* timelines.
     """
 
     def __init__(self):
@@ -336,6 +352,132 @@ class TimelineList(UnsortedActiveList):
 
 
 # -- Twitter entities ---------------------------------------------------------
+
+
+class Timeline(ActiveList, Updatable):
+    """
+    List of Twitter statuses ordered reversely by date, optionally with
+    a name and a function that updates the current timeline and its arguments.
+
+    Its :attr:`~turses.meta.Updatable` and implements the
+    :attr:`~turses.meta.ActiveList` interface.
+    """
+
+    def __init__(self,
+                 name='',
+                 statuses=None,
+                 **kwargs):
+        ActiveList.__init__(self)
+        Updatable.__init__(self, **kwargs)
+        self.name = name
+
+        self.statuses = []
+        if statuses:
+            self.add_statuses(statuses)
+            self.activate_first()
+            self.mark_active_as_read()
+
+    def add_status(self, new_status):
+        """
+        Adds the given status to the status list of the Timeline if it's
+        not already in it.
+        """
+        if new_status in self.statuses:
+            return
+
+        if self.active_index == self.NULL_INDEX:
+            self.active_index = 0
+
+        # keep the same tweet as the active when inserting statuses
+        active = self.active
+        is_more_recent_status = lambda a, b: a.created_at < b.created_at
+
+        if active and is_more_recent_status(active, new_status):
+            self.activate_next()
+
+        insort(self.statuses, new_status)
+
+    def add_statuses(self, new_statuses):
+        """
+        Adds the given new statuses to the status list of the Timeline
+        if they are not already in it.
+        """
+        if not new_statuses:
+            return
+
+        for status in new_statuses:
+            self.add_status(status)
+
+    def clear(self):
+        """Clears the Timeline."""
+        self.active_index = self.NULL_INDEX
+        self.statuses = []
+
+    @property
+    def unread_count(self):
+        def one_if_unread(tweet):
+            if hasattr(tweet, 'read') and tweet.read:
+                return 0
+            return 1
+
+        return sum([one_if_unread(tweet) for tweet in self.statuses])
+
+    def mark_active_as_read(self):
+        """Set active status' `read` attribute to `True`."""
+        if self.active:
+            self.active.read = True
+
+    def mark_all_as_read(self):
+        for status in self.statuses:
+            status.read = True
+    # magic
+
+    def __len__(self):
+        return len(self.statuses)
+
+    def __iter__(self):
+        return self.statuses.__iter__()
+
+    def __getitem__(self, i):
+        return self.statuses[i]
+
+    # from `ActiveList`
+
+    @property
+    def active(self):
+        if self.statuses and self.is_valid_index(self.active_index):
+            return self.statuses[self.active_index]
+
+    def is_valid_index(self, index):
+        if self.statuses:
+            return index >= 0 and index < len(self.statuses)
+        else:
+            self.active_index = self.NULL_INDEX
+        return False
+
+    def activate_previous(self):
+        ActiveList.activate_previous(self)
+        self.mark_active_as_read()
+
+    def activate_next(self):
+        ActiveList.activate_next(self)
+        self.mark_active_as_read()
+
+    def activate_first(self):
+        ActiveList.activate_first(self)
+        self.mark_active_as_read()
+
+    def activate_last(self):
+        if self.statuses:
+            self.active_index = len(self.statuses) - 1
+            self.mark_active_as_read()
+        else:
+            self.active_index = self.NULL_INDEX
+
+    # from `Updatable`
+
+    def update_callback(self, result):
+        self.add_statuses(result)
 
 
 class User(object):
@@ -659,129 +801,3 @@ class List(object):
         self.member_count = member_count
         self.subscriber_count = subscriber_count
         self.private = private
-
-
-class Timeline(ActiveList, Updatable):
-    """
-    List of Twitter statuses ordered reversely by date. Optionally with
-    a name, a function that updates the current timeline and its arguments.
-
-    One of the elements of the timeline is the 'active' since `Timeline`
-    extends `ActiveList`.
-    """
-
-    def __init__(self,
-                 name='',
-                 statuses=None,
-                 **kwargs):
-        ActiveList.__init__(self)
-        Updatable.__init__(self, **kwargs)
-        self.name = name
-
-        self.statuses = []
-        if statuses:
-            self.add_statuses(statuses)
-            self.activate_first()
-            self.mark_active_as_read()
-
-    def add_status(self, new_status):
-        """
-        Adds the given status to the status list of the Timeline if it's
-        not already in it.
-        """
-        if new_status in self.statuses:
-            return
-
-        if self.active_index == self.NULL_INDEX:
-            self.active_index = 0
-
-        # keep the same tweet as the active when inserting statuses
-        active = self.active
-        is_more_recent_status = lambda a, b: a.created_at < b.created_at
-
-        if active and is_more_recent_status(active, new_status):
-            self.activate_next()
-
-        insort(self.statuses, new_status)
-
-    def add_statuses(self, new_statuses):
-        """
-        Adds the given new statuses to the status list of the Timeline
-        if they are not already in it.
-        """
-        if not new_statuses:
-            return
-
-        for status in new_statuses:
-            self.add_status(status)
-
-    def clear(self):
-        """Clears the Timeline."""
-        self.active_index = self.NULL_INDEX
-        self.statuses = []
-
-    @property
-    def unread_count(self):
-        def one_if_unread(tweet):
-            if hasattr(tweet, 'read') and tweet.read:
-                return 0
-            return 1
-
-        return sum([one_if_unread(tweet) for tweet in self.statuses])
-
-    def mark_active_as_read(self):
-        """Set active status' `read` attribute to `True`."""
-        if self.active:
-            self.active.read = True
-
-    def mark_all_as_read(self):
-        for status in self.statuses:
-            status.read = True
-    # magic
-
-    def __len__(self):
-        return len(self.statuses)
-
-    def __iter__(self):
-        return self.statuses.__iter__()
-
-    def __getitem__(self, i):
-        return self.statuses[i]
-
-    # from `ActiveList`
-
-    @property
-    def active(self):
-        if self.statuses and self.is_valid_index(self.active_index):
-            return self.statuses[self.active_index]
-
-    def is_valid_index(self, index):
-        if self.statuses:
-            return index >= 0 and index < len(self.statuses)
-        else:
-            self.active_index = self.NULL_INDEX
-        return False
-
-    def activate_previous(self):
-        ActiveList.activate_previous(self)
-        self.mark_active_as_read()
-
-    def activate_next(self):
-        ActiveList.activate_next(self)
-        self.mark_active_as_read()
-
-    def activate_first(self):
-        ActiveList.activate_first(self)
-        self.mark_active_as_read()
-
-    def activate_last(self):
-        if self.statuses:
-            self.active_index = len(self.statuses) - 1
-            self.mark_active_as_read()
-        else:
-            self.active_index = self.NULL_INDEX
-
-    # from `Updatable`
-
-    def update_callback(self, result):
-        self.add_statuses(result)

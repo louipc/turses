@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 
 """
-turses.api.base
-~~~~~~~~~~~~~~~
-
 This module contains an `ApiAdapter` abstract class that acts as an adapter
 for different Twitter API implementations.
 

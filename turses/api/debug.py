@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 
 """
-turses.api.debug
-~~~~~~~~~~~~~~~~
-
 Contains `MockApi`, a fake `turses.api.ApiAdapter` implementation for debugging
 purposes.
 """

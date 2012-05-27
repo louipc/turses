@@ -1,9 +1,6 @@
 # -*- coding: utf-8 -*-
 
 """
-turses.api.backends
-~~~~~~~~~~~~~~~~~~~
-
 This module contains implementations of `turses.api.base.Api` using multiple
 API backends.
 """

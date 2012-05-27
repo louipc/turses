@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 
 """
-turses.core
-~~~~~~~~~~~
-
-This module contains the controller logic of turses.
+This module contains the controller and key handling logic of turses.
 """
 
 
 from gettext import gettext as _
 from functools import partial, wraps
+from abc import ABCMeta, abstractmethod
 
 import urwid
 from tweepy import TweepError
@@ -228,13 +226,21 @@ def text_from_editor(func):
 
 
 class Controller(object):
-    """Controller of the program."""
+    """
+    An abstract class that implements most of the controller logic of
+    ``turses``.
+
+    Subclasses must implement the methods decorated with
+    ``abc.abstractmethod``.
+    """
 
     INFO_MODE = 0
     TIMELINE_MODE = 1
     HELP_MODE = 2
     EDITOR_MODE = 3
     USER_INFO_MODE = 4
+
+    __metaclass__ = ABCMeta
 
     # -- Initialization -------------------------------------------------------
 
@@ -264,17 +270,6 @@ class Controller(object):
         self.api.init_api(on_error=self.api_init_error,
                           on_success=self.init_timelines,)
 
-    def main_loop(self):
-        """
-        Main loop of the program, `Controller` subclasses must override this
-        method.
-        """
-        raise NotImplementedError
-
-    def exit(self):
-        """Exit the program."""
-        raise NotImplementedError
-
     @async
     def init_timelines(self):
         # API has to be authenticated
@@ -287,10 +282,23 @@ class Controller(object):
         # The main loop must have started
         while (not hasattr(self, 'loop')):
             pass
+        # TODO: don't call `loop` explicitly or pull down to `CursesController`
         self.loop.set_alarm_in(seconds, self.update_alarm)
 
-    def reload_configuration(self):
-        raise NotImplementedError
+    # abstract methods
+
+    @abstractmethod
+    def main_loop(self):
+        """
+        Main loop of the program, `Controller` subclasses must override this
+        method.
+        """
+        pass
+
+    @abstractmethod
+    def exit(self):
+        """Exit the program."""
+        pass
 
     # -- Callbacks ------------------------------------------------------------
 
@@ -728,8 +736,9 @@ class Controller(object):
 
     # -- UI -------------------------------------------------------------------
 
+    @abstractmethod
     def redraw_screen(self):
-        raise NotImplementedError
+        pass
 
     # -- Editor ---------------------------------------------------------------
 
@@ -1165,6 +1174,13 @@ class Controller(object):
         self.ui.show_user_info(user)
         self.user_info_mode(user)
 
+    # - Configuration ---------------------------------------------------------
+
+    def reload_configuration(self):
+        self.configuration.reload()
+        self.redraw_screen()
+        self.info_message(_('Configuration reloaded'))
+
     # - Browser ---------------------------------------------------------------
 
     @has_active_status
@@ -1214,7 +1230,10 @@ class Controller(object):
 
 
 class Turses(Controller):
-    """Controller for the curses implementation."""
+    """
+    A :attr:`~turses.core.Controller` implementation for launching
+    ``turses`` in a console.
+    """
 
     def main_loop(self):
         if not hasattr(self, 'loop'):
@@ -1239,8 +1258,3 @@ class Turses(Controller):
                 self.loop.draw_screen()
             except AssertionError:
                 pass
-
-    def reload_configuration(self):
-        self.configuration.reload()
-        self.redraw_screen()
-        self.info_message(_('Configuration reloaded'))

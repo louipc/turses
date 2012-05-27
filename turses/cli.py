@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-turses.cli
-~~~~~~~~~~
-
-Handle the invocation of `turses` from the command line.
+Handle the invocation of ``turses`` from the command line.
 """
 
 from sys import stdout
@@ -103,6 +100,9 @@ def parse_arguments():
 
 
 def main():
+    """
+    Launch ``turses``.
+    """
     set_title(__name__)
     set_encoding('utf8')
 

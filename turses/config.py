@@ -1,31 +1,42 @@
 # -*- coding: utf-8 -*-
 
 """
-turses.config
-~~~~~~~~~~~~~
-
-This module contains the configuration logic.
-
+The configuration files are located on ``$HOME/.turses`` directory.
 
 There is one mayor configuration file in turses:
 
-    `config`
+    ``config``
         contains user preferences: colors, bindings, etc.
 
 An one default token file:
 
-    `token`
+    ``token``
         contains authentication token for the default user account
 
-Each user account (that is no the default one) has its .token file.
-Keep this secret.
+Each user account that is no the default one needs to be aliased and  has its 
+own token file ``alias.token``.
 
-    `<alias>.token`
-        contains the oauth tokens
+To create an aliased account:
 
-The standard location is under $HOME directory, in a folder called `.turses`.
+.. code-block:: sh
+
+    $ turses -a work
+
+And, after authorizing ``turses`` to use that account,  a token file named
+``work.token`` will be created.
+
+Now, when you execute again:
+
+.. code-block:: sh
+
+    $ turses -a work
+
+you will be logged in with the previously stored credentials.
+
 Here is an example with two accounts apart from the default one, aliased
-to `alice` and `bob`.
+to ``alice`` and ``bob``.
+
+.. code-block:: sh
 
     ~
     |+.turses/
@@ -36,6 +47,13 @@ to `alice` and `bob`.
     |+...
     |-...
     `
+
+
+If you want to generate a configuration file, you can do so with:
+
+.. code-block:: sh
+
+    $ turses -g /path/to/file
 """
 
 from sys import exit
@@ -380,9 +398,15 @@ def print_deprecation_notice():
 
 class Configuration(object):
     """
-    Generate and parse configuration files.
+    Generate and parse configuration files. When instantiated, it loads the
+    defaults.
 
-    Has backwards compatibility with the Tyrs legacy configuration.
+    Calling :attr:`~turses.config.Configuration.load` on this class' instances
+    reads the preferences from the user configuration files. If no
+    configuration or token files are found, this class will take care of
+    creating them.
+
+    Offers backwards compatibility with the Tyrs configuration.
     """
 
     def __init__(self, cli_args=None):
