@@ -156,7 +156,7 @@ class CursesInterface(Frame):
 
         self.body.show_widget_on_top(widget=self._editor,
                                      width=80,
-                                     height=10,
+                                     height=5,
                                      align=horizontal_align,
                                      valign=vertical_align,
                                      min_height=5,)
