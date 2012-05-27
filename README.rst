@@ -22,9 +22,11 @@ With ``pip`` ::
 
     $ pip install turses
 
-or (but `you should consider using pip <http://www.pip-installer.org/en/latest/other-tools.html#pip-compared-to-easy-install>`_):  ::
+or (but `consider using pip`_):  ::
 
     $ easy_install turses
+
+.. _`consider using pip`: http://www.pip-installer.org/en/latest/other-tools.html#pip-compared-to-easy-install
 
 Features
 --------
@@ -56,15 +58,18 @@ requests or participate in ongoing discussions.
 
 .. _`issue tracker`: http://github.com/alejandrogomez/turses/issues
 
-If you feel hackish, reading the `dev docs
-<http://turses.readthedocs.org/en/latest/dev/internals.html>`_ is recommended.
+If you feel hackish, reading the `dev docs`_ is recommended.
+
+.. _`dev docs`: http://turses.readthedocs.org/en/latest/dev/internals.html
 
 To contribute code:
  1. Create a branch from ``develop``
- 2. Code following `pep8 rules <http://www.python.org/dev/peps/pep-0008/>`_.
+ 2. Code following `pep8 rules`_.
  3. Commit your changes
  4. Add yourself to ``AUTHORS``
  5. Send a pull request to the ``develop`` branch
+
+.. _`pep8 rules`: http://www.python.org/dev/peps/pep-0008
 
 Any feedback is very much appreciated.
 
