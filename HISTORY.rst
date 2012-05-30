@@ -1,3 +1,7 @@
+0.1.18
+------
+- bugfix: crash when rendering direct messages
+
 0.1.17
 ------
 - `developer docs`_
