@@ -556,13 +556,17 @@ class Status(object):
         >>> s.map_attributes('hashtag', 'attag', 'url')
         ['I love ', ('hashtag', '#Python')]
         """
-        # Favorites don't include any entities so we parse the status
-        # text manually.
-        if not self.entities:
-            text = self.retweeted_status.text if self.is_retweet else self.text
-            return parse_attributes(text, hashtag, attag, url)
-        elif self.is_retweet:
+        is_retweet = getattr(self, 'is_retweet', False)
+
+        if is_retweet:
+            # call this method on the retweeted status
             return self.retweeted_status.map_attributes(hashtag, attag, url)
+
+        if not self.entities:
+            # no entities defined, parse text *manually*
+            #  - Favorites don't include any entities at the time of writing
+            text = self.retweeted_status.text if is_retweet else self.text
+            return parse_attributes(text, hashtag, attag, url)
 
         # we have entities, extract the (attr, string[, replacement]) tuples
         attribute_mappings = self._extract_attributes(hashtag=hashtag,
@@ -607,8 +611,8 @@ class Status(object):
     def _extract_attributes(self, hashtag, attag, url):
         """
         Extract attributes from entities.
-        
-        Return a list with (`attr`, string[, replacement]) tuples for each 
+
+        Return a list with (`attr`, string[, replacement]) tuples for each
         entity in the status.
         """
         assert self.entities

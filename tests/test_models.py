@@ -7,37 +7,12 @@ from datetime import datetime
 
 from mock import MagicMock
 
+from tests import create_status, create_direct_message
 from tests.test_meta import ActiveListTest
 from turses.models import (prepend_at, sanitize_username, parse_attributes,
                            is_DM, is_username, is_hashtag,
-                           Status, DirectMessage, Timeline, TimelineList)
 
-
-def create_status(**kwargs):
-    now = datetime.now()
-    defaults = {
-        'id': 1,
-        'created_at': now,
-        'user': 'testbot',
-        'text': 'Status created at %s' % now,
-    }
-    defaults.update(**kwargs)
-
-    return Status(**defaults)
-
-
-def create_direct_message(**kwargs):
-    now = datetime.now()
-    defaults = {
-        'id': 1,
-        'created_at': now,
-        'sender_screen_name': 'Alice',
-        'recipient_screen_name': 'Bob',
-        'text': 'Direct Message at %s' % now,
-    }
-    defaults.update(kwargs)
-
-    return DirectMessage(**defaults)
+                           Timeline, TimelineList)
 
 
 class HelperFunctionTest(unittest.TestCase):
