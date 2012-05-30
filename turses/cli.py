@@ -4,6 +4,7 @@
 Handle the invocation of ``turses`` from the command line.
 """
 
+import logging
 from sys import stdout
 from argparse import ArgumentParser
 from os import getenv
@@ -13,7 +14,7 @@ from urwid import set_encoding
 
 from turses import __name__
 from turses import version as turses_version
-from turses.config import Configuration
+from turses.config import Configuration, LOG_FILE
 from turses.ui import CursesInterface
 from turses.api.debug import MockApi
 from turses.api.backends import TweepyApi
@@ -124,6 +125,10 @@ def main():
     # configuration
     configuration = Configuration(args)
     configuration.load()
+
+    # start logger
+    logging.basicConfig(filename=LOG_FILE,
+                        level=configuration.logging_level)
 
     # view
     curses_interface = CursesInterface(configuration)

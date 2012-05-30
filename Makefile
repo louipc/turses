@@ -34,7 +34,7 @@ pyc:
 watch:
 	tdaemon . $(TESTRUNNER) --custom-args="$(WATCHTESTFLAGS)"
 
-release: bump merge publish
+release: bump merge publish develop
 
 bump:
 	$(EDITOR) HISTORY.rst turses/__init__.py Makefile 
@@ -45,6 +45,9 @@ merge:
 	git stash
 	git checkout master
 	git merge develop
+
+develop:
+	git checkout develop
 
 publish:
 	$(PY) setup.py sdist upload

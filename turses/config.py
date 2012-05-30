@@ -370,6 +370,7 @@ CONFIG_DIR = '.turses'
 CONFIG_PATH = path.join(HOME, CONFIG_DIR)
 DEFAULT_CONFIG_FILE = path.join(CONFIG_PATH, 'config')
 DEFAULT_TOKEN_FILE = path.join(CONFIG_PATH, 'token')
+LOG_FILE = path.join(CONFIG_PATH, 'log')
 
 LEGACY_CONFIG_DIR = '.config/turses'
 LEGACY_CONFIG_PATH = path.join(HOME, LEGACY_CONFIG_DIR)
@@ -728,7 +729,7 @@ class Configuration(object):
 
     def _parse_debug(self, conf):
         if conf.has_option(SECTION_DEBUG, 'logging_level'):
-            self.logging_level = conf.get(SECTION_DEBUG, 'logging_level')
+            self.logging_level = conf.getint(SECTION_DEBUG, 'logging_level')
 
     def parse_token_file(self, token_file):
         conf = RawConfigParser()
