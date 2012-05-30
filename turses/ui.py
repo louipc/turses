@@ -4,6 +4,7 @@
 This module contains the curses UI widgets.
 """
 
+import logging
 from gettext import gettext as _
 
 from urwid import (AttrMap, WidgetWrap, Padding, Divider, SolidFill,
@@ -198,10 +199,10 @@ class CursesInterface(Frame):
     def hide_editor(self, done_signal_handler):
         try:
             disconnect_signal(self._editor, 'done', done_signal_handler)
-        except:
+        except Exception, message:
             # `disconnect_signal` raises an exception if no signal was
             # connected from `self._editor`. We can safely ignore it.
-            pass
+            logging.exception(message)
         self._editor = None
         self.body.hide_top_widget()
 

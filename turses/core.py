@@ -4,6 +4,7 @@
 This module contains the controller and key handling logic of turses.
 """
 
+import logging
 from gettext import gettext as _
 from functools import partial, wraps
 from abc import ABCMeta, abstractmethod
@@ -1224,7 +1225,8 @@ class Controller(object):
 
         try:
             spawn_process(command, urls)
-        except:
+        except Exception, message:
+            logging.exception(message)
             self.error_message(_('Unable to launch the browser'))
 
 
@@ -1244,8 +1246,9 @@ class Turses(Controller):
                                        unhandled_input=handler)
         try:
             self.loop.run()
-        except TweepError:
-            self.error_message(_('API error'))
+        except TweepError, message:
+            logging.exception(message)
+            self.error_message(_('API error: %s' % message))
             self.main_loop()
 
     def exit(self):
@@ -1255,5 +1258,5 @@ class Turses(Controller):
         if hasattr(self, "loop"):
             try:
                 self.loop.draw_screen()
-            except AssertionError:
-                pass
+            except AssertionError, message:
+                logging.critical(message)
