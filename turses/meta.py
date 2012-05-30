@@ -4,6 +4,7 @@
 This module contains abstract classes and decorators.
 """
 
+import logging
 from abc import ABCMeta, abstractmethod, abstractproperty
 from functools import wraps
 from threading import Thread
@@ -28,8 +29,10 @@ def wrap_exceptions(func):
 
         try:
             result = func(self, *args, **kwargs)
-        except:
+        except Exception, message:
             if callable(on_error):
+                logging.warning('Exception on wrapped function %s: %s' %
+                                (func.__name__, message))
                 on_error()
         else:
             if callable(on_success):

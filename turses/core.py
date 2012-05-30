@@ -4,7 +4,6 @@
 This module contains the controller and key handling logic of turses.
 """
 
-
 from gettext import gettext as _
 from functools import partial, wraps
 from abc import ABCMeta, abstractmethod
