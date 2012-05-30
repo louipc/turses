@@ -31,8 +31,7 @@ def wrap_exceptions(func):
             result = func(self, *args, **kwargs)
         except Exception, message:
             if callable(on_error):
-                logging.warning('Exception on wrapped function %s: %s' %
-                                (func.__name__, message))
+                logging.exception(message)
                 on_error()
         else:
             if callable(on_success):
