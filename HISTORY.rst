@@ -1,3 +1,7 @@
+0.2.0
+------
+- logging
+
 0.1.18
 ------
 - bugfix: crash when rendering direct messages
