@@ -4,10 +4,9 @@
 This module contains an `ApiAdapter` abstract class that acts as an adapter
 for different Twitter API implementations.
 
-It also contains `AsyncApi`, an asynchronous wrapper to `ApiAdapter`;
-`MockApi`, an `ApiAdapter` implementation that returns dummy values with
-debugging purposes; and a function to authorize `turses` to use a Twitter
-account obtaining the OAuth tokens.
+It also contains `AsyncApi`, an asynchronous wrapper to `ApiAdapter` and a
+function to authorize `turses` to use a Twitter account obtaining the OAuth
+tokens.
 """
 
 from abc import ABCMeta, abstractmethod
