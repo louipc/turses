@@ -16,7 +16,7 @@ from turses.utils import (
         get_urls,
         spawn_process,
 )
-from turses.meta import async, wrap_exceptions
+from turses.meta import async, wrap_exceptions, Observer
 from turses.config import (
         HOME_TIMELINE,
         MENTIONS_TIMELINE,
@@ -225,7 +225,7 @@ def text_from_editor(func):
 # Controller
 
 
-class Controller(object):
+class Controller(Observer):
     """
     An abstract class that implements most of the controller logic of
     ``turses``.
@@ -249,6 +249,7 @@ class Controller(object):
         self.ui = ui
         self.editor = None
         self.timelines = TimelineList()
+        self.timelines.subscribe(self)
 
         # Mode
         self.mode = self.INFO_MODE
@@ -299,6 +300,12 @@ class Controller(object):
     def exit(self):
         """Exit the program."""
         pass
+
+    # -- Observer -------------------------------------------------------------
+
+    def update(self):
+        # Called when `self.timelines` has changed
+        self.draw_timelines()
 
     # -- Callbacks ------------------------------------------------------------
 
@@ -397,7 +404,6 @@ class Controller(object):
         self.timelines.append_timeline(timeline)
         if self.is_in_info_mode():
             self.timeline_mode()
-        self.draw_timelines()
 
     @async
     def append_default_timelines(self):
@@ -431,7 +437,6 @@ class Controller(object):
             append = default_timelines[timeline]
             if self.configuration.default_timelines[timeline]:
                 append()
-                self.draw_timelines()
         self.clear_status()
 
     def append_home_timeline(self):
@@ -580,7 +585,7 @@ class Controller(object):
 
     @async
     def update_active_timeline(self):
-        """Updates the timeline and renders the active timeline."""
+        """Update the active timeline and draw the timeline buffers."""
         if self.timelines.has_timelines():
             active_timeline = self.timelines.active
             try:
@@ -615,68 +620,54 @@ class Controller(object):
     def previous_timeline(self):
         if self.timelines.has_timelines():
             self.timelines.activate_previous()
-            self.draw_timelines()
 
     def next_timeline(self):
         if self.timelines.has_timelines():
             self.timelines.activate_next()
-            self.draw_timelines()
 
     def shift_buffer_left(self):
         if self.timelines.has_timelines():
             self.timelines.shift_active_previous()
-            self.draw_timelines()
 
     def shift_buffer_right(self):
         if self.timelines.has_timelines():
             self.timelines.shift_active_next()
-            self.draw_timelines()
 
     def shift_buffer_beggining(self):
         if self.timelines.has_timelines():
             self.timelines.shift_active_beggining()
-            self.draw_timelines()
 
     def shift_buffer_end(self):
         if self.timelines.has_timelines():
             self.timelines.shift_active_end()
-            self.draw_timelines()
 
     def expand_buffer_left(self):
         if self.timelines.has_timelines():
             self.timelines.expand_visible_previous()
-            self.draw_timelines()
 
     def expand_buffer_right(self):
         if self.timelines.has_timelines():
             self.timelines.expand_visible_next()
-            self.draw_timelines()
 
     def shrink_buffer_left(self):
         if self.timelines.has_timelines():
             self.timelines.shrink_visible_beggining()
-            self.draw_timelines()
 
     def shrink_buffer_right(self):
         if self.timelines.has_timelines():
             self.timelines.shrink_visible_end()
-            self.draw_timelines()
 
     def activate_first_buffer(self):
         if self.timelines.has_timelines():
             self.timelines.activate_first()
-            self.draw_timelines()
 
     def activate_last_buffer(self):
         if self.timelines.has_timelines():
             self.timelines.activate_last()
-            self.draw_timelines()
 
     def delete_buffer(self):
         self.timelines.delete_active_timeline()
-        if self.timelines.has_timelines():
-            self.draw_timelines()
-        else:
+        if not self.timelines.has_timelines():
             self.info_mode()
 
     # -- Motion ---------------------------------------------------------------

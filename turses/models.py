@@ -13,7 +13,8 @@ from calendar import timegm
 from functools import partial, total_ordering
 from htmlentitydefs import entitydefs
 
-from turses.meta import ActiveList, UnsortedActiveList, Updatable
+from turses.meta import (ActiveList, UnsortedActiveList, Updatable, Observable,
+                         notify)
 from turses.utils import is_url, matches_word
 
 
@@ -148,7 +149,7 @@ def parse_attributes(text,
 # -- Model --------------------------------------------------------------------
 
 
-class TimelineList(UnsortedActiveList):
+class TimelineList(UnsortedActiveList, Observable):
     """
     A list of :attr:`~turses.models.Timeline` instances that implements the
     :attr:`~turses.meta.UnsortedActiveList` interface, thus having an *active*
@@ -157,6 +158,7 @@ class TimelineList(UnsortedActiveList):
 
     def __init__(self):
         UnsortedActiveList.__init__(self)
+        Observable.__init__(self)
         self.timelines = []
         self.visible = []
 
@@ -169,6 +171,7 @@ class TimelineList(UnsortedActiveList):
             active_timeline = self.active
             return active_timeline.active
 
+    @notify
     def append_timeline(self, timeline):
         """Appends a new `Timeline` to the end of the list."""
         if self.active_index == self.NULL_INDEX:
@@ -180,6 +183,7 @@ class TimelineList(UnsortedActiveList):
             return
         self.timelines.append(timeline)
 
+    @notify
     def delete_active_timeline(self):
         """
         Deletes the active timeline (if any) and shifts the active index
@@ -206,6 +210,7 @@ class TimelineList(UnsortedActiveList):
         finally:
             self._set_active_as_visible()
 
+    @notify
     def update_active_timeline(self):
         if self.has_timelines():
             self.active.update()
@@ -222,6 +227,7 @@ class TimelineList(UnsortedActiveList):
         if self.active_index not in self.visible:
             self.visible = [self.active_index]
 
+    @notify
     def expand_visible_previous(self):
         if not self.visible:
             return
@@ -232,6 +238,7 @@ class TimelineList(UnsortedActiveList):
         if self.is_valid_index(previous):
             self.visible.insert(0, previous)
 
+    @notify
     def expand_visible_next(self):
         if not self.visible:
             return
@@ -242,6 +249,7 @@ class TimelineList(UnsortedActiveList):
         if self.is_valid_index(next):
             self.visible.append(next)
 
+    @notify
     def shrink_visible_beggining(self):
         self.visible.sort()
         try:
@@ -252,6 +260,7 @@ class TimelineList(UnsortedActiveList):
         except IndexError:
             pass
 
+    @notify
     def shrink_visible_end(self):
         self.visible.sort()
         try:
@@ -280,21 +289,25 @@ class TimelineList(UnsortedActiveList):
     def is_valid_index(self, index):
         return index >= 0 and index < len(self.timelines)
 
+    @notify
     def activate_previous(self):
         UnsortedActiveList.activate_previous(self)
         self._mark_read()
         self._set_active_as_visible()
 
+    @notify
     def activate_next(self):
         UnsortedActiveList.activate_next(self)
         self._mark_read()
         self._set_active_as_visible()
 
+    @notify
     def activate_first(self):
         UnsortedActiveList.activate_first(self)
         self._mark_read()
         self._set_active_as_visible()
 
+    @notify
     def activate_last(self):
         if self.has_timelines():
             last_index = len(self.timelines) - 1
@@ -316,6 +329,7 @@ class TimelineList(UnsortedActiveList):
             active_timeline = self.active
             active_timeline.mark_active_as_read()
 
+    @notify
     def shift_active_previous(self):
         active_index = self.active_index
         previous_index = active_index - 1
@@ -324,6 +338,7 @@ class TimelineList(UnsortedActiveList):
             self.active_index = previous_index
             self._set_active_as_visible()
 
+    @notify
     def shift_active_next(self):
         active_index = self.active_index
         next_index = active_index + 1
@@ -332,6 +347,7 @@ class TimelineList(UnsortedActiveList):
             self.active_index = next_index
             self._set_active_as_visible()
 
+    @notify
     def shift_active_beggining(self):
         if self.has_timelines():
             first_index = 0
@@ -341,6 +357,7 @@ class TimelineList(UnsortedActiveList):
             self.active_index = first_index
             self._set_active_as_visible()
 
+    @notify
     def shift_active_end(self):
         if self.has_timelines():
             last_index = len(self.timelines)

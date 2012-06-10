@@ -208,3 +208,59 @@ class Updatable:
     @abstractmethod
     def update_callback(self, result):
         pass
+
+
+def notify(func):
+    """
+    Wrap a instance method `func` calling the instance's `notify` method after
+    executing `func`.
+    """
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        result = func(self, *args, **kwargs)
+        if isinstance(self, Observable):
+            self.notify()
+        else:
+            raise Exception("The `notify` decorator should only be applied to "
+                            "`Observable` subclasses")
+        return result
+
+    return wrapper
+
+
+class Observable:
+    """
+    An implementation of the *observer* pattern.
+
+    Zero or more *observers* can `subscribe` to the changes in the instances 
+    of this class. When the instance changes, it will call its `notify` method,
+    which loops through the *observers* and calls `update()` on them.
+    """
+
+    def __init__(self):
+        self._observers = []
+
+    def subscribe(self, observer):
+        if observer not in self._observers:
+            self._observers.append(observer)
+
+    def unsubscribe(self, observer):
+        if observer in self._observers:
+            self._observers.remove(observer)
+
+    def notify(self):
+        for observer in self._observers:
+            observer.update()
+
+
+class Observer:
+    """
+    An abstract class that can subscribe to updates in 
+    :attr:`~turses.meta.Observable` instances.
+    """
+
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def update(self):
+        pass
