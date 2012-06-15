@@ -1,18 +1,22 @@
 # -*- coding: utf-8 -*-
 
+"""
+turses installation.
+"""
+
 from setuptools import setup, find_packages
 
 import turses
 
-name = "turses"
+NAME = "turses"
 
-requirements = [
+REQUIREMENTS = [
     "oauth2",
     "urwid",
     "tweepy",
 ]
-test_requirements = list(requirements)
-test_requirements.extend(["mock", "nose", "coverage"])
+TEST_REQUIREMENTS = list(REQUIREMENTS)
+TEST_REQUIREMENTS.extend(["mock", "nose", "coverage"])
 
 try:
     long_description = open("README.rst").read() + "\n\n" + open("HISTORY.rst").read()
@@ -20,7 +24,7 @@ except IOError:
     long_description = ""
 
 
-setup(name="turses",
+setup(name=NAME,
       version=turses.version,
       author="Alejandro Gómez",
       author_email="alejandroogomez@gmail.com",
@@ -44,4 +48,5 @@ setup(name="turses",
           "Programming Language :: Python :: 2.7",
           "Topic :: Communications",
       ],
-      install_requires=requirements,)
+      install_requires=REQUIREMENTS,
+      tests_require=TEST_REQUIREMENTS)
