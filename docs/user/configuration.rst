@@ -4,20 +4,216 @@ Configuration
 .. automodule:: turses.config
 
 
+The configuration file is divided into sections, each of which is described
+below these lines.
+
+Timelines
+---------
+
+This sections allows you to configure which timelines are created when
+``turses`` is launched. The default timelines are:
+
+- home: The tweets and retweets from the people you follow.
+- own_tweets: Your own tweets and retweets.
+- messages: Messages sent to and from you.
+- favorites: Your favorited tweets.
+- mentions: Tweets mentioning you.
+
+You can controll wether a timeline is created at startup assigning ``true`` or
+``false`` to the name of the timeline in the ``timelines`` section.
+
+An example configuration with only the ``home`` and ``mentions`` timeline
+active:
+
+
+::
+
+    [timelines]
+    home = true
+    own_tweets = false
+    messages = false
+    favorites = false
+    mentions = true
+
+
+Twitter
+-------
+
+This section allows you to configure the settings related to the Twitter API.
+The only available option is ``update_frequency`` which controls how often (in
+seconds) the timelines should be automatically updated.
+
+An example configuration that updates the timelines every minute:
+
+::
+
+    [twitter]
+    update_frequency = 60
+
+
 Bindings
 --------
 
-.. note::
-    Write about configuring key bindings.
+Almost every action within ``turses`` is configurable. The defaults resemble
+some of the bindings from the ``vi`` editor. To see an up-to-date description
+of all the available actions open the help buffer pressing ``?``.
 
-Palette
--------
+An example configuration with the motion keys assigned to the arrow keys:
 
-.. note::
-    Write about configuring colors.
+::
+
+    [bindings]
+    up = up
+    down = down
+    left = left
+    right = right
+
+``turses`` uses the representation of keystrokes provided by `urwid <http://excess.org/urwid/>`_ to
+map the bindings to actions.
+
+Colors
+------
+
+You can change the colors of different elements of the UI in ``turses``. The
+legal values for colors are listed in the `urwid wiki <http://excess.org/urwid/wiki/DisplayAttributes>`_.
+
+An example configuration that sets a magenta background and white foreground in
+the editor:
+
+::
+
+    [colors]
+    editor = white
+    editor_bg = dark magenta
 
 Styles
 ------
 
-.. note::
-    Write about configuring styles.
+This section allows you to onfigure the styles for some of the UI elements in
+``turses``. Below is a description of all the configuration options in the
+section.
+
+Templates
+~~~~~~~~~
+
+The templates allow you to configure how certain text is rendered in ``turses``.
+The following templates are available:
+
+- ``header_template``: The header of a tweet.
+- ``dm_template``: The header of a direct message.
+- ``tab_template``: The text in a tab.
+
+This templates contain variables enclosed between braces that are replaced by
+their corresponding value. Let's look at the defaults to see all the available
+variables within the templates:
+
+::
+
+    [styles]
+    header_template =  {username}{retweeted}{retweeter} - {time}{reply} {retweet_count}
+
+- ``username``: The author of the tweet.
+- ``retweeted``: ♻ symbol indicating that the tweet is a retweet.
+- ``retweeter``: The name of the retweeter (if any).
+- ``time``: Relative time of the tweet.
+- ``reply``: ✉ symbol indicating that the tweet is a reply.
+- ``retweet_count``: The number of retweets.
+
+::
+
+    [styles]
+    dm_template =  {sender_screen_name} => {recipient_screen_name} - {time}
+
+- ``sender_screen_name``: The sender of the message.
+- ``recipient_screen_name``: The recipient of the message.
+- ``time``: Relative time of the message.
+
+::
+
+    [styles]
+    tab_template = {unread} {timeline_name}
+
+- ``unread``: Unread tweet count.
+- ``timeline_name``: The name of the timeline.
+
+Tweets
+~~~~~~
+
+You can configure how tweets are rendered. By default the statuses are enclosed
+in a box, but you can use a divider instead.
+
+Here's how the default configuration for status styles looks like:
+
+::
+
+    [styles]
+    box_around_status = true
+
+If ``box_around_status`` is set to ``true``, the tweets will be rendered as
+follows:
+
+.. image:: ../images/box_around_status.png
+    :width: 900px
+    :height: 600px
+    :align: center
+    :alt: tweets rendered with a box around them
+
+
+When setting ``box_around_status`` to ``false`` you can specify a divider
+character that will be printed below the statuses.
+
+.. note:: The ``box_around_status`` option has precedence over
+   ``status_divider``
+
+::
+
+    [styles]
+    box_around_status = false
+    status_divider = false
+    status_divider_char = ─
+
+This is how it looks like using ``─`` as a status divider:
+
+.. image:: ../images/status_divider.png
+    :width: 900px
+    :height: 600px
+    :align: center
+    :alt: tweets rendered with a status divider
+
+Editor
+~~~~~~
+
+You can also configure the position of the editor in the screen modifyng the
+``editor_horizontal_align`` and ``editor_vertical_align`` options. The accepted
+values for this options are the following:
+
+- ``editor_horizontal_aling``: ``left``, ``center`` or ``right``
+- ``editor_vertical_aling``: ``top``, ``middle`` or ``bottom``
+
+An example configuration with the editor positioned in the center of the
+screen:
+
+::
+
+    [styles]
+    editor_horizontal_align = center
+    editor_vertical_align = middle
+
+Here's how it looks like:
+
+.. image:: ../images/editor_middle.png
+    :width: 900px
+    :height: 600px
+    :align: center
+    :alt: tweets rendered with a status divider
+
+Debug
+-----
+
+The last section of the configuration is ``debug``, which is intended for
+developers.
+
+::
+
+    [debug]
+    logging_level = 3
