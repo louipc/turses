@@ -866,7 +866,6 @@ class StatusWidget(WidgetWrap):
         if is_DM(status):
             return self._dm_header(status)
 
-        # tweet or retweet
         reply = ''
         retweeted = ''
         retweet_count = ''

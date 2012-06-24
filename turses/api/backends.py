@@ -62,7 +62,7 @@ def _to_status(status, **kwargs):
         if hasattr(status.retweeted_status, 'user'):
             defaults['author'] = status.retweeted_status.user.screen_name
 
-    if hasattr(status, 'in_reply_to_screen_name'):
+    if getattr(status, 'in_reply_to_screen_name', False):
         defaults['is_reply'] = True
         defaults['in_reply_to_user'] = status.in_reply_to_screen_name
 
