@@ -162,7 +162,7 @@ follows:
 When setting ``box_around_status`` to ``false`` you can specify a divider
 character that will be printed below the statuses.
 
-.. note:: The ``box_around_status`` option has precedence over
+.. warning:: The ``box_around_status`` option has precedence over
    ``status_divider``
 
 ::
