@@ -145,6 +145,50 @@ def parse_attributes(text,
 
     return tweet
 
+def extract_attributes(entities, hashtag, attag, url):
+    """
+    Extract attributes from entities.
+
+    Return a list with (`attr`, string[, replacement]) tuples for each
+    entity in the status.
+    """
+    def map_attr(attr, entity_list):
+        """
+        Return a list with (`attr`, string) tuples for each string in
+        `entity_list`.
+        """
+        attributes = []
+        for entity in entity_list:
+            # urls are a special case, we change the URL shortened by
+            # Twitter (`http://t.co/*`) by the URL returned in
+            # `display_url`
+            indices = entity.get('indices')
+            url = entity.get('display_url', False)
+
+            if url:
+                mapping = (attr, indices, url)
+            else:
+                mapping = (attr, indices)
+            attributes.append(mapping)
+        return attributes
+
+    entity_names_and_attributes = [
+        ('user_mentions', attag),
+        ('hashtags', hashtag),
+        ('urls', url),
+        ('media', url),
+    ]
+
+    attributes = []
+    for entity_name, entity_attribute in entity_names_and_attributes:
+        entity_list = entities.get(entity_name, [])
+        attributes.extend(map_attr(entity_attribute, entity_list))
+
+    # sort mappings to split the text in order
+    attributes.sort(key=lambda mapping: mapping[1][0])
+
+    return attributes
+
 
 # -- Model --------------------------------------------------------------------
 
@@ -586,9 +630,11 @@ class Status(object):
             return parse_attributes(text, hashtag, attag, url)
 
         # we have entities, extract the (attr, string[, replacement]) tuples
-        attribute_mappings = self._extract_attributes(hashtag=hashtag,
-                                                      attag=attag,
-                                                      url=url)
+        assert self.entities
+        attribute_mappings = extract_attributes(entities=self.entities,
+                                                hashtag=hashtag,
+                                                attag=attag,
+                                                url=url)
 
         text = []
         status_text = unicode(self.text)
@@ -624,52 +670,6 @@ class Status(object):
             text.append(normal_text)
 
         return text
-
-    def _extract_attributes(self, hashtag, attag, url):
-        """
-        Extract attributes from entities.
-
-        Return a list with (`attr`, string[, replacement]) tuples for each
-        entity in the status.
-        """
-        assert self.entities
-
-        def map_attr(attr, entity_list):
-            """
-            Return a list with (`attr`, string) tuples for each string in
-            `entity_list`.
-            """
-            attributes = []
-            for entity in entity_list:
-                # urls are a special case, we change the URL shortened by
-                # Twitter (`http://t.co/*`) by the URL returned in
-                # `display_url`
-                indices = entity.get('indices')
-                url = entity.get('display_url', False)
-
-                if url:
-                    mapping = (attr, indices, url)
-                else:
-                    mapping = (attr, indices)
-                attributes.append(mapping)
-            return attributes
-
-        entity_names_and_attributes = [
-            ('user_mentions', attag),
-            ('hashtags', hashtag),
-            ('urls', url),
-            ('media', url),
-        ]
-
-        attributes = []
-        for entity_name, entity_attribute in entity_names_and_attributes:
-            entity_list = self.entities.get(entity_name, [])
-            attributes.extend(map_attr(entity_attribute, entity_list))
-
-        # sort mappings to split the text in order
-        attributes.sort(key=lambda mapping: mapping[1][0])
-
-        return attributes
 
     @property
     def relative_created_at(self):
