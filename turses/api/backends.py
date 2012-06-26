@@ -44,7 +44,7 @@ def _to_status(status, **kwargs):
         'retweeted_status': None,
         'retweet_count': 0,
         'author': '',
-        'entities': None
+        'entities': getattr(status, 'entities', None),
     }
 
     # When fetching an individual user her last status is included and
