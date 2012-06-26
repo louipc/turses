@@ -1,3 +1,7 @@
+0.2.2
+-----
+- fix regression: timelines not updating periodically
+
 0.2.1
 -----
 - bugfix: the Twitter entities were not processed every time
