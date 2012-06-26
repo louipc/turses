@@ -272,7 +272,9 @@ class Controller(Observer):
                             access_token_secret=oauth_token_secret,)
 
     def start(self):
+        # authenticate API
         self.authenticate_api()
+
         self.main_loop()
 
     def authenticate_api(self):
@@ -295,11 +297,12 @@ class Controller(Observer):
         self.append_default_timelines()
 
         # Main loop has to be running
-        while (not self.is_main_loop_running):
+        while not getattr(self, 'loop'):
             pass
 
+        # update alarm
         seconds = self.configuration.update_frequency
-        self.set_update_frequency(seconds)
+        self.loop.set_alarm_in(seconds, self.update_alarm)
 
     def main_loop(self):
         """
@@ -344,7 +347,7 @@ class Controller(Observer):
         self.update_all_timelines()
 
         seconds = self.configuration.update_frequency
-        self.set_update_alarm_in(seconds)
+        self.loop.set_alarm_in(seconds, self.update_alarm)
 
     # -- Modes ----------------------------------------------------------------
 
