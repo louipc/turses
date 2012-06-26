@@ -11,6 +11,12 @@ A ``turses`` session with multiple columns running on ``urxvt``:
 The goal of the project is to build a full-featured, lightweight, and extremely 
 configurable Twitter client.
 
+Documentation
+-------------
+
+The documentation for ``turses`` is `available on ReadTheDocs
+<http://turses.readthedocs.org>`_.
+
 Installation
 ------------
 
