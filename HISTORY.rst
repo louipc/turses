@@ -1,5 +1,9 @@
+0.2.1
+-----
+- bugfix: the Twitter entities were not processed every time
+
 0.2.0
-------
+-----
 - logging
 
 0.1.18
