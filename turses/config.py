@@ -402,7 +402,7 @@ class Configuration(object):
     Generate and parse configuration files. When instantiated, it loads the
     defaults.
 
-    Calling :attr:`~turses.config.Configuration.load` on this class' instances
+    Calling :func:`turses.config.Configuration.load` on this class' instances
     reads the preferences from the user configuration files. If no
     configuration or token files are found, this class will take care of
     creating them.

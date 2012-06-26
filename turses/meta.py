@@ -43,7 +43,7 @@ def wrap_exceptions(func):
 
 def async(func):
     """
-    Decorator for executing a function in a separate :attr:`~threading.Thread`.
+    Decorator for executing a function in a separate :class:`threading.Thread`.
     """
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -73,9 +73,9 @@ class ActiveList(object):
     A list that contains an *active* element.
 
     This abstract class implements some functions but the subclasses must
-    define the :attr:`~turses.meta.ActiveList.active` property, as well as 
-    :attr:`~turses.meta.ActiveList.is_valid_index` and
-    :attr:`~turses.meta.ActiveList.activate_last`.
+    define the :attr:`turses.meta.ActiveList.active` property, as well as 
+    :func:`turses.meta.ActiveList.is_valid_index` and
+    :func:`turses.meta.ActiveList.activate_last`.
     methods.
     """
     __metaclass__ = ABCMeta
@@ -120,7 +120,7 @@ class ActiveList(object):
 
 class UnsortedActiveList(ActiveList):
     """
-    A :attr:`~turses.meta.ActiveList` in which the *active* element can be shifted position by
+    A :class:`~turses.meta.ActiveList` in which the *active* element can be shifted position by
     position, to the begging and to the end.
 
     All the methods that this class contains are abstract.
@@ -156,10 +156,10 @@ class Updatable:
     An abstract class that for making a class *updatable*.
 
     The constructor takes update function and arguments used to update the
-    subclasses of :attr:`~turses.meta.Updatable`.
+    subclasses of :class:`~turses.meta.Updatable`.
 
-    When :attr:`~turses.meta.Updatable.update` is executed,
-    :attr:`~turses.meta.Updatable.update_callback` is called passing it the
+    When :func:`~turses.meta.Updatable.update` is executed,
+    :func:`~turses.meta.Updatable.update_callback` is called passing it the
     result.
     """
 
@@ -256,7 +256,7 @@ class Observable:
 class Observer:
     """
     An abstract class that can subscribe to updates in 
-    :attr:`~turses.meta.Observable` instances.
+    :class:`~turses.meta.Observable` instances.
     """
 
     __metaclass__ = ABCMeta

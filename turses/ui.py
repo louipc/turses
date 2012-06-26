@@ -533,7 +533,7 @@ class Scrollable:
 class ScrollableListBox(ListBox, Scrollable):
     """
     A ``urwid.ListBox`` subclass that implements the
-    :attr:`~turses.ui.Scrollable` interface.
+    :class:`~turses.ui.Scrollable` interface.
     """
     def __init__(self,
                  contents,
@@ -584,7 +584,7 @@ class ScrollableListBox(ListBox, Scrollable):
 
 class ScrollableWidgetWrap(WidgetWrap, Scrollable):
     """
-    A ``urwid.WidgetWrap`` for :attr:`~turses.ui.Scrollable`, list-like
+    A ``urwid.WidgetWrap`` for :class:`~turses.ui.Scrollable`, list-like
     widgets.
     """
     def __init__(self, contents=None):

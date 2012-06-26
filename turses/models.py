@@ -151,8 +151,8 @@ def parse_attributes(text,
 
 class TimelineList(UnsortedActiveList, Observable):
     """
-    A list of :attr:`~turses.models.Timeline` instances that implements the
-    :attr:`~turses.meta.UnsortedActiveList` interface, thus having an *active*
+    A list of :class:`~turses.models.Timeline` instances that implements the
+    :class:`~turses.meta.UnsortedActiveList` interface, thus having an *active*
     element and a group of adjacent *visible* timelines.
     """
 
@@ -376,8 +376,8 @@ class Timeline(ActiveList, Updatable):
     List of Twitter statuses ordered reversely by date, optionally with
     a name and a function that updates the current timeline and its arguments.
 
-    Its :attr:`~turses.meta.Updatable` and implements the
-    :attr:`~turses.meta.ActiveList` interface.
+    Its :class:`~turses.meta.Updatable` and implements the
+    :class:`~turses.meta.ActiveList` interface.
     """
 
     def __init__(self,

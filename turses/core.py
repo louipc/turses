@@ -329,7 +329,7 @@ class Controller(Observer):
 
     def update(self):
         """
-        From :class:`turses.meta.Observer`, gets called when the observed
+        From :class:`~turses.meta.Observer`, gets called when the observed
         subjects change.
         """
         self.draw_timelines()
