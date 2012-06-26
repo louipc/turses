@@ -18,7 +18,7 @@ from turses.config import Configuration, LOG_FILE
 from turses.ui import CursesInterface
 from turses.api.debug import MockApi
 from turses.api.backends import TweepyApi
-from turses.core import Turses
+from turses.core import Controller as Turses
 
 
 def save_stdout():
@@ -109,7 +109,7 @@ def main():
 
     args = parse_arguments()
 
-    # stdout
+    # check if stdout has to be restored after program exit
     if any([args.debug,
             args.offline,
             getattr(args, 'help', False),
@@ -122,7 +122,7 @@ def main():
     if save_and_restore_stdout:
         save_stdout()
 
-    # configuration
+    # load configuration
     configuration = Configuration(args)
     configuration.load()
 
@@ -130,16 +130,16 @@ def main():
     logging.basicConfig(filename=LOG_FILE,
                         level=configuration.logging_level)
 
-    # view
+    # create view
     curses_interface = CursesInterface(configuration)
 
-    # API
+    # select API backend
     if args.offline:
         api_backend = MockApi
     else:
         api_backend = TweepyApi
 
-    # controller
+    # create controller
     turses = Turses(configuration=configuration,
                     ui=curses_interface,
                     api_backend=api_backend)
@@ -148,6 +148,7 @@ def main():
     except KeyboardInterrupt:
         pass
     except:
+        # open the debugger
         if args.debug or args.offline:
             import pdb
             pdb.post_mortem()

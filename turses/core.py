@@ -7,7 +7,6 @@ This module contains the controller and key handling logic of turses.
 import logging
 from gettext import gettext as _
 from functools import partial, wraps
-from abc import ABCMeta, abstractmethod
 
 import urwid
 from tweepy import TweepError
@@ -44,14 +43,14 @@ def merge_dicts(*args):
     """
     result = {}
     for arg in args:
-        if isinstance(arg, dict):
-            result.update(arg)
+        result.update(arg)
     return result
 
 
 class KeyHandler(object):
     """
-    Maps key bindings from configuration to calls to controllers' functions.
+    Maps key bindings from configuration to calls to :class:`Controller` 
+    functions.
     """
 
     def __init__(self,
@@ -211,8 +210,21 @@ def has_active_status(func):
             return func(self, *args, **kwargs)
     return wrapper
 
+def has_timelines(func):
+    """
+    `func` only is executed if there are any timelines.
+    """
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        if self.timelines.has_timelines():
+            return func(self, *args, **kwargs)
+    return wrapper
+
 
 def text_from_editor(func):
+    """
+    `func` receives text from an editor.
+    """
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         self.ui.hide_editor(wrapper)
@@ -227,12 +239,10 @@ def text_from_editor(func):
 
 class Controller(Observer):
     """
-    An abstract class that implements most of the controller logic of
-    ``turses``.
-
-    Subclasses must implement the methods decorated with
-    ``abc.abstractmethod``.
+    The :class:`Controller`.
     """
+
+    # Modes
 
     INFO_MODE = 0
     TIMELINE_MODE = 1
@@ -240,14 +250,14 @@ class Controller(Observer):
     EDITOR_MODE = 3
     USER_INFO_MODE = 4
 
-    __metaclass__ = ABCMeta
-
     # -- Initialization -------------------------------------------------------
 
     def __init__(self, configuration, ui, api_backend):
         self.configuration = configuration
         self.ui = ui
         self.editor = None
+
+        # Model
         self.timelines = TimelineList()
         self.timelines.subscribe(self)
 
@@ -276,35 +286,52 @@ class Controller(Observer):
         # API has to be authenticated
         while (not self.api.is_authenticated):
             pass
+
+        # fetch the authenticated user
         self.user = self.api.verify_credentials()
+
+        # initialize the timelines
         self.info_message(_('Initializing timelines'))
         self.append_default_timelines()
-        seconds = self.configuration.update_frequency
-        # The main loop must have started
-        while (not hasattr(self, 'loop')):
+
+        # Main loop has to be running
+        while (not self.is_main_loop_running):
             pass
-        # TODO: don't call `loop` explicitly or pull down to `CursesController`
-        self.loop.set_alarm_in(seconds, self.update_alarm)
 
-    # abstract methods
+        seconds = self.configuration.update_frequency
+        self.set_update_frequency(seconds)
 
-    @abstractmethod
     def main_loop(self):
         """
-        Main loop of the program, `Controller` subclasses must override this
-        method.
+        Launch the main loop of the program.
         """
-        pass
+        if not hasattr(self, 'loop'):
+            # Creating the main loop for the first time
+            self.key_handler = KeyHandler(self.configuration, self)
+            handler = self.key_handler.handle
+            self.loop = urwid.MainLoop(self.ui,
+                                       self.configuration.palette,
+                                       handle_mouse=False,
+                                       unhandled_input=handler)
+        try:
+            self.loop.run()
+        except TweepError, message:
+            logging.exception(message)
+            self.error_message(_('API error: %s' % message))
+            # recover from API errors
+            self.main_loop()
 
-    @abstractmethod
     def exit(self):
         """Exit the program."""
-        pass
+        raise urwid.ExitMainLoop()
 
     # -- Observer -------------------------------------------------------------
 
     def update(self):
-        # Called when `self.timelines` has changed
+        """
+        From :class:`turses.meta.Observer`, gets called when the observed
+        subjects change.
+        """
         self.draw_timelines()
 
     # -- Callbacks ------------------------------------------------------------
@@ -314,9 +341,10 @@ class Controller(Observer):
         self.error_message(_('Couldn\'t initialize API'))
 
     def update_alarm(self, *args, **kwargs):
-        seconds = self.configuration.update_frequency
         self.update_all_timelines()
-        self.loop.set_alarm_in(seconds, self.update_alarm)
+
+        seconds = self.configuration.update_frequency
+        self.set_update_alarm_in(seconds)
 
     # -- Modes ----------------------------------------------------------------
 
@@ -356,9 +384,10 @@ class Controller(Observer):
         return self.mode == self.INFO_MODE
 
     def help_mode(self):
-        """Activate help mode."""
+        """Activate Help mode."""
         if self.is_in_help_mode():
             return
+
         self.mode = self.HELP_MODE
         self.ui.show_help(self.configuration)
         self.redraw_screen()
@@ -407,14 +436,6 @@ class Controller(Observer):
 
     @async
     def append_default_timelines(self):
-        default_timelines = {
-            HOME_TIMELINE:       self.append_home_timeline,
-            MENTIONS_TIMELINE:   self.append_mentions_timeline,
-            FAVORITES_TIMELINE:  self.append_favorites_timeline,
-            MESSAGES_TIMELINE:   self.append_direct_messages_timeline,
-            OWN_TWEETS_TIMELINE: self.append_own_tweets_timeline,
-        }
-
         timelines = [
             HOME_TIMELINE,
             MENTIONS_TIMELINE,
@@ -423,20 +444,30 @@ class Controller(Observer):
             OWN_TWEETS_TIMELINE,
         ]
 
-        is_any = any([self.configuration.default_timelines[timeline]
-                      for timeline in timelines])
+        default_timelines = self.configuration.default_timelines
+        is_any_default_timeline = any([default_timelines[timeline] for timeline 
+                                                                   in timelines])
 
-        if is_any:
+        if is_any_default_timeline:
             self.timeline_mode()
         else:
             message = _('You don\'t have any default timelines activated')
             self.info_message(message)
             return
 
+        default_timeline_append_functions = {
+            HOME_TIMELINE:       self.append_home_timeline,
+            MENTIONS_TIMELINE:   self.append_mentions_timeline,
+            FAVORITES_TIMELINE:  self.append_favorites_timeline,
+            MESSAGES_TIMELINE:   self.append_direct_messages_timeline,
+            OWN_TWEETS_TIMELINE: self.append_own_tweets_timeline,
+        }
+
         for timeline in timelines:
-            append = default_timelines[timeline]
-            if self.configuration.default_timelines[timeline]:
+            append = default_timeline_append_functions[timeline]
+            if default_timelines[timeline]:
                 append()
+
         self.clear_status()
 
     def append_home_timeline(self):
@@ -547,7 +578,18 @@ class Controller(Observer):
     def draw_timelines(self):
         if self.is_in_timeline_mode():
             self.update_header()
-            self.draw_timeline_buffer()
+
+            # draw visible timelines
+            visible_timelines = self.timelines.visible_timelines
+            self.ui.draw_timelines(visible_timelines)
+
+            # focus active timeline
+            active_timeline = self.timelines.active
+            active_pos = self.timelines.active_index_relative_to_visible
+
+            # focus active status
+            self.ui.focus_timeline(active_pos)
+            self.ui.focus_status(active_timeline.active_index)
 
     def update_header(self):
         template = self.configuration.styles['tab_template']
@@ -564,17 +606,6 @@ class Controller(Observer):
         # colorize the visible tabs
         visible_indexes = self.timelines.visible
         self.ui.header.set_visible_tabs(visible_indexes)
-
-    def draw_timeline_buffer(self):
-        # draw visible timelines
-        visible_timelines = self.timelines.visible_timelines
-        self.ui.draw_timelines(visible_timelines)
-        # focus active timeline
-        active_timeline = self.timelines.active
-        active_pos = self.timelines.active_index_relative_to_visible
-        # focus active status
-        self.ui.focus_timeline(active_pos)
-        self.ui.focus_status(active_timeline.active_index)
 
     def mark_all_as_read(self):
         """Mark all statuses in active timeline as read."""
@@ -617,53 +648,53 @@ class Controller(Observer):
         if active_status:
             active_timeline.update(max_id=active_status.id)
 
+    @has_timelines
     def previous_timeline(self):
-        if self.timelines.has_timelines():
-            self.timelines.activate_previous()
+        self.timelines.activate_previous()
 
+    @has_timelines
     def next_timeline(self):
-        if self.timelines.has_timelines():
-            self.timelines.activate_next()
+        self.timelines.activate_next()
 
+    @has_timelines
     def shift_buffer_left(self):
-        if self.timelines.has_timelines():
-            self.timelines.shift_active_previous()
+        self.timelines.shift_active_previous()
 
+    @has_timelines
     def shift_buffer_right(self):
-        if self.timelines.has_timelines():
-            self.timelines.shift_active_next()
+        self.timelines.shift_active_next()
 
+    @has_timelines
     def shift_buffer_beggining(self):
-        if self.timelines.has_timelines():
-            self.timelines.shift_active_beggining()
+        self.timelines.shift_active_beggining()
 
+    @has_timelines
     def shift_buffer_end(self):
-        if self.timelines.has_timelines():
-            self.timelines.shift_active_end()
+        self.timelines.shift_active_end()
 
+    @has_timelines
     def expand_buffer_left(self):
-        if self.timelines.has_timelines():
-            self.timelines.expand_visible_previous()
+        self.timelines.expand_visible_previous()
 
+    @has_timelines
     def expand_buffer_right(self):
-        if self.timelines.has_timelines():
-            self.timelines.expand_visible_next()
+        self.timelines.expand_visible_next()
 
+    @has_timelines
     def shrink_buffer_left(self):
-        if self.timelines.has_timelines():
-            self.timelines.shrink_visible_beggining()
+        self.timelines.shrink_visible_beggining()
 
+    @has_timelines
     def shrink_buffer_right(self):
-        if self.timelines.has_timelines():
-            self.timelines.shrink_visible_end()
+        self.timelines.shrink_visible_end()
 
+    @has_timelines
     def activate_first_buffer(self):
-        if self.timelines.has_timelines():
-            self.timelines.activate_first()
+        self.timelines.activate_first()
 
+    @has_timelines
     def activate_last_buffer(self):
-        if self.timelines.has_timelines():
-            self.timelines.activate_last()
+        self.timelines.activate_last()
 
     def delete_buffer(self):
         self.timelines.delete_active_timeline()
@@ -716,10 +747,6 @@ class Controller(Observer):
         self.ui.status_info_message(message)
         self.redraw_screen()
 
-    def clear_body(self):
-        """Clear body."""
-        self.ui.body.clear()
-
     def clear_status(self):
         """Clear the status bar."""
         self.ui.clear_status()
@@ -727,14 +754,22 @@ class Controller(Observer):
 
     # -- UI -------------------------------------------------------------------
 
-    @abstractmethod
+    def clear_body(self):
+        """Clear body."""
+        self.ui.body.clear()
+
     def redraw_screen(self):
-        pass
+        if hasattr(self, "loop"):
+            try:
+                self.loop.draw_screen()
+            except AssertionError, message:
+                logging.critical(message)
 
     # -- Editor ---------------------------------------------------------------
 
     def forward_to_editor(self, key):
         if self.editor:
+            # FIXME: `keypress` function needs a `size` parameter
             size = 20,
             self.editor.keypress(size, key)
 
@@ -744,7 +779,7 @@ class Controller(Observer):
         self.info_message(_('Sending tweet'))
 
         if not is_valid_status_text(text):
-            # <Esc> was pressed
+            # tweet was explicitly cancelled or empty text
             self.info_message(_('Tweet canceled'))
             return
 
@@ -1219,35 +1254,3 @@ class Controller(Observer):
         except Exception, message:
             logging.exception(message)
             self.error_message(_('Unable to launch the browser'))
-
-
-class Turses(Controller):
-    """
-    A :attr:`~turses.core.Controller` implementation for launching
-    ``turses`` in a console.
-    """
-
-    def main_loop(self):
-        if not hasattr(self, 'loop'):
-            self.key_handler = KeyHandler(self.configuration, self)
-            handler = self.key_handler.handle
-            self.loop = urwid.MainLoop(self.ui,
-                                       self.configuration.palette,
-                                       handle_mouse=False,
-                                       unhandled_input=handler)
-        try:
-            self.loop.run()
-        except TweepError, message:
-            logging.exception(message)
-            self.error_message(_('API error: %s' % message))
-            self.main_loop()
-
-    def exit(self):
-        raise urwid.ExitMainLoop()
-
-    def redraw_screen(self):
-        if hasattr(self, "loop"):
-            try:
-                self.loop.draw_screen()
-            except AssertionError, message:
-                logging.critical(message)
