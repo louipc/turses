@@ -590,9 +590,10 @@ class Controller(Observer):
             active_timeline = self.timelines.active
             active_pos = self.timelines.active_index_relative_to_visible
 
-            # focus active status
-            self.ui.focus_timeline(active_pos)
-            self.ui.focus_status(active_timeline.active_index)
+            # focus active status (if any)
+            if active_timeline.active_index:
+                self.ui.focus_timeline(active_pos)
+                self.ui.focus_status(active_timeline.active_index)
 
     def update_header(self):
         template = self.configuration.styles['tab_template']
