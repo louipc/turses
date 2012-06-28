@@ -790,8 +790,8 @@ class TimelinesBuffer(ScrollableWidgetWrap):
 
 class TimelineWidget(ScrollableListBox):
     """
-    A `ListBox` containing a list of Twitter statuses, each of which is
-    rendered as a `StatusWidget`.
+    A :class:`ScrollableListBox` containing a list of Twitter statuses, each of 
+    which is rendered as a :class:`StatusWidget`.
     """
 
     def __init__(self, timeline=None, configuration=None):
