@@ -13,7 +13,7 @@ An one default token file:
     ``token``
         contains authentication token for the default user account
 
-Each user account that is no the default one needs to be aliased and  has its 
+Each user account that is no the default one needs to be aliased and  has its
 own token file ``alias.token``.
 
 To create an aliased account:
@@ -23,7 +23,8 @@ To create an aliased account:
     $ turses -a work
 
 And, after authorizing ``turses`` to use that account,  a token file named
-``work.token`` will be created.
+``work.token`` will be created. Optionally you can create a ``work.config``
+file for a configuration specific to that account.
 
 Now, when you execute again:
 
@@ -41,6 +42,7 @@ to ``alice`` and ``bob``.
     ~
     |+.turses/
     | |-config
+    | |-alice.config
     | |-token
     | |-alice.token
     | `-bob.token
@@ -49,7 +51,7 @@ to ``alice`` and ``bob``.
     `
 
 
-If you want to generate a configuration file, you can do so with:
+If you want to generate a configuration file, you can do so executing:
 
 .. code-block:: sh
 
@@ -59,6 +61,7 @@ If you want to generate a configuration file, you can do so with:
 from sys import exit
 from ConfigParser import RawConfigParser
 from os import getenv, path, mkdir, remove
+from functools import partial
 from gettext import gettext as _
 
 from turses.utils import encode
@@ -432,22 +435,26 @@ class Configuration(object):
             self.generate_config_file(config_file=cli_args.generate_config,)
             exit(0)
 
+        # path to configuration file
         if cli_args and cli_args.config:
             config_file = cli_args.config
+        elif cli_args and cli_args.account:
+            config_file = path.join(CONFIG_PATH, '%s.config' % cli_args.account)
         else:
             config_file = DEFAULT_CONFIG_FILE
+
         self.config_file = config_file
 
+        # path to token file
         if cli_args and cli_args.account:
             token_file = path.join(CONFIG_PATH, '%s.token' % cli_args.account)
         else:
-            # loads the default `token' if no account was specified
             token_file = DEFAULT_TOKEN_FILE
+
+        self.token_file = token_file
 
         # debug mode
         self.debug = getattr(cli_args, 'debug', False)
-
-        self.token_file = token_file
 
     def load(self):
         """Loads configuration from files."""
@@ -621,12 +628,13 @@ class Configuration(object):
     def generate_config_file(self, config_file):
         kwargs = {
             'config_file': config_file,
-            'on_error': self._config_generation_error,
+            'on_error': partial(self._config_generation_error, config_file),
         }
 
         if not path.isfile(config_file):
             kwargs.update({
-                'on_success': self._config_generation_success
+                'on_success': partial(self._config_generation_success, 
+                                      config_file)
             })
 
         self._generate_config_file(**kwargs)
@@ -645,12 +653,12 @@ class Configuration(object):
         with open(config_file, 'wb') as config:
             conf.write(config)
 
-    def _config_generation_error(self):
-        print encode(_('Unable to generate configuration file in %s')) % self.config_file
-        exit(2)
+    def _config_generation_success(self, config_file):
+        print encode(_('Generated configuration file in %s')) % config_file
 
-    def _config_generation_success(self):
-        print encode(_('Generated configuration file in %s')) % self.config_file
+    def _config_generation_error(self, config_file):
+        print encode(_('Unable to generate configuration file in %s')) % config_file
+        exit(2)
 
     def generate_token_file(self,
                             token_file,
