@@ -18,7 +18,7 @@ The documentation for ``turses`` is `available on ReadTheDocs
 <http://turses.readthedocs.org>`_.
 
 Take a look at `this screencast
-<http://www.youtube.com/watch?v=kmnEdldw7WY&feature=youtu.be&a`_ for an
+<http://www.youtube.com/kmnEdldw7WY>`_ for an
 overview of the features of ``turses`` and its usage.
 
 Installation
