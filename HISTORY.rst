@@ -1,3 +1,8 @@
+0.2.3
+-----
+- per-account configuration
+- bugfix: crashed when navigating to empty buffers
+
 0.2.2
 -----
 - fix regression: timelines not updating periodically
