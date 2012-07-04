@@ -272,9 +272,6 @@ class Controller(Observer):
                             access_token_secret=oauth_token_secret,)
 
     def start(self):
-        # authenticate API
-        self.authenticate_api()
-
         self.main_loop()
 
     def authenticate_api(self):
@@ -316,6 +313,10 @@ class Controller(Observer):
                                        self.configuration.palette,
                                        handle_mouse=False,
                                        unhandled_input=handler)
+
+            # Authenticate API just before starting main loop
+            self.authenticate_api()
+
         try:
             self.loop.run()
         except TweepError, message:
