@@ -592,7 +592,7 @@ class Controller(Observer):
             active_pos = self.timelines.active_index_relative_to_visible
 
             # focus active status (if any)
-            if active_timeline.active_index:
+            if active_timeline.active_index >= 0:
                 self.ui.focus_timeline(active_pos)
                 self.ui.focus_status(active_timeline.active_index)
 
