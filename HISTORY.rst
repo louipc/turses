@@ -1,3 +1,7 @@
+0.2.4
+-----
+- bugfix: unable to focus the topmost status when having multiple columns
+
 0.2.3
 -----
 - per-account configuration
