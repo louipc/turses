@@ -82,7 +82,8 @@ class CursesInterface(Frame):
 
     # -- Footer ---------------------------------------------------------------
 
-    def _can_write_status(self):
+    @property
+    def can_write_status(self):
         if self._status_bar:
             if self.footer is None:
                 self.footer = StatusBar('')
@@ -90,16 +91,16 @@ class CursesInterface(Frame):
         return False
 
     def status_message(self, text):
-        if self._can_write_status():
+        if self.can_write_status:
             self.footer.message(text)
             self.set_footer(self.footer)
 
     def status_error_message(self, message):
-        if self._can_write_status():
+        if self.can_write_status:
             self.footer.error_message(message)
 
     def status_info_message(self, message):
-        if self._can_write_status():
+        if self.can_write_status:
             self.footer.info_message(message)
 
     def clear_status(self):
