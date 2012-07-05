@@ -28,7 +28,7 @@ from turses.utils import encode
 # - Main UI -------------------------------------------------------------------
 
 
-class CursesInterface(Frame):
+class CursesInterface(WidgetWrap):
     """
     Creates a curses interface for the program, providing functions to draw
     all the components of the UI.
@@ -52,94 +52,114 @@ class CursesInterface(Frame):
         else:
             footer = None
 
-        Frame.__init__(self,
-                       body,
-                       header=header,
-                       footer=footer)
+        self.frame = Frame(body,
+                           header=header,
+                           footer=footer)
+
+        # FIXME
+        COVER_ALL_SCREEN = 999
+
+        width = COVER_ALL_SCREEN
+        height = COVER_ALL_SCREEN
+        dummy_widget = ListBox(SimpleListWalker([]))
+
+        widget = Overlay(top_w=self.frame,
+                         bottom_w=dummy_widget,
+                         align='center',
+                         width=width,
+                         valign='middle',
+                         height=height,
+                         min_width=width,
+                         min_height=height)
+
+        WidgetWrap.__init__(self, widget)
 
     # -- Modes ----------------------------------------------------------------
 
     def draw_timelines(self, timelines):
-        self.body = TimelinesBuffer(timelines,
-                                    configuration=self._configuration)
-        self.set_body(self.body)
+        self.frame.body = TimelinesBuffer(timelines,
+                                          configuration=self._configuration)
+        self.frame.set_body(self.frame.body)
 
     def show_info(self):
-        self.header.clear()
-        self.body = Banner(self._configuration)
-        self.set_body(self.body)
+        self.frame.header.clear()
+        self.frame.body = Banner(self._configuration)
+        self.frame.set_body(self.frame.body)
 
     def show_help(self, configuration):
         self.clear_header()
-        self.status_info_message(_('Type <Esc> to leave the help page.'))
-        self.body = HelpBuffer(configuration)
-        self.set_body(self.body)
+        self.status_info_message(_('type <esc> to leave the help page.'))
+        self.frame.body = HelpBuffer(configuration)
+        self.frame.set_body(self.frame.body)
 
     # -- Header ---------------------------------------------------------------
 
     def clear_header(self):
-        self.header.clear()
+        self.frame.header.clear()
+
+    def set_tab_names(self, names):
+        self.frame.header.set_tabs(names)
+        self.frame.set_header(self.frame.header)
+
+    def activate_tab(self, index):
+        self.frame.header.set_active_tab(index)
+        self.frame.set_header(self.frame.header)
+
+    def highlight_tabs(self, indexes):
+        self.frame.header.set_visible_tabs(indexes)
 
     # -- Footer ---------------------------------------------------------------
 
     @property
     def can_write_status(self):
         if self._status_bar:
-            if self.footer is None:
-                self.footer = StatusBar('')
+            if self.frame.footer is None:
+                self.frame.footer = StatusBar('')
             return True
         return False
 
     def status_message(self, text):
         if self.can_write_status:
-            self.footer.message(text)
-            self.set_footer(self.footer)
+            self.frame.footer.message(text)
+            self.frame.set_footer(self.frame.footer)
 
     def status_error_message(self, message):
         if self.can_write_status:
-            self.footer.error_message(message)
+            self.frame.footer.error_message(message)
 
     def status_info_message(self, message):
         if self.can_write_status:
-            self.footer.info_message(message)
+            self.frame.footer.info_message(message)
 
     def clear_status(self):
-        self.footer = None
-        self.set_footer(self.footer)
+        self.frame.footer = None
+        self.frame.set_footer(self.frame.footer)
 
     # -- Timeline mode --------------------------------------------------------
 
     def focus_timeline(self, index):
         """Give focus to the `index`-th visible timeline."""
-        self.body.focus_timeline(index)
+        self.frame.body.focus_timeline(index)
 
     def focus_status(self, index):
-        if callable(getattr(self.body, 'set_focus', None)):
-            self.body.set_focus(index)
+        if callable(getattr(self.frame.body, 'set_focus', None)):
+            self.frame.body.set_focus(index)
 
-    def set_tab_names(self, names):
-        self.header.set_tabs(names)
-        self.set_header(self.header)
-
-    def activate_tab(self, index):
-        self.header.set_active_tab(index)
-        self.set_header(self.header)
-
-    # -- Help mode ------------------------------------------------------------
+    # -- motions --------------------------------------------------------------
 
     def focus_next(self):
-        self.body.scroll_down()
+        self.frame.body.scroll_down()
 
     def focus_previous(self):
-        self.body.scroll_up()
+        self.frame.body.scroll_up()
 
     def focus_first(self):
-        self.body.scroll_top()
+        self.frame.body.scroll_top()
 
     def focus_last(self):
-        self.body.scroll_bottom()
+        self.frame.body.scroll_bottom()
 
-    # -- Editors --------------------------------------------------------------
+    # -- editors --------------------------------------------------------------
 
     def _show_editor(self,
                      editor_cls,
@@ -156,7 +176,7 @@ class CursesInterface(Frame):
         horizontal_align = styles['editor_horizontal_align']
         vertical_align = styles['editor_vertical_align']
 
-        self.body.show_widget_on_top(widget=self._editor,
+        self.frame.body.show_widget_on_top(widget=self._editor,
                                      width=80,
                                      height=5,
                                      align=horizontal_align,
@@ -202,23 +222,23 @@ class CursesInterface(Frame):
             disconnect_signal(self._editor, 'done', done_signal_handler)
         except Exception, message:
             # `disconnect_signal` raises an exception if no signal was
-            # connected from `self._editor`. We can safely ignore it.
+            # connected from `self._editor`. we can safely ignore it.
             logging.exception(message)
         self._editor = None
-        self.body.hide_top_widget()
+        self.frame.body.hide_top_widget()
 
-    # - Pop ups ---------------------------------------------------------------
+    # - pop ups ---------------------------------------------------------------
 
     def show_user_info(self, user):
         widget = UserInfo(user=user,
                           configuration=self._configuration)
 
-        self.body.show_widget_on_top(widget,
+        self.frame.body.show_widget_on_top(widget,
                                      width=40,
                                      height=18)
 
     def hide_user_info(self):
-        self.body.hide_top_widget()
+        self.frame.body.hide_top_widget()
 
 
 # - Program info --------------------------------------------------------------
