@@ -56,10 +56,10 @@ class CursesInterface(WidgetWrap):
         self.frame = Frame(body,
                            header=header,
                            footer=footer)
-        
+
         WidgetWrap.__init__(self, self.frame)
 
-    def _build_overlay_widget(self, 
+    def _build_overlay_widget(self,
                               top_w,
                               align,
                               width,
@@ -767,7 +767,7 @@ class TimelinesBuffer(ScrollableWidgetWrap):
 
     def clear(self):
         """Clears the buffer."""
-        # TODO 
+        # TODO
         pass
 
     def set_focus(self, index):
@@ -786,7 +786,7 @@ class TimelinesBuffer(ScrollableWidgetWrap):
 
 class TimelineWidget(ScrollableListBox):
     """
-    A :class:`ScrollableListBox` containing a list of Twitter statuses, each of 
+    A :class:`ScrollableListBox` containing a list of Twitter statuses, each of
     which is rendered as a :class:`StatusWidget`.
     """
 
