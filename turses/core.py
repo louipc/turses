@@ -580,7 +580,10 @@ class Controller(Observer):
     # -- Timeline mode --------------------------------------------------------
 
     def draw_timelines(self):
-        if self.is_in_timeline_mode():
+        if not self.is_in_timeline_mode():
+            return
+
+        if self.timelines.has_timelines():
             self.update_header()
 
             # draw visible timelines
@@ -595,6 +598,8 @@ class Controller(Observer):
             if active_timeline.active_index >= 0:
                 self.ui.focus_timeline(active_pos)
                 self.ui.focus_status(active_timeline.active_index)
+        else:
+            self.ui.clear_header()
 
     def update_header(self):
         template = self.configuration.styles['tab_template']
