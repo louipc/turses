@@ -8,7 +8,7 @@ import logging
 from gettext import gettext as _
 
 from urwid import (AttrMap, WidgetWrap, Padding, Divider, SolidFill,
-                   WidgetDecoration, Filler, LineBox,
+                   WidgetDecoration, LineBox, Filler,
 
                    # widgets
                    Text, Edit, Frame, Columns, Pile, ListBox, SimpleListWalker,
@@ -26,6 +26,7 @@ from turses.utils import encode
 
 
 # - Main UI -------------------------------------------------------------------
+
 
 
 class CursesInterface(WidgetWrap):
@@ -56,23 +57,21 @@ class CursesInterface(WidgetWrap):
                            header=header,
                            footer=footer)
         
-        widget = self._build_widget()
-        
-        WidgetWrap.__init__(self, widget)
+        WidgetWrap.__init__(self, self.frame)
 
-    def _build_widget(self):
-        # FIXME
-        COVER_ALL_SCREEN = 999
-
-        dummy_widget = ListBox(SimpleListWalker([]))
-
-        width = COVER_ALL_SCREEN
-        height = COVER_ALL_SCREEN
-        return Overlay(top_w=self.frame,
-                       bottom_w=dummy_widget,
-                       align='center',
+    def _build_overlay_widget(self, 
+                              top_w,
+                              align,
+                              width,
+                              valign,
+                              height,
+                              min_width,
+                              min_height):
+        return Overlay(top_w=Filler(top_w),
+                       bottom_w=self.frame,
+                       align=align,
                        width=width,
-                       valign='middle',
+                       valign=valign,
                        height=height,
                        min_width=width,
                        min_height=height)
@@ -247,21 +246,20 @@ class CursesInterface(WidgetWrap):
                            height,
                            align='center',
                            valign='middle',
-                           min_height=None,
-                           min_width=None):
+                           min_height=0,
+                           min_width=0):
         """Show `widget` on top of :attr:`frame`."""
-        self._w.bottom_w = self.frame
-        self._w.top_w = Filler(widget)
-        self._w.set_overlay_parameters(align=align,
-                                       width=width,
-                                       valign=valign,
-                                       height=height,
-                                       min_width=min_width,
-                                       min_height=min_height)
+        self._w = self._build_overlay_widget(top_w=widget,
+                                             align=align,
+                                             width=width,
+                                             valign=valign,
+                                             height=height,
+                                             min_width=min_width,
+                                             min_height=min_height)
 
     def hide_widget_on_top(self):
         """Hide the topmost widget (if any)."""
-        self._w = self._build_widget()
+        self._w = self.frame
 
 
 # - Program info --------------------------------------------------------------
