@@ -55,24 +55,27 @@ class CursesInterface(WidgetWrap):
         self.frame = Frame(body,
                            header=header,
                            footer=footer)
+        
+        widget = self._build_widget()
+        
+        WidgetWrap.__init__(self, widget)
 
+    def _build_widget(self):
         # FIXME
         COVER_ALL_SCREEN = 999
 
-        width = COVER_ALL_SCREEN
-        height = COVER_ALL_SCREEN
         dummy_widget = ListBox(SimpleListWalker([]))
 
-        widget = Overlay(top_w=self.frame,
-                         bottom_w=dummy_widget,
-                         align='center',
-                         width=width,
-                         valign='middle',
-                         height=height,
-                         min_width=width,
-                         min_height=height)
-
-        WidgetWrap.__init__(self, widget)
+        width = COVER_ALL_SCREEN
+        height = COVER_ALL_SCREEN
+        return Overlay(top_w=self.frame,
+                       bottom_w=dummy_widget,
+                       align='center',
+                       width=width,
+                       valign='middle',
+                       height=height,
+                       min_width=width,
+                       min_height=height)
 
     # -- Modes ----------------------------------------------------------------
 
@@ -176,12 +179,12 @@ class CursesInterface(WidgetWrap):
         horizontal_align = styles['editor_horizontal_align']
         vertical_align = styles['editor_vertical_align']
 
-        self.frame.body.show_widget_on_top(widget=self._editor,
-                                     width=80,
-                                     height=5,
-                                     align=horizontal_align,
-                                     valign=vertical_align,
-                                     min_height=5,)
+        self.show_widget_on_top(widget=self._editor,
+                                width=80,
+                                height=5,
+                                align=horizontal_align,
+                                valign=vertical_align,
+                                min_height=5,)
         return self._editor
 
     def show_text_editor(self,
@@ -225,7 +228,7 @@ class CursesInterface(WidgetWrap):
             # connected from `self._editor`. we can safely ignore it.
             logging.exception(message)
         self._editor = None
-        self.frame.body.hide_top_widget()
+        self.hide_widget_on_top()
 
     # - pop ups ---------------------------------------------------------------
 
@@ -233,12 +236,32 @@ class CursesInterface(WidgetWrap):
         widget = UserInfo(user=user,
                           configuration=self._configuration)
 
-        self.frame.body.show_widget_on_top(widget,
-                                     width=40,
-                                     height=18)
+        self.show_widget_on_top(widget, width=40, height=18)
 
     def hide_user_info(self):
-        self.frame.body.hide_top_widget()
+        self.hide_widget_on_top()
+
+    def show_widget_on_top(self,
+                           widget,
+                           width,
+                           height,
+                           align='center',
+                           valign='middle',
+                           min_height=None,
+                           min_width=None):
+        """Show `widget` on top of :attr:`frame`."""
+        self._w.bottom_w = self.frame
+        self._w.top_w = Filler(widget)
+        self._w.set_overlay_parameters(align=align,
+                                       width=width,
+                                       valign=valign,
+                                       height=height,
+                                       min_width=min_width,
+                                       min_height=min_height)
+
+    def hide_widget_on_top(self):
+        """Hide the topmost widget (if any)."""
+        self._w = self._build_widget()
 
 
 # - Program info --------------------------------------------------------------
@@ -705,51 +728,25 @@ class TimelinesBuffer(ScrollableWidgetWrap):
     def __init__(self, timelines=None, **kwargs):
         timelines = [] if timelines is None else timelines
 
-        widget = self._create_widget(timelines, **kwargs)
+        widget = self._build_widget(timelines, **kwargs)
 
         ScrollableWidgetWrap.__init__(self, widget)
 
-    def _create_widget(self, timelines, **kwargs):
+    def _build_widget(self, timelines, **kwargs):
         timeline_widgets = [TimelineWidget(timeline, **kwargs) for timeline
                                                                 in timelines]
-        columns = Columns(timeline_widgets)
-
-        return self._create_overlay(columns)
-
-    def _create_overlay(self, top_w):
-        # NOTE:
-        # This is an ugly hack for being able to show a widget on top when
-        # needed. I create the Overlay with a dummy_widget on the bottom that
-        # will never be visible (making the top widget big enough).
-
-        # TODO: move this to a `urwid.Overlay` subclass with a simple API
-        COVER_ALL_SCREEN = 999
-
-        width = COVER_ALL_SCREEN
-        height = COVER_ALL_SCREEN
-        dummy_widget = ListBox(SimpleListWalker([]))
-
-        return Overlay(top_w=top_w,
-                       bottom_w=dummy_widget,
-                       align='center',
-                       width=width,
-                       valign='middle',
-                       height=height,
-                       min_width=width,
-                       min_height=height)
+        return Columns(timeline_widgets)
 
     def render_timelines(self, timelines, **kwargs):
         """Render the given statuses."""
-        self._w = self._create_widget(timelines, **kwargs)
+        self._w = self._build_widget(timelines, **kwargs)
 
     @property
     def columns(self):
         """
         The `Columns` widget.
         """
-        top = self._w.top_w
-        bottom = self._w.bottom_w
-        return top if isinstance(top, Columns) else bottom
+        return self._w
 
     @property
     def active_widget(self):
@@ -757,26 +754,6 @@ class TimelinesBuffer(ScrollableWidgetWrap):
         The active widget.
         """
         return self.columns.get_focus()
-
-    def show_widget_on_top(self,
-                           widget,
-                           width,
-                           height,
-                           align='center',
-                           valign='middle',
-                           min_height=None,
-                           min_width=None):
-        widget = Filler(widget)
-        self._w.bottom_w, self._w.top_w = self._w.top_w, widget
-        self._w.set_overlay_parameters(align=align,
-                                       width=width,
-                                       valign=valign,
-                                       height=height,
-                                       min_width=min_width,
-                                       min_height=min_height)
-
-    def hide_top_widget(self):
-        self._w = self._create_overlay(self.columns)
 
     def scroll_up(self):
         self.active_widget.scroll_up()
@@ -792,7 +769,7 @@ class TimelinesBuffer(ScrollableWidgetWrap):
 
     def clear(self):
         """Clears the buffer."""
-        # FIXME
+        # TODO 
         pass
 
     def set_focus(self, index):
