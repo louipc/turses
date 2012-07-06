@@ -570,6 +570,28 @@ class Controller(Observer):
                              on_success=timeline_fetched)
 
     @async
+    def append_search_timeline(self, query):
+        text = query.strip()
+        if not is_valid_search_text(text):
+            self.error_message(_('Invalid search'))
+            return
+        else:
+            self.info_message(_('Creating search timeline for "%s"' % text))
+
+        success_message = _('Search timeline for "%s" created' % text)
+        timeline_created = partial(self.info_message,
+                                   success_message)
+        error_message = _('Error creating search timeline for "%s"' % text)
+        timeline_not_created = partial(self.info_message,
+                                       error_message)
+
+        self.append_timeline(name=_('Search: %s' % text),
+                             update_function=self.api.search,
+                             update_args=text,
+                             on_error=timeline_not_created,
+                             on_success=timeline_created)
+
+    @async
     def update_all_timelines(self):
         for timeline in self.timelines:
             timeline.update()
@@ -898,26 +920,7 @@ class Controller(Observer):
         if text is None:
             self.info_message(_('Search cancelled'))
             return
-
-        text = text.strip()
-        if not is_valid_search_text(text):
-            self.error_message(_('Invalid search'))
-            return
-        else:
-            self.info_message(_('Creating search timeline for "%s"' % text))
-
-        success_message = _('Search timeline for "%s" created' % text)
-        timeline_created = partial(self.info_message,
-                                   success_message)
-        error_message = _('Error creating search timeline for "%s"' % text)
-        timeline_not_created = partial(self.info_message,
-                                       error_message)
-
-        self.append_timeline(name=_('Search: %s' % text),
-                             update_function=self.api.search,
-                             update_args=text,
-                             on_error=timeline_not_created,
-                             on_success=timeline_created)
+        self.append_search_timeline(text)
 
     @text_from_editor
     def search_user_handler(self, username):
