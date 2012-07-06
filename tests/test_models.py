@@ -832,6 +832,145 @@ class TimelineListTest(ActiveListTest):
         self.timeline_list.activate_first()
         self.assert_visible([0])
 
+    def test_consistent_visible_timelines_when_deleting_leftmost_active(self):
+        self.append_timeline()
+        self.append_timeline()
+        self.append_timeline()
+        self.timeline_list.expand_visible_next()
+        self.timeline_list.expand_visible_next()
+
+        self.assertEqual(self.active_index(), 0)
+        self.assert_visible([0, 1, 2])
+
+        self.timeline_list.delete_active_timeline()
+
+        # active index does not change
+        self.assertEqual(self.active_index(), 0)
+
+        # visible
+        self.assert_visible([0, 1])
+
+        # relative index
+        relative_index = self.timeline_list.active_index_relative_to_visible
+        self.assertEqual(relative_index, 0)
+
+    def test_consistent_visible_timelines_when_deleting_middle_active(self):
+        self.append_timeline()
+        self.append_timeline()
+        self.append_timeline()
+        self.append_timeline()
+        self.append_timeline()
+        self.timeline_list.expand_visible_next()
+        self.timeline_list.expand_visible_next()
+        self.timeline_list.expand_visible_next()
+        self.timeline_list.expand_visible_next()
+        self.timeline_list.expand_visible_next()
+
+        self.assertEqual(self.active_index(), 0)
+        self.assert_visible([0, 1, 2, 3, 4])
+
+        self.timeline_list.activate_next()
+        self.timeline_list.activate_next()
+
+        self.assertEqual(self.active_index(), 2)
+        self.assert_visible([0, 1, 2, 3, 4])
+
+        self.timeline_list.delete_active_timeline()
+
+        # active index does not change
+        self.assertEqual(self.active_index(), 2)
+
+        # visible
+        self.assert_visible([0, 1, 2, 3])
+
+        # relative index
+        relative_index = self.timeline_list.active_index_relative_to_visible
+        self.assertEqual(relative_index, 2)
+
+    def test_consistent_visible_timelines_when_deleting_rightmost_timeline(self):
+        self.append_timeline()
+        self.append_timeline()
+        self.append_timeline()
+        self.assertEqual(len(self.timeline_list), 3)
+
+        self.timeline_list.expand_visible_next()
+        self.timeline_list.expand_visible_next()
+
+        self.assertEqual(self.active_index(), 0)
+        self.assert_visible([0, 1, 2])
+
+        self.timeline_list.activate_next()
+        self.timeline_list.activate_next()
+
+        self.assertEqual(self.active_index(), 2)
+        self.assert_visible([0, 1, 2])
+
+        self.timeline_list.delete_active_timeline()
+        self.assertEqual(len(self.timeline_list), 2)
+
+        # active index shifts left
+        self.assertEqual(self.active_index(), 1)
+
+        # visible
+        self.assert_visible([0, 1])
+
+        # relative index
+        relative_index = self.timeline_list.active_index_relative_to_visible
+        self.assertEqual(relative_index, 1)
+
+    def test_delete_active_timeline_with_one_visible_timeline_in_the_left(self):
+        self.append_timeline()
+        self.append_timeline()
+
+        self.assertEqual(self.active_index(), 0)
+        self.assert_visible([0])
+
+        self.timeline_list.delete_active_timeline()
+
+        self.assertEqual(self.active_index(), 0)
+        self.assert_visible([0])
+
+    def test_delete_active_timeline_with_one_visible_timeline_in_the_middle(self):
+        self.append_timeline()
+        self.append_timeline()
+        self.append_timeline()
+        self.append_timeline()
+        self.append_timeline()
+
+        self.assertEqual(self.active_index(), 0)
+        self.assert_visible([0])
+        self.assertEqual(len(self.timeline_list), 5)
+
+        self.timeline_list.activate_next()
+        self.timeline_list.activate_next()
+        
+        self.assertEqual(self.active_index(), 2)
+        self.assert_visible([2])
+
+        self.timeline_list.delete_active_timeline()
+        self.assertEqual(len(self.timeline_list), 4)
+
+        self.assertEqual(self.active_index(), 2)
+        self.assert_visible([2])
+
+    def test_delete_active_timeline_with_one_visible_timeline_in_the_right(self):
+        self.append_timeline()
+        self.append_timeline()
+        self.append_timeline()
+        self.assertEqual(len(self.timeline_list), 3)
+
+        self.timeline_list.activate_next()
+        self.timeline_list.activate_next()
+
+        self.assertEqual(self.active_index(), 2)
+        self.assert_visible([2])
+
+        self.timeline_list.delete_active_timeline()
+        self.assertEqual(len(self.timeline_list), 2)
+
+        self.assertEqual(self.active_index(), 1)
+        self.assert_visible([1])
+
 
 if __name__ == '__main__':
     unittest.main()

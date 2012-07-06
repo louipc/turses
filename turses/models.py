@@ -229,30 +229,32 @@ class TimelineList(UnsortedActiveList, Observable):
 
     @notify
     def delete_active_timeline(self):
-        """
-        Deletes the active timeline (if any) and shifts the active index
-        to the right.
-        """
+        """Delete the active timeline (if any)."""
         if not self.has_timelines():
             return
 
         # delete timeline
-        del self.timelines[self.active_index]
-        if self.is_valid_index(self.active_index):
-            pass
-        else:
+        old_index = self.active_index
+        del self.timelines[old_index]
+
+        # recalculate visible indexes
+        if len(self.visible) > 1:
+            old_index_in_visible = self.visible.index(old_index)
+            left_indexes = self.visible[:old_index_in_visible]
+            right_indexes = self.visible[old_index_in_visible + 1:]
+            # decrement those that are in the right of the deleted one
+            self.visible = left_indexes + [index - 1 for index in right_indexes
+                                                               if index]
+        elif len(self.visible) == 1:
+            visible_index = self.visible[0]
+            if not self.is_valid_index(visible_index):
+                self.visible = [visible_index - 1]
+
+        if not self.is_valid_index(self.active_index):
             # Shift cursor to left when we don't have any element
             # in the right. When deleting the last timeline in the
             # list, the `active_index` becomes -1 (NULL_INDEX).
             self.active_index -= 1
-
-        # remove from visible
-        try:
-            self.visible.remove(self.active_index)
-        except ValueError:
-            pass
-        finally:
-            self._set_active_as_visible()
 
     @notify
     def update_active_timeline(self):
