@@ -436,7 +436,8 @@ class Controller(Observer):
         timeline.activate_first()
         self.timelines.append_timeline(timeline)
         if self.is_in_info_mode():
-            self.timeline_mode()
+            #self.timeline_mode()
+            pass
 
     @async
     def append_default_timelines(self):
@@ -472,6 +473,7 @@ class Controller(Observer):
             if default_timelines[timeline]:
                 append()
 
+        self.timeline_mode()
         self.clear_status()
 
     def append_home_timeline(self):
@@ -637,7 +639,7 @@ class Controller(Observer):
 
         # colorize the visible tabs
         visible_indexes = self.timelines.visible
-        self.ui.header.set_visible_tabs(visible_indexes)
+        self.ui.highlight_tabs(visible_indexes)
 
     def mark_all_as_read(self):
         """Mark all statuses in active timeline as read."""
@@ -785,11 +787,6 @@ class Controller(Observer):
         self.redraw_screen()
 
     # -- UI -------------------------------------------------------------------
-
-    def clear_body(self):
-        """Clear body."""
-        self.ui.body.clear()
-
     def redraw_screen(self):
         if hasattr(self, "loop"):
             try:
