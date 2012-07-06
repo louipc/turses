@@ -64,6 +64,7 @@ class KeyHandler(object):
             'redraw':        self.controller.redraw_screen,
             'help':          self.controller.help_mode,
             'reload_config': self.controller.reload_configuration,
+            'clear':         self.controller.clear_status,
         }
 
         self.MOTION_COMMANDS = {
@@ -91,7 +92,6 @@ class KeyHandler(object):
             'activate_last_buffer':   self.controller.activate_last_buffer,
 
             'delete_buffer':          self.controller.delete_buffer,
-            'clear':                  self.controller.clear_status,
             'mark_all_as_read':       self.controller.mark_all_as_read,
         }
 

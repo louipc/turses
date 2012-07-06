@@ -126,8 +126,6 @@ KEY_BINDINGS = {
         ('N', _('shrink visible timelines one column from the left')),
     'delete_buffer':
         ('d', _('delete buffer')),
-    'clear':
-        ('c', _('clear status bar')),
     'mark_all_as_read':
         ('A', _('mark all tweets in the current timeline as read')),
 
@@ -198,6 +196,8 @@ KEY_BINDINGS = {
     # turses
     'quit':
         ('q', _('exit program')),
+    'clear':
+        ('c', _('clear status bar')),
     'openurl':
         ('o', _('open URLs of the focused status in a browser')),
     'open_status_url':
@@ -232,7 +232,6 @@ BUFFERS_KEY_BINDINGS = [
     'shrink_visible_left',
     'shrink_visible_right',
     'delete_buffer',
-    'clear',
     'mark_all_as_read',
 ]
 
@@ -274,6 +273,7 @@ META_KEY_BINDINGS = [
 ]
 
 TURSES_KEY_BINDINGS = [
+    'clear',
     'quit',
     'openurl',
     'open_status_url',
