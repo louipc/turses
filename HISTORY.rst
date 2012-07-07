@@ -1,3 +1,11 @@
+0.2.5
+-----
+- search commands also available with no timelines
+- clear the status bar in every mode
+- asynchronous search timeline addition
+- keep columns when deleting a buffer within them
+- bugfix: crashed when deleting all buffers
+
 0.2.4
 -----
 - bugfix: unable to focus the topmost status when having multiple columns
