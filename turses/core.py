@@ -336,6 +336,8 @@ class Controller(Observer):
         From :class:`~turses.meta.Observer`, gets called when the observed
         subjects change.
         """
+        if self.is_in_info_mode():
+            self.timeline_mode()
         self.draw_timelines()
 
     # -- Callbacks ------------------------------------------------------------
