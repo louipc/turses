@@ -26,6 +26,17 @@ def matches_word(regex, word):
         return match.start() == 0 and match.end() == len(word)
     return False
 
+# username
+username_regex = compile_regex(r'[A-Za-z0-9_]+')
+is_username = partial(matches_word, username_regex)
+sanitize_username = partial(filter, is_username)
+prepend_at = lambda username: '@%s' % username
+
+# hashtag
+hashtag_regex = compile_regex(r'#.+')
+is_hashtag = partial(matches_word, hashtag_regex)
+
+# URL
 is_url = partial(matches_word, URL_REGEX)
 
 

@@ -23,9 +23,9 @@ from turses.config import (
 
         configuration,
 )
+from turses.utils import is_username
 from turses.models import (
         is_DM,
-        is_username,
         is_valid_status_text,
         is_valid_search_text,
         sanitize_username,

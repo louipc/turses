@@ -7,31 +7,18 @@ the Twitter entities represented into it.
 
 import time
 from re import sub
-from re import compile as compile_regex
 from bisect import insort
 from calendar import timegm
-from functools import partial, total_ordering
+from functools import total_ordering
 from htmlentitydefs import entitydefs
 
 from turses.meta import (ActiveList, UnsortedActiveList, Updatable, Observable,
                          notify)
-from turses.utils import is_url, matches_word
+from turses.utils import prepend_at, sanitize_username, is_hashtag
 
 
 TWEET_MAXIMUM_CHARACTERS = 140
 STATUS_URL_TEMPLATE = 'https://twitter.com/#!/{user}/status/{id}'
-
-# -- Helpers ------------------------------------------------------------------
-
-# username
-username_regex = compile_regex(r'[A-Za-z0-9_]+')
-is_username = partial(matches_word, username_regex)
-sanitize_username = partial(filter, is_username)
-prepend_at = lambda username: '@%s' % username
-
-# hashtag
-hashtag_regex = compile_regex(r'#.+')
-is_hashtag = partial(matches_word, hashtag_regex)
 
 
 def is_DM(status):
@@ -62,132 +49,6 @@ def html_unescape(string):
             return m.group(0)
 
     return sub(r'&([^;]+);', entity_replacer, string)
-
-
-
-def apply_attribute(string,
-                    hashtag='hashtag',
-                    attag='attag',
-                    url='url'):
-    """
-    Apply an attribute to `string` dependending on wether it is
-    a hashtag, a Twitter username or an URL.
-
-    >>> apply_attribute('#Python')
-    ('hashtag', u'#Python')
-    >>> apply_attribute('@dialelo')
-    ('attag', u'@dialelo')
-    >>> apply_attribute('@dialelo',
-                        attag='username')
-    ('username', u'@dialelo')
-    >>> apply_attribute('http://www.dialelo.com')
-    ('url', u'http://www.dialelo.com')
-    >>> apply_attribute('turses')
-    u'turses'
-    """
-    string = unicode(string)
-
-    if is_hashtag(string):
-        return (hashtag, string)
-    elif string.startswith('@') and is_username(string[1:]):
-        return (attag, string)
-    elif is_url(string):
-        return  (url, string)
-    else:
-        return string
-
-
-def parse_attributes(text,
-                     hashtag='hashtag',
-                     attag='attag',
-                     url='url'):
-    """
-    Parse the attributes in `text` and isolate the hashtags, usernames
-    and URLs with the provided attributes.
-
-    >>> text = 'I love #Python'
-    >>> parse_attributes(text=text,
-    ...                  hashtag='hashtag')
-    ['I love ', ('hashtag', '#Python')]
-    """
-
-    # nothing to do
-    if not text:
-        return u''
-
-    words = text.split()
-    parsed_text = [apply_attribute(word) for word in words]
-
-    def add_withespace(parsed_word):
-        if isinstance(parsed_word, tuple):
-            # is an (attr, word) tuple
-            return parsed_word
-        else:
-            return parsed_word + ' '
-
-    tweet = [add_withespace(parsed_word) for parsed_word
-                                         in parsed_text]
-
-    # insert spaces after an attribute
-    indices = []
-    for i, word in enumerate(tweet[:-1]):
-        word_is_attribute = isinstance(word, tuple)
-
-        if word_is_attribute:
-            indices.append(i + 1 + len(indices))
-
-    for index in indices:
-        tweet.insert(index, u' ')
-
-    # remove trailing withespace
-    if tweet and isinstance(tweet[-1], basestring):
-        tweet[-1] = tweet[-1][:-1]
-
-    return tweet
-
-def extract_attributes(entities, hashtag, attag, url):
-    """
-    Extract attributes from entities.
-
-    Return a list with (`attr`, string[, replacement]) tuples for each
-    entity in the status.
-    """
-    def map_attr(attr, entity_list):
-        """
-        Return a list with (`attr`, string) tuples for each string in
-        `entity_list`.
-        """
-        attributes = []
-        for entity in entity_list:
-            # urls are a special case, we change the URL shortened by
-            # Twitter (`http://t.co/*`) by the URL returned in
-            # `display_url`
-            indices = entity.get('indices')
-            url = entity.get('display_url', False)
-
-            if url:
-                mapping = (attr, indices, url)
-            else:
-                mapping = (attr, indices)
-            attributes.append(mapping)
-        return attributes
-
-    entity_names_and_attributes = [
-        ('user_mentions', attag),
-        ('hashtags', hashtag),
-        ('urls', url),
-        ('media', url),
-    ]
-
-    attributes = []
-    for entity_name, entity_attribute in entity_names_and_attributes:
-        entity_list = entities.get(entity_name, [])
-        attributes.extend(map_attr(entity_attribute, entity_list))
-
-    # sort mappings to split the text in order
-    attributes.sort(key=lambda mapping: mapping[1][0])
-
-    return attributes
 
 
 # -- Model --------------------------------------------------------------------
@@ -603,75 +464,6 @@ class Status(object):
         self.retweeted_status = retweeted_status
         self.author = author
         self.entities = {} if entities is None else entities
-
-    def map_attributes(self, hashtag, attag, url):
-        """
-        Return a list of strings and tuples for hashtag, attag and
-        url entities.
-
-        For a hashtag, its tuple would be (`hashtag`, text).
-
-        >>> from datetime import datetime
-        >>> s = Status(id=0,
-        ...            created_at=datetime.now(),
-        ...            user='dialelo',
-        ...            text='I love #Python',)
-        >>> s.map_attributes('hashtag', 'attag', 'url')
-        ['I love ', ('hashtag', '#Python')]
-        """
-        is_retweet = getattr(self, 'is_retweet', False)
-
-        if is_retweet:
-            # call this method on the retweeted status
-            return self.retweeted_status.map_attributes(hashtag, attag, url)
-
-        if not self.entities:
-            # no entities defined, parse text *manually*
-            #  - Favorites don't include any entities at the time of writing
-            text = self.retweeted_status.text if is_retweet else self.text
-            return parse_attributes(text, hashtag, attag, url)
-
-        # we have entities, extract the (attr, string[, replacement]) tuples
-        assert self.entities
-        attribute_mappings = extract_attributes(entities=self.entities,
-                                                hashtag=hashtag,
-                                                attag=attag,
-                                                url=url)
-
-        text = []
-        status_text = unicode(self.text)
-        # start from the beggining
-        index = 0
-        for mapping in attribute_mappings:
-            attribute = mapping[0]
-            starts, ends = mapping[1]
-
-            # this text has an attribute associated
-            entity_text = status_text[starts:ends]
-
-            if attribute == url and len(mapping) == 3:
-                ## if the text is a url and a third element is included in the
-                ## tuple; the third element is the original URL
-                entity_text = mapping[2]
-
-            # append normal text before the text with an attribute
-            normal_text = status_text[index:starts]
-            if normal_text:
-                text.append(normal_text)
-
-            # append text with attribute
-            text_with_attribute = (attribute, entity_text)
-            text.append(text_with_attribute)
-
-            # update index, continue from where the attribute text ends
-            index = ends
-
-        # after parsing all attributes we can have some text left
-        normal_text = status_text[index:]
-        if normal_text:
-            text.append(normal_text)
-
-        return text
 
     @property
     def relative_created_at(self):
