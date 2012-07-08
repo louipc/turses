@@ -22,6 +22,8 @@ from turses.config import (
         FAVORITES_TIMELINE,
         MESSAGES_TIMELINE,
         OWN_TWEETS_TIMELINE,
+
+        configuration,
 )
 from turses.models import (
         is_DM,
@@ -53,10 +55,7 @@ class KeyHandler(object):
     functions.
     """
 
-    def __init__(self,
-                 configuration,
-                 controller):
-        self.configuration = configuration
+    def __init__(self, controller):
         self.controller = controller
 
         self.TURSES_COMMANDS = {
@@ -155,8 +154,8 @@ class KeyHandler(object):
         """
         Return the command name that corresponds to `key` (if any).
         """
-        for command_name in self.configuration.key_bindings:
-            bound_key, _ = self.configuration.key_bindings[command_name]
+        for command_name in configuration.key_bindings:
+            bound_key, _ = configuration.key_bindings[command_name]
             if key == bound_key:
                 return command_name
 
@@ -252,8 +251,7 @@ class Controller(Observer):
 
     # -- Initialization -------------------------------------------------------
 
-    def __init__(self, configuration, ui, api_backend):
-        self.configuration = configuration
+    def __init__(self, ui, api_backend):
         self.ui = ui
         self.editor = None
 
@@ -265,8 +263,8 @@ class Controller(Observer):
         self.mode = self.INFO_MODE
 
         # API
-        oauth_token = self.configuration.oauth_token
-        oauth_token_secret = self.configuration.oauth_token_secret
+        oauth_token = configuration.oauth_token
+        oauth_token_secret = configuration.oauth_token_secret
         self.api = AsyncApi(api_backend,
                             access_token_key=oauth_token,
                             access_token_secret=oauth_token_secret,)
@@ -298,7 +296,7 @@ class Controller(Observer):
             pass
 
         # update alarm
-        seconds = self.configuration.update_frequency
+        seconds = configuration.update_frequency
         self.loop.set_alarm_in(seconds, self.update_alarm)
 
     def main_loop(self):
@@ -307,10 +305,10 @@ class Controller(Observer):
         """
         if not hasattr(self, 'loop'):
             # Creating the main loop for the first time
-            self.key_handler = KeyHandler(self.configuration, self)
+            self.key_handler = KeyHandler(self)
             handler = self.key_handler.handle
             self.loop = urwid.MainLoop(self.ui,
-                                       self.configuration.palette,
+                                       configuration.palette,
                                        handle_mouse=False,
                                        unhandled_input=handler)
 
@@ -349,7 +347,7 @@ class Controller(Observer):
     def update_alarm(self, *args, **kwargs):
         self.update_all_timelines()
 
-        seconds = self.configuration.update_frequency
+        seconds = configuration.update_frequency
         self.loop.set_alarm_in(seconds, self.update_alarm)
 
     # -- Modes ----------------------------------------------------------------
@@ -395,7 +393,7 @@ class Controller(Observer):
             return
 
         self.mode = self.HELP_MODE
-        self.ui.show_help(self.configuration)
+        self.ui.show_help()
         self.redraw_screen()
 
     def is_in_help_mode(self):
@@ -451,7 +449,7 @@ class Controller(Observer):
             OWN_TWEETS_TIMELINE,
         ]
 
-        default_timelines = self.configuration.default_timelines
+        default_timelines = configuration.default_timelines
         is_any_default_timeline = any([default_timelines[timeline] for timeline 
                                                                    in timelines])
 
@@ -628,7 +626,7 @@ class Controller(Observer):
             self.ui.clear_header()
 
     def update_header(self):
-        template = self.configuration.styles['tab_template']
+        template = configuration.styles['tab_template']
         name_and_unread = [(tl.name, tl.unread_count) for tl in self.timelines]
 
         tabs = [template.format(timeline_name=name, unread=unread)
@@ -1215,7 +1213,7 @@ class Controller(Observer):
     # - Configuration ---------------------------------------------------------
 
     def reload_configuration(self):
-        self.configuration.reload()
+        configuration.reload()
         self.redraw_screen()
         self.info_message(_('Configuration reloaded'))
 
@@ -1254,7 +1252,7 @@ class Controller(Observer):
         """
         Open `urls` in $BROWSER if the environment variable is set.
         """
-        command = self.configuration.browser
+        command = configuration.browser
         if not command:
             message = _('You have to set the BROWSER environment variable'
                         ' to open URLs')

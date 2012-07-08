@@ -45,6 +45,8 @@ class ConfigurationTest(unittest.TestCase):
     def test_defaults(self):
         """Test that defaults get loaded correctly."""
         config = Configuration()
+        config.load()
+
         self.assertEqual(config.config_file, DEFAULT_CONFIG_FILE)
         self.assertEqual(config.token_file, DEFAULT_TOKEN_FILE)
 
@@ -106,21 +108,30 @@ class ConfigurationTest(unittest.TestCase):
     def test_args_account(self):
         account = 'bob'
         args = Args(account=account)
-        config = Configuration(args)
         token_path = join(CONFIG_PATH, "%s.token" % account)
+
+        config = Configuration()
+        config.parse_args(args)
+
         self.assertEqual(token_path, config.token_file)
 
     def test_args_generate_config(self):
         config_path = '~/.turses/custom_config'
         args = Args(generate_config=config_path)
-        ConfigurationMock = Mock(Configuration)
-        config = ConfigurationMock(args)
+
+        config = Configuration()
+        config.generate_config_file = Mock()
+        config.parse_args(args)
+
         config.generate_config_file.assert_called_once()
 
     def test_args_config(self):
         config_path = '/path/to/custom/config/file'
         args = Args(config=config_path)
-        config = Configuration(args)
+
+        config = Configuration()
+        config.parse_args(args)
+
         self.assertEqual(config_path, config.config_file)
 
 

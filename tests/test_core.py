@@ -6,7 +6,7 @@ import unittest
 
 from mock import Mock
 
-from turses.config import Configuration
+from turses.config import configuration
 from turses.core import KeyHandler, Controller
 
 
@@ -39,16 +39,14 @@ class KeyHandlerTest(unittest.TestCase):
             self.failIf(handler.called)
 
     def key(self, command):
-        key, _ = self.configuration.key_bindings[command]
+        key, _ = configuration.key_bindings[command]
         return key
 
     # - Tests -----------------------------------------------------------------
 
     def setUp(self):
         self.controller = Mock(Controller)
-        self.configuration = Configuration()
-        self.key_handler = KeyHandler(self.configuration,
-                                      self.controller)
+        self.key_handler = KeyHandler(self.controller)
 
         return_false = Mock(return_value=False)
         self.controller.is_in_info_mode = return_false

@@ -20,7 +20,9 @@ from urwid import (AttrMap, WidgetWrap, Padding, Divider, SolidFill,
 from turses import version
 from turses.config import (MOTION_KEY_BINDINGS, BUFFERS_KEY_BINDINGS,
                            TWEETS_KEY_BINDINGS, TIMELINES_KEY_BINDINGS,
-                           META_KEY_BINDINGS, TURSES_KEY_BINDINGS, )
+                           META_KEY_BINDINGS, TURSES_KEY_BINDINGS,
+
+                           configuration)
 from turses.models import is_DM, TWEET_MAXIMUM_CHARACTERS, parse_attributes
 from turses.utils import encode
 
@@ -35,16 +37,14 @@ class CursesInterface(WidgetWrap):
     all the components of the UI.
     """
 
-    def __init__(self,
-                 configuration):
-        self._configuration = configuration
+    def __init__(self):
         self._editor = None
 
         # header
         header = TabsWidget()
 
         # body
-        body = Banner(configuration)
+        body = Banner()
 
         # footer
         self._status_bar = configuration.styles.get('status_bar', False)
@@ -79,19 +79,18 @@ class CursesInterface(WidgetWrap):
     # -- Modes ----------------------------------------------------------------
 
     def draw_timelines(self, timelines):
-        self.frame.body = TimelinesBuffer(timelines,
-                                          configuration=self._configuration)
+        self.frame.body = TimelinesBuffer(timelines)
         self.frame.set_body(self.frame.body)
 
     def show_info(self):
         self.frame.header.clear()
-        self.frame.body = Banner(self._configuration)
+        self.frame.body = Banner()
         self.frame.set_body(self.frame.body)
 
-    def show_help(self, configuration):
+    def show_help(self):
         self.clear_header()
         self.status_info_message(_('type <esc> to leave the help page.'))
-        self.frame.body = HelpBuffer(configuration)
+        self.frame.body = HelpBuffer()
         self.frame.set_body(self.frame.body)
 
     # -- Header ---------------------------------------------------------------
@@ -174,7 +173,7 @@ class CursesInterface(WidgetWrap):
                                   done_signal_handler=done_signal_handler,
                                   **kwargs)
 
-        styles = self._configuration.styles
+        styles = configuration.styles
         horizontal_align = styles['editor_horizontal_align']
         vertical_align = styles['editor_vertical_align']
 
@@ -232,8 +231,7 @@ class CursesInterface(WidgetWrap):
     # - pop ups ---------------------------------------------------------------
 
     def show_user_info(self, user):
-        widget = UserInfo(user=user,
-                          configuration=self._configuration)
+        widget = UserInfo(user)
 
         self.show_widget_on_top(widget, width=40, height=18)
 
@@ -268,7 +266,7 @@ class CursesInterface(WidgetWrap):
 class Banner(WidgetWrap):
     """Displays information about the program."""
 
-    def __init__(self, configuration):
+    def __init__(self):
         self.text = []
 
         help_key = configuration.key_bindings['help'][0]
@@ -656,9 +654,7 @@ class HelpBuffer(ScrollableWidgetWrap):
 
     col = [30, 7]
 
-    def __init__(self, configuration):
-        self.configuration = configuration
-
+    def __init__(self):
         self.items = []
         self.create_help_buffer()
 
@@ -669,7 +665,7 @@ class HelpBuffer(ScrollableWidgetWrap):
 
     def _insert_bindings(self, bindings):
         for label in bindings:
-            values = self.configuration.key_bindings[label]
+            values = configuration.key_bindings[label]
             key, description = values[0], values[1]
             widgets = [
                 ('fixed', self.col[0], Text('  ' + label)),
@@ -790,19 +786,17 @@ class TimelineWidget(ScrollableListBox):
     which is rendered as a :class:`StatusWidget`.
     """
 
-    def __init__(self, timeline=None, configuration=None):
+    def __init__(self, timeline=None):
         statuses = timeline if timeline else []
-        status_widgets = [StatusWidget(status, configuration) for status
-                                                              in statuses]
+        status_widgets = [StatusWidget(status) for status in statuses]
         ScrollableListBox.__init__(self, status_widgets)
 
 
 class StatusWidget(WidgetWrap):
     """Widget containing a Twitter status."""
 
-    def __init__(self, status, configuration):
+    def __init__(self, status):
         self.status = status
-        self.configuration = configuration
 
         header_text = self._create_header(status)
         text = status.map_attributes(hashtag='hashtag',
@@ -816,10 +810,9 @@ class StatusWidget(WidgetWrap):
 
     def _build_widget(self, header_text, text, favorite=False):
         """Return the wrapped widget."""
-        box_around_status = self.configuration.styles.get('box_around_status',
+        box_around_status = configuration.styles.get('box_around_status',
                                                           True)
-        divider = self.configuration.styles.get('status_divider',
-                                                False)
+        divider = configuration.styles.get('status_divider', False)
 
         header = AttrMap(Text(header_text), 'header')
         body = Padding(AttrMap(Text(text), 'body'), left=1, right=1)
@@ -838,7 +831,7 @@ class StatusWidget(WidgetWrap):
             # use a divider
             # we focus the divider to change colors when this
             # widget is focused
-            styles = self.configuration.styles
+            styles = configuration.styles
             status_divider = styles.get('status_divider_char', '·')
 
             divider = AttrMap(Divider(status_divider),
@@ -883,7 +876,7 @@ class StatusWidget(WidgetWrap):
             retweet_count = str(status.retweet_count)
 
         # create header
-        styles = self.configuration.styles
+        styles = configuration.styles
         header_template = ' ' + styles.get('header_template') + ' '
         header = unicode(header_template).format(
             username=username,
@@ -897,7 +890,7 @@ class StatusWidget(WidgetWrap):
         return encode(header)
 
     def _dm_header(self, dm):
-        dm_template = ' ' + self.configuration.styles['dm_template'] + ' '
+        dm_template = ''.join([' ', configuration.styles['dm_template'], ' '])
         relative_created_at = dm.relative_created_at
         header = unicode(dm_template).format(
             sender_screen_name=dm.sender_screen_name,
@@ -973,7 +966,7 @@ class UserInfo(WidgetWrap):
     __metaclass__ = signals.MetaSignals
     signals = ['done']
 
-    def __init__(self, user, configuration):
+    def __init__(self, user):
         """
         """
         whitespace = Divider(' ')
@@ -1005,7 +998,7 @@ class UserInfo(WidgetWrap):
 
         # last status
         if user.status:
-            status = StatusWidget(user.status, configuration)
+            status = StatusWidget(user.status)
             widgets.append(status)
 
         pile = Pile(widgets)

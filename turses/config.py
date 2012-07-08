@@ -405,6 +405,10 @@ class Configuration(object):
     Generate and parse configuration files. When instantiated, it loads the
     defaults.
 
+    Calling :func:`Configuration.parse_args` with an
+    :class:`argparse.ArgumentParser` instance will modify the instance to match
+    the options provided by the command line arguments.
+
     Calling :func:`turses.config.Configuration.load` on this class' instances
     reads the preferences from the user configuration files. If no
     configuration or token files are found, this class will take care of
@@ -413,13 +417,27 @@ class Configuration(object):
     Offers backwards compatibility with the Tyrs configuration.
     """
 
-    def __init__(self, cli_args=None):
+    def __init__(self):
         """
         Create a `Configuration` taking into account the arguments
         from the command line interface (if any).
         """
-        self.load_defaults()
+        # load defaults
+        self.default_timelines = DEFAULT_TIMELINES
+        self.update_frequency = UPDATE_FREQUENCY
+        self.key_bindings = KEY_BINDINGS
+        self.palette = PALETTE
+        self.styles = STYLES
+        self.logging_level = LOGGING_LEVEL
 
+        # config and token files
+        self.config_file = DEFAULT_CONFIG_FILE
+        self.token_file = DEFAULT_TOKEN_FILE
+
+        # debug mode
+        self.debug = False
+
+        # browser
         self.browser = BROWSER
 
         # create the config directory if it does not exist
@@ -430,45 +448,31 @@ class Configuration(object):
                 print encode(_('Error creating config directory in %s' % CONFIG_DIR))
                 exit(3)
 
+    def parse_args(self, cli_args):
+        """Interprets the arguments provided by `cli_args`."""
         # generate config file and exit
         if cli_args and cli_args.generate_config:
             self.generate_config_file(config_file=cli_args.generate_config,)
-            exit(0)
 
         # path to configuration file
         if cli_args and cli_args.config:
-            config_file = cli_args.config
+            self.config_file = cli_args.config
         elif cli_args and cli_args.account:
-            config_file = path.join(CONFIG_PATH, '%s.config' % cli_args.account)
-        else:
-            config_file = DEFAULT_CONFIG_FILE
-
-        self.config_file = config_file
+            self.config_file = path.join(CONFIG_PATH, '%s.config' % cli_args.account)
 
         # path to token file
         if cli_args and cli_args.account:
-            token_file = path.join(CONFIG_PATH, '%s.token' % cli_args.account)
-        else:
-            token_file = DEFAULT_TOKEN_FILE
-
-        self.token_file = token_file
+            self.token_file = path.join(CONFIG_PATH, '%s.token' % cli_args.account)
 
         # debug mode
         self.debug = getattr(cli_args, 'debug', False)
 
     def load(self):
-        """Loads configuration from files."""
+        """
+        Loads configuration from files.
+        """
         self._init_config()
         self._init_token()
-
-    def load_defaults(self):
-        """Load default values into configuration."""
-        self.default_timelines = DEFAULT_TIMELINES
-        self.update_frequency = UPDATE_FREQUENCY
-        self.key_bindings = KEY_BINDINGS
-        self.palette = PALETTE
-        self.styles = STYLES
-        self.logging_level = LOGGING_LEVEL
 
     def _init_config(self):
         if path.isfile(LEGACY_CONFIG_FILE):
@@ -638,6 +642,7 @@ class Configuration(object):
             })
 
         self._generate_config_file(**kwargs)
+        exit(0)
 
     @wrap_exceptions
     def _generate_config_file(self, config_file):
@@ -761,3 +766,6 @@ class Configuration(object):
 
     def reload(self):
         self.parse_config_file(self.config_file)
+
+# configuration singleton
+configuration = Configuration()

@@ -14,7 +14,7 @@ from urwid import set_encoding
 
 from turses import __name__
 from turses import version as turses_version
-from turses.config import Configuration, LOG_FILE
+from turses.config import configuration, LOG_FILE
 from turses.ui import CursesInterface
 from turses.api.debug import MockApi
 from turses.api.backends import TweepyApi
@@ -53,8 +53,8 @@ def restore_title():
         set_title(getenv('SHELL').split('/')[-1])
 
 
-def parse_arguments():
-    """Parse arguments from the command line."""
+def read_arguments():
+    """Read arguments from the command line."""
 
     parser_title = "turses: Twitter client featuring a sexy curses interface."
     parser = ArgumentParser(parser_title)
@@ -107,7 +107,7 @@ def main():
     set_title(__name__)
     set_encoding('utf8')
 
-    args = parse_arguments()
+    args = read_arguments()
 
     # check if stdout has to be restored after program exit
     if any([args.debug,
@@ -122,8 +122,8 @@ def main():
     if save_and_restore_stdout:
         save_stdout()
 
-    # load configuration
-    configuration = Configuration(args)
+    # parse arguments and load configuration
+    configuration.parse_args(args)
     configuration.load()
 
     # start logger
@@ -131,7 +131,7 @@ def main():
                         level=configuration.logging_level)
 
     # create view
-    curses_interface = CursesInterface(configuration)
+    curses_interface = CursesInterface()
 
     # select API backend
     if args.offline:
@@ -140,8 +140,7 @@ def main():
         api_backend = TweepyApi
 
     # create controller
-    turses = Turses(configuration=configuration,
-                    ui=curses_interface,
+    turses = Turses(ui=curses_interface,
                     api_backend=api_backend)
     try:
         turses.start()
