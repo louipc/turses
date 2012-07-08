@@ -7,11 +7,15 @@ from sys import path
 path.append('../')
 
 from turses.config import (
-        PALETTE,
-
         CONFIG_PATH,
         DEFAULT_CONFIG_FILE,
         DEFAULT_TOKEN_FILE,
+        PALETTE,
+        STYLES,
+        DEFAULT_TIMELINES,
+        KEY_BINDINGS,
+        UPDATE_FREQUENCY,
+        LOGGING_LEVEL,
 
         validate_color,
         Configuration,
@@ -45,10 +49,21 @@ class ConfigurationTest(unittest.TestCase):
     def test_defaults(self):
         """Test that defaults get loaded correctly."""
         config = Configuration()
-        config.load()
 
+        # files
         self.assertEqual(config.config_file, DEFAULT_CONFIG_FILE)
         self.assertEqual(config.token_file, DEFAULT_TOKEN_FILE)
+
+        # config options
+        self.assertEqual(config.default_timelines, DEFAULT_TIMELINES)
+        self.assertEqual(config.update_frequency, UPDATE_FREQUENCY)
+        self.assertEqual(config.key_bindings, KEY_BINDINGS)
+        self.assertEqual(config.palette, PALETTE)
+        self.assertEqual(config.styles, STYLES)
+        self.assertEqual(config.logging_level, LOGGING_LEVEL)
+
+        # debug mode
+        self.assertEqual(config.debug, False)
 
     def test_parse_config_file(self):
         pass
