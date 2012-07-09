@@ -38,14 +38,3 @@ def encode(string):
         return string.encode(stdout.encoding, 'replace')
     except AttributeError:
         return string
-
-
-def spawn_process(command, args):
-    """
-    Spawn the process `command` with `args` as arguments in the background.
-    """
-    with open(devnull, 'w') as null:
-        call(' '.join([command, args, '&']),
-             shell=True,
-             stdout=null,
-             stderr=null,)
