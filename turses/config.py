@@ -364,7 +364,6 @@ UPDATE_FREQUENCY = 300
 # Environment
 
 HOME = getenv('HOME')
-BROWSER = getenv('BROWSER')
 
 # -- Configuration ------------------------------------------------------------
 
@@ -436,9 +435,6 @@ class Configuration(object):
 
         # debug mode
         self.debug = False
-
-        # browser
-        self.browser = BROWSER
 
         # create the config directory if it does not exist
         if not path.isdir(CONFIG_PATH):

@@ -7,14 +7,12 @@ This module contains the controller and key handling logic of turses.
 import logging
 from gettext import gettext as _
 from functools import partial, wraps
+import webbrowser
 
 import urwid
 from tweepy import TweepError
 
-from turses.utils import (
-        get_urls,
-        spawn_process,
-)
+from turses.utils import get_urls
 from turses.meta import async, wrap_exceptions, Observer
 from turses.config import (
         HOME_TIMELINE,
@@ -1231,8 +1229,7 @@ class Controller(Observer):
             self.info_message(_('No URLs found on this tweet'))
             return
 
-        args = ' '.join(urls)
-        self.open_urls_in_browser(args)
+        self.open_urls_in_browser(urls)
 
     @has_active_status
     def open_status_url(self):
@@ -1246,21 +1243,20 @@ class Controller(Observer):
             self.info_message(message)
             return
 
-        self.open_urls_in_browser(status.url)
+        self.open_urls_in_browser([status.url])
 
     def open_urls_in_browser(self, urls):
         """
         Open `urls` in $BROWSER if the environment variable is set.
         """
-        command = configuration.browser
-        if not command:
-            message = _('You have to set the BROWSER environment variable'
-                        ' to open URLs')
-            self.error_message(message)
-            return
-
+        # The webbrowser module respects the BROWSER environment variable,
+        # so if that's set, it'll use it, otherwise it will try to find
+        # something sensible
         try:
-            spawn_process(command, urls)
+            # Firefox, w3m, etc can't handle multiple URLs at command line, so
+            # split the URLs up for them
+            for url in urls:
+                webbrowser.open(url)
         except Exception, message:
             logging.exception(message)
             self.error_message(_('Unable to launch the browser'))
