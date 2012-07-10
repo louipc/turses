@@ -351,6 +351,7 @@ STYLES = {
     'status_divider_char': '─',
     'editor_horizontal_align': 'center',
     'editor_vertical_align': 'bottom',
+    'url_format': 'display',
 }
 
 # Debug
@@ -729,8 +730,8 @@ class Configuration(object):
                 elif (style == 'editor_horizontal_align' and
                       style in ['left', 'center', 'right']):
                     self.styles[style] = conf.get(SECTION_STYLES, style)
-                elif (style == 'editor_vertical_align' and
-                      style in ['top', 'middle', 'bottom']):
+                elif (style == 'url_format' and
+                      style in ['shortened', 'original', 'display']):
                     self.styles[style] = conf.get(SECTION_STYLES, style)
                 else:
                     self.styles[style] = unicode(conf.get(SECTION_STYLES, style),

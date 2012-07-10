@@ -207,6 +207,25 @@ Here's how it looks like:
     :align: center
     :alt: tweets rendered with a status divider
 
+Url format
+~~~~~~~~~~
+
+You can choose how URLs are rendered tweaking the ``url_format`` option in the
+``styles`` section. The following formats are available:
+
+- ``shortened``: URL shortened by Twitter (e.g. ``t.co/foo``)
+- ``original``: Full original URL (e.g. ``http://example.com/``)
+- ``display``: Original URL with an ellipsis if it's too long and trimming the
+    protocol prefix (e.g. ``example.com/a-very-long-⋯``)
+
+The default option is ``display``. Here's an example of a configuration option
+to display the full original URLs:
+
+::
+
+    [styles]
+    url_format = original
+
 Debug
 -----
 

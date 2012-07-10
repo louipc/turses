@@ -121,15 +121,22 @@ def extract_attributes(entities, hashtag, attag, url):
         Return a list with (`attr`, string) tuples for each string in
         `entity_list`.
         """
+        url_format = configuration.styles['url_format']
         attributes = []
         for entity in entity_list:
             # urls are a special case, we change the URL shortened by
             # Twitter (`http://t.co/*`) by the URL returned in
             # `display_url`
             indices = entity.get('indices')
-            url = entity.get('display_url', False)
+            is_url = entity.get('display_url', False)
 
-            if url:
+            if is_url:
+                # `display_url` is the default
+                url = entity.get('display_url')
+                if url_format == 'shortened':
+                    url = entity.get('url')
+                elif url_format == 'original' and 'expanded_url' in entity:
+                    url = entity.get('expanded_url')
                 mapping = (attr, indices, url)
             else:
                 mapping = (attr, indices)
