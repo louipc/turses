@@ -1,3 +1,8 @@
+0.2.6
+-----
+- configurable URL format
+- better browser integration (by @ivanov)
+
 0.2.5
 -----
 - search commands also available with no timelines
