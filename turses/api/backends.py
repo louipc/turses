@@ -11,7 +11,7 @@ from tweepy import API as BaseTweepyApi
 from tweepy import OAuthHandler as TweepyOAuthHandler
 
 from turses.meta import filter_result
-from turses.models import User, Status, DirectMessage
+from turses.models import User, Status, DirectMessage, List
 from turses.api.base import ApiAdapter
 
 
@@ -110,6 +110,7 @@ def _to_user(user, **kwargs):
     """
     Convert a `tweepy.User` to a `turses.models.User`.
     """
+
     defaults = {
         'id': user.id,
         'name': user.name,
@@ -120,11 +121,35 @@ def _to_user(user, **kwargs):
         'friends_count': user.friends_count,
         'followers_count': user.followers_count,
         'favorites_count': user.favourites_count,
-        'status': _to_status(user.status, user=user.screen_name),
     }
+
+    if hasattr(user, 'status'):
+        status = _to_status(user.status, user=user.screen_name)
+        defaults['status'] = status
 
     defaults.update(**kwargs)
     return User(**defaults)
+
+
+def _to_list(a_list, **kwargs):
+    """
+    Convert a `tweepy.List` to a `turses.models.List`.
+    """
+    defaults = {
+        'id': a_list.id,
+        'owner': _to_user(a_list.user),
+        # TODO: `created_at` should be a datetime object
+        'created_at': a_list.created_at,
+        'name': a_list.name,
+        'slug': a_list.slug,
+        'description': a_list.description,
+        'member_count': a_list.member_count,
+        'subscriber_count': a_list.subscriber_count,
+        'private': a_list.mode == u'private',
+    }
+
+    defaults.update(**kwargs)
+    return List(**defaults)
 
 to_status = partial(filter_result,
                     filter_func=_to_status)
@@ -134,6 +159,8 @@ to_direct_message = partial(filter_result,
                             filter_func=_to_direct_message)
 to_user = partial(filter_result,
                   filter_func=_to_user)
+to_list = partial(filter_result,
+                  filter_func=_to_list)
 
 
 class TweepyApi(BaseTweepyApi, ApiAdapter):
@@ -269,32 +296,50 @@ class TweepyApi(BaseTweepyApi, ApiAdapter):
 
     # list methods
 
+    @to_list
     def get_lists(self, screen_name):
-        raise NotImplementedError
+        return self._api.lists(screen_name)
 
+    @to_list
     def get_own_lists(self):
-        raise NotImplementedError
+        return self._api.lists()
 
+    @to_list
     def get_list_memberships(self):
-        raise NotImplementedError
+        return self._api.lists_memberships()
 
+    @to_list
     def get_list_subscriptions(self):
-        raise NotImplementedError
+        return self._api.lists_subscriptions()
 
-    def get_list_timeline(self, list):
-        raise NotImplementedError
+    @to_status
+    def get_list_timeline(self, a_list):
+        owner = a_list.owner.screen_name
+        return self._api.list_timeline(owner=owner, slug=a_list.slug)
 
-    def get_list_members(self, list):
-        raise NotImplementedError
+    @to_user
+    def get_list_members(self, a_list):
+        owner = a_list.owner.screen_name
+        return self._api.list_members(owner=owner, slug=a_list.slug)
 
-    def is_list_member(self, user, list):
-        raise NotImplementedError
+    def is_list_member(self, user, a_list):
+        return bool(self._api.is_list_member(owner=user.screen_name,
+                                             slug=a_list.slug,
+                                             user_id=user.id,))
 
-    def subscribe_to_list(self, list):
-        raise NotImplementedError
+    @to_list
+    def subscribe_to_list(self, a_list):
+        owner = a_list.owner
+        return self._api.subscribe_list(owner=owner.screen_name,
+                                        slug=a_list.slug)
 
-    def get_list_subscribers(self, list):
-        raise NotImplementedError
+    @to_user
+    def get_list_subscribers(self, a_list):
+        owner = a_list.owner
+        return self._api.list_subscribers(owner=owner.screen_name,
+                                          slug=a_list.slug,)
 
-    def is_list_subscriber(self, user, list):
-        raise NotImplementedError
+    def is_list_subscriber(self, user, a_list):
+        return bool(self._api.is_subscribed_list(owner=user.screen_name,
+                                                 slug=a_list.slug,
+                                                 user_id=user.id,))

@@ -363,6 +363,9 @@ class AsyncApi(ApiAdapter):
     @wrap_exceptions
     def destroy_favorite(self, status):
         self._api.destroy_favorite(status)
+    
+    def get_list(self, screen_name, slug):
+        pass
 
     def get_lists(self, screen_name):
         pass

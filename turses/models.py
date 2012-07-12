@@ -419,7 +419,7 @@ class User(object):
                  friends_count,
                  followers_count,
                  favorites_count,
-                 status):
+                 status=None):
         self.id = id
         self.name = name
         self.screen_name = screen_name
@@ -604,6 +604,7 @@ class List(object):
                  owner,
                  created_at,
                  name,
+                 slug,
                  description,
                  member_count,
                  subscriber_count,
@@ -612,6 +613,7 @@ class List(object):
         self.owner = owner
         self.created_at = created_at
         self.name = name
+        self.slug = slug
         self.description = description
         self.member_count = member_count
         self.subscriber_count = subscriber_count

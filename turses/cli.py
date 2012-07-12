@@ -23,12 +23,12 @@ from turses.core import Controller as Turses
 
 def save_stdout():
     """Save shell screen."""
-    print "\033[?1049h\033[H"
+    stdout.write("\033[?1049h\033[H")
 
 
 def restore_stdout():
     """Restore saved shell screen."""
-    print "\033[?1049l"
+    stdout.write("\033[?1049l")
 
 
 def set_title(string):
