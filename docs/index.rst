@@ -44,6 +44,7 @@ you.
 .. toctree::
    :maxdepth: 1
 
+   dev/setup
    dev/internals
    dev/authors
    dev/changelog
