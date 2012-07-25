@@ -350,6 +350,11 @@ class CursesInterface(WidgetWrap):
         if callable(getattr(self.frame.body, 'set_focus', None)):
             self.frame.body.set_focus(index)
 
+    def center_focus(self):
+        if callable(getattr(self.frame.body, 'set_focus_valign', None)):
+            logging.debug('centering focus')
+            self.frame.body.set_focus_valign('middle')
+
     # -- motions --------------------------------------------------------------
 
     def focus_next(self):
@@ -972,6 +977,9 @@ class TimelinesBuffer(ScrollableWidgetWrap):
 
     def set_focus(self, index):
         self.active_widget.set_focus(index)
+
+    def set_focus_valign(self, valign):
+        self.active_widget.set_focus_valign(valign)
 
     def focus_timeline(self, index):
         self.columns.set_focus_column(index)

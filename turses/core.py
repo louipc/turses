@@ -49,7 +49,7 @@ def merge_dicts(*args):
 
 class KeyHandler(object):
     """
-    Maps key bindings from configuration to calls to :class:`Controller` 
+    Maps key bindings from configuration to calls to :class:`Controller`
     functions.
     """
 
@@ -448,7 +448,7 @@ class Controller(Observer):
         ]
 
         default_timelines = configuration.default_timelines
-        is_any_default_timeline = any([default_timelines[timeline] for timeline 
+        is_any_default_timeline = any([default_timelines[timeline] for timeline
                                                                    in timelines])
 
         if is_any_default_timeline:
@@ -679,6 +679,11 @@ class Controller(Observer):
         active_status = active_timeline.active
         if active_status:
             active_timeline.update(max_id=active_status.id)
+
+        # Center focus in order to make the fetched tweets visible
+        self.draw_timelines()
+        self.ui.center_focus()
+        self.redraw_screen()
 
     @has_timelines
     def previous_timeline(self):
