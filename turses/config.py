@@ -453,6 +453,7 @@ class Configuration(object):
         # generate config file and exit
         if cli_args and cli_args.generate_config:
             self.generate_config_file(config_file=cli_args.generate_config,)
+            exit(0)
 
         # path to configuration file
         if cli_args and cli_args.config:
@@ -642,7 +643,6 @@ class Configuration(object):
             })
 
         self._generate_config_file(**kwargs)
-        exit(0)
 
     @wrap_exceptions
     def _generate_config_file(self, config_file):
