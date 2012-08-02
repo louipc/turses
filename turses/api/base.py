@@ -11,7 +11,7 @@ tokens.
 
 from abc import ABCMeta, abstractmethod
 import oauth2 as oauth
-from urlparse import parse_qsl
+from urlparse import parse_qsl, urljoin
 from gettext import gettext as _
 
 from turses.models import is_DM
@@ -24,16 +24,18 @@ TWITTER_CONSUMER_SECRET = 'viud49uVgdVO9dnOGxSQJRo7jphTioIlEn3OdpkZI'
 
 BASE_URL = 'https://api.twitter.com'
 
+HTTP_OK = 200
 
-def authorization():
+
+def get_authorization_tokens():
     """
     Authorize `turses` to use a Twitter account.
 
-    Return a dictionary with `oauth_token` and `oauth_token_secret`
+    Return a dictionary with `oauth_token` and `oauth_token_secret` keys
     if succesfull, `None` otherwise.
     """
     # This function is borrowed from python-twitter developers
-
+    #
     # Copyright 2007 The Python-Twitter Developers
     #
     # Licensed under the Apache License, Version 2.0 (the "License");
@@ -47,60 +49,104 @@ def authorization():
     # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     # See the License for the specific language governing permissions and
     # limitations under the License.
-    print 'base_url:{0}'.format(BASE_URL)
-
-    REQUEST_TOKEN_URL = BASE_URL + '/oauth/request_token'
-    ACCESS_TOKEN_URL = BASE_URL + '/oauth/access_token'
-    AUTHORIZATION_URL = BASE_URL + '/oauth/authorize'
-
-    consumer_key = TWITTER_CONSUMER_KEY
-    consumer_secret = TWITTER_CONSUMER_SECRET
-    oauth_consumer = oauth.Consumer(key=consumer_key, secret=consumer_secret)
+    oauth_consumer = oauth.Consumer(key=TWITTER_CONSUMER_KEY,
+                                    secret=TWITTER_CONSUMER_SECRET)
     oauth_client = oauth.Client(oauth_consumer)
 
-    print encode(_('Requesting temp token from Twitter'))
+    print _('Requesting temporary token from Twitter')
 
-    resp, content = oauth_client.request(REQUEST_TOKEN_URL, 'GET')
+    try:
+        oauth_token, oauth_token_secret = get_temporary_tokens(oauth_client)
+    except Exception as e:
+        print e
+        return None
 
-    if resp['status'] != '200':
-        response = str(resp['status'])
-        message = _('Invalid respond, requesting temp token: %s') % response
-        print encode(message)
-        return
 
-    request_token = dict(parse_qsl(content))
-
+    authorization_url = urljoin(BASE_URL, '/oauth/authorize')
+    authorization_url_with_token = urljoin(authorization_url,
+                                           '?oauth_token=%s' % oauth_token)
     print
-    message = _('Please visit the following page to retrieve needed pin code'
-                'to obtain an Authentication Token:')
-    print encode(message)
+    print  _('Please visit the following page to retrieve the pin code needed '
+             'to obtain an Authorization Token:')
     print
-    print '%s?oauth_token=%s' % (AUTHORIZATION_URL,
-                                 request_token['oauth_token'])
+    print authorization_url_with_token
     print
 
-    pincode = raw_input('Pin code? ')
+    pin_code = raw_input(_('Pin code? '))
 
-    token = oauth.Token(request_token['oauth_token'],
-                        request_token['oauth_token_secret'])
-    token.set_verifier(pincode)
-
-    print ''
+    print
     print encode(_('Generating and signing request for an access token'))
-    print ''
+    print
 
+    # Generate an OAuth token that verifies the identity of the user
+    token = oauth.Token(oauth_token, oauth_token_secret)
+    token.set_verifier(pin_code)
+
+    # Re-create the OAuth client with the corresponding token
     oauth_client = oauth.Client(oauth_consumer, token)
-    resp, content = oauth_client.request(ACCESS_TOKEN_URL,
-                                         method='POST',
-                                         body='oauth_verifier=%s' % pincode)
-    access_token = dict(parse_qsl(content))
 
-    if resp['status'] == '200':
+    try:
+        access_tokens = get_access_tokens(oauth_client, pin_code)
+        return access_tokens
+    except Exception as e:
+        print e
+        return None
+
+def get_temporary_tokens(oauth_client):
+    """
+    Request temporary OAuth tokens using the provided `oauth_client`; these
+    tokens require the user to confirm its identity on Twitter's website for
+    obtaining an access token.
+
+    This function will return a tuple with a public and a private OAuth tokens
+    that can be used to retrieve an access token from Twitter if the request
+    was successfull.
+
+    If there is an error with the HTTP request, it will raise an
+    :class:`Exception` with a meaningful error message.
+    """
+    request_token_url = urljoin(BASE_URL, '/oauth/request_token')
+
+    response, content = oauth_client.request(request_token_url, 'GET')
+
+    status_code = int(response['status'])
+    if status_code == HTTP_OK:
+        response_content = dict(parse_qsl(content))
+
+        oauth_token = response_content['oauth_token']
+        oauth_token_secret = response_content['oauth_token_secret']
+
+        return (oauth_token, oauth_token_secret)
+    else:
+        error_message = _('Twitter responded with an HTTP %s code.' % str(status_code))
+        raise Exception(error_message)
+
+def get_access_tokens(oauth_client, pin_code):
+    """
+    Request access tokens using the provided `oauth_client` and the
+    `pin_code`that verifies the user's identity.
+
+    This function will return a dictionary with `oauth_token` and
+    `oauth_token_secret` keys if the request was successful.
+
+    If there is an error with the HTTP request, it will raise an
+    :class:`Exception` with a meaningful error message.
+    """
+    access_token_url = urljoin(BASE_URL, '/oauth/access_token')
+
+    response, content = oauth_client.request(access_token_url,
+                                             method='POST',
+                                             body='oauth_verifier=%s' % pin_code)
+
+    status_code = int(response['status'])
+
+    if status_code == HTTP_OK:
+        access_token = dict(parse_qsl(content))
         return access_token
     else:
-        print 'response:{0}'.format(resp['status'])
-        print encode(_('Request for access token failed: %s')) % resp['status']
-        return None
+        error_message = _('Twitter responded with an HTTP %s code.' % str(status_code))
+        raise Exception(error_message)
+
 
 
 class ApiAdapter(object):

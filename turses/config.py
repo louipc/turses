@@ -66,7 +66,7 @@ from gettext import gettext as _
 
 from turses.utils import encode
 from turses.meta import wrap_exceptions
-from turses.api.base import authorization
+from turses.api.base import get_authorization_tokens
 
 # -- Defaults -----------------------------------------------------------------
 
@@ -754,12 +754,15 @@ class Configuration(object):
             self.oauth_token_secret = conf.get(SECTION_TOKEN, 'oauth_token_secret')
 
     def authorize_new_account(self):
-        access_token = authorization()
-        if access_token:
-            self.oauth_token = access_token['oauth_token']
+        access_tokens = get_authorization_tokens()
+        if access_tokens:
+            access_token = access_tokens['oauth_token']
+            access_token_secret = access_tokens['oauth_token_secret']
+
+            self.oauth_token = access_token
             self.generate_token_file(self.token_file,
-                                   access_token['oauth_token'],
-                                   access_token['oauth_token_secret'])
+                                     access_token,
+                                     access_token_secret)
         else:
             # TODO: exit codes
             exit(2)
