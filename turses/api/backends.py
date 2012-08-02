@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 """
-This module contains implementations of `turses.api.base.Api` using multiple
-API backends.
+This module contains implementations of :class:`turses.api.base.ApiAdapter`
+using libraries for accessing the Twitter API.
 """
 
 from functools import wraps, partial
@@ -21,7 +21,7 @@ def include_entities(func):
     """
     @wraps(func)
     def wrapper(*args, **kwargs):
-        kwargs.update({'include_entities': True})
+        kwargs['include_entities'] = True
         return func(*args, **kwargs)
     return wrapper
 
@@ -165,7 +165,7 @@ to_list = partial(filter_result,
 
 class TweepyApi(BaseTweepyApi, ApiAdapter):
     """
-    A `ApiAdapter` implementation using `tweepy` library.
+    A :class:`turses.api.ApiAdapter` implementation using `tweepy` library.
 
         http://github.com/tweepy/tweepy/
     """
