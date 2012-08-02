@@ -34,7 +34,7 @@ pyc:
 watch:
 	tdaemon . $(TESTRUNNER) --custom-args="$(WATCHTESTFLAGS)"
 
-release: bump merge publish develop
+release: bump merge publish develop tag
 
 bump:
 	$(EDITOR) HISTORY.rst turses/__init__.py Makefile 
@@ -51,6 +51,9 @@ develop:
 
 publish:
 	$(PY) setup.py sdist upload
+
+tag:
+	@echo "Tag the release NOW!"
 
 stats:
 	@echo "pep8"

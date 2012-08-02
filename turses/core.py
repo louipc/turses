@@ -93,17 +93,18 @@ class KeyHandler(object):
         }
 
         self.TIMELINE_COMMANDS = {
-            'home':          self.controller.append_home_timeline,
-            'own_tweets':    self.controller.append_own_tweets_timeline,
-            'favorites':     self.controller.append_favorites_timeline,
-            'mentions':      self.controller.append_mentions_timeline,
-            'DMs':           self.controller.append_direct_messages_timeline,
-            'search':        self.controller.search,
-            'search_user':   self.controller.search_user,
-            'thread':        self.controller.append_thread_timeline,
-            'user_info':     self.controller.user_info,
-            'hashtags':      self.controller.search_hashtags,
-            'user_timeline': self.controller.focused_status_author_timeline,
+            'home':           self.controller.append_home_timeline,
+            'own_tweets':     self.controller.append_own_tweets_timeline,
+            'favorites':      self.controller.append_favorites_timeline,
+            'mentions':       self.controller.append_mentions_timeline,
+            'DMs':            self.controller.append_direct_messages_timeline,
+            'search':         self.controller.search,
+            'search_user':    self.controller.search_user,
+            'thread':         self.controller.append_thread_timeline,
+            'user_info':      self.controller.user_info,
+            'hashtags':       self.controller.search_hashtags,
+            'user_timeline':  self.controller.focused_status_author_timeline,
+            'retweets_of_me': self.controller.append_retweets_of_me_timeline,
         }
 
         self.TWITTER_COMMANDS = {
@@ -588,6 +589,20 @@ class Controller(Observer):
         self.append_timeline(name=_('Search: %s' % text),
                              update_function=self.api.search,
                              update_args=text,
+                             on_error=timeline_not_created,
+                             on_success=timeline_created)
+
+    @async
+    def append_retweets_of_me_timeline(self):
+        success_message = _('Your retweeted tweet timeline created')
+        timeline_created = partial(self.info_message,
+                                   success_message)
+        error_message = _('Error creating timeline for your retweeted tweets')
+        timeline_not_created = partial(self.info_message,
+                                       error_message)
+
+        self.append_timeline(name=_('Retweets of %s' % self.user.screen_name),
+                             update_function=self.api.get_retweets_of_me,
                              on_error=timeline_not_created,
                              on_success=timeline_created)
 

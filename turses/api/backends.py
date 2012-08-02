@@ -267,6 +267,11 @@ class TweepyApi(BaseTweepyApi, ApiAdapter):
     def search(self, text, **kwargs):
         return self._api.search(text, **kwargs)
 
+    @to_status
+    @include_entities
+    def get_retweets_of_me(self, **kwargs):
+        return self._api.retweets_of_me(**kwargs)
+
     def update(self, text):
         self._api.update_status(text)
 

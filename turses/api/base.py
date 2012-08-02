@@ -173,6 +173,10 @@ class ApiAdapter(object):
     def search(self, text):
         pass
 
+    @abstractmethod
+    def get_retweets_of_me(self):
+        pass
+
     # statuses
 
     @abstractmethod
@@ -314,6 +318,9 @@ class AsyncApi(ApiAdapter):
     def search(self, text, **kwargs):
         return self._api.search(text, **kwargs)
 
+    def get_retweets_of_me(self, **kwargs):
+        return self._api.get_retweets_of_me(**kwargs)
+
     def get_user(self, screen_name):
         return self._api.get_user(screen_name)
 
@@ -363,7 +370,7 @@ class AsyncApi(ApiAdapter):
     @wrap_exceptions
     def destroy_favorite(self, status):
         self._api.destroy_favorite(status)
-    
+
     def get_list(self, screen_name, slug):
         pass
 

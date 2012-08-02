@@ -182,6 +182,8 @@ KEY_BINDINGS = {
         ('T', _('open the thread of the focused status')),
     'hashtags':
         ('L', _('open a search timeline with the hashtags of the focused status')),
+    'retweets_of_me':
+        ('I', _('open a timeline with your tweets that have been retweeted')),
 
     # info
     'user_info':
@@ -265,6 +267,7 @@ TIMELINES_KEY_BINDINGS = [
     'user_timeline',
     'thread',
     'hashtags',
+    'retweets_of_me',
 ]
 
 META_KEY_BINDINGS = [
