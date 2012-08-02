@@ -1,3 +1,8 @@
+0.2.7
+-----
+- center focus when receiving tweets after scrolling down the bottom
+- get your tweets that have been retweeted
+
 0.2.6
 -----
 - configurable URL format
