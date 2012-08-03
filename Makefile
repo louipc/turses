@@ -8,7 +8,6 @@ PIPI=pip install
 PIPFLAGS=--ignore-installed --no-deps
 
 TESTRUNNER=nosetests
-TESTFLAGS=--nocapture --logging-clear-handlers --with-coverage --cover-package=turses
 WATCHTESTFLAGS=--verbosity=0
 
 
@@ -26,7 +25,7 @@ clean: pyc
 	rm -rf dist/
 
 test: pyc
-	$(TESTRUNNER) $(TESTFLAGS)
+	$(TESTRUNNER)
 
 pyc:
 	find . -name "*.pyc" -exec rm {} \;
@@ -53,7 +52,9 @@ publish:
 	$(PY) setup.py sdist upload
 
 tag:
+	@echo "===================="
 	@echo "Tag the release NOW!"
+	@echo "===================="
 
 stats:
 	@echo "pep8"

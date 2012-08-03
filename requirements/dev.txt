@@ -2,8 +2,3 @@
 
 mock
 nose
-coverage
-nose-progressive
-tdaemon
-sphinx
-rudolf2
