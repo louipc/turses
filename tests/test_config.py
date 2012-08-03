@@ -136,9 +136,11 @@ class ConfigurationTest(unittest.TestCase):
 
         config = Configuration()
         config.generate_config_file = Mock()
+        config.exit_with_code = Mock()
         config.parse_args(args)
 
         config.generate_config_file.assert_called_once()
+        config.exit_with_code.assert_called_once_with(0)
 
     def test_args_config(self):
         config_path = '/path/to/custom/config/file'

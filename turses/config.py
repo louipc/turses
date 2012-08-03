@@ -446,14 +446,14 @@ class Configuration(object):
                 mkdir(CONFIG_PATH)
             except:
                 print encode(_('Error creating config directory in %s' % CONFIG_DIR))
-                exit(3)
+                self.exit_with_code(3)
 
     def parse_args(self, cli_args):
         """Interprets the arguments provided by `cli_args`."""
         # generate config file and exit
         if cli_args and cli_args.generate_config:
             self.generate_config_file(config_file=cli_args.generate_config,)
-            exit(0)
+            self.exit_with_code(0)
 
         # path to configuration file
         if cli_args and cli_args.config:
@@ -638,7 +638,7 @@ class Configuration(object):
 
         if not path.isfile(config_file):
             kwargs.update({
-                'on_success': partial(self._config_generation_success, 
+                'on_success': partial(self._config_generation_success,
                                       config_file)
             })
 
@@ -663,7 +663,7 @@ class Configuration(object):
 
     def _config_generation_error(self, config_file):
         print encode(_('Unable to generate configuration file in %s')) % config_file
-        exit(2)
+        self.exit_with_code(2)
 
     def generate_token_file(self,
                             token_file,
@@ -765,10 +765,16 @@ class Configuration(object):
                                      access_token_secret)
         else:
             # TODO: exit codes
-            exit(2)
+            self.exit_with_code(2)
 
     def reload(self):
         self.parse_config_file(self.config_file)
+
+    def exit_with_code(self, code):
+        """Invoke `sys.exit` with the given status `code`."""
+        # This is here because makes testing exit codes easier
+        exit(code)
+
 
 # configuration singleton
 configuration = Configuration()
