@@ -188,6 +188,10 @@ class ApiAdapter(object):
     # timelines
 
     @abstractmethod
+    def get_status(self, status_id):
+        pass
+
+    @abstractmethod
     def get_home_timeline(self):
         pass
 
@@ -339,6 +343,9 @@ class AsyncApi(ApiAdapter):
 
     def verify_credentials(self):
         return self._api.verify_credentials()
+
+    def get_status(self, **kwargs):
+        return self._api.get_status(**kwargs)
 
     def get_home_timeline(self, **kwargs):
         return self._api.get_home_timeline(**kwargs)

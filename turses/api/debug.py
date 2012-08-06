@@ -94,6 +94,9 @@ class MockApi(ApiAdapter):
 
     # timelines
 
+    def get_status(self, status_id):
+        return random_status(id=status_id)
+
     def get_home_timeline(self):
         return random_status(quantity=3)
 
