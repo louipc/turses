@@ -443,16 +443,18 @@ class Status(object):
                  created_at,
                  user,
                  text,
+                 author='',
+                 entities=None,
+                 # reply
                  is_reply=False,
-                 is_retweet=False,
-                 is_favorite=False,
-                 # for replies
                  in_reply_to_user='',
-                 # for retweets
+                 in_reply_to_status_id=None,
+                 # retweet
+                 is_retweet=False,
                  retweeted_status=None,
                  retweet_count=0,
-                 author='',
-                 entities=None):
+                 # favorite
+                 is_favorite=False,):
         self.id = id
         self.created_at = created_at
         self.user = user

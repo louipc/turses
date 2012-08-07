@@ -41,6 +41,7 @@ def _to_status(status, **kwargs):
         'is_retweet': False,
         'is_favorite': False,
         'in_reply_to_user': '',
+        'in_reply_to_status_id': None,
         'retweeted_status': None,
         'retweet_count': 0,
         'author': '',
@@ -65,6 +66,9 @@ def _to_status(status, **kwargs):
     if getattr(status, 'in_reply_to_screen_name', False):
         defaults['is_reply'] = True
         defaults['in_reply_to_user'] = status.in_reply_to_screen_name
+
+    if getattr(status, 'in_reply_to_status_id', False):
+        defaults['in_reply_to_status_id'] = status.in_reply_to_status_id
 
     if hasattr(status, 'favorited'):
         defaults['is_favorite'] = status.favorited
