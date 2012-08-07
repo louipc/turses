@@ -555,17 +555,21 @@ class Controller(Observer):
                                        _('Failed to fetch thread'))
 
         if is_DM(status):
-            self.error_message(_('Doesn\'t look like a public conversation'))
-            return
+            participants = [status.sender_screen_name,
+                            status.recipient_screen_name,]
+            name = _('DM thread: %s' % ', '.join(participants))
+            update_function = self.api.get_message_thread
+        else:
+            participants = status.mentioned_usernames
+            author = status.authors_username
+            if author not in participants:
+                participants.insert(0, author)
 
-        participants = status.mentioned_usernames
-        author = status.authors_username
-        if author not in participants:
-            participants.insert(0, author)
+            name = _('thread: %s' % ', '.join(participants))
+            update_function = self.api.get_thread
 
-        name = _('thread: %s' % ', '.join(participants))
         self.append_timeline(name=name,
-                             update_function=self.api.get_thread,
+                             update_function=update_function,
                              update_args=status,
                              on_error=timeline_not_fetched,
                              on_success=timeline_fetched)

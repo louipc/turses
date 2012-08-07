@@ -285,6 +285,21 @@ class TweepyApi(BaseTweepyApi, ApiAdapter):
                                        count=count/2)
         return older + newer
 
+    def get_message_thread(self, dm, **kwargs):
+        messages = self.get_direct_messages(**kwargs)
+
+        me = self.verify_credentials()
+        if dm.sender_screen_name == me.screen_name:
+            with_user = dm.recipient_screen_name
+        else:
+            with_user = dm.sender_screen_name
+
+        def belongs_to_conversation(message):
+            return (message.sender_screen_name == with_user or
+                    message.recipient_screen_name == with_user)
+
+        return filter(belongs_to_conversation, messages)
+
     @to_status_from_search
     @include_entities
     def search(self, text, **kwargs):

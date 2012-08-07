@@ -220,6 +220,10 @@ class ApiAdapter(object):
         pass
 
     @abstractmethod
+    def get_message_thread(self, dm):
+        pass
+
+    @abstractmethod
     def search(self, text):
         pass
 
@@ -367,6 +371,9 @@ class AsyncApi(ApiAdapter):
 
     def get_thread(self, status, **kwargs):
         return self._api.get_thread(status, **kwargs)
+
+    def get_message_thread(self, dm, **kwargs):
+        return self._api.get_message_thread(dm, **kwargs)
 
     def search(self, text, **kwargs):
         return self._api.search(text, **kwargs)

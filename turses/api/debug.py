@@ -119,6 +119,9 @@ class MockApi(ApiAdapter):
     def get_thread(self, status):
         return random_status(quantity=14)
 
+    def get_message_thread(self, status):
+        return random_status(quantity=4)
+
     def search(self, text):
         return random_status(quantity=14)
 
