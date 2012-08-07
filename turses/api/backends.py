@@ -243,33 +243,47 @@ class TweepyApi(BaseTweepyApi, ApiAdapter):
         dms.extend(sent)
         return dms
 
-    # NOTE:
-    #  `get_thread` is not decorated with `to_status` because
-    #  it uses `TweepyApi.get_user_timeline` which is already
-    #  decorated
     @include_entities
     def get_thread(self, status, **kwargs):
         """
         Get the conversation to which `status` belongs.
-
-        It filters the last tweets by the participanting users and
-        based on mentions to each other.
         """
-        author = status.authors_username
-        mentioned = status.mentioned_usernames
-        if author not in mentioned:
-            mentioned.append(author)
+        users_in_conversation = [status.authors_username]
 
-        tweets = []
-        for username in mentioned:
-            tweets.extend(self.get_user_timeline(username, **kwargs))
+        # Save the users that are mentioned
+        for user in status.mentioned_usernames:
+            if user not in users_in_conversation:
+                users_in_conversation.append(user)
 
-        def belongs_to_conversation(status):
-            for username in mentioned:
-                if username in status.text:
+        # Fetch the tweets from participants before and after `status`
+        # was published
+        tweets_from_participants = []
+        for user in users_in_conversation:
+            user_tweets = self._get_older_and_newer_tweets(user, status.id)
+            tweets_from_participants.extend(user_tweets)
+
+        def belongs_to_conversation(tweet):
+            for user in users_in_conversation:
+                if user in tweet.text:
                     return True
 
-        return filter(belongs_to_conversation, tweets)
+        return filter(belongs_to_conversation, tweets_from_participants)
+
+    def _get_older_and_newer_tweets(self, screen_name, tweet_id, count=20):
+        """
+        Get tweets from the user with `screen_name` username that are older
+        and newer than `tweet_id`.
+
+        By default, 20 tweets are fetched. If provided, `count` controls how
+        many tweets are requested.
+        """
+        older = self.get_user_timeline(screen_name,
+                                       max_id=tweet_id,
+                                       count=count/2)
+        newer = self.get_user_timeline(screen_name,
+                                       since_id=tweet_id,
+                                       count=count/2)
+        return older + newer
 
     @to_status_from_search
     @include_entities
