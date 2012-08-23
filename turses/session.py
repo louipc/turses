@@ -25,14 +25,6 @@ their names. Here is a list with the valid names:
  - ``messages`` for the direct message timeline
  - ``own_tweets`` for the timeline with your tweets
 
-Here's an example of how the default section looks like:
-
-.. code-block:: ini
-
-    [DEFAULT]
-    visible = home
-    buffer = mentions, favorites, messages, own_tweets
-
 Declaring a custom session is as easy as defining a section on the
 ``sessions`` file. As an example, let's define a session called
 ``interactions``, in which we would only like to view our mentions and messages
@@ -126,7 +118,7 @@ def clean_timeline_list_string(timeline_list_string):
 
 
 class Session:
-    """Load and save sessions."""
+    """Loads and saves sessions."""
 
     def __init__(self, api):
         self.api = api
@@ -145,8 +137,18 @@ class Session:
 
         session_dict = self.sessions[session_name]
 
-        visible_names = clean_timeline_list_string(session_dict['visible'])
-        buffers_names = clean_timeline_list_string(session_dict['buffers'])
+        visible_names = session_dict['visible']
+        buffers_names = session_dict['buffers']
+
+        self.append_visible_timelines(visible_names, timeline_list)
+        self.append_background_timelines(buffers_names, timeline_list)
+
+    def append_visible_timelines(self, visible_string, timeline_list):
+        """"
+        Given a `visible_string` with the names of the visible timelines,
+        append them to `timeline_list` and make them all visible.
+        """
+        visible_names = clean_timeline_list_string(visible_string)
 
         # append first timeline (is always visible)
         first_timeline_name = visible_names.pop(0)
@@ -157,9 +159,15 @@ class Session:
         # append the rest of the visible timelines, expanding `timeline_list`
         # visible columns for showing the visible timelines
         for timeline_name in visible_names:
-            timeline_list.append_timeline(self.factory.create(timeline_name))
-            timeline_list.expand_visible_right()
+            timeline_list.append_timeline(self.factory(timeline_name))
+            timeline_list.expand_visible_next()
 
-        # append the rest of the timelines
+    def append_background_timelines(self, buffers_string, timeline_list):
+        """
+        Given a `buffers_string` with the names of the timelines that should be
+        loaded in the background, append them to `timeline_list`.
+        """
+        buffers_names = clean_timeline_list_string(buffers_string)
+
         for timeline_name in buffers_names:
-            timeline_list.append_timeline(self.factory.create(timeline_name))
+            timeline_list.append_timeline(self.factory(timeline_name))

@@ -127,3 +127,30 @@ class SessionTest(unittest.TestCase):
         self.session.populate(timeline_list)
 
         self.assertEqual(timeline_list.visible_timelines, [timeline_list[0]])
+
+    def test_custom_session(self):
+        """
+        Test that, when defining a custom session, the timelines are created
+        correctly.
+        """
+        timeline_list = TimelineList()
+
+        visible_string = 'home, mentions'
+        self.session.append_visible_timelines(visible_string, timeline_list)
+
+        # check that the visible timelines are appended correctly
+        self.assertTrue(len(timeline_list), 2)
+
+        self.assertTrue(is_home_timeline(timeline_list[0]))
+        self.assertTrue(is_mentions_timeline(timeline_list[1]))
+
+        self.assertEqual(timeline_list.visible_timelines,
+                         [timeline_list[0], timeline_list[1]])
+
+        # now let's append the buffers in the background
+        buffers_string = 'messages'
+        self.session.append_background_timelines(buffers_string, timeline_list)
+
+        self.assertTrue(len(timeline_list), 3)
+
+        self.assertTrue(is_messages_timeline(timeline_list[2]))
