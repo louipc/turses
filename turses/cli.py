@@ -15,6 +15,7 @@ from urwid import set_encoding
 from turses import __name__
 from turses import version as turses_version
 from turses.config import configuration, LOG_FILE
+from turses.models import TimelineList
 from turses.ui import CursesInterface
 from turses.api.base import AsyncApi
 from turses.api.debug import MockApi
@@ -134,6 +135,9 @@ def main():
     # create view
     curses_interface = CursesInterface()
 
+    # create model
+    timeline_list = TimelineList()
+
     # create API
     if args.offline:
         api_backend = MockApi
@@ -146,7 +150,9 @@ def main():
                    access_token_secret=oauth_token_secret,)
 
     # create controller
-    turses = Turses(ui=curses_interface, api=api)
+    turses = Turses(ui=curses_interface,
+                    api=api,
+                    timelines=timeline_list,)
     try:
         turses.start()
     except KeyboardInterrupt:

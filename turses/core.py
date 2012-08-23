@@ -31,7 +31,6 @@ from turses.models import (
         sanitize_username,
 
         Timeline,
-        TimelineList,
 )
 
 
@@ -249,15 +248,17 @@ class Controller(Observer):
 
     # -- Initialization -------------------------------------------------------
 
-    def __init__(self, ui, api):
+    def __init__(self, ui, api, timelines):
+        # View
         self.ui = ui
+
+        # Model
+        self.timelines = timelines
+        self.timelines.subscribe(self)
+
         self.api = api
 
         self.editor = None
-
-        # Model
-        self.timelines = TimelineList()
-        self.timelines.subscribe(self)
 
         # Mode
         self.mode = self.INFO_MODE
