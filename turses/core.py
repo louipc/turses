@@ -33,7 +33,6 @@ from turses.models import (
         Timeline,
         TimelineList,
 )
-from turses.api.base import AsyncApi
 
 
 def merge_dicts(*args):
@@ -250,8 +249,10 @@ class Controller(Observer):
 
     # -- Initialization -------------------------------------------------------
 
-    def __init__(self, ui, api_backend):
+    def __init__(self, ui, api):
         self.ui = ui
+        self.api = api
+
         self.editor = None
 
         # Model
@@ -260,13 +261,6 @@ class Controller(Observer):
 
         # Mode
         self.mode = self.INFO_MODE
-
-        # API
-        oauth_token = configuration.oauth_token
-        oauth_token_secret = configuration.oauth_token_secret
-        self.api = AsyncApi(api_backend,
-                            access_token_key=oauth_token,
-                            access_token_secret=oauth_token_secret,)
 
     def start(self):
         self.main_loop()

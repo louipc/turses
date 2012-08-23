@@ -16,6 +16,7 @@ from turses import __name__
 from turses import version as turses_version
 from turses.config import configuration, LOG_FILE
 from turses.ui import CursesInterface
+from turses.api.base import AsyncApi
 from turses.api.debug import MockApi
 from turses.api.backends import TweepyApi
 from turses.core import Controller as Turses
@@ -133,21 +134,25 @@ def main():
     # create view
     curses_interface = CursesInterface()
 
-    # select API backend
+    # create API
     if args.offline:
         api_backend = MockApi
     else:
         api_backend = TweepyApi
+    oauth_token = configuration.oauth_token
+    oauth_token_secret = configuration.oauth_token_secret
+    api = AsyncApi(api_backend,
+                   access_token_key=oauth_token,
+                   access_token_secret=oauth_token_secret,)
 
     # create controller
-    turses = Turses(ui=curses_interface,
-                    api_backend=api_backend)
+    turses = Turses(ui=curses_interface, api=api)
     try:
         turses.start()
     except KeyboardInterrupt:
         pass
     except:
-        # open the debugger
+        # A unexpected exception occurred, open the debugger
         if args.debug or args.offline:
             import pdb
             pdb.post_mortem()
