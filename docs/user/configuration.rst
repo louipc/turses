@@ -14,10 +14,10 @@ This sections allows you to configure which timelines are created when
 ``turses`` is launched. The default timelines are:
 
 - home: The tweets and retweets from the people you follow.
-- own_tweets: Your own tweets and retweets.
-- messages: Messages sent to and from you.
-- favorites: Your favorited tweets.
 - mentions: Tweets mentioning you.
+- favorites: Your favorited tweets.
+- messages: Messages sent to and from you.
+- own_tweets: Your own tweets and retweets.
 
 You can controll wether a timeline is created at startup assigning ``true`` or
 ``false`` to the name of the timeline in the ``timelines`` section.
@@ -30,10 +30,10 @@ active:
 
     [timelines]
     home = true
-    own_tweets = false
-    messages = false
-    favorites = false
     mentions = true
+    favorites = false
+    messages = false
+    own_tweets = false
 
 
 Twitter
