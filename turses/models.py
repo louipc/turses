@@ -184,7 +184,10 @@ class TimelineList(UnsortedActiveList, Observable):
         return self.timelines.__iter__()
 
     def __len__(self):
-        return self.timelines.__len__()
+        return len(self.timelines)
+
+    def __getitem__(self, key):
+        return self.timelines[key]
 
     # from `UnsortedActiveList`
 
@@ -362,8 +365,8 @@ class Timeline(ActiveList, Updatable):
     def __iter__(self):
         return self.statuses.__iter__()
 
-    def __getitem__(self, i):
-        return self.statuses[i]
+    def __getitem__(self, key):
+        return self.statuses[key]
 
     # from `ActiveList`
 
