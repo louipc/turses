@@ -16,6 +16,7 @@ from turses.session import (
     is_favorites_timeline,
     is_messages_timeline,
     is_own_timeline,
+    is_search_timeline,
 )
 
 
@@ -58,6 +59,13 @@ class HelperFunctionTest(unittest.TestCase):
         messages_timeline = Timeline(update_function=mock_api.get_direct_messages)
         self.assertTrue(is_messages_timeline(messages_timeline))
 
+    def test_is_search_timeline(self):
+        a_timeline = Timeline()
+        self.assertFalse(is_search_timeline(a_timeline))
+
+        search_timeline = Timeline(update_function=mock_api.search)
+        self.assertTrue(is_search_timeline(search_timeline))
+
     def test_clean_timeline_list_string(self):
         self.assertEqual(clean_timeline_list_string(''), [])
 
@@ -81,7 +89,27 @@ class TimelineFactoryTest(unittest.TestCase):
     def setUp(self):
         self.factory = TimelineFactory(mock_api)
 
+    def valid_name(self, timeline_name):
+        """Test that `timeline_name` is a valid timeline name."""
+        self.assertTrue(self.factory.valid_timeline_name(timeline_name))
+
+    def test_default_names_are_valid_timeline_names(self):
+        self.valid_name('home')
+        self.valid_name('mentions')
+        self.valid_name('favorites')
+        self.valid_name('messages')
+        self.valid_name('own_tweets')
+
+    def test_search_names_are_valid_timeline_name(self):
+        self.valid_name('search:turses')
+        self.valid_name('search:I love ramen!')
+        self.valid_name('search:#Python is awesome')
+
     def created_timeline_verifies(self, name, prop):
+        """
+        Test that the timeline created from `name` verifies the `prop`
+        property.
+        """
         timeline = self.factory(name)
         self.assertTrue(prop(timeline))
 
@@ -99,6 +127,16 @@ class TimelineFactoryTest(unittest.TestCase):
 
     def test_timeline_factory_own_tweets(self):
         self.created_timeline_verifies('own_tweets', is_own_timeline)
+
+    def test_timeline_factory_search(self):
+        self.created_timeline_verifies('search:turses', is_search_timeline)
+
+    def test_timeline_factory_search_query(self):
+        query = 'Programming is fun'
+
+        timeline = self.factory(':'.join(['search', query]))
+
+        self.assertEqual(timeline._args, [query])
 
 
 class SessionTest(unittest.TestCase):
@@ -135,22 +173,23 @@ class SessionTest(unittest.TestCase):
         """
         timeline_list = TimelineList()
 
-        visible_string = 'home, mentions'
+        visible_string = 'home, mentions, search:turses'
         self.session.append_visible_timelines(visible_string, timeline_list)
 
         # check that the visible timelines are appended correctly
-        self.assertTrue(len(timeline_list), 2)
+        self.assertTrue(len(timeline_list), 3)
 
         self.assertTrue(is_home_timeline(timeline_list[0]))
         self.assertTrue(is_mentions_timeline(timeline_list[1]))
+        self.assertTrue(is_search_timeline(timeline_list[2]))
 
         self.assertEqual(timeline_list.visible_timelines,
-                         [timeline_list[0], timeline_list[1]])
+                         [timeline_list[0], timeline_list[1], timeline_list[2]])
 
         # now let's append the buffers in the background
         buffers_string = 'messages'
         self.session.append_background_timelines(buffers_string, timeline_list)
 
-        self.assertTrue(len(timeline_list), 3)
+        self.assertTrue(len(timeline_list), 4)
 
-        self.assertTrue(is_messages_timeline(timeline_list[2]))
+        self.assertTrue(is_messages_timeline(timeline_list[3]))

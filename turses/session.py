@@ -24,16 +24,18 @@ their names. Here is a list with the valid names:
  - ``favorites`` for the favorites timeline
  - ``messages`` for the direct message timeline
  - ``own_tweets`` for the timeline with your tweets
+ - ``search:<query>`` for search timelines
 
 Declaring a custom session is as easy as defining a section on the
 ``sessions`` file. As an example, let's define a session called
-``interactions``, in which we would only like to view our mentions and messages
-and load the home timeline in background:
+``interactions``, in which we would only like to view our mentions, messages
+and what people are saying about ``turses``; and load the home timeline in
+background:
 
 .. code-block:: ini
 
     [interactions]
-    visible = mentions, messages
+    visible = mentions, messages, search:turses
     buffer = home
 
 If you would like to load a session when starting ``turses``, you must provide
@@ -59,8 +61,6 @@ from turses.models import Timeline
 
 SESSIONS_FILE = path.join(CONFIG_PATH, 'sessions')
 
-invalid_name_re = re.compile(r'^\s*$')
-
 
 def check_update_function_name(timeline, update_function_name=None):
     if not isinstance(timeline, Timeline):
@@ -82,7 +82,11 @@ is_own_timeline = partial(check_update_function_name,
                           update_function_name='get_own_timeline')
 is_messages_timeline = partial(check_update_function_name,
                                update_function_name='get_direct_messages')
+is_search_timeline = partial(check_update_function_name,
+                             update_function_name='search')
 
+
+search_name_re = re.compile(r'^search:(?P<query>.+)$')
 
 class TimelineFactory:
     def __init__(self, api):
@@ -107,6 +111,23 @@ class TimelineFactory:
             return Timeline(name=_('me'),
                             update_function=self.api.get_own_timeline,)
 
+        is_search = search_name_re.match(timeline)
+        if is_search:
+            query = is_search.groupdict()['query']
+            return Timeline(name=_('Search: %s' % query),
+                            update_function=self.api.search,
+                            update_function_args=query,)
+
+    def valid_timeline_name(self, name):
+        if name in ['home', 'mentions', 'favorites', 'messages', 'own_tweets']:
+            return True
+
+        # search
+        if search_name_re.match(name):
+            return True
+
+        return False
+
 
 def clean_timeline_list_string(timeline_list_string):
     """
@@ -115,6 +136,9 @@ def clean_timeline_list_string(timeline_list_string):
     """
     timeline_names = [name.strip() for name in timeline_list_string.split(',')]
     return [name.lower() for name in timeline_names if not invalid_name_re.match(name)]
+
+
+invalid_name_re = re.compile(r'^\s*$')
 
 
 class Session:
