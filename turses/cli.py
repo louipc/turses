@@ -78,6 +78,11 @@ def read_arguments():
                         "--generate-config",
                         help=generate_config_help)
 
+    # load session
+    parser.add_argument("-s",
+                        "--session",
+                        help=_("Load the specified session"))
+
     # version
     version = "turses %s" % turses_version
     parser.add_argument("-v",

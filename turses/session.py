@@ -53,7 +53,7 @@ from os import path
 from functools import partial
 from gettext import gettext as _
 
-from turses.config import CONFIG_PATH
+from turses.config import CONFIG_PATH, configuration
 from turses.models import Timeline
 
 
@@ -132,8 +132,8 @@ class Session:
 
     def populate(self, timeline_list, session=None):
         """Populate `timeline_list` with the session timelines."""
-
-        session_name = 'default' if session is None else session
+        # TODO: validate that the session EXISTS
+        session_name = configuration.session
 
         session_dict = self.sessions[session_name]
 

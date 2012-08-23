@@ -29,10 +29,12 @@ class Args(object):
     def __init__(self,
                  account=None,
                  config=None,
-                 generate_config=None):
+                 generate_config=None,
+                 session=None):
         self.account = account
         self.config = config
         self.generate_config = generate_config
+        self.session = session
 
 
 class ConfigurationTest(unittest.TestCase):
@@ -150,6 +152,22 @@ class ConfigurationTest(unittest.TestCase):
         config.parse_args(args)
 
         self.assertEqual(config_path, config.config_file)
+
+    def test_no_session_arg_means_default_session(self):
+        args = Args()
+
+        config = Configuration()
+        config.parse_args(args)
+
+        self.assertEqual('default', config.session)
+
+    def test_args_session(self):
+        args = Args(session='interactions')
+
+        config = Configuration()
+        config.parse_args(args)
+
+        self.assertEqual('interactions', config.session)
 
 
 if __name__ == '__main__':

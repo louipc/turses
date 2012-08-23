@@ -371,6 +371,8 @@ HOME = getenv('HOME')
 
 # -- Configuration ------------------------------------------------------------
 
+DEFAULT_SESSION = 'default'
+
 # Default config path
 CONFIG_DIR = '.turses'
 CONFIG_PATH = path.join(HOME, CONFIG_DIR)
@@ -432,6 +434,7 @@ class Configuration(object):
         self.palette = PALETTE
         self.styles = STYLES
         self.logging_level = LOGGING_LEVEL
+        self.session = DEFAULT_SESSION
 
         # config and token files
         self.config_file = DEFAULT_CONFIG_FILE
@@ -450,20 +453,26 @@ class Configuration(object):
 
     def parse_args(self, cli_args):
         """Interprets the arguments provided by `cli_args`."""
-        # generate config file and exit
-        if cli_args and cli_args.generate_config:
+        if cli_args is None:
+            return
+
+        if cli_args.generate_config:
             self.generate_config_file(config_file=cli_args.generate_config,)
             self.exit_with_code(0)
 
         # path to configuration file
-        if cli_args and cli_args.config:
+        if cli_args.config:
             self.config_file = cli_args.config
-        elif cli_args and cli_args.account:
+        elif cli_args.account:
             self.config_file = path.join(CONFIG_PATH, '%s.config' % cli_args.account)
 
         # path to token file
-        if cli_args and cli_args.account:
+        if cli_args.account:
             self.token_file = path.join(CONFIG_PATH, '%s.token' % cli_args.account)
+
+        # session
+        if cli_args.session:
+            self.session = cli_args.session
 
         # debug mode
         self.debug = getattr(cli_args, 'debug', False)
