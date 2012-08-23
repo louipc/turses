@@ -82,7 +82,7 @@ class TimelineFactoryTest(unittest.TestCase):
         self.factory = TimelineFactory(mock_api)
 
     def created_timeline_verifies(self, name, prop):
-        timeline = self.factory.create(name)
+        timeline = self.factory(name)
         self.assertTrue(prop(timeline))
 
     def test_timeline_factory_home(self):

@@ -96,7 +96,7 @@ class TimelineFactory:
     def __init__(self, api):
         self.api = api
 
-    def create(self, timeline_string):
+    def __call__(self, timeline_string):
         timeline = timeline_string.strip()
 
         if timeline == 'home':
@@ -150,7 +150,7 @@ class Session:
 
         # append first timeline (is always visible)
         first_timeline_name = visible_names.pop(0)
-        first_timeline = self.factory.create(first_timeline_name)
+        first_timeline = self.factory(first_timeline_name)
 
         timeline_list.append_timeline(first_timeline)
 
