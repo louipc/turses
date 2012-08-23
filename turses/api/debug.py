@@ -125,6 +125,9 @@ class MockApi(ApiAdapter):
     def search(self, text):
         return random_status(quantity=14)
 
+    def get_retweets_of_me(self):
+        return random_status(quantity=14)
+
     # statuses
 
     def update(self, text):
