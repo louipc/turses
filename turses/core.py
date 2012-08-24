@@ -32,6 +32,7 @@ from turses.models import (
 
         Timeline,
 )
+from turses.session import Session
 
 
 def merge_dicts(*args):
@@ -251,17 +252,21 @@ class Controller(Observer):
     def __init__(self, ui, api, timelines):
         # View
         self.ui = ui
-
-        # Model
-        self.timelines = timelines
-        self.timelines.subscribe(self)
-
         self.api = api
+        self.timelines = timelines
+
+        # Load session
+        session = Session(self.api)
+        session.load()
+        session.populate(self.timelines)
 
         self.editor = None
 
-        # Mode
+        # Default Mode
         self.mode = self.INFO_MODE
+
+        # Subscribe to model updates
+        self.timelines.subscribe(self)
 
     def start(self):
         self.main_loop()
@@ -283,7 +288,13 @@ class Controller(Observer):
 
         # initialize the timelines
         self.info_message(_('Initializing timelines'))
-        self.append_default_timelines()
+
+        for timeline in self.timelines:
+            timeline.update()
+            timeline.activate_first()
+
+        self.timeline_mode()
+        self.clear_status()
 
         # Main loop has to be running
         while not getattr(self, 'loop'):
@@ -429,46 +440,7 @@ class Controller(Observer):
         timeline.update()
         timeline.activate_first()
         self.timelines.append_timeline(timeline)
-        if self.is_in_info_mode():
-            #self.timeline_mode()
-            pass
 
-    @async
-    def append_default_timelines(self):
-        timelines = [
-            HOME_TIMELINE,
-            MENTIONS_TIMELINE,
-            FAVORITES_TIMELINE,
-            MESSAGES_TIMELINE,
-            OWN_TWEETS_TIMELINE,
-        ]
-
-        default_timelines = configuration.default_timelines
-        is_any_default_timeline = any([default_timelines[timeline] for timeline
-                                                                   in timelines])
-
-        if is_any_default_timeline:
-            self.timeline_mode()
-        else:
-            message = _('You don\'t have any default timelines activated')
-            self.info_message(message)
-            return
-
-        default_timeline_append_functions = {
-            HOME_TIMELINE:       self.append_home_timeline,
-            MENTIONS_TIMELINE:   self.append_mentions_timeline,
-            FAVORITES_TIMELINE:  self.append_favorites_timeline,
-            MESSAGES_TIMELINE:   self.append_direct_messages_timeline,
-            OWN_TWEETS_TIMELINE: self.append_own_tweets_timeline,
-        }
-
-        for timeline in timelines:
-            append = default_timeline_append_functions[timeline]
-            if default_timelines[timeline]:
-                append()
-
-        self.timeline_mode()
-        self.clear_status()
 
     def append_home_timeline(self):
         timeline_fetched = partial(self.info_message,

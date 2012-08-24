@@ -50,7 +50,8 @@ named ``interactions`` by executing:
 """
 
 import re
-from ConfigParser import RawConfigParser
+import logging
+from ConfigParser import RawConfigParser, NoSectionError
 from os import path
 from functools import partial
 from gettext import gettext as _
@@ -180,6 +181,70 @@ class Session:
         self.sessions = {
             DEFAULT_SESSION: dict(self.sessions_conf.defaults()),
         }
+
+    def load(self):
+        """Load sessions stored in `SESSIONS_FILE` to :attr:sessions."""
+        if not path.isfile(SESSIONS_FILE):
+            # create the sessions file
+            logging.info(_('Sessions file created'))
+            self.init_sessions_file()
+
+        self.sessions_conf.read(SESSIONS_FILE)
+
+        # load the non-default sessions
+        for section in self.sessions_conf.sections():
+            self.sections[section] = {
+                VISIBLE: self.sessions_conf.get(section, VISIBLE),
+                BUFFERS: self.sessions_conf.get(section, BUFFERS),
+            }
+
+        # load default session from `SESSIONS_FILE` if it's present since
+        # `RawConfigParser.sections()` does not return the `DEFAULT` section
+        self.sessions[DEFAULT_SESSION] = dict(self.sessions_conf.defaults())
+
+    def init_sessions_file(self):
+        """
+        Create the `SESSIONS_FILE` and translate
+        `turses.config.configuration.default_timelines` into a `default`
+        session declaration.
+        """
+        # read default timelines from configuration for supporting legacy
+        # timeline configuration
+        default_timelines = configuration.default_timelines
+        is_any_default_timeline = any((default_timelines[timeline] for timeline
+                                                                   in DEFAULT_TIMELINES))
+        default_visible = ''
+        default_buffers_list = []
+
+        if is_any_default_timeline:
+            # the first timeline that is encountered is the only visible
+            for timeline in DEFAULT_TIMELINES:
+                if default_timelines[timeline]:
+                    default_visible = timeline
+                    break
+
+            # the rest of the timelines are saved as buffers
+            for timeline in DEFAULT_TIMELINES:
+                if default_timelines[timeline] and not timeline in default_visible:
+                    default_buffers_list.append(timeline)
+
+        default_buffers = ', '.join(default_buffers_list)
+
+        # update the default session according to the configuration
+        self.sessions[DEFAULT_SESSION] = {
+            VISIBLE: default_visible,
+            BUFFERS: default_buffers,
+        }
+
+        self.sessions_conf.set(DEFAULT_SESSION, VISIBLE, default_visible)
+        self.sessions_conf.set(DEFAULT_SESSION, BUFFERS, default_buffers)
+
+        logging.debug('default visible: %s' % default_visible)
+        logging.debug('default buffers: %s' % default_buffers)
+
+        # create the file and write the `default` session
+        with open(SESSIONS_FILE, 'w') as sessions_fp:
+            self.sessions_conf.write(sessions_fp)
 
     def populate(self, timeline_list, session=None):
         """Populate `timeline_list` with the session timelines."""
