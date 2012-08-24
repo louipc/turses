@@ -55,11 +55,34 @@ from os import path
 from functools import partial
 from gettext import gettext as _
 
-from turses.config import CONFIG_PATH, configuration
+from turses.config import (
+    CONFIG_PATH,
+
+    HOME_TIMELINE,
+    MENTIONS_TIMELINE,
+    FAVORITES_TIMELINE,
+    MESSAGES_TIMELINE,
+    OWN_TWEETS_TIMELINE,
+
+    DEFAULT_SESSION,
+
+    configuration,
+)
 from turses.models import Timeline
 
 
 SESSIONS_FILE = path.join(CONFIG_PATH, 'sessions')
+
+DEFAULT_TIMELINES = [
+    HOME_TIMELINE,
+    MENTIONS_TIMELINE,
+    FAVORITES_TIMELINE,
+    MESSAGES_TIMELINE,
+    OWN_TWEETS_TIMELINE,
+]
+
+VISIBLE = 'visible'
+BUFFERS = 'buffers'
 
 
 def check_update_function_name(timeline, update_function_name=None):
@@ -95,19 +118,19 @@ class TimelineFactory:
     def __call__(self, timeline_string):
         timeline = timeline_string.strip()
 
-        if timeline == 'home':
+        if timeline == HOME_TIMELINE:
             return Timeline(name=_('tweets'),
                             update_function=self.api.get_home_timeline,)
-        elif timeline == 'mentions':
+        elif timeline == MENTIONS_TIMELINE:
             return Timeline(name=_('mentions'),
                             update_function=self.api.get_mentions,)
-        elif timeline == 'favorites':
+        elif timeline == FAVORITES_TIMELINE:
             return Timeline(name=_('favorites'),
                             update_function=self.api.get_favorites,)
-        elif timeline == 'messages':
+        elif timeline == MESSAGES_TIMELINE:
             return Timeline(name=_('messages'),
                             update_function=self.api.get_direct_messages,)
-        elif timeline == 'own_tweets':
+        elif timeline == OWN_TWEETS_TIMELINE:
             return Timeline(name=_('me'),
                             update_function=self.api.get_own_timeline,)
 
@@ -119,7 +142,7 @@ class TimelineFactory:
                             update_function_args=query,)
 
     def valid_timeline_name(self, name):
-        if name in ['home', 'mentions', 'favorites', 'messages', 'own_tweets']:
+        if name in DEFAULT_TIMELINES:
             return True
 
         # search
@@ -148,10 +171,7 @@ class Session:
         self.api = api
         self.factory = TimelineFactory(api)
         self.sessions = {
-            'default': {
-                'visible': 'home',
-                'buffers': 'mentions, favorites, messages, own_tweets'
-            },
+            DEFAULT_SESSION: dict(self.sessions_conf.defaults()),
         }
 
     def populate(self, timeline_list, session=None):
@@ -161,8 +181,8 @@ class Session:
 
         session_dict = self.sessions[session_name]
 
-        visible_names = session_dict['visible']
-        buffers_names = session_dict['buffers']
+        visible_names = session_dict[VISIBLE]
+        buffers_names = session_dict[BUFFERS]
 
         self.append_visible_timelines(visible_names, timeline_list)
         self.append_background_timelines(buffers_names, timeline_list)

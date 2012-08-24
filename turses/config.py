@@ -371,7 +371,7 @@ HOME = getenv('HOME')
 
 # -- Configuration ------------------------------------------------------------
 
-DEFAULT_SESSION = 'default'
+DEFAULT_SESSION = 'DEFAULT'
 
 # Default config path
 CONFIG_DIR = '.turses'

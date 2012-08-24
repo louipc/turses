@@ -13,6 +13,7 @@ from turses.config import (
         PALETTE,
         STYLES,
         DEFAULT_TIMELINES,
+        DEFAULT_SESSION,
         KEY_BINDINGS,
         UPDATE_FREQUENCY,
         LOGGING_LEVEL,
@@ -159,7 +160,7 @@ class ConfigurationTest(unittest.TestCase):
         config = Configuration()
         config.parse_args(args)
 
-        self.assertEqual('default', config.session)
+        self.assertEqual(DEFAULT_SESSION, config.session)
 
     def test_args_session(self):
         args = Args(session='interactions')
