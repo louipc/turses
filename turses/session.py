@@ -170,6 +170,13 @@ class Session:
     def __init__(self, api):
         self.api = api
         self.factory = TimelineFactory(api)
+        self.sessions_conf = RawConfigParser(defaults={
+                VISIBLE: HOME_TIMELINE,
+                BUFFERS: ', '.join([MENTIONS_TIMELINE,
+                                    FAVORITES_TIMELINE,
+                                    MESSAGES_TIMELINE,
+                                    OWN_TWEETS_TIMELINE,])
+        })
         self.sessions = {
             DEFAULT_SESSION: dict(self.sessions_conf.defaults()),
         }
