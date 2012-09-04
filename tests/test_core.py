@@ -6,8 +6,15 @@ import unittest
 
 from mock import Mock
 
+from turses.models import TimelineList
+from turses.session import (
+    is_home_timeline,
+    is_user_timeline,
+    is_own_timeline,
+)
 from turses.config import configuration
 from turses.core import KeyHandler, Controller
+from turses.api.debug import MockApi
 
 
 class KeyHandlerTest(unittest.TestCase):
@@ -104,6 +111,35 @@ class KeyHandlerTest(unittest.TestCase):
         for key in "ABCDEFGHIJKLMNÑOPQRSTUVWXYZabcdefghijklmnñopqrstuvwxyz":
             self.key_handler.handle(key)
             self.controller.forward_to_editor.assert_called_with(key)
+
+
+class ControllerTest(unittest.TestCase):
+    def setUp(self):
+        self.timelines = TimelineList()
+        self.controller = Controller(ui=Mock(),
+                                api=MockApi('foo', 'bar'),
+                                timelines=self.timelines)
+
+
+    def test_append_home_timeline(self):
+        self.controller.append_home_timeline()
+
+        appended_timeline = self.timelines[-1]
+        self.assertTrue(is_home_timeline(appended_timeline))
+
+    def test_append_user_timeline(self):
+        user = 'dialelo'
+        self.controller.append_user_timeline(user)
+
+        appended_timeline = self.timelines[-1]
+        self.assertTrue(is_user_timeline(appended_timeline))
+        self.assertEqual(appended_timeline._args, [user])
+
+    def test_own_tweets_timeline(self):
+        self.controller.append_own_tweets_timeline()
+
+        appended_timeline = self.timelines[-1]
+        self.assertTrue(is_own_timeline(appended_timeline))
 
 
 if __name__ == '__main__':

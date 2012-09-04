@@ -25,6 +25,7 @@ their names. Here is a list with the valid names:
  - ``messages`` for the direct message timeline
  - ``own_tweets`` for the timeline with your tweets
  - ``search:<query>`` for search timelines
+ - ``user:<screen_name>`` for a user's timeline
 
 Declaring a custom session is as easy as defining a section on the
 ``sessions`` file. As an example, let's define a session called
@@ -108,9 +109,12 @@ is_messages_timeline = partial(check_update_function_name,
                                update_function_name='get_direct_messages')
 is_search_timeline = partial(check_update_function_name,
                              update_function_name='search')
+is_user_timeline = partial(check_update_function_name,
+                             update_function_name='get_user_timeline')
 
 
 search_name_re = re.compile(r'^search:(?P<query>.+)$')
+user_name_re = re.compile(r'^user:(?P<screen_name>[A-Za-z0-9_]+)$')
 
 class TimelineFactory:
     def __init__(self, api):
@@ -142,12 +146,23 @@ class TimelineFactory:
                             update_function=self.api.search,
                             update_function_args=query,)
 
+        is_user = user_name_re.match(timeline)
+        if is_user:
+            screen_name = is_user.groupdict()['screen_name']
+            return Timeline(name=_('@{screen_name}'.format(screen_name=screen_name)),
+                            update_function=self.api.get_user_timeline,
+                            update_function_args=screen_name,)
+
     def valid_timeline_name(self, name):
         if name in DEFAULT_TIMELINES:
             return True
 
         # search
         if search_name_re.match(name):
+            return True
+
+        # user
+        if user_name_re.match(name):
             return True
 
         return False

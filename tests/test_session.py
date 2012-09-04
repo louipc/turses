@@ -17,6 +17,7 @@ from turses.session import (
     is_messages_timeline,
     is_own_timeline,
     is_search_timeline,
+    is_user_timeline,
 )
 
 
@@ -66,6 +67,13 @@ class HelperFunctionTest(unittest.TestCase):
         search_timeline = Timeline(update_function=mock_api.search)
         self.assertTrue(is_search_timeline(search_timeline))
 
+    def test_is_user_timeline(self):
+        a_timeline = Timeline()
+        self.assertFalse(is_user_timeline(a_timeline))
+
+        user_timeline = Timeline(update_function=mock_api.get_user_timeline)
+        self.assertTrue(is_user_timeline(user_timeline))
+
     def test_clean_timeline_list_string(self):
         self.assertEqual(clean_timeline_list_string(''), [])
 
@@ -104,6 +112,10 @@ class TimelineFactoryTest(unittest.TestCase):
         self.valid_name('search:turses')
         self.valid_name('search:I love ramen!')
         self.valid_name('search:#Python is awesome')
+
+    def test_user_names_are_valid_timeline_name(self):
+        self.valid_name('user:dialelo')
+        self.valid_name('user:PepeGuer')
 
     def created_timeline_verifies(self, name, prop):
         """
