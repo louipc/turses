@@ -26,6 +26,7 @@ their names. Here is a list with the valid names:
  - ``own_tweets`` for the timeline with your tweets
  - ``search:<query>`` for search timelines
  - ``user:<screen_name>`` for a user's timeline
+ - ``retweets_of_me`` for the timeline with your retweeted tweets
 
 Declaring a custom session is as easy as defining a section on the
 ``sessions`` file. As an example, let's define a session called
@@ -111,6 +112,8 @@ is_search_timeline = partial(check_update_function_name,
                              update_function_name='search')
 is_user_timeline = partial(check_update_function_name,
                              update_function_name='get_user_timeline')
+is_retweets_of_me_timeline = partial(check_update_function_name,
+                                     update_function_name='get_retweets_of_me')
 
 
 search_name_re = re.compile(r'^search:(?P<query>.+)$')
@@ -138,6 +141,9 @@ class TimelineFactory:
         elif timeline == OWN_TWEETS_TIMELINE:
             return Timeline(name=_('me'),
                             update_function=self.api.get_own_timeline,)
+        elif timeline == 'retweets_of_me':
+            return Timeline(name=_('retweets of me'),
+                            update_function=self.api.get_retweets_of_me,)
 
         is_search = search_name_re.match(timeline)
         if is_search:
@@ -155,6 +161,9 @@ class TimelineFactory:
 
     def valid_timeline_name(self, name):
         if name in DEFAULT_TIMELINES:
+            return True
+
+        if name == 'retweets_of_me':
             return True
 
         # search

@@ -18,6 +18,7 @@ from turses.session import (
     is_own_timeline,
     is_search_timeline,
     is_user_timeline,
+    is_retweets_of_me_timeline,
 )
 
 
@@ -74,6 +75,13 @@ class HelperFunctionTest(unittest.TestCase):
         user_timeline = Timeline(update_function=mock_api.get_user_timeline)
         self.assertTrue(is_user_timeline(user_timeline))
 
+    def test_is_retweets_of_me_timeline(self):
+        a_timeline = Timeline()
+        self.assertFalse(is_retweets_of_me_timeline(a_timeline))
+
+        rts_timeline = Timeline(update_function=mock_api.get_retweets_of_me)
+        self.assertTrue(is_retweets_of_me_timeline(rts_timeline))
+
     def test_clean_timeline_list_string(self):
         self.assertEqual(clean_timeline_list_string(''), [])
 
@@ -117,6 +125,9 @@ class TimelineFactoryTest(unittest.TestCase):
         self.valid_name('user:dialelo')
         self.valid_name('user:PepeGuer')
 
+    def test_retweets_of_me_is_valid_timeline_name(self):
+        self.valid_name('retweets_of_me')
+
     def created_timeline_verifies(self, name, prop):
         """
         Test that the timeline created from `name` verifies the `prop`
@@ -149,6 +160,10 @@ class TimelineFactoryTest(unittest.TestCase):
         timeline = self.factory(':'.join(['search', query]))
 
         self.assertEqual(timeline._args, [query])
+
+    def test_timeline_factory_retweets_of_me(self):
+        self.created_timeline_verifies('retweets_of_me',
+                                       is_retweets_of_me_timeline)
 
 
 class SessionTest(unittest.TestCase):
