@@ -120,25 +120,25 @@ class ControllerTest(unittest.TestCase):
                                 api=MockApi('foo', 'bar'),
                                 timelines=self.timelines)
 
-    #def test_append_home_timeline(self):
-        #self.controller.append_home_timeline()
+    def test_append_home_timeline(self):
+        self.controller.append_home_timeline()
 
-        #appended_timeline = self.timelines[-1]
-        #self.assertTrue(is_home_timeline(appended_timeline))
+        appended_timeline = self.timelines[-1]
+        self.assertTrue(is_home_timeline(appended_timeline))
 
-    #def test_append_user_timeline(self):
-        #user = 'dialelo'
-        #self.controller.append_user_timeline(user)
+    def test_append_user_timeline(self):
+        user = 'dialelo'
+        self.controller.append_user_timeline(user)
 
-        #appended_timeline = self.timelines[-1]
-        #self.assertTrue(is_user_timeline(appended_timeline))
-        #self.assertEqual(appended_timeline._args, [user])
+        appended_timeline = self.timelines[-1]
+        self.assertTrue(is_user_timeline(appended_timeline))
+        self.assertEqual(appended_timeline._kwargs, {'screen_name': user})
 
-    #def test_own_tweets_timeline(self):
-        #self.controller.append_own_tweets_timeline()
+    def test_own_tweets_timeline(self):
+        self.controller.append_own_tweets_timeline()
 
-        #appended_timeline = self.timelines[-1]
-        #self.assertTrue(is_own_timeline(appended_timeline))
+        appended_timeline = self.timelines[-1]
+        self.assertTrue(is_own_timeline(appended_timeline))
 
 
 if __name__ == '__main__':
