@@ -4,6 +4,8 @@ from sys import path
 path.append('../')
 import unittest
 
+from . import create_status, create_direct_message
+
 from turses.api.debug import MockApi
 from turses.models import Timeline, TimelineList
 from turses.session import (
@@ -164,6 +166,24 @@ class TimelineFactoryTest(unittest.TestCase):
     def test_timeline_factory_retweets_of_me(self):
         self.created_timeline_verifies('retweets_of_me',
                                        is_retweets_of_me_timeline)
+
+    def test_thread(self):
+        status = create_status()
+
+        thread_timeline = self.factory.thread(status)
+
+        self.assertEqual(thread_timeline.update_function.__name__,
+                         'get_thread',)
+        self.assertEqual(thread_timeline._args[0], status)
+
+    def test_dm_thread(self):
+        message = create_direct_message()
+
+        dm_thread_timeline = self.factory.thread(message)
+
+        self.assertEqual(dm_thread_timeline.update_function.__name__,
+                         'get_message_thread',)
+        self.assertEqual(dm_thread_timeline._args[0], message)
 
 
 class SessionTest(unittest.TestCase):

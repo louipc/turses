@@ -71,7 +71,7 @@ from turses.config import (
 
     configuration,
 )
-from turses.models import Timeline
+from turses.models import is_DM, Timeline
 
 
 SESSIONS_FILE = path.join(CONFIG_PATH, 'sessions')
@@ -175,6 +175,30 @@ class TimelineFactory:
             return True
 
         return False
+
+    def thread(self, status):
+        """
+        Create a timeline with the conversation to which `status` belongs.
+        `status` can be a regular status or a direct message.
+        """
+        if is_DM(status):
+            participants = [status.sender_screen_name,
+                            status.recipient_screen_name,]
+            name = _('DM thread: %s' % ', '.join(participants))
+            update_function = self.api.get_message_thread
+        else:
+            participants = status.mentioned_usernames
+            author = status.authors_username
+            if author not in participants:
+                participants.insert(0, author)
+
+            name = _('thread: %s' % ', '.join(participants))
+            update_function = self.api.get_thread
+
+        return Timeline(name=name,
+                        update_function=update_function,
+                        update_function_args=status,)
+
 
 
 def clean_timeline_list_string(timeline_list_string):
