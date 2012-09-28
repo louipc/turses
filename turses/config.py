@@ -72,6 +72,7 @@ from turses.api.base import get_authorization_tokens
 
 # Timelines
 
+# TODO: remove this constants
 HOME_TIMELINE = 'home'
 MENTIONS_TIMELINE = 'mentions'
 FAVORITES_TIMELINE = 'favorites'
