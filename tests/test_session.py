@@ -21,6 +21,7 @@ from turses.session import (
     is_search_timeline,
     is_user_timeline,
     is_retweets_of_me_timeline,
+    is_thread_timeline,
 )
 
 
@@ -83,6 +84,13 @@ class HelperFunctionTest(unittest.TestCase):
 
         rts_timeline = Timeline(update_function=mock_api.get_retweets_of_me)
         self.assertTrue(is_retweets_of_me_timeline(rts_timeline))
+
+    def test_is_thread_timeline(self):
+        a_timeline = Timeline()
+        self.assertFalse(is_thread_timeline(a_timeline))
+
+        thread_timeline = Timeline(update_function=mock_api.get_thread)
+        self.assertTrue(is_thread_timeline(thread_timeline))
 
     def test_clean_timeline_list_string(self):
         self.assertEqual(clean_timeline_list_string(''), [])

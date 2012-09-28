@@ -114,6 +114,8 @@ is_user_timeline = partial(check_update_function_name,
                              update_function_name='get_user_timeline')
 is_retweets_of_me_timeline = partial(check_update_function_name,
                                      update_function_name='get_retweets_of_me')
+is_thread_timeline = partial(check_update_function_name,
+                             update_function_name='get_thread')
 
 
 search_name_re = re.compile(r'^search:(?P<query>.+)$')

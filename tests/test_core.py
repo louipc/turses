@@ -6,11 +6,15 @@ import unittest
 
 from mock import Mock
 
+from . import create_status
 from turses.models import TimelineList
 from turses.session import (
     is_home_timeline,
     is_user_timeline,
     is_own_timeline,
+    is_mentions_timeline,
+    is_messages_timeline,
+    is_thread_timeline,
 )
 from turses.config import configuration
 from turses.core import KeyHandler, Controller
@@ -139,6 +143,32 @@ class ControllerTest(unittest.TestCase):
 
         appended_timeline = self.timelines[-1]
         self.assertTrue(is_own_timeline(appended_timeline))
+
+    def test_mentions_timeline(self):
+        self.controller.append_mentions_timeline()
+
+        appended_timeline = self.timelines[-1]
+        self.assertTrue(is_mentions_timeline(appended_timeline))
+
+    def test_direct_messages_timeline(self):
+        self.controller.append_direct_messages_timeline()
+
+        appended_timeline = self.timelines[-1]
+        self.assertTrue(is_messages_timeline(appended_timeline))
+
+    def test_thread_timeline(self):
+        active_timeline = self.controller.timelines.active
+        active_timeline.add_status(create_status())
+        # make sure that there is at least one status in the active timeline
+        self.assertTrue(active_timeline.active)
+
+        self.controller.append_thread_timeline()
+
+        appended_timeline = self.timelines[-1]
+        self.assertTrue(is_thread_timeline(appended_timeline))
+
+    # TODO: test `append_search_timeline`
+    # TODO: test `append_retweets_of_me_timeline`
 
 
 if __name__ == '__main__':

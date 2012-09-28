@@ -513,6 +513,7 @@ class Controller(Observer):
                              on_error=timeline_not_fetched,
                              on_success=timeline_fetched,)
 
+    @has_active_status
     def append_thread_timeline(self):
         status = self.timelines.active_status
 
