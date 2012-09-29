@@ -481,7 +481,7 @@ class TimelineListTest(ActiveListTest):
         self.assertEqual(timeline, active_timeline)
 
     def test_active_returns_None_when_empty(self):
-        self.assertIsNone(self.timeline_list.active)
+        self.assertEqual(self.timeline_list.active, None)
 
     def test_append_timeline_increases_timeline_size(self):
         self.assertEqual(len(self.timeline_list), 0)
