@@ -32,6 +32,7 @@ See ``AUTHORS`` for a full list of contributors.
 """
 
 from setuptools import setup, find_packages
+from sys import version_info
 
 import turses
 
@@ -42,6 +43,9 @@ REQUIREMENTS = [
     "urwid",
     "tweepy",
 ]
+if version_info[:2] == (2, 6):
+    REQUIREMENTS.append("argparse")
+
 TEST_REQUIREMENTS = list(REQUIREMENTS)
 TEST_REQUIREMENTS.extend(["mock", "nose", "coverage", "tox"])
 
