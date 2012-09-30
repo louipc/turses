@@ -70,23 +70,6 @@ from turses.api.base import get_authorization_tokens
 
 # -- Defaults -----------------------------------------------------------------
 
-# Timelines
-
-# TODO: remove this constants
-HOME_TIMELINE = 'home'
-MENTIONS_TIMELINE = 'mentions'
-FAVORITES_TIMELINE = 'favorites'
-MESSAGES_TIMELINE = 'messages'
-OWN_TWEETS_TIMELINE = 'own_tweets'
-
-DEFAULT_TIMELINES = {
-    HOME_TIMELINE:       True,
-    MENTIONS_TIMELINE:   True,
-    FAVORITES_TIMELINE:  True,
-    MESSAGES_TIMELINE:   True,
-    OWN_TWEETS_TIMELINE: True,
-}
-
 # Key bindings
 
 KEY_BINDINGS = {
@@ -429,7 +412,6 @@ class Configuration(object):
         from the command line interface (if any).
         """
         # load defaults
-        self.default_timelines = DEFAULT_TIMELINES
         self.update_frequency = UPDATE_FREQUENCY
         self.key_bindings = KEY_BINDINGS
         self.palette = PALETTE
@@ -494,16 +476,6 @@ class Configuration(object):
             self.parse_config_file(self.config_file)
         else:
             self.generate_config_file(self.config_file)
-
-    def _add_section_default_timelines(self, conf):
-        # Default timelines
-        if not conf.has_section(SECTION_DEFAULT_TIMELINES):
-            conf.add_section(SECTION_DEFAULT_TIMELINES)
-        for timeline in DEFAULT_TIMELINES:
-            if conf.has_option(SECTION_DEFAULT_TIMELINES, timeline):
-                continue
-            value = str(self.default_timelines[timeline]).lower()
-            conf.set(SECTION_DEFAULT_TIMELINES, timeline, value)
 
     def _add_section_twitter(self, conf):
         # Twitter
@@ -658,7 +630,6 @@ class Configuration(object):
     def _generate_config_file(self, config_file):
         conf = RawConfigParser()
 
-        self._add_section_default_timelines(conf)
         self._add_section_twitter(conf)
         self._add_section_key_bindings(conf)
         self._add_section_palette(conf)
@@ -696,22 +667,11 @@ class Configuration(object):
         conf = RawConfigParser()
         conf.read(config_file)
 
-        self._parse_default_timelines(conf)
         self._parse_twitter(conf)
         self._parse_key_bindings(conf)
         self._parse_palette(conf)
         self._parse_styles(conf)
         self._parse_debug(conf)
-
-    def _parse_default_timelines(self, conf):
-        for timeline in self.default_timelines:
-            if conf.has_option(SECTION_DEFAULT_TIMELINES, timeline):
-                try:
-                    value = conf.getboolean(SECTION_DEFAULT_TIMELINES,
-                                            timeline)
-                except ValueError:
-                    continue
-                self.default_timelines[timeline] = value
 
     def _parse_twitter(self, conf):
         if conf.has_option(SECTION_TWITTER, 'update_frequency'):

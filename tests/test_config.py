@@ -12,7 +12,6 @@ from turses.config import (
         DEFAULT_TOKEN_FILE,
         PALETTE,
         STYLES,
-        DEFAULT_TIMELINES,
         DEFAULT_SESSION,
         KEY_BINDINGS,
         UPDATE_FREQUENCY,
@@ -58,7 +57,6 @@ class ConfigurationTest(unittest.TestCase):
         self.assertEqual(config.token_file, DEFAULT_TOKEN_FILE)
 
         # config options
-        self.assertEqual(config.default_timelines, DEFAULT_TIMELINES)
         self.assertEqual(config.update_frequency, UPDATE_FREQUENCY)
         self.assertEqual(config.key_bindings, KEY_BINDINGS)
         self.assertEqual(config.palette, PALETTE)

@@ -130,44 +130,13 @@ class Session:
         self.sessions[DEFAULT_SESSION] = dict(self.sessions_conf.defaults())
 
     def init_sessions_file(self):
-        """
-        Create the `SESSIONS_FILE` and translate
-        `turses.config.configuration.default_timelines` into a `default`
-        session declaration.
-        """
-        # read default timelines from configuration for supporting legacy
-        # timeline configuration
-        default_timelines = configuration.default_timelines
-        is_any_default_timeline = any((default_timelines[timeline] for timeline
-                                                                   in DEFAULT_TIMELINES))
-        default_visible = ''
-        default_buffers_list = []
-
-        if is_any_default_timeline:
-            # the first timeline that is encountered is the only visible
-            for timeline in DEFAULT_TIMELINES:
-                if default_timelines[timeline]:
-                    default_visible = timeline
-                    break
-
-            # the rest of the timelines are saved as buffers
-            for timeline in DEFAULT_TIMELINES:
-                if default_timelines[timeline] and not timeline in default_visible:
-                    default_buffers_list.append(timeline)
-
-        default_buffers = ', '.join(default_buffers_list)
-
-        # update the default session according to the configuration
-        self.sessions[DEFAULT_SESSION] = {
-            VISIBLE: default_visible,
-            BUFFERS: default_buffers,
-        }
-
-        self.sessions_conf.set(DEFAULT_SESSION, VISIBLE, default_visible)
-        self.sessions_conf.set(DEFAULT_SESSION, BUFFERS, default_buffers)
-
-        logging.debug('default visible: %s' % default_visible)
-        logging.debug('default buffers: %s' % default_buffers)
+        """Create the `SESSIONS_FILE`."""
+        self.sessions_conf.set(DEFAULT_SESSION,
+                               VISIBLE, 
+                               self.sessions[DEFAULT_SESSION][VISIBLE])
+        self.sessions_conf.set(DEFAULT_SESSION,
+                               BUFFERS,
+                               self.sessions[DEFAULT_SESSION][BUFFERS])
 
         # create the file and write the `default` session
         with open(SESSIONS_FILE, 'w') as sessions_fp:
