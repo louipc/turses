@@ -14,15 +14,7 @@ from tweepy import TweepError
 
 from turses.utils import get_urls
 from turses.meta import async, wrap_exceptions, Observer
-from turses.config import (
-        HOME_TIMELINE,
-        MENTIONS_TIMELINE,
-        FAVORITES_TIMELINE,
-        MESSAGES_TIMELINE,
-        OWN_TWEETS_TIMELINE,
-
-        configuration,
-)
+from turses.config import configuration
 from turses.utils import is_username
 from turses.models import (
         is_DM,

@@ -8,7 +8,7 @@ from mock import Mock
 
 from . import create_status
 from turses.models import TimelineList
-from turses.session import (
+from turses.api.helpers import (
     is_home_timeline,
     is_user_timeline,
     is_own_timeline,

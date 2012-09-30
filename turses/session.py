@@ -55,31 +55,19 @@ import re
 import logging
 from ConfigParser import RawConfigParser, NoSectionError
 from os import path
-from functools import partial
 from gettext import gettext as _
 
 from turses.api.helpers import (
     TimelineFactory,
-
-    is_home_timeline,
-    is_mentions_timeline,
-    is_favorites_timeline,
-    is_messages_timeline,
-    is_own_timeline,
-    is_search_timeline,
-    is_user_timeline,
-    is_retweets_of_me_timeline,
-    is_thread_timeline,
-)
-from turses.config import (
-    CONFIG_PATH,
 
     HOME_TIMELINE,
     MENTIONS_TIMELINE,
     FAVORITES_TIMELINE,
     MESSAGES_TIMELINE,
     OWN_TWEETS_TIMELINE,
-
+)
+from turses.config import (
+    CONFIG_PATH,
     DEFAULT_SESSION,
 
     configuration,

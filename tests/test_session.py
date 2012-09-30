@@ -10,9 +10,10 @@ from turses.api.debug import MockApi
 from turses.models import Timeline, TimelineList
 from turses.session import (
     Session,
-    TimelineFactory,
 
     clean_timeline_list_string,
+)
+from turses.api.helpers import (
     is_home_timeline,
     is_mentions_timeline,
     is_favorites_timeline,
