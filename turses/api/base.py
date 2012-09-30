@@ -9,6 +9,7 @@ function to authorize `turses` to use a Twitter account obtaining the OAuth
 tokens.
 """
 
+from ssl import SSLError
 from abc import ABCMeta, abstractmethod
 import oauth2 as oauth
 from urlparse import parse_qsl, urljoin
@@ -34,7 +35,8 @@ def get_authorization_tokens():
     Return a dictionary with `oauth_token` and `oauth_token_secret` keys
     if succesfull, `None` otherwise.
     """
-    # This function is borrowed from python-twitter developers
+    # This function was borrowed from python-twitter developers and experienced
+    # an important refactoring
     #
     # Copyright 2007 The Python-Twitter Developers
     #
@@ -57,6 +59,11 @@ def get_authorization_tokens():
 
     try:
         oauth_token, oauth_token_secret = get_temporary_tokens(oauth_client)
+    except SSLError:
+        print _("""There was an SSL certificate error, your user may not have
+                   permission to access SSL. Try executing `turses` as a
+                   privileged user.""")
+        return None
     except Exception as e:
         print e
         return None
@@ -108,6 +115,7 @@ def get_temporary_tokens(oauth_client):
     request_token_url = urljoin(BASE_URL, '/oauth/request_token')
 
     response, content = oauth_client.request(request_token_url, 'GET')
+
 
     status_code = int(response['status'])
     if status_code == HTTP_OK:

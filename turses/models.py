@@ -9,7 +9,12 @@ import time
 from re import sub
 from bisect import insort
 from calendar import timegm
-from functools import total_ordering
+
+try:
+    from functools import total_ordering
+except ImportError:
+    from turses.utils import total_ordering
+
 from htmlentitydefs import entitydefs
 
 from turses.meta import (ActiveList, UnsortedActiveList, Updatable, Observable,

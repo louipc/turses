@@ -1,3 +1,7 @@
+0.2.8
+-----
+- Python 2.6 support
+
 0.2.7
 -----
 - center focus when receiving tweets after scrolling down the bottom
