@@ -52,30 +52,6 @@ class SessionTest(unittest.TestCase):
         self.assertEqual(clean_timeline_list_string('mentions, favorites, messages, own_tweets'),
                          ['mentions', 'favorites', 'messages', 'own_tweets'])
 
-
-    def test_default_session_timelines(self):
-        """
-        Test that, by default, the following timelines are loaded: `home`,
-        `mentions`, `favorites`, `messages` and `own_tweets`.
-        """
-        timeline_list = TimelineList()
-        self.session.populate(timeline_list)
-
-        self.assertTrue(is_home_timeline(timeline_list[0]))
-        self.assertTrue(is_mentions_timeline(timeline_list[1]))
-        self.assertTrue(is_favorites_timeline(timeline_list[2]))
-        self.assertTrue(is_messages_timeline(timeline_list[3]))
-        self.assertTrue(is_own_timeline(timeline_list[4]))
-
-    def test_default_session_only_visible_first_timeline(self):
-        """
-        Test that, by default, only the `home` timeline is visible.
-        """
-        timeline_list = TimelineList()
-        self.session.populate(timeline_list)
-
-        self.assertEqual(timeline_list.visible_timelines, [timeline_list[0]])
-
     def test_custom_session(self):
         """
         Test that, when defining a custom session, the timelines are created

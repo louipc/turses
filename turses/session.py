@@ -16,6 +16,9 @@ Each section has only two options:
     ``buffers``
         contains the timelines that won't be visible but will be loaded
 
+.. warning:: The ``visible`` option must be present for any session but
+   ``buffers`` is optional.
+
 For each option, you will define the timelines as a comma-separated list of
 their names. Here is a list with the valid names:
 
@@ -98,41 +101,26 @@ class Session:
     def __init__(self, api):
         self.api = api
         self.factory = TimelineFactory(api)
-        self.sessions_conf = RawConfigParser(defaults={
+        self.sessions_conf = RawConfigParser()
+        self.sessions = {
+            DEFAULT_SESSION: {
                 VISIBLE: HOME_TIMELINE,
                 BUFFERS: ', '.join([MENTIONS_TIMELINE,
                                     FAVORITES_TIMELINE,
                                     MESSAGES_TIMELINE,
                                     OWN_TWEETS_TIMELINE,])
-        })
-        self.sessions = {
-            DEFAULT_SESSION: dict(self.sessions_conf.defaults()),
+            }
         }
-
-    def load(self):
-        """Load sessions stored in `SESSIONS_FILE` to :attr:sessions."""
         if not path.isfile(SESSIONS_FILE):
             # create the sessions file
             logging.info(_('Sessions file created'))
             self.init_sessions_file()
 
-        self.sessions_conf.read(SESSIONS_FILE)
-
-        # load the non-default sessions
-        for section in self.sessions_conf.sections():
-            self.sections[section] = {
-                VISIBLE: self.sessions_conf.get(section, VISIBLE),
-                BUFFERS: self.sessions_conf.get(section, BUFFERS),
-            }
-
-        # load default session from `SESSIONS_FILE` if it's present since
-        # `RawConfigParser.sections()` does not return the `DEFAULT` section
-        self.sessions[DEFAULT_SESSION] = dict(self.sessions_conf.defaults())
-
     def init_sessions_file(self):
         """Create the `SESSIONS_FILE`."""
+        self.sessions_conf.add_section(DEFAULT_SESSION)
         self.sessions_conf.set(DEFAULT_SESSION,
-                               VISIBLE, 
+                               VISIBLE,
                                self.sessions[DEFAULT_SESSION][VISIBLE])
         self.sessions_conf.set(DEFAULT_SESSION,
                                BUFFERS,
@@ -142,12 +130,39 @@ class Session:
         with open(SESSIONS_FILE, 'w') as sessions_fp:
             self.sessions_conf.write(sessions_fp)
 
+    def load_from_session_conf(self, session_name):
+        """
+        Load the session `session_name` from :attr:session_conf to
+        :attr:sessions dictionary.
+        """
+        # we assume that the `visible` option is present
+        visible = self.sessions_conf.get(session_name, VISIBLE)
+
+        # `buffers` option is not required, prevent loading the default
+        # buffers when the aforementioned option is not present
+        if self.sessions_conf.has_option(session_name, BUFFERS):
+            buffers = self.sessions_conf.get(session_name, BUFFERS)
+        else:
+            buffers = ''
+
+        self.sessions[session_name] = {
+            VISIBLE: visible,
+            BUFFERS: buffers,
+        }
+
     def populate(self, timeline_list, session=None):
         """Populate `timeline_list` with the session timelines."""
-        # TODO: validate that the session EXISTS
         session_name = configuration.session
 
-        session_dict = self.sessions[session_name]
+        # read the `SESSIONS_FILE`
+        self.sessions_conf.read(SESSIONS_FILE)
+
+        if self.sessions_conf.has_section(session_name):
+            self.load_from_session_conf(session_name)
+            session_dict = self.sessions[session_name]
+        else:
+            # `configuration.session` does not exist, load default session
+            session_dict = self.sessions[DEFAULT_SESSION]
 
         visible_names = session_dict[VISIBLE]
         buffers_names = session_dict[BUFFERS]

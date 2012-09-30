@@ -249,7 +249,6 @@ class Controller(Observer):
 
         # Load session
         self.session = Session(self.api)
-        self.session.load()
         self.session.populate(self.timelines)
 
         self.editor = None
