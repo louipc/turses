@@ -109,6 +109,7 @@ def parse_attributes(text,
 
     return tweet
 
+
 def extract_attributes(entities, hashtag, attag, url):
     """
     Extract attributes from entities.
@@ -159,6 +160,7 @@ def extract_attributes(entities, hashtag, attag, url):
     attributes.sort(key=lambda mapping: mapping[1][0])
 
     return attributes
+
 
 def map_attributes(status, hashtag, attag, url):
     """
@@ -230,15 +232,17 @@ def map_attributes(status, hashtag, attag, url):
     return text
 
 
-
 # - Main UI -------------------------------------------------------------------
-
 
 
 class CursesInterface(WidgetWrap):
     """
     Creates a curses interface for the program, providing functions to draw
     all the components of the UI.
+
+    Provides a facade API to draw the representation of the
+    :class:`~turses.models.TimelineList`, help :class:`HelpBuffer`
+    and intro :class:`Banner` screens.
     """
 
     def __init__(self):

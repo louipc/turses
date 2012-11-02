@@ -58,7 +58,7 @@ except IOError:
 setup(name=NAME,
       version=turses.version,
       author="Alejandro Gómez",
-      author_email="alejandroogomez@gmail.com",
+      author_email="alejandro@dialelo.com",
       url="http://github.com/alejandrogomez/turses",
       description="A Twitter client for the console.",
       long_description=long_description,

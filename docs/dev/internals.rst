@@ -24,6 +24,7 @@ of them with a comment explaining their goal.
         ├── config.py        # configuration management
         ├── core.py          # core logic: controller and event handling
         ├── __init__.py
+        ├── meta.py          # decorators and abstract base classes
         ├── models.py        # data structures
         ├── ui.py            # UI widgets
         └── utils.py         # misc funcions that don't fit elsewhere
@@ -60,15 +61,21 @@ Decorators
 .. autofunction:: turses.meta.async
 .. autofunction:: turses.meta.filter_result
 
-Abstract classes
-~~~~~~~~~~~~~~~~
+Abstract base classes
+~~~~~~~~~~~~~~~~~~~~~
 
-These abstract classes are meant to provide a very general pieces of
-functionality:
+The abstract base classes can be understood as interfaces, they define a set of
+methods and properties that their subclasses must implement. They provide very
+general pieces of functionality.
 
 .. autoclass:: turses.meta.ActiveList
 .. autoclass:: turses.meta.UnsortedActiveList
+.. autoclass:: turses.meta.Observable
 .. autoclass:: turses.meta.Updatable
+.. autoclass:: turses.meta.Observable
+.. autoclass:: turses.meta.Observer
+.. autofunction:: turses.meta.notify
+
 
 ``turses.models``
 -----------------
@@ -79,7 +86,8 @@ Base model
 ~~~~~~~~~~
 
 The model on which ``turses`` is based is :attr:`~turses.models.TimelineList`,
-a list of *updatable* :attr:`~turses.models.Timeline` objects.
+a list of :attr:`~turses.models.Timeline` objects. This model is mapped into
+the list of buffers that appear on the user interface.
 
 .. autoclass:: turses.models.TimelineList
 
@@ -99,24 +107,11 @@ The Twitter entities represented on ``turses`` are the following:
 
 .. automodule:: turses.ui
 
-:attr:`~turses.ui.CursesInterface` is the main UI widget, which provides a
-generic API to draw the representation of the
-:attr:`~turses.models.TimelineList`, help and an intro screen:
-
 .. autoclass:: turses.ui.CursesInterface
 
 .. note::
 
     The list of widgets presented here is not complete.
-
-Interfaces
-~~~~~~~~~~
-
-The extraction of interfaces from the widgets is still in process. Here are
-the ones that have been extracted:
-
-.. autoclass:: turses.ui.Scrollable
-
 
 Widget wrappers
 ~~~~~~~~~~~~~~~
@@ -132,14 +127,20 @@ the motion commands ``up``, ``down``, ``scroll_to_top`` and
 .. autoclass:: turses.ui.ScrollableWidgetWrap
 
 
-Widgets
-~~~~~~~
+Twitter Widgets
+~~~~~~~~~~~~~~~
 
 Here's a list with some of the widgets that represent Twitter entities:
 
 .. autoclass:: turses.ui.TimelinesBuffer
 .. autoclass:: turses.ui.StatusWidget
 .. autoclass:: turses.ui.UserInfo
+
+Other widgets
+~~~~~~~~~~~~~
+
+.. autoclass:: turses.ui.HelpBuffer
+.. autoclass:: turses.ui.Banner
 
 ``turses.utils``
 ----------------

@@ -73,7 +73,7 @@ class ActiveList(object):
     A list that contains an *active* element.
 
     This abstract class implements some functions but the subclasses must
-    define the :attr:`turses.meta.ActiveList.active` property, as well as 
+    define the :attr:`turses.meta.ActiveList.active` property, as well as
     :func:`turses.meta.ActiveList.is_valid_index` and
     :func:`turses.meta.ActiveList.activate_last`.
     methods.
@@ -232,7 +232,7 @@ class Observable:
     """
     An implementation of the *observer* pattern.
 
-    Zero or more *observers* can `subscribe` to the changes in the instances 
+    Zero or more *observers* can `subscribe` to the changes in the instances
     of this class. When the instance changes, it will call its `notify` method,
     which loops through the *observers* and calls `update()` on them.
     """
@@ -255,7 +255,7 @@ class Observable:
 
 class Observer:
     """
-    An abstract class that can subscribe to updates in 
+    An abstract class that can subscribe to updates in
     :class:`~turses.meta.Observable` instances.
     """
 
