@@ -56,7 +56,7 @@ def apply_attribute(string,
     elif string.startswith('@') and is_username(string[1:]):
         return (attag, string)
     elif is_url(string):
-        return  (url, string)
+        return (url, string)
     else:
         return string
 
@@ -443,10 +443,11 @@ class CursesInterface(WidgetWrap):
 
     # - pop ups ---------------------------------------------------------------
 
-    def show_user_info(self, user):
-        widget = UserInfo(user)
+    def show_user_info(self, user, last_statuses):
+        widget = UserInfo(user, last_statuses)
 
-        self.show_widget_on_top(widget, width=40, height=18)
+        # TODO: adjust height to widget size
+        self.show_widget_on_top(widget, width=50, height=28)
 
     def hide_user_info(self):
         self.hide_widget_on_top()
@@ -485,32 +486,32 @@ class Banner(WidgetWrap):
         help_key = configuration.key_bindings['help'][0]
         quit_key = configuration.key_bindings['quit'][0]
         self.BANNER = [
-             "   _                             ",
-             " _| |_ _   _ _ __ ___  ___  ____ ",
-             "|_   _| | | | '__/ __|/   \/ ___|",
-             "  | | | | | | |  |   \  ~ ||   \\ ",
-             "  | |_| |_| | |  \__ |  __/\__ | ",
-             "  \___|\____|_| |____/\___||___/ ",
-             "  ······························ ",
-             "%s" % version,
-             "",
-             "",
-             _("Press '%s' for help") % help_key,
-             _("Press '%s' to quit turses") % quit_key,
-             "",
-             "",
-             _("Configuration and token files reside under"),
-             _("your $HOME directory"),
-             #"",
-             "",
-             "    ~                                              ",
-             "    |+.turses/                                     ",
-             "    | |-config                                     ",
-             _("    | |-token       # default account's token      "),
-             _("    | `-bob.token   # another account's token      "),
-             "    |+...                                          ",
-             "",
-             "",
+            "   _                             ",
+            " _| |_ _   _ _ __ ___  ___  ____ ",
+            "|_   _| | | | '__/ __|/   \/ ___|",
+            "  | | | | | | |  |   \  ~ ||   \\ ",
+            "  | |_| |_| | |  \__ |  __/\__ | ",
+            "  \___|\____|_| |____/\___||___/ ",
+            "  ······························ ",
+            "%s" % version,
+            "",
+            "",
+            _("Press '%s' for help") % help_key,
+            _("Press '%s' to quit turses") % quit_key,
+            "",
+            "",
+            _("Configuration and token files reside under"),
+            _("your $HOME directory"),
+            #"",
+            "",
+            "    ~                                              ",
+            "    |+.turses/                                     ",
+            "    | |-config                                     ",
+            _("    | |-token       # default account's token      "),
+            _("    | `-bob.token   # another account's token      "),
+            "    |+...                                          ",
+            "",
+            "",
         ]
         self.__super.__init__(self._create_text())
 
@@ -940,8 +941,7 @@ class TimelinesBuffer(ScrollableWidgetWrap):
         ScrollableWidgetWrap.__init__(self, widget)
 
     def _build_widget(self, timelines, **kwargs):
-        timeline_widgets = [TimelineWidget(timeline, **kwargs) for timeline
-                                                                in timelines]
+        timeline_widgets = [TimelineWidget(timeline, **kwargs) for timeline in timelines]
         return Columns(timeline_widgets)
 
     def render_timelines(self, timelines, **kwargs):
@@ -1027,8 +1027,7 @@ class StatusWidget(WidgetWrap):
 
     def _build_widget(self, header_text, text, favorite=False):
         """Return the wrapped widget."""
-        box_around_status = configuration.styles.get('box_around_status',
-                                                          True)
+        box_around_status = configuration.styles.get('box_around_status', True)
         divider = configuration.styles.get('status_divider', False)
 
         header = AttrMap(Text(header_text), 'header')
@@ -1164,10 +1163,11 @@ class BoxDecoration(WidgetDecoration, WidgetWrap):
                           ('fixed', 1, brcorner)])
 
         pile = Pile([('flow', top),
-                     middle,
-                     ('flow', bottom)],
-                     focus_item=1)
+                    middle,
+                    ('flow', bottom)],
+                    focus_item=1)
 
+        # super?
         WidgetDecoration.__init__(self, original_widget)
         WidgetWrap.__init__(self, pile)
 
@@ -1183,7 +1183,7 @@ class UserInfo(WidgetWrap):
     __metaclass__ = signals.MetaSignals
     signals = ['done']
 
-    def __init__(self, user):
+    def __init__(self, user, last_statuses):
         """
         """
         whitespace = Divider(' ')
@@ -1206,6 +1206,7 @@ class UserInfo(WidgetWrap):
             widgets.extend([url, whitespace])
 
         # statistics: following, followers and favorites
+        # TODO: tweet count
         following = Text(_('following:\n%s' % user.friends_count))
         followers = Text(_('followers:\n%s' % user.followers_count))
         favorites = Text(_('favorites:\n%s' % user.favorites_count))
@@ -1213,10 +1214,10 @@ class UserInfo(WidgetWrap):
 
         widgets.extend([stats, whitespace])
 
-        # last status
-        if user.status:
-            status = StatusWidget(user.status)
-            widgets.append(status)
+        # Last n statuses
+        # TODO: make it configurable
+        status_widgets = [StatusWidget(status) for status in last_statuses[:3]]
+        widgets.extend(status_widgets)
 
         pile = Pile(widgets)
 

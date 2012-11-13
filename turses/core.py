@@ -1188,8 +1188,10 @@ class Controller(Observer):
     def user_info(self):
         status = self.timelines.active_status
 
-        user = self.api.get_user(status.authors_username)
-        self.ui.show_user_info(user)
+        username = status.authors_username
+        user = self.api.get_user(username)
+        last_statuses = self.api.get_user_timeline(username)
+        self.ui.show_user_info(user, last_statuses)
         self.user_info_mode(user)
 
     # - Configuration ---------------------------------------------------------
