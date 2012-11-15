@@ -4,11 +4,7 @@
 turses
 ~~~~~~
 
-A Twitter client with a sexy curses interface.
-
-:copyright: © 2012 turses contributors. See ``AUTHORS``.
-:license: GPL3
-
+A Twitter client for the console.
 """
 
 __title__ = "turses"
