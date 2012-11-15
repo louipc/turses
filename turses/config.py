@@ -339,6 +339,7 @@ STYLES = {
     'editor_horizontal_align': 'center',
     'editor_vertical_align': 'bottom',
     'url_format': 'display',
+    'statuses_in_user_info': 3,
 }
 
 # Debug
@@ -706,6 +707,8 @@ class Configuration(object):
                 elif (style == 'url_format' and
                       style in ['shortened', 'original', 'display']):
                     self.styles[style] = conf.get(SECTION_STYLES, style)
+                elif style == 'statuses_in_user_info':
+                    self.styles[style] = conf.getint(SECTION_STYLES, style)
                 else:
                     self.styles[style] = unicode(conf.get(SECTION_STYLES, style),
                                                  'utf-8')

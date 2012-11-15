@@ -226,6 +226,22 @@ to display the full original URLs:
     [styles]
     url_format = original
 
+User info window
+~~~~~~~~~~~~~~~~
+
+When you are focusing a status and press ``i``, ``turses`` will show a popup
+with information about the author of the status. At the bottom of the
+information widget the last statuses posted by the user are shown.
+
+The number of statuses to display is configurable via the
+``statuses_in_user_info`` parameter. By default, it shows three statuses but we
+can easily change that to show the last five:
+
+::
+
+    [styles]
+    statuses_in_user_info = 5
+
 Debug
 -----
 

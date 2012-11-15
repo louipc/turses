@@ -1185,6 +1185,7 @@ class UserInfo(WidgetWrap):
 
     def __init__(self, user, last_statuses):
         """
+        Receive a ``user`` and its ``last_statuses`` to render the widget.
         """
         whitespace = Divider(' ')
         widgets = []
@@ -1216,7 +1217,8 @@ class UserInfo(WidgetWrap):
 
         # Last n statuses
         # TODO: make it configurable
-        status_widgets = [StatusWidget(status) for status in last_statuses[:3]]
+        statuses_to_show = configuration.styles['statuses_in_user_info']
+        status_widgets = [StatusWidget(status) for status in last_statuses[:statuses_to_show]]
         widgets.extend(status_widgets)
 
         pile = Pile(widgets)
