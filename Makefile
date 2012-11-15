@@ -1,6 +1,4 @@
 APPNAME=turses
-VERSION=0.2.8
-DISTPKG=dist/$(APPNAME)-$(VERSION).tar.gz
 
 PY=python
 DIST=$(PY) setup.py sdist
@@ -18,7 +16,7 @@ turses: clean test dist install
 dist: clean
 	$(DIST)
 
-install: 
+install:
 	$(PY) setup.py develop
 
 clean: pyc
@@ -33,37 +31,23 @@ pyc:
 watch:
 	tdaemon . $(TESTRUNNER) --custom-args="$(WATCHTESTFLAGS)"
 
-release: bump merge publish develop tag
+release: bump merge tag push publish
 
 bump:
-	$(EDITOR) HISTORY.rst turses/__init__.py Makefile 
+	$(EDITOR) HISTORY.rst turses/__init__.py
 	git add -u
-	git commit
+	git commit -m "bump `cat turses/__init__.py | grep -o "., ., ." | tr -s ', ' '.'`"
 
 merge:
 	git stash
 	git checkout master
 	git merge develop
 
-develop:
-	git checkout develop
+tag:
+	git tag v`cat turses/__init__.py | grep -o "., ., ." | tr -s ', ' '.'`
+
+push:
+	git push --tags origin master
 
 publish:
 	$(PY) setup.py sdist upload
-
-tag:
-	@echo "===================="
-	@echo "Tag the release NOW!"
-	@echo "===================="
-
-stats:
-	@echo "pep8"
-	@echo "===="
-	@echo
-	@echo "Warnings: " `pep8 . | grep -o "W[0-9]*.*"  | wc -l`
-	@echo "Errors: " `pep8 . | grep -o "E[0-9]*.*"  | wc -l`
-	@echo
-	@echo "pyflakes"
-	@echo "========"
-	@echo 
-	@echo "Errors: `pyflakes . | wc -l`"
