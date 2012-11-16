@@ -7,33 +7,13 @@ Configuration
 The configuration file is divided into sections, each of which is described
 below these lines.
 
-Timelines
----------
+.. warning:: The ``timelines`` section of the configuration has been
+   deprecated, use sessions instead.
 
-This sections allows you to configure which timelines are created when
-``turses`` is launched. The default timelines are:
+Sessions
+--------
 
-- home: The tweets and retweets from the people you follow.
-- mentions: Tweets mentioning you.
-- favorites: Your favorited tweets.
-- messages: Messages sent to and from you.
-- own_tweets: Your own tweets and retweets.
-
-You can controll wether a timeline is created at startup assigning ``true`` or
-``false`` to the name of the timeline in the ``timelines`` section.
-
-An example configuration with only the ``home`` and ``mentions`` timeline
-active:
-
-
-::
-
-    [timelines]
-    home = true
-    mentions = true
-    favorites = false
-    messages = false
-    own_tweets = false
+.. automodule:: turses.session
 
 
 Twitter

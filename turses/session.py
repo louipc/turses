@@ -5,7 +5,7 @@ The file with the session declarations is located on
 ``$HOME/.turses/sessions``.
 
 ``sessions`` is a ini-style configuration file in which each section represents
-the layout of a session. The ``DEFAULT`` session is loaded when no other
+the layout of a session. The ``defaults`` session is loaded when no other
 section is present.
 
 Each section has only two options:
@@ -56,7 +56,7 @@ named ``interactions`` by executing:
 
 import re
 import logging
-from ConfigParser import RawConfigParser, NoSectionError
+from ConfigParser import RawConfigParser
 from os import path
 from gettext import gettext as _
 
@@ -75,7 +75,6 @@ from turses.config import (
 
     configuration,
 )
-from turses.models import is_DM, Timeline
 
 
 SESSIONS_FILE = path.join(CONFIG_PATH, 'sessions')
@@ -108,7 +107,7 @@ class Session:
                 BUFFERS: ', '.join([MENTIONS_TIMELINE,
                                     FAVORITES_TIMELINE,
                                     MESSAGES_TIMELINE,
-                                    OWN_TWEETS_TIMELINE,])
+                                    OWN_TWEETS_TIMELINE])
             }
         }
         if not path.isfile(SESSIONS_FILE):

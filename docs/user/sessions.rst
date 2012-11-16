@@ -1,4 +1,0 @@
-Sessions
-========
-
-.. automodule:: turses.session
