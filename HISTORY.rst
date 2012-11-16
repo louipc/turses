@@ -1,3 +1,9 @@
+0.2.9
+-----
+- Configurable number of statuses in user info widget
+- Sessions support
+- Better information for SSL errors
+
 0.2.8
 -----
 - Python 2.6 support
