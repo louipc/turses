@@ -11,3 +11,4 @@ build/
 _build/
 .ropeproject/
 .tox
+cover/

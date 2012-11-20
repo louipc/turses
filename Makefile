@@ -6,6 +6,7 @@ PIPI=pip install
 PIPFLAGS=--ignore-installed --no-deps
 
 TESTRUNNER=nosetests
+COVERTESTFLAGS=--with-coverage --cover-package=turses --cover-html
 WATCHTESTFLAGS=--verbosity=0
 
 
@@ -25,13 +26,16 @@ clean: pyc
 test: pyc
 	$(TESTRUNNER)
 
+coverage: pyc
+	$(TESTRUNNER) $(COVERTESTFLAGS)
+
 pyc:
 	find . -name "*.pyc" -exec rm {} \;
 
 watch:
 	tdaemon . $(TESTRUNNER) --custom-args="$(WATCHTESTFLAGS)"
 
-release: bump merge tag push publish
+release: test bump merge publish develop tag
 
 bump:
 	$(EDITOR) HISTORY.rst turses/__init__.py
