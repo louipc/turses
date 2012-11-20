@@ -17,12 +17,12 @@ from turses.meta import async, wrap_exceptions, Observer
 from turses.config import configuration
 from turses.utils import is_username
 from turses.models import (
-        is_DM,
-        is_valid_status_text,
-        is_valid_search_text,
-        sanitize_username,
+    is_DM,
+    is_valid_status_text,
+    is_valid_search_text,
+    sanitize_username,
 
-        Timeline,
+    Timeline,
 )
 from turses.session import Session
 
@@ -160,6 +160,8 @@ class KeyHandler(object):
         # User info mode
         #  we remove the user widget and activate timeline mode when
         #  receiving input
+        # TODO: commands for info mode (any other input will transition to
+        # timeline mode)
         if self.controller.is_in_user_info_mode():
             self.controller.timeline_mode()
 
@@ -195,9 +197,10 @@ def has_active_status(func):
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         status = self.timelines.active_status
-        if status != None:
+        if status is not None:
             return func(self, *args, **kwargs)
     return wrapper
+
 
 def has_timelines(func):
     """
@@ -432,12 +435,11 @@ class Controller(Observer):
         timeline.activate_first()
         self.timelines.append_timeline(timeline)
 
-
     def append_home_timeline(self):
         timeline_fetched = partial(self.info_message,
-                                    _('Home timeline fetched'))
+                                   _('Home timeline fetched'))
         timeline_not_fetched = partial(self.error_message,
-                                        _('Failed to fetch home timeline'))
+                                       _('Failed to fetch home timeline'))
 
         self.append_timeline(name=_('tweets'),
                              update_function=self.api.get_home_timeline,
@@ -460,9 +462,9 @@ class Controller(Observer):
 
     def append_own_tweets_timeline(self):
         timeline_fetched = partial(self.info_message,
-                                    _('Your tweets fetched'))
+                                   _('Your tweets fetched'))
         timeline_not_fetched = partial(self.error_message,
-                                        _('Failed to fetch your tweets'))
+                                       _('Failed to fetch your tweets'))
 
         if not hasattr(self, 'user'):
             self.user = self.api.verify_credentials()
@@ -473,9 +475,9 @@ class Controller(Observer):
 
     def append_mentions_timeline(self):
         timeline_fetched = partial(self.info_message,
-                                    _('Mentions fetched'))
+                                   _('Mentions fetched'))
         timeline_not_fetched = partial(self.error_message,
-                                        _('Failed to fetch mentions'))
+                                       _('Failed to fetch mentions'))
 
         self.append_timeline(name=_('mentions'),
                              update_function=self.api.get_mentions,
@@ -484,9 +486,9 @@ class Controller(Observer):
 
     def append_favorites_timeline(self):
         timeline_fetched = partial(self.info_message,
-                                    _('Favorites fetched'))
+                                   _('Favorites fetched'))
         timeline_not_fetched = partial(self.error_message,
-                                        _('Failed to fetch favorites'))
+                                       _('Failed to fetch favorites'))
 
         self.append_timeline(name=_('favorites'),
                              update_function=self.api.get_favorites,
@@ -495,9 +497,9 @@ class Controller(Observer):
 
     def append_direct_messages_timeline(self):
         timeline_fetched = partial(self.info_message,
-                                    _('Messages fetched'))
+                                   _('Messages fetched'))
         timeline_not_fetched = partial(self.error_message,
-                                        _('Failed to fetch messages'))
+                                       _('Failed to fetch messages'))
 
         self.append_timeline(name=_('messages'),
                              update_function=self.api.get_direct_messages,
@@ -515,7 +517,7 @@ class Controller(Observer):
 
         if is_DM(status):
             participants = [status.sender_screen_name,
-                            status.recipient_screen_name,]
+                            status.recipient_screen_name]
             name = _('DM thread: %s' % ', '.join(participants))
             update_function = self.api.get_message_thread
         else:
@@ -944,8 +946,8 @@ class Controller(Observer):
         prompt = _('Search user (no need to prepend it with "@"')
         handler = self.search_user_handler
         editor = self.ui.show_text_editor(prompt=prompt,
-                                 content='',
-                                 done_signal_handler=handler)
+                                          content='',
+                                          done_signal_handler=handler)
         self.editor_mode(editor)
 
     @has_active_status
@@ -1061,8 +1063,7 @@ class Controller(Observer):
             return
 
         author = status.authors_username
-        if (author != self.user.screen_name and
-            status.user != self.user.screen_name):
+        if author != self.user.screen_name and status.user != self.user.screen_name:
             self.error_message(_('You can only delete your own tweets'))
             return
 
