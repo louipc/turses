@@ -6,9 +6,9 @@ A Twitter client for the console
 
 A ``turses`` session with multiple columns running on ``urxvt``:
 
-.. image:: http://dialelo.com/img/turses_screenshot.png
+.. image:: http://alejandrogomez.github.com/img/turses_screenshot.png
 
-The goal of the project is to build a full-featured, lightweight, and extremely 
+The goal of the project is to build a full-featured, lightweight, and extremely
 configurable Twitter client.
 
 Documentation
@@ -62,7 +62,7 @@ The code is hosted on a `git repo`_.
 
 .. _`git repo`: http://github.com/alejandrogomez/turses
 
-``turses`` is evolving fast, a list of tasks can be found on 
+``turses`` is evolving fast, a list of tasks can be found on
 the on the `issue tracker`_. Feel free to submit issues, feature
 requests or participate in ongoing discussions.
 
