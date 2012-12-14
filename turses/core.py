@@ -295,7 +295,7 @@ class Controller(Observer):
             pass
 
         # update alarm
-        seconds = configuration.update_frequency
+        seconds = configuration.twitter['update_frequency']
         self.loop.set_alarm_in(seconds, self.update_alarm)
 
     def main_loop(self):
@@ -346,7 +346,7 @@ class Controller(Observer):
     def update_alarm(self, *args, **kwargs):
         self.update_all_timelines()
 
-        seconds = configuration.update_frequency
+        seconds = configuration.twitter['update_frequency']
         self.loop.set_alarm_in(seconds, self.update_alarm)
 
     # -- Modes ----------------------------------------------------------------

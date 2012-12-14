@@ -7,18 +7,18 @@ from sys import path
 path.append('../')
 
 from turses.config import (
-        CONFIG_PATH,
-        DEFAULT_CONFIG_FILE,
-        DEFAULT_TOKEN_FILE,
-        PALETTE,
-        STYLES,
-        DEFAULT_SESSION,
-        KEY_BINDINGS,
-        UPDATE_FREQUENCY,
-        LOGGING_LEVEL,
+    CONFIG_PATH,
+    DEFAULT_CONFIG_FILE,
+    DEFAULT_TOKEN_FILE,
+    PALETTE,
+    STYLES,
+    DEFAULT_SESSION,
+    KEY_BINDINGS,
+    TWITTER,
+    LOGGING_LEVEL,
 
-        validate_color,
-        Configuration,
+    validate_color,
+    Configuration,
 )
 
 
@@ -57,7 +57,10 @@ class ConfigurationTest(unittest.TestCase):
         self.assertEqual(config.token_file, DEFAULT_TOKEN_FILE)
 
         # config options
-        self.assertEqual(config.update_frequency, UPDATE_FREQUENCY)
+        self.assertEqual(config.twitter['update_frequency'],
+                         TWITTER['update_frequency'])
+        self.assertEqual(config.twitter['use_https'],
+                         TWITTER['use_https'])
         self.assertEqual(config.key_bindings, KEY_BINDINGS)
         self.assertEqual(config.palette, PALETTE)
         self.assertEqual(config.styles, STYLES)

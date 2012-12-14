@@ -10,6 +10,7 @@ from functools import wraps, partial
 from tweepy import API as BaseTweepyApi
 from tweepy import OAuthHandler as TweepyOAuthHandler
 
+from turses.config import configuration
 from turses.meta import filter_result
 from turses.models import User, Status, DirectMessage, List
 from turses.api.base import ApiAdapter
@@ -181,10 +182,11 @@ class TweepyApi(BaseTweepyApi, ApiAdapter):
 
     def init_api(self):
         oauth_handler = TweepyOAuthHandler(self._consumer_key,
-                                           self._consumer_secret, secure=True)
+                                           self._consumer_secret,
+                                           secure=configuration.twitter['use_https'])
         oauth_handler.set_access_token(self._access_token_key,
                                        self._access_token_secret)
-        self._api = BaseTweepyApi(oauth_handler, secure=True)
+        self._api = BaseTweepyApi(oauth_handler, secure=configuration.twitter['use_https'])
 
     @to_user
     def verify_credentials(self):

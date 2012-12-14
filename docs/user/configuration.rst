@@ -20,7 +20,19 @@ Twitter
 -------
 
 This section allows you to configure the settings related to the Twitter API.
-The only available option is ``update_frequency`` which controls how often (in
+
+``turses`` communicates with Twitter over HTTPS by default but you can switch
+it off if you set it to false:
+
+::
+    [twitter]
+    use_https = false
+
+However, we recommend you to use HTTPS, especially in open WiFi networks where
+anybody could be sniffing packages and reading your personal information and
+communications.
+
+The other available option is ``update_frequency`` which controls how often (in
 seconds) the timelines should be automatically updated.
 
 An example configuration that updates the timelines every minute:

@@ -347,8 +347,13 @@ STYLES = {
 LOGGING_LEVEL = 3
 
 # Twitter
-
 UPDATE_FREQUENCY = 300
+USE_HTTPS = True
+
+TWITTER = {
+  'update_frequency': UPDATE_FREQUENCY,
+  'use_https': USE_HTTPS,
+}
 
 # Environment
 
@@ -413,7 +418,7 @@ class Configuration(object):
         from the command line interface (if any).
         """
         # load defaults
-        self.update_frequency = UPDATE_FREQUENCY
+        self.twitter = TWITTER
         self.key_bindings = KEY_BINDINGS
         self.palette = PALETTE
         self.styles = STYLES
@@ -482,10 +487,10 @@ class Configuration(object):
         # Twitter
         if not conf.has_section(SECTION_TWITTER):
             conf.add_section(SECTION_TWITTER)
-        if conf.has_option(SECTION_TWITTER, 'update_frequency'):
-            return
-        else:
+        if not conf.has_option(SECTION_TWITTER, 'update_frequency'):
             conf.set(SECTION_TWITTER, 'update_frequency', UPDATE_FREQUENCY)
+        if not conf.has_option(SECTION_TWITTER, 'use_https'):
+            conf.set(SECTION_TWITTER, 'use_https', USE_HTTPS)
 
     def _add_section_key_bindings(self, conf):
         # Key bindings
@@ -676,7 +681,9 @@ class Configuration(object):
 
     def _parse_twitter(self, conf):
         if conf.has_option(SECTION_TWITTER, 'update_frequency'):
-            self.update_frequency = conf.getint(SECTION_TWITTER, 'update_frequency')
+            self.twitter['update_frequency'] = conf.getint(SECTION_TWITTER, 'update_frequency')
+        if conf.has_option(SECTION_TWITTER, 'use_https'):
+            self.twitter['use_https'] = conf.getboolean(SECTION_TWITTER, 'use_https')
 
     def _parse_key_bindings(self, conf):
         for binding in self.key_bindings:
