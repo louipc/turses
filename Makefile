@@ -32,9 +32,6 @@ coverage: pyc
 pyc:
 	find . -name "*.pyc" -exec rm {} \;
 
-watch:
-	tdaemon . $(TESTRUNNER) --custom-args="$(WATCHTESTFLAGS)"
-
 release: test bump merge publish develop tag
 
 bump:
@@ -55,3 +52,6 @@ push:
 
 publish:
 	$(PY) setup.py sdist upload
+
+watch:
+	watchmedo shell-command --patterns="*.py" --recursive --command="$(TESTRUNNER) $(WATCHTESTFLAGS)"
