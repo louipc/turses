@@ -1,3 +1,7 @@
+0.2.10
+------
+- User HTTPS by default (thanks to Joe Di Castro)
+
 0.2.9
 -----
 - Configurable number of statuses in user info widget
@@ -16,7 +20,7 @@
 0.2.6
 -----
 - configurable URL format
-- better browser integration (by @ivanov)
+- better browser integration (by Paul Ivanov)
 
 0.2.5
 -----
