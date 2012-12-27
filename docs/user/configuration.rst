@@ -25,6 +25,7 @@ This section allows you to configure the settings related to the Twitter API.
 it off if you set it to false:
 
 ::
+
     [twitter]
     use_https = false
 
