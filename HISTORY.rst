@@ -1,3 +1,7 @@
+0.2.11
+------
+- Include ``in_reply_to_status_id`` parameter in replies
+
 0.2.10
 ------
 - User HTTPS by default (thanks to Joe Di Castro)
