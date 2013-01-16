@@ -246,6 +246,10 @@ class ApiAdapter(object):
         pass
 
     @abstractmethod
+    def reply(self, status, text):
+        pass
+
+    @abstractmethod
     def retweet(self, status):
         pass
 
@@ -396,6 +400,12 @@ class AsyncApi(ApiAdapter):
     @wrap_exceptions
     def update(self, text):
         self._api.update(text)
+
+    @async
+    @wrap_exceptions
+    def reply(self, status, text):
+        self._api.reply(status, text)
+
 
     @async
     @wrap_exceptions

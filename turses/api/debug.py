@@ -133,6 +133,9 @@ class MockApi(ApiAdapter):
     def update(self, text):
         pass
 
+    def reply(self, status, text):
+        pass
+
     def retweet(self, status):
         pass
 

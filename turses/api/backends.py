@@ -315,6 +315,9 @@ class TweepyApi(BaseTweepyApi, ApiAdapter):
     def update(self, text):
         self._api.update_status(text)
 
+    def reply(self, status, text):
+        self._api.update_status(text, in_reply_to_status_id=status.id)
+
     def destroy_status(self, status):
         self._api.destroy_status(status.id)
 

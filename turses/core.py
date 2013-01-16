@@ -804,6 +804,29 @@ class Controller(Observer):
                         on_error=tweet_not_sent,)
 
     @text_from_editor
+    @has_active_status
+    def reply_handler(self, text):
+        """Handle the post as a tweet of the given `text` replying to the
+        current status."""
+        status = self.timelines.active_status
+
+        self.info_message(_('Sending reply'))
+
+        if not is_valid_status_text(text):
+            # reply was explicitly cancelled or empty text
+            self.info_message(_('Reply canceled'))
+            return
+
+        reply_sent = partial(self.info_message, _('Reply sent'))
+        reply_not_sent = partial(self.error_message, _('Reply not sent'))
+
+        # API call
+        self.api.reply(status=status,
+                       text=text,
+                       on_success=reply_sent,
+                       on_error=reply_not_sent,)
+
+    @text_from_editor
     def direct_message_handler(self, username, text):
         """Handle the post as a DM of the given `text` to `username`."""
         self.info_message(_('Sending DM'))
@@ -1003,7 +1026,6 @@ class Controller(Observer):
         else:
             self.error_message(_('Tweet too long for manual retweet'))
 
-    # TODO: add `in_reply_to_status_id` parameter
     @has_active_status
     def reply(self):
         status = self.timelines.active_status
@@ -1019,7 +1041,7 @@ class Controller(Observer):
         except ValueError:
             pass
 
-        handler = self.tweet_handler
+        handler = self.reply_handler
         editor = self.ui.show_tweet_editor(prompt=_('Reply to %s' % author),
                                            content=' '.join(mentioned),
                                            done_signal_handler=handler)
