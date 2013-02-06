@@ -63,7 +63,7 @@ setup(name=NAME,
       description="A Twitter client for the console.",
       long_description=long_description,
       keywords="twitter client, curses, console, twitter",
-      packages=find_packages(),
+      packages=find_packages(exclude=["tests"]),
       entry_points={
           'console_scripts':
             ['turses = turses.cli:main']
