@@ -6,7 +6,7 @@ turses
 
 A Twitter client for the console.
 
-The goal of the project is to build a full-featured, lightweight, and extremely 
+The goal of the project is to build a full-featured, lightweight, and extremely
 configurable Twitter client.
 
 Documentation
@@ -41,7 +41,7 @@ NAME = "turses"
 REQUIREMENTS = [
     "oauth2",
     "urwid",
-    "tweepy",
+    "tweepy>=2.0",
 ]
 if version_info[:2] == (2, 6):
     REQUIREMENTS.append("argparse")

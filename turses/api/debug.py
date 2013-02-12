@@ -190,8 +190,6 @@ class MockApi(ApiAdapter):
     def get_list_members(self, list):
         pass
 
-    def is_list_member(self, user, list):
-        pass
 
     def subscribe_to_list(self, list):
         pass
@@ -199,5 +197,3 @@ class MockApi(ApiAdapter):
     def get_list_subscribers(self, list):
         pass
 
-    def is_list_subscriber(self, user, list):
-        pass

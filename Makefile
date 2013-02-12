@@ -37,7 +37,7 @@ release: test bump merge publish develop tag
 bump:
 	$(EDITOR) HISTORY.rst turses/__init__.py
 	git add -u
-	git commit -m "bump `cat turses/__init__.py | grep -o "., ., ." | tr -s ', ' '.'`"
+	git commit -m "bump `cat turses/__init__.py | grep -o "[[:digit:]]*, [[:digit:]]*, [[:digit:]]*" | tr -s ', ' '.'`"
 
 merge:
 	git stash
@@ -45,7 +45,7 @@ merge:
 	git merge develop
 
 tag:
-	git tag v`cat turses/__init__.py | grep -o "., ., ." | tr -s ', ' '.'`
+	git tag v`cat turses/__init__.py | grep -o "[[:digit:]]*, [[:digit:]]*, [[:digit:]]*" | tr -s ', ' '.'`
 
 push:
 	git push --tags origin master
