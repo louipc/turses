@@ -219,11 +219,7 @@ class TweepyApi(BaseTweepyApi, ApiAdapter):
     @include_entities
     def get_own_timeline(self, **kwargs):
         me = self.verify_credentials()
-        tweets = self._api.user_timeline(screen_name=me.screen_name,
-                                         **kwargs)
-        retweets = self._api.retweeted_by_me(**kwargs)
-        tweets.extend(retweets)
-        return tweets
+        return self._api.user_timeline(screen_name=me.screen_name, **kwargs)
 
     @to_status
     @include_entities
