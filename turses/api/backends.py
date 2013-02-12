@@ -208,8 +208,6 @@ class TweepyApi(BaseTweepyApi, ApiAdapter):
     @include_entities
     def get_home_timeline(self, **kwargs):
         tweets = self._api.home_timeline(**kwargs)
-        retweets = self._api.retweeted_to_me(**kwargs)
-        tweets.extend(retweets)
         return tweets
 
     @to_status
