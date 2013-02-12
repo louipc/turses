@@ -230,7 +230,7 @@ class TweepyApi(BaseTweepyApi, ApiAdapter):
     @to_status
     @include_entities
     def get_mentions(self, **kwargs):
-        return self._api.mentions(**kwargs)
+        return self._api.mentions_timeline(**kwargs)
 
     @to_status
     @include_entities
