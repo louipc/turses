@@ -1,3 +1,7 @@
+0.2.12
+------
+- Upgrade to Tweepy 2.0 (hence Twitter API v1.1)
+
 0.2.11
 ------
 - Include ``in_reply_to_status_id`` parameter in replies
