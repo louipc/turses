@@ -318,19 +318,11 @@ class ApiAdapter(object):
         pass
 
     @abstractmethod
-    def is_list_member(self, user, list):
-        pass
-
-    @abstractmethod
     def subscribe_to_list(self, list):
         pass
 
     @abstractmethod
     def get_list_subscribers(self, list):
-        pass
-
-    @abstractmethod
-    def is_list_subscriber(self, user, list):
         pass
 
 
@@ -470,14 +462,8 @@ class AsyncApi(ApiAdapter):
     def get_list_members(self, list):
         pass
 
-    def is_list_member(self, user, list):
-        pass
-
     def subscribe_to_list(self, list):
         pass
 
     def get_list_subscribers(self, list):
-        pass
-
-    def is_list_subscriber(self, user, list):
         pass

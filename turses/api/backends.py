@@ -346,11 +346,11 @@ class TweepyApi(BaseTweepyApi, ApiAdapter):
 
     @to_list
     def get_lists(self, screen_name):
-        return self._api.lists(screen_name)
+        return self._api.lists_all(screen_name)
 
     @to_list
     def get_own_lists(self):
-        return self._api.lists()
+        return self._api.lists_all()
 
     @to_list
     def get_list_memberships(self):
@@ -370,11 +370,6 @@ class TweepyApi(BaseTweepyApi, ApiAdapter):
         owner = a_list.owner.screen_name
         return self._api.list_members(owner=owner, slug=a_list.slug)
 
-    def is_list_member(self, user, a_list):
-        return bool(self._api.is_list_member(owner=user.screen_name,
-                                             slug=a_list.slug,
-                                             user_id=user.id,))
-
     @to_list
     def subscribe_to_list(self, a_list):
         owner = a_list.owner
@@ -386,8 +381,3 @@ class TweepyApi(BaseTweepyApi, ApiAdapter):
         owner = a_list.owner
         return self._api.list_subscribers(owner=owner.screen_name,
                                           slug=a_list.slug,)
-
-    def is_list_subscriber(self, user, a_list):
-        return bool(self._api.is_subscribed_list(owner=user.screen_name,
-                                                 slug=a_list.slug,
-                                                 user_id=user.id,))
