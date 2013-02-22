@@ -47,7 +47,7 @@ def get_urls(text):
 def encode(string):
     try:
         return string.encode(stdout.encoding, 'replace')
-    except AttributeError:
+    except (AttributeError, TypeError):
         return string
 
 # For Python < 2.7
