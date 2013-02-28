@@ -105,6 +105,7 @@ class KeyHandler(object):
             'reply':             self.controller.reply,
             'retweet':           self.controller.retweet,
             'retweet_and_edit':  self.controller.manual_retweet,
+            'retweet_and_fav':   self.controller.retweet_and_favorite,
             'delete_tweet':      self.controller.delete_tweet,
             'follow_selected':   self.controller.follow_selected,
             'follow_user':       self.controller.follow_user,
@@ -1006,6 +1007,9 @@ class Controller(Observer):
             self.error_message(_('You can\'t retweet direct messages'))
             return
 
+        self._retweet(status)
+
+    def _retweet(self, status):
         retweet_posted = partial(self.info_message,
                                  _('Retweet posted'))
         retweet_post_failed = partial(self.error_message,
@@ -1025,6 +1029,17 @@ class Controller(Observer):
                        cursor_position=0)
         else:
             self.error_message(_('Tweet too long for manual retweet'))
+
+    @has_active_status
+    def retweet_and_favorite(self):
+        status = self.timelines.active_status
+
+        if is_DM(status):
+            self.error_message(_('You can\'t retweet or favorite direct messages'))
+            return
+
+        self._retweet(status)
+        self._favorite(status)
 
     @has_active_status
     def reply(self):
@@ -1187,6 +1202,9 @@ class Controller(Observer):
     def favorite(self):
         status = self.timelines.active_status
 
+        self._favorite(status)
+
+    def _favorite(self, status):
         favorite_error = partial(self.error_message,
                                  _('Failed to mark tweet as favorite'))
         favorite_done = partial(self.info_message,

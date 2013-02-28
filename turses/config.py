@@ -124,6 +124,8 @@ KEY_BINDINGS = {
         ('R', _('retweet focused status')),
     'retweet_and_edit':
         ('E', _('open a editor for manually retweeting the focused status')),
+    'retweet_and_fav':
+        ('Y', _('mark focused tweet as favorite and retweet it')),
     'send_dm':
         ('D', _('compose a direct message')),
     'update':
@@ -227,6 +229,7 @@ TWEETS_KEY_BINDINGS = [
     'reply',
     'retweet',
     'retweet_and_edit',
+    'retweet_and_fav',
     'send_dm',
     'update',
     'update_all',
