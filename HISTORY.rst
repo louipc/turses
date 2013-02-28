@@ -1,3 +1,7 @@
+0.2.13
+------
+- `Y` as shortcut for retweeting and favoriting a tweet
+
 0.2.12
 ------
 - Upgrade to Tweepy 2.0 (hence Twitter API v1.1)
@@ -8,7 +12,7 @@
 
 0.2.10
 ------
-- User HTTPS by default (thanks to Joe Di Castro)
+- Use HTTPS by default (thanks to Joe Di Castro)
 
 0.2.9
 -----
