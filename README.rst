@@ -89,7 +89,6 @@ Roadmap
 - Lists
 - Streaming
 - Notifications
-- Sessions
 
 License
 -------
