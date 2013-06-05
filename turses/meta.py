@@ -47,7 +47,9 @@ def async(func):
     """
     @wraps(func)
     def wrapper(*args, **kwargs):
-        return Thread(target=func, args=args, kwargs=kwargs).start()
+        thread = Thread(target=func, args=args, kwargs=kwargs)
+        thread.daemon = True
+        return thread.start()
     return wrapper
 
 
