@@ -4,6 +4,7 @@
 This module contains the curses UI widgets.
 """
 
+import os
 import logging
 from gettext import gettext as _
 
@@ -89,8 +90,7 @@ def parse_attributes(text,
         else:
             return parsed_word + ' '
 
-    tweet = [add_withespace(parsed_word) for parsed_word
-                                         in parsed_text]
+    tweet = [add_withespace(parsed_word) for parsed_word in parsed_text]
 
     # insert spaces after an attribute
     indices = []
@@ -485,6 +485,8 @@ class Banner(WidgetWrap):
 
         help_key = configuration.key_bindings['help'][0]
         quit_key = configuration.key_bindings['quit'][0]
+        home_dir = os.getenv("HOME", _("unknown"))
+
         self.BANNER = [
             "   _                             ",
             " _| |_ _   _ _ __ ___  ___  ____ ",
@@ -493,19 +495,20 @@ class Banner(WidgetWrap):
             "  | |_| |_| | |  \__ |  __/\__ | ",
             "  \___|\____|_| |____/\___||___/ ",
             "  ······························ ",
-            "%s" % version,
+            "{}".format(version),
             "",
             "",
-            _("Press '%s' for help") % help_key,
-            _("Press '%s' to quit turses") % quit_key,
+            _("Press '{}' for help").format(help_key),
+            _("Press '{}' to quit turses").format(quit_key),
             "",
             "",
             _("Configuration and token files reside under"),
-            _("your $HOME directory"),
+            _("your $HOME directory ({})").format(home_dir),
             #"",
             "",
             "    ~                                              ",
             "    |+.turses/                                     ",
+            "    | |-sessions",
             "    | |-config                                     ",
             _("    | |-token       # default account's token      "),
             _("    | `-bob.token   # another account's token      "),
@@ -556,7 +559,7 @@ class BaseEditor(WidgetWrap):
         and `BaseEditor` will wrap it in a `urwid.Colums` widget, calling to
         `urwid.WidgetWrap.__init__` with the wrapped widget.
         """
-        caption = _(u'%s (twice enter key to validate or esc) \n>> ') % prompt
+        caption = _(u'{} (twice enter key to validate or esc) \n>> ').format(prompt)
         if content:
             content += ' '
         self.content = content
@@ -665,7 +668,7 @@ class DmEditor(TweetEditor):
                  done_signal_handler):
         self.recipient = recipient
         TweetEditor.__init__(self,
-                             prompt='DM to %s' % recipient,
+                             prompt='DM to {}'.format(recipient),
                              content='',
                              done_signal_handler=done_signal_handler)
 
@@ -1187,12 +1190,7 @@ class UserInfo(WidgetWrap):
         """
         Receive a ``user`` and its ``last_statuses`` to render the widget.
         """
-        whitespace = Divider(' ')
-        widgets = []
-
-        # name
-        name = Text('%s' % user.name)
-        widgets.extend([name, whitespace])
+        widgets = [Text(user.name), Divider(' ')]
 
         # bio
         if user.description:
@@ -1208,9 +1206,9 @@ class UserInfo(WidgetWrap):
 
         # statistics: following, followers and favorites
         # TODO: tweet count
-        following = Text(_('following:\n%s' % user.friends_count))
-        followers = Text(_('followers:\n%s' % user.followers_count))
-        favorites = Text(_('favorites:\n%s' % user.favorites_count))
+        following = Text(_('following:\n{}'.format(user.friends_count)))
+        followers = Text(_('followers:\n{}'.format(user.followers_count)))
+        favorites = Text(_('favorites:\n{}'.format(user.favorites_count)))
         stats = Columns([following, followers, favorites])
 
         widgets.extend([stats, whitespace])
@@ -1223,5 +1221,5 @@ class UserInfo(WidgetWrap):
 
         pile = Pile(widgets)
 
-        WidgetWrap.__init__(self, LineBox(title='@%s' % user.screen_name,
+        WidgetWrap.__init__(self, LineBox(title='@{}'.format(user.screen_name),
                                           original_widget=pile))
