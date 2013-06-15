@@ -508,7 +508,7 @@ class Banner(WidgetWrap):
             "",
             "    ~                                              ",
             "    |+.turses/                                     ",
-            "    | |-sessions",
+            "    | |-sessions                                   ",
             "    | |-config                                     ",
             _("    | |-token       # default account's token      "),
             _("    | `-bob.token   # another account's token      "),
@@ -1190,7 +1190,8 @@ class UserInfo(WidgetWrap):
         """
         Receive a ``user`` and its ``last_statuses`` to render the widget.
         """
-        widgets = [Text(user.name), Divider(' ')]
+        whitespace = Divider(' ')
+        widgets = [Text(u"{}".format(user.name)), whitespace]
 
         # bio
         if user.description:
