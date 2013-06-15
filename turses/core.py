@@ -4,6 +4,7 @@
 This module contains the controller and key handling logic of turses.
 """
 
+import signal
 import logging
 from gettext import gettext as _
 from functools import partial, wraps
@@ -263,8 +264,15 @@ class Controller(Observer):
         # Subscribe to model updates
         self.timelines.subscribe(self)
 
+        signal.signal(signal.SIGCONT, self.handle_sigcont)
+
     def start(self):
         self.main_loop()
+
+    def handle_sigcont(self, signum, stack_frame):
+        self.loop.screen.stop()
+        self.loop.screen.start()
+        self.redraw_screen()
 
     def authenticate_api(self):
         self.info_message(_('Authenticating API'))

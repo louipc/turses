@@ -4,6 +4,7 @@
 Handle the invocation of ``turses`` from the command line.
 """
 
+import signal
 import logging
 from sys import stdout
 from argparse import ArgumentParser
@@ -158,6 +159,7 @@ def main():
     turses = Turses(ui=curses_interface,
                     api=api,
                     timelines=timeline_list,)
+
     try:
         turses.start()
     except KeyboardInterrupt:
