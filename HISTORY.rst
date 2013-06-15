@@ -1,3 +1,8 @@
+0.2.14
+------
+- Daemonize threads so they finish when quitting turses
+- Fix a bug regarding SIGCONT handling
+
 0.2.13
 ------
 - `Y` as shortcut for retweeting and favoriting a tweet
