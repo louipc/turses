@@ -1,3 +1,7 @@
+0.2.15
+------
+- Configurable retweet and reply indicators
+
 0.2.14
 ------
 - Daemonize threads so they finish when quitting turses
