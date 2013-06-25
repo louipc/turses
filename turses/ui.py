@@ -28,6 +28,9 @@ from turses.models import is_DM, TWEET_MAXIMUM_CHARACTERS
 from turses.utils import encode, is_hashtag, is_username, is_url
 
 
+def surround_with_spaces(s):
+    return ' '.join(['', s , ''])
+
 # - Text parsing --------------------------------------------------------------
 
 def apply_attribute(string,
@@ -1083,11 +1086,11 @@ class StatusWidget(WidgetWrap):
 
         # reply
         if status.is_reply:
-            reply = u' \u2709'
+            reply = surround_with_spaces(configuration.styles['reply_indicator'])
 
         # retweet
         if status.is_retweet:
-            retweeted = u" \u267b "
+            retweeted = surround_with_spaces(configuration.styles['retweet_indicator'])
             # `username` is the author of the original tweet
             username = status.author
             # `retweeter` is the user who made the RT

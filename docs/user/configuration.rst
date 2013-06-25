@@ -103,14 +103,19 @@ variables within the templates:
 ::
 
     [styles]
+    reply_indicator = ✉
+    retweet_indicator = ♻
     header_template =  {username}{retweeted}{retweeter} - {time}{reply} {retweet_count}
 
 - ``username``: The author of the tweet.
-- ``retweeted``: ♻ symbol indicating that the tweet is a retweet.
+- ``retweeted``: The value of ``retweet_indicator`` if the status is a retweet.
 - ``retweeter``: The name of the retweeter (if any).
 - ``time``: Relative time of the tweet.
-- ``reply``: ✉ symbol indicating that the tweet is a reply.
+- ``reply``: The value of ``reply_indicator`` if the status is a reply.
 - ``retweet_count``: The number of retweets.
+
+.. warning:: The ``reply_indicator`` and ``retweet_indicator`` values will be
+    surrounded with spaces.
 
 ::
 
