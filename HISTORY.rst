@@ -1,3 +1,7 @@
+0.2.16
+------
+- Update to tweepy 2.1, fix search functionality
+
 0.2.15
 ------
 - Configurable retweet and reply indicators
