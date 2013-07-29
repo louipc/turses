@@ -78,22 +78,6 @@ def _to_status(status, **kwargs):
     return Status(**defaults)
 
 
-def _to_status_from_search(status, **kwargs):
-    """
-    Convert a `tweepy.SearchResult` to a `turses.models.Status`.
-    """
-    defaults = {
-        'id': status.id,
-        'created_at': status.created_at,
-        'user': status.from_user,
-        'text': status.text,
-        'entities': getattr(status, 'entities', None),
-    }
-
-    defaults.update(**kwargs)
-    return Status(**defaults)
-
-
 def _to_direct_message(dm, **kwargs):
     """
     Convert a `tweepy.DirectMessage` to a `turses.models.DirectMessage`.
@@ -158,8 +142,6 @@ def _to_list(a_list, **kwargs):
 
 to_status = partial(filter_result,
                     filter_func=_to_status)
-to_status_from_search = partial(filter_result,
-                                filter_func=_to_status_from_search)
 to_direct_message = partial(filter_result,
                             filter_func=_to_direct_message)
 to_user = partial(filter_result,
@@ -296,7 +278,7 @@ class TweepyApi(BaseTweepyApi, ApiAdapter):
 
         return filter(belongs_to_conversation, messages)
 
-    @to_status_from_search
+    @to_status
     @include_entities
     def search(self, text, **kwargs):
         return self._api.search(text, **kwargs)
