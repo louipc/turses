@@ -56,6 +56,7 @@ is_thread_timeline = partial(check_update_function_name,
 
 
 search_name_re = re.compile(r'^search:(?P<query>.+)$')
+hashtag_name_re = re.compile(r'^hashtag:(?P<query>.+)$')
 user_name_re = re.compile(r'^user:(?P<screen_name>[A-Za-z0-9_]+)$')
 
 
@@ -89,6 +90,13 @@ class TimelineFactory:
         if is_search:
             query = is_search.groupdict()['query']
             return Timeline(name=_('Search: %s' % query),
+                            update_function=self.api.search,
+                            update_function_args=query,)
+
+        is_hashtag = hashtag_name_re.match(timeline)
+        if is_hashtag:
+            query = "#{}".format(is_hashtag.groupdict()['query'])
+            return Timeline(name=_('hashtag: %s' % query),
                             update_function=self.api.search,
                             update_function_args=query,)
 

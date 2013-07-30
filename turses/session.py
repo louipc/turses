@@ -27,7 +27,8 @@ their names. Here is a list with the valid names:
  - ``favorites`` for the favorites timeline
  - ``messages`` for the direct message timeline
  - ``own_tweets`` for the timeline with your tweets
- - ``search:<query>`` for search timelines
+ - ``search:<query>`` for searching timelines
+ - ``hashtag:<query>`` for searching a hashtag
  - ``user:<screen_name>`` for a user's timeline
  - ``retweets_of_me`` for the timeline with your retweeted tweets
 
@@ -40,7 +41,7 @@ background:
 .. code-block:: ini
 
     [interactions]
-    visible = mentions, messages, search:turses
+    visible = mentions, messages, search:turses, hashtag:turses
     buffer = home
 
 If you would like to load a session when starting ``turses``, you must provide
