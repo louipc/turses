@@ -330,6 +330,10 @@ class Controller(Observer):
             self.error_message(_('API error: %s' % message))
             # recover from API errors
             self.main_loop()
+        except KeyboardInterrupt:
+            # treat Ctrl-C as Escape
+            self.key_handler.handle('esc')
+            self.main_loop()
 
     def exit(self):
         """Exit the program."""
