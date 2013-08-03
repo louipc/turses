@@ -562,7 +562,8 @@ class BaseEditor(WidgetWrap):
         and `BaseEditor` will wrap it in a `urwid.Colums` widget, calling to
         `urwid.WidgetWrap.__init__` with the wrapped widget.
         """
-        caption = _(u'{} (twice enter key to validate or esc) \n>> ').format(prompt)
+        caption = _(u'{} (Enter key twice to validate, '
+                    u'Esc or Ctrl-C to cancel) \n>> ').format(prompt)
         if content:
             content += ' '
         self.content = content
