@@ -4,7 +4,6 @@
 Handle the invocation of ``turses`` from the command line.
 """
 
-import signal
 import logging
 from sys import stdout
 from argparse import ArgumentParser
@@ -54,6 +53,18 @@ def restore_title():
     """Restore original window title."""
     if getenv('TMUX'):
         set_title(getenv('SHELL').split('/')[-1])
+
+
+def create_async_api(api_backend_cls):
+    """
+    Create an asynchronous API given a concrete API class ``api_backend_cls``.
+    """
+    oauth_token = configuration.oauth_token
+    oauth_token_secret = configuration.oauth_token_secret
+
+    return AsyncApi(api_backend_cls,
+                    access_token_key=oauth_token,
+                    access_token_secret=oauth_token_secret,)
 
 
 def read_arguments():
@@ -145,15 +156,7 @@ def main():
     timeline_list = TimelineList()
 
     # create API
-    if args.offline:
-        api_backend = MockApi
-    else:
-        api_backend = TweepyApi
-    oauth_token = configuration.oauth_token
-    oauth_token_secret = configuration.oauth_token_secret
-    api = AsyncApi(api_backend,
-                   access_token_key=oauth_token,
-                   access_token_secret=oauth_token_secret,)
+    api = create_async_api(MockApi if args.offline else TweepyApi)
 
     # create controller
     turses = Turses(ui=curses_interface,
@@ -162,10 +165,8 @@ def main():
 
     try:
         turses.start()
-    except KeyboardInterrupt:
-        pass
     except:
-        # A unexpected exception occurred, open the debugger
+        # A unexpected exception occurred, open the debugger in debug mode
         if args.debug or args.offline:
             import pdb
             pdb.post_mortem()
