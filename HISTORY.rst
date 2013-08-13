@@ -1,3 +1,8 @@
+0.2.17
+------
+- Make Ctrl-C act as escape
+- Hashtag searches in sessions
+
 0.2.16
 ------
 - Update to tweepy 2.1, fix search functionality
