@@ -70,6 +70,7 @@ def filter_result(func, filter_func=None):
 
 # - Abstract classes ----------------------------------------------------------
 
+# FIXME: Use urwid.MonitoredFocusList
 class ActiveList(object):
     """
     A list that contains an *active* element.
