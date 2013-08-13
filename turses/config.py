@@ -332,8 +332,8 @@ PALETTE = [
 
 STYLES = {
     # TODO: make time string configurable
-    'reply_indicator': u'✉',
-    'retweet_indicator': u'♻',
+    'reply_indicator': '@',
+    'retweet_indicator': 'RT',
     'header_template': ' {username}{retweeted}{retweeter} - {time}{reply}{retweet_count} ',
     'dm_template': ' {sender_screen_name} => {recipient_screen_name} - {time} ',
     'tab_template': '{timeline_name} [{unread}]',
