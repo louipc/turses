@@ -1,10 +1,16 @@
 turses
 ======
 
-A Twitter client for the console
---------------------------------
+.. image:: https://api.travis-ci.org/alejandrogomez/turses.png?branch=master
+.. image:: https://pypip.in/v/turses/badge.png
+    :target: https://crate.io/packages/turses
 
-A ``turses`` session with multiple columns running on ``urxvt``:
+.. image:: https://pypip.in/d/turses/badge.png
+    :target: https://crate.io/packages/turses
+
+A Twitter client for the console.
+
+A session with multiple columns running on ``urxvt``:
 
 .. image:: http://alejandrogomez.github.com/img/turses_screenshot.png
 
@@ -62,9 +68,8 @@ The code is hosted on a `git repo`_.
 
 .. _`git repo`: http://github.com/alejandrogomez/turses
 
-``turses`` is evolving fast, a list of tasks can be found on
-the on the `issue tracker`_. Feel free to submit issues, feature
-requests or participate in ongoing discussions.
+A list of tasks can be found on the on the `issue tracker`_. Feel free to
+submit issues, feature requests or participate in ongoing discussions.
 
 .. _`issue tracker`: http://github.com/alejandrogomez/turses/issues
 
