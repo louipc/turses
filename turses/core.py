@@ -290,7 +290,7 @@ class Controller(Observer):
         self.user = self.api.verify_credentials()
 
         # initialize the timelines
-        self.info_message(_('Initializing timelines'))
+        self.info_message(_('Fetching timelines'))
 
         for timeline in self.timelines:
             timeline.update()
