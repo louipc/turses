@@ -1,3 +1,7 @@
+0.2.18
+------
+- Bugfix: use ASCII characters for reply and retweet indicators
+
 0.2.17
 ------
 - Make Ctrl-C act as escape
