@@ -77,16 +77,7 @@ If you feel hackish, reading the `dev docs`_ is recommended.
 
 .. _`dev docs`: http://turses.readthedocs.org/en/latest/dev/internals.html
 
-To contribute code:
- 1. Create a branch from ``develop``
- 2. Code following `pep8 rules`_.
- 3. Commit your changes
- 4. Add yourself to ``AUTHORS``
- 5. Send a pull request to the ``develop`` branch
-
-.. _`pep8 rules`: http://www.python.org/dev/peps/pep-0008
-
-Any feedback is very much appreciated.
+``CONTRIBUTING.md`` contains instructions on how to contribute code.
 
 Roadmap
 -------
