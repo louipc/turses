@@ -590,6 +590,7 @@ class Controller(Observer):
             timeline.update()
             self.draw_timelines()
             self.info_message(_('%s updated' % timeline.name))
+        self.redraw_screen()
         self.clear_status()
 
     # -- Timeline mode --------------------------------------------------------
