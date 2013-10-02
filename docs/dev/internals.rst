@@ -64,7 +64,7 @@ Decorators
 Abstract base classes
 ~~~~~~~~~~~~~~~~~~~~~
 
-The abstract base classes can be understood as interfaces, they define a set of
+The abstract base classes can be understood as interfaces; they define a set of
 methods and properties that their subclasses must implement. They provide very
 general pieces of functionality.
 
