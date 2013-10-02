@@ -123,10 +123,10 @@ class ActiveList(object):
 
 class UnsortedActiveList(ActiveList):
     """
-    A :class:`~turses.meta.ActiveList` in which the *active* element can be shifted position by
-    position, to the begging and to the end.
+    A :class:`~turses.meta.ActiveList` in which the *active* element position
+    can be shifted either to the beginning or to the end.
 
-    All the methods that this class contains are abstract.
+    All the methods contained in this class are abstract.
     """
 
     @abstractmethod
@@ -142,27 +142,27 @@ class UnsortedActiveList(ActiveList):
     @abstractmethod
     def shift_active_beggining(self):
         """
-        Shift the active element (if any) to the begginning of the list.
+        Shift the active element (if any) to the beginning of the list.
         """
         pass
 
     @abstractmethod
     def shift_active_end(self):
         """
-        Shift the active element (if any) to the begginning of the list.
+        Shift the active element (if any) to the beginning of the list.
         """
         pass
 
 
 class Updatable:
     """
-    An abstract class that for making a class *updatable*.
+    An abstract class for making a class *updatable*.
 
-    The constructor takes update function and arguments used to update the
+    The constructor takes an update function and arguments used to update the
     subclasses of :class:`~turses.meta.Updatable`.
 
     When :func:`~turses.meta.Updatable.update` is executed,
-    :func:`~turses.meta.Updatable.update_callback` is called passing it the
+    :func:`~turses.meta.Updatable.update_callback` is called, passing it the
     result.
     """
 
@@ -174,8 +174,7 @@ class Updatable:
                  update_function_kwargs=None,):
         """
         `update_function` is the function used to update the class, with
-        the args `update_function_args` and `update_function_kwargs` if
-        they are provided.
+        optional args `update_function_args` and `update_function_kwargs`.
         """
         self.update_function = update_function
 
@@ -194,7 +193,7 @@ class Updatable:
     @wrap_exceptions
     def update(self, **extra_kwargs):
         """
-        Update the object, after receiving the result it is passed to the
+        Update the object. The result of `update_function` is passed to the
         `update_callback` function.
         """
         if not self.update_function:
@@ -215,7 +214,7 @@ class Updatable:
 
 def notify(func):
     """
-    Wrap a instance method `func` calling the instance's `notify` method after
+    Wrap an instance method `func`, calling the instance's `notify` method after
     executing `func`.
     """
     @wraps(func)
@@ -258,7 +257,7 @@ class Observable:
 
 class Observer:
     """
-    An abstract class that can subscribe to updates in
+    An abstract class that can subscribe to updates from
     :class:`~turses.meta.Observable` instances.
     """
 
