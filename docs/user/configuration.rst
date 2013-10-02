@@ -185,8 +185,8 @@ You can also configure the position of the editor in the screen modifyng the
 ``editor_horizontal_align`` and ``editor_vertical_align`` options. The accepted
 values for this options are the following:
 
-- ``editor_horizontal_aling``: ``left``, ``center`` or ``right``
-- ``editor_vertical_aling``: ``top``, ``middle`` or ``bottom``
+- ``editor_horizontal_align``: ``left``, ``center`` or ``right``
+- ``editor_vertical_align``: ``top``, ``middle`` or ``bottom``
 
 An example configuration with the editor positioned in the center of the
 screen:
