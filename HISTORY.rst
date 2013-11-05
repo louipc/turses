@@ -1,3 +1,7 @@
+0.2.19
+------
+- Bugfix: Restore Python 2.6 compatibility
+
 0.2.18
 ------
 - Bugfix: use ASCII characters for reply and retweet indicators
