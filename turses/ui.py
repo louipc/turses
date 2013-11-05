@@ -498,15 +498,15 @@ class Banner(WidgetWrap):
             "  | |_| |_| | |  \__ |  __/\__ | ",
             "  \___|\____|_| |____/\___||___/ ",
             "  ······························ ",
-            "{}".format(version),
+            "{0}".format(version),
             "",
             "",
-            _("Press '{}' for help").format(help_key),
-            _("Press '{}' to quit turses").format(quit_key),
+            _("Press '{0}' for help").format(help_key),
+            _("Press '{0}' to quit turses").format(quit_key),
             "",
             "",
             _("Configuration and token files reside under"),
-            _("your $HOME directory ({})").format(home_dir),
+            _("your $HOME directory ({0})").format(home_dir),
             #"",
             "",
             "    ~                                              ",
@@ -562,7 +562,7 @@ class BaseEditor(WidgetWrap):
         and `BaseEditor` will wrap it in a `urwid.Colums` widget, calling to
         `urwid.WidgetWrap.__init__` with the wrapped widget.
         """
-        caption = _(u'{} (Enter key twice to validate, '
+        caption = _(u'{0} (Enter key twice to validate, '
                     u'Esc or Ctrl-C to cancel) \n>> ').format(prompt)
         if content:
             content += ' '
@@ -672,7 +672,7 @@ class DmEditor(TweetEditor):
                  done_signal_handler):
         self.recipient = recipient
         TweetEditor.__init__(self,
-                             prompt='DM to {}'.format(recipient),
+                             prompt='DM to {0}'.format(recipient),
                              content='',
                              done_signal_handler=done_signal_handler)
 
@@ -1195,7 +1195,7 @@ class UserInfo(WidgetWrap):
         Receive a ``user`` and its ``last_statuses`` to render the widget.
         """
         whitespace = Divider(' ')
-        widgets = [Text(u"{}".format(user.name)), whitespace]
+        widgets = [Text(u"{0}".format(user.name)), whitespace]
 
         # bio
         if user.description:
@@ -1211,9 +1211,9 @@ class UserInfo(WidgetWrap):
 
         # statistics: following, followers and favorites
         # TODO: tweet count
-        following = Text(_('following:\n{}'.format(user.friends_count)))
-        followers = Text(_('followers:\n{}'.format(user.followers_count)))
-        favorites = Text(_('favorites:\n{}'.format(user.favorites_count)))
+        following = Text(_('following:\n{0}'.format(user.friends_count)))
+        followers = Text(_('followers:\n{0}'.format(user.followers_count)))
+        favorites = Text(_('favorites:\n{0}'.format(user.favorites_count)))
         stats = Columns([following, followers, favorites])
 
         widgets.extend([stats, whitespace])
@@ -1226,5 +1226,5 @@ class UserInfo(WidgetWrap):
 
         pile = Pile(widgets)
 
-        WidgetWrap.__init__(self, LineBox(title='@{}'.format(user.screen_name),
+        WidgetWrap.__init__(self, LineBox(title='@{0}'.format(user.screen_name),
                                           original_widget=pile))
