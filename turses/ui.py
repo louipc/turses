@@ -268,7 +268,7 @@ class CursesInterface(WidgetWrap):
                            header=header,
                            footer=footer)
 
-        WidgetWrap.__init__(self, self.frame)
+        super(CursesInterface, self).__init__(self.frame)
 
     def _build_overlay_widget(self,
                               top_w,
@@ -519,7 +519,7 @@ class Banner(WidgetWrap):
             "",
             "",
         ]
-        self.__super.__init__(self._create_text())
+        super(Banner, self).__init__(self._create_text())
 
     def _create_text(self):
         """Create the text to display in the welcome buffer."""
@@ -579,7 +579,7 @@ class BaseEditor(WidgetWrap):
         composed_widget = Columns(widgets)
 
         widget = AttrMap(LineBox(composed_widget), 'editor')
-        WidgetWrap.__init__(self, widget)
+        super(BaseEditor, self).__init__(widget)
 
     def keypress(self, size, key):
         if key == 'enter' and self.last_key == 'enter':
@@ -614,12 +614,10 @@ class TextEditor(BaseEditor):
                  content,
                  done_signal_handler,
                  cursor_position=None):
-        BaseEditor.__init__(self,
-                            prompt,
-                            content,
-                            done_signal_handler,
-                            cursor_position)
-
+        super(TextEditor, self).__init__(prompt,
+                                         content,
+                                         done_signal_handler,
+                                         cursor_position)
         self._wrap(self.editor)
 
 
@@ -634,11 +632,10 @@ class TweetEditor(BaseEditor):
                  content,
                  done_signal_handler,
                  cursor_position=None):
-        BaseEditor.__init__(self,
-                            prompt,
-                            content,
-                            done_signal_handler,
-                            cursor_position)
+        super(TweetEditor, self).__init__(prompt,
+                                          content,
+                                          done_signal_handler,
+                                          cursor_position)
 
         self.counter = len(self.content)
         self.counter_widget = Text(str(self.counter))
@@ -671,10 +668,9 @@ class DmEditor(TweetEditor):
                  content,
                  done_signal_handler):
         self.recipient = recipient
-        TweetEditor.__init__(self,
-                             prompt='DM to {0}'.format(recipient),
-                             content='',
-                             done_signal_handler=done_signal_handler)
+        super(DmEditor, self).__init__(prompt='DM to {0}'.format(recipient),
+                                       content='',
+                                       done_signal_handler=done_signal_handler)
 
     def emit_done_signal(self, content=None):
         emit_signal(self, 'done', self.recipient, content)
@@ -701,7 +697,7 @@ class TabsWidget(WidgetWrap):
             self.visible_indexes = []
         created_text = self._create_text()
         text = created_text if created_text else ''
-        WidgetWrap.__init__(self, Text(text))
+        super(TabsWidget, self).__init__(Text(text))
 
     def _is_valid_index(self, index):
         return index >= 0 and index < len(self.tabs)
@@ -754,7 +750,7 @@ class StatusBar(WidgetWrap):
     ARROW = " => "
 
     def __init__(self, text=''):
-        WidgetWrap.__init__(self, Text(text))
+        super(StatusBar, self).__init__(Text(text))
 
     def message(self, text):
         """Write `text` on the footer."""
@@ -1226,5 +1222,5 @@ class UserInfo(WidgetWrap):
 
         pile = Pile(widgets)
 
-        WidgetWrap.__init__(self, LineBox(title='@{0}'.format(user.screen_name),
-                                          original_widget=pile))
+        super(UserInfo, self).__init__(LineBox(title='@{0}'.format(user.screen_name),
+                                       original_widget=pile))
