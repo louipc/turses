@@ -240,15 +240,13 @@ class Observable:
     """
 
     def __init__(self):
-        self._observers = []
+        self._observers = set([])
 
     def subscribe(self, observer):
-        if observer not in self._observers:
-            self._observers.append(observer)
+        self._observers.add(observer)
 
     def unsubscribe(self, observer):
-        if observer in self._observers:
-            self._observers.remove(observer)
+        self._observers.discard(observer)
 
     def notify(self):
         for observer in self._observers:
