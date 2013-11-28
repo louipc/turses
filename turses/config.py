@@ -400,6 +400,16 @@ def print_deprecation_notice():
     print
 
 
+def invert_command_map(bindings):
+    """
+    Invert configuration keybindings to make reverse lookups faster
+    """
+    command_map = {}
+    for command, (key, _) in bindings.iteritems():
+        command_map[key] = command
+    return command_map
+
+
 class Configuration(object):
     """
     Generate and parse configuration files. When instantiated, it loads the
@@ -425,6 +435,7 @@ class Configuration(object):
         # load defaults
         self.twitter = TWITTER
         self.key_bindings = KEY_BINDINGS
+        self.key_mappings = invert_command_map(self.key_bindings)
         self.palette = PALETTE
         self.styles = STYLES
         self.logging_level = LOGGING_LEVEL
@@ -487,6 +498,7 @@ class Configuration(object):
             self.parse_config_file(self.config_file)
         else:
             self.generate_config_file(self.config_file)
+        self.key_mappings = invert_command_map(self.key_bindings)
 
     def _add_section_twitter(self, conf):
         # Twitter
@@ -754,6 +766,7 @@ class Configuration(object):
 
     def reload(self):
         self.parse_config_file(self.config_file)
+        self.key_mappings = invert_command_map(self.key_bindings)
 
     def exit_with_code(self, code):
         """Invoke `sys.exit` with the given status `code`."""
