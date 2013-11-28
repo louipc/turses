@@ -39,10 +39,9 @@ def merge_dicts(*args):
     return result
 
 
-class KeyHandler(object):
+class InputHandler(object):
     """
-    Maps key bindings from configuration to calls to :class:`Controller`
-    functions.
+    Maps user input to calls to :class:`Controller` functions.
     """
 
     def __init__(self, controller):
@@ -149,8 +148,17 @@ class KeyHandler(object):
         return configuration.key_mappings.get(key)
 
     def handle(self, key):
-        """Handle keyboard input."""
-        command = self.command(key)
+        """Handle input."""
+        # Handle scroll events as normal key presses
+        if self.is_mouse_input(key):
+            if key[1] == 4:
+                command = 'up'
+                key = configuration.key_bindings[command][0]
+            elif key[1] == 5:
+                command = 'down'
+                key = configuration.key_bindings[command][0]
+        else:
+            command = self.command(key)
 
         # Editor mode -- don't interpret keypress as command
         if self.controller.is_in_editor_mode():
@@ -184,6 +192,10 @@ class KeyHandler(object):
                 return handler()
 
         return key
+
+    def is_mouse_input(self, key):
+        return len(key) >= 2 and key[0] == 'mouse press'
+
 
 
 # Decorators
@@ -310,11 +322,11 @@ class Controller(Observer):
         """
         if not hasattr(self, 'loop'):
             # Creating the main loop for the first time
-            self.key_handler = KeyHandler(self)
-            handler = self.key_handler.handle
+            self.input_handler = InputHandler(self)
+            handler = self.input_handler.handle
             self.loop = urwid.MainLoop(self.ui,
                                        configuration.palette,
-                                       handle_mouse=False,
+                                       handle_mouse=True,
                                        unhandled_input=handler)
 
             # Authenticate API just before starting main loop
@@ -329,7 +341,7 @@ class Controller(Observer):
             self.main_loop()
         except KeyboardInterrupt:
             # treat Ctrl-C as Escape
-            self.key_handler.handle('esc')
+            self.input_handler.handle('esc')
             self.main_loop()
 
     def exit(self):
