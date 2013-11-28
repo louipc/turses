@@ -146,10 +146,7 @@ class KeyHandler(object):
         """
         Return the command name that corresponds to `key` (if any).
         """
-        for command_name in configuration.key_bindings:
-            bound_key, _ = configuration.key_bindings[command_name]
-            if key == bound_key:
-                return command_name
+        return configuration.key_mappings.get(key)
 
     def handle(self, key):
         """Handle keyboard input."""
