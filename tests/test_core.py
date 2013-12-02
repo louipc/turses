@@ -17,11 +17,11 @@ from turses.api.helpers import (
     is_thread_timeline,
 )
 from turses.config import configuration
-from turses.core import KeyHandler, Controller
+from turses.core import InputHandler, Controller
 from turses.api.debug import MockApi
 
 
-class KeyHandlerTest(unittest.TestCase):
+class InputHandlerTest(unittest.TestCase):
 
     # - Helpers ---------------------------------------------------------------
 
@@ -57,7 +57,7 @@ class KeyHandlerTest(unittest.TestCase):
 
     def setUp(self):
         self.controller = Mock(Controller)
-        self.key_handler = KeyHandler(self.controller)
+        self.key_handler = InputHandler(self.controller)
 
         return_false = Mock(return_value=False)
         self.controller.is_in_info_mode = return_false

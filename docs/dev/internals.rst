@@ -46,7 +46,7 @@ of them with a comment explaining their goal.
 
 .. automodule:: turses.core
 
-.. autoclass:: turses.core.KeyHandler
+.. autoclass:: turses.core.InputHandler
 .. autoclass:: turses.core.Controller
 
 ``turses.meta``
