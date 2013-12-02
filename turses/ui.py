@@ -6,7 +6,10 @@ This module contains the curses UI widgets.
 
 import os
 import logging
+import re
 from gettext import gettext as _
+from htmlentitydefs import entitydefs
+
 
 from urwid import (AttrMap, WidgetWrap, Padding, Divider, SolidFill,
                    WidgetDecoration, LineBox, Filler,
@@ -1034,7 +1037,8 @@ class StatusWidget(WidgetWrap):
         divider = configuration.styles.get('status_divider', False)
 
         header = AttrMap(Text(header_text), 'header')
-        body = Padding(AttrMap(Text(text), 'body'), left=1, right=1)
+        sanitized_text = [sanitize(t) for t in text] if isinstance(text, list) else sanitize(text)
+        body = Padding(AttrMap(Text(sanitized_text), 'body'), left=1, right=1)
 
         border_attr = 'line'
         if favorite:
@@ -1224,3 +1228,22 @@ class UserInfo(WidgetWrap):
 
         super(UserInfo, self).__init__(LineBox(title='@{0}'.format(user.screen_name),
                                        original_widget=pile))
+
+
+def sanitize(text):
+    if isinstance(text, unicode):
+        return html_unescape(text)
+    else:
+        return text
+
+def html_unescape(string):
+    """Unescape HTML entities from ``string``."""
+    def entity_replacer(m):
+        entity = m.group(1)
+        if entity in entitydefs:
+            return entitydefs[entity]
+        else:
+            return m.group(0)
+
+    return re.sub(r'&([^;]+);', entity_replacer, string)
+

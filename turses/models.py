@@ -6,7 +6,6 @@ the Twitter entities represented into it.
 """
 
 import time
-from re import sub
 from bisect import insort
 from calendar import timegm
 
@@ -14,8 +13,6 @@ try:
     from functools import total_ordering
 except ImportError:
     from turses.utils import total_ordering
-
-from htmlentitydefs import entitydefs
 
 from turses.meta import (ActiveList, UnsortedActiveList, Updatable, Observable,
                          notify)
@@ -42,18 +39,6 @@ def is_valid_search_text(text):
 
 def timestamp_from_datetime(datetime):
     return timegm(datetime.utctimetuple())
-
-
-def html_unescape(string):
-    """Unescape HTML entities from ``string``."""
-    def entity_replacer(m):
-        entity = m.group(1)
-        if entity in entitydefs:
-            return entitydefs[entity]
-        else:
-            return m.group(0)
-
-    return sub(r'&([^;]+);', entity_replacer, string)
 
 
 # -- Model --------------------------------------------------------------------
@@ -466,7 +451,7 @@ class Status(object):
         self.id = id
         self.created_at = created_at
         self.user = user
-        self.text = html_unescape(text)
+        self.text = text
         self.is_reply = is_reply
         self.is_retweet = is_retweet
         self.is_favorite = is_favorite
@@ -596,7 +581,7 @@ class DirectMessage(Status):
         self.created_at = created_at
         self.sender_screen_name = sender_screen_name
         self.recipient_screen_name = recipient_screen_name
-        self.text = html_unescape(text)
+        self.text = text
         self.entities = entities
 
     @property
