@@ -1,3 +1,8 @@
+0.2.20
+------
+- Mouse scrolling support (thanks to Wes Turner)
+- Bugfix: Escape HTML entities without borking tweet text (thanks to David Tiersch)
+
 0.2.19
 ------
 - Bugfix: Restore Python 2.6 compatibility
