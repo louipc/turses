@@ -149,6 +149,15 @@ class InputHandler(object):
 
     def handle(self, key):
         """Handle input."""
+        command = self.command(key)
+
+        # Editor mode -- don't interpret keypress as command
+        if self.controller.is_in_editor_mode():
+            if self.is_mouse_event(key):
+                return key
+            else:
+                return self.controller.forward_to_editor(key)
+
         # Handle scroll events as normal key presses
         if self.is_mouse_input(key):
             if key[1] == 4:
@@ -157,12 +166,6 @@ class InputHandler(object):
             elif key[1] == 5:
                 command = 'down'
                 key = configuration.key_bindings[command][0]
-        else:
-            command = self.command(key)
-
-        # Editor mode -- don't interpret keypress as command
-        if self.controller.is_in_editor_mode():
-            return self.controller.forward_to_editor(key)
 
         # User info mode
         #  we remove the user widget and activate timeline mode when
@@ -195,6 +198,9 @@ class InputHandler(object):
 
     def is_mouse_input(self, key):
         return len(key) >= 2 and key[0] == 'mouse press'
+
+    def is_mouse_event(self, key):
+        return len(key) >= 2 and 'mouse' in key[0]
 
 
 
