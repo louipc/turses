@@ -157,6 +157,8 @@ class InputHandler(object):
             elif key[1] == 5:
                 command = 'down'
                 key = configuration.key_bindings[command][0]
+            else:
+                return key
         else:
             command = self.command(key)
 
