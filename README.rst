@@ -100,3 +100,9 @@ Authors
 .. _`Nicolas Paris`: http://github.com/Nic0
 
 See ``AUTHORS`` for a full list of contributors.
+
+
+.. image:: https://d2weczhvl823v0.cloudfront.net/alejandrogomez/turses/trend.png
+   :alt: Bitdeli badge
+   :target: https://bitdeli.com/free
+
