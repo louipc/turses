@@ -4,9 +4,12 @@ turses
 .. image:: https://api.travis-ci.org/alejandrogomez/turses.png?branch=master
 .. image:: https://pypip.in/v/turses/badge.png
     :target: https://crate.io/packages/turses
-
 .. image:: https://pypip.in/d/turses/badge.png
     :target: https://crate.io/packages/turses
+.. image:: https://d2weczhvl823v0.cloudfront.net/alejandrogomez/turses/trend.png
+   :alt: Bitdeli badge
+   :target: https://bitdeli.com/free
+
 
 A Twitter client for the console.
 
@@ -100,9 +103,4 @@ Authors
 .. _`Nicolas Paris`: http://github.com/Nic0
 
 See ``AUTHORS`` for a full list of contributors.
-
-
-.. image:: https://d2weczhvl823v0.cloudfront.net/alejandrogomez/turses/trend.png
-   :alt: Bitdeli badge
-   :target: https://bitdeli.com/free
 
