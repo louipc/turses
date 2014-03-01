@@ -43,6 +43,7 @@ class InputHandler(object):
     """
     Maps user input to calls to :class:`Controller` functions.
     """
+    ALLOWED_MOUSE_KEYS = (4, 5)
 
     def __init__(self, controller):
         self.controller = controller
@@ -146,6 +147,14 @@ class InputHandler(object):
         Return the command name that corresponds to `key` (if any).
         """
         return configuration.key_mappings.get(key)
+
+    def filter_input(self, keys, raw):
+        accepted_keys = []
+        for key in keys:
+            if (not self.is_mouse_input(key) or
+                    key[1] in self.ALLOWED_MOUSE_KEYS):
+                accepted_keys.append(key)
+        return accepted_keys
 
     def handle(self, key):
         """Handle input."""
@@ -329,11 +338,11 @@ class Controller(Observer):
         if not hasattr(self, 'loop'):
             # Creating the main loop for the first time
             self.input_handler = InputHandler(self)
-            handler = self.input_handler.handle
             self.loop = urwid.MainLoop(self.ui,
                                        configuration.palette,
                                        handle_mouse=True,
-                                       unhandled_input=handler)
+                                       unhandled_input=self.input_handler.handle,
+                                       input_filter=self.input_handler.filter_input)
 
             # Authenticate API just before starting main loop
             self.authenticate_api()
