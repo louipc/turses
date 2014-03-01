@@ -1,3 +1,7 @@
+0.2.21
+------
+- Bugfix: Turses no longer crashes when clicking on the window
+
 0.2.20
 ------
 - Mouse scrolling support (thanks to Wes Turner)
