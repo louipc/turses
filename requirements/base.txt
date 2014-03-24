@@ -1,4 +1,4 @@
 httplib2
 oauth2
 urwid
-tweepy
+tweepy==2.2
