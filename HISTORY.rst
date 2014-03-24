@@ -1,3 +1,7 @@
+0.2.22
+------
+- Upgrade Tweepy dependency
+
 0.2.21
 ------
 - Bugfix: Turses no longer crashes when clicking on the window
