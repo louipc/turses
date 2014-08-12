@@ -41,7 +41,7 @@ NAME = "turses"
 REQUIREMENTS = [
     "oauth2",
     "urwid",
-    "tweepy==2.2",
+    "tweepy >2.2,<3",
 ]
 if version_info[:2] == (2, 6):
     REQUIREMENTS.append("argparse")
