@@ -1,6 +1,10 @@
+0.2.23
+------
+- Upgrade Tweepy dependency to 2.3
+
 0.2.22
 ------
-- Upgrade Tweepy dependency
+- Upgrade Tweepy dependency to 2.2
 
 0.2.21
 ------
