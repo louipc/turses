@@ -29,7 +29,7 @@ Running the test suite
 
 Each time you add a feature, there are two things to do regarding tests: checking that the tests run in a right way, and be sure that you add tests for the feature you are working on or the bug you’re fixing.
 
-The tests leaves under ``/tests`` and you can run them using ``nosetests``:
+The tests leaves under ``/tests`` and you can run them using ``py.test``:
 
 
 .. code-block:: sh

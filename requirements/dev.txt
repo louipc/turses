@@ -1,4 +1,4 @@
 -r base.txt
 
 mock
-nose
+pytest

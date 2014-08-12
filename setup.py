@@ -47,7 +47,7 @@ if version_info[:2] == (2, 6):
     REQUIREMENTS.append("argparse")
 
 TEST_REQUIREMENTS = list(REQUIREMENTS)
-TEST_REQUIREMENTS.extend(["mock", "nose", "coverage", "tox"])
+TEST_REQUIREMENTS.extend(["mock", "pytest", "coverage", "tox"])
 
 try:
     long_description = open("README.rst").read() + "\n\n" + open("HISTORY.rst").read()
