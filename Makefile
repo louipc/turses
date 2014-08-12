@@ -32,17 +32,12 @@ coverage: pyc
 pyc:
 	find . -name "*.pyc" -exec rm {} \;
 
-release: test bump merge publish tag push
+release: test bump publish tag push
 
 bump:
 	$(EDITOR) HISTORY.rst turses/__init__.py
 	git add -u
 	git commit -m "bump `cat turses/__init__.py | grep -o "[[:digit:]]*, [[:digit:]]*, [[:digit:]]*" | tr -s ', ' '.'`"
-
-merge:
-	git stash
-	git checkout master
-	git merge develop
 
 tag:
 	git tag v`cat turses/__init__.py | grep -o "[[:digit:]]*, [[:digit:]]*, [[:digit:]]*" | tr -s ', ' '.'`
