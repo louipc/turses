@@ -5,7 +5,7 @@ path.append('../')
 import unittest
 
 from turses.ui import StatusWidget, map_attributes, parse_attributes
-from tests  import create_status, create_direct_message
+from tests import create_status, create_direct_message
 
 
 class AttributeTest(unittest.TestCase):
@@ -67,7 +67,7 @@ class AttributeTest(unittest.TestCase):
             u'hashtags': [{u'indices': [15, 22], u'text': u'Turses'}],
             u'urls': [{u'display_url': u'github.com/alejandrogomez\u2026',
                        u'expanded_url':
-                            u'https://github.com/alejandrogomez/turses',
+                       u'https://github.com/alejandrogomez/turses',
                        u'indices': [80, 101],
                        u'url': u'https://t.co/cciH85AG'}],
             u'user_mentions': [{u'id': 87322884,
@@ -79,7 +79,7 @@ class AttributeTest(unittest.TestCase):
         expected_result = [u'New release of ',
                            ('hashtag', u'#Turses'),
                            (u' 0.1.6 with lots of improvements, '
-                           u'ncurses twitter client. '),
+                            u'ncurses twitter client. '),
                            ('url', u'github.com/alejandrogomez\u2026'),
                            u' via ',
                            ('attag', u'@dialelo')]
@@ -147,7 +147,7 @@ class AttributeTest(unittest.TestCase):
                                 url='url')
 
         self.assertEqual(result, expected_result)
-    
+
     def test_parse_attributes(self):
         text = '@asdf http://www.dialelo.com #asf'
 
@@ -172,8 +172,6 @@ class StatusWidgetTest(unittest.TestCase):
         # load the defaults
         direct_message = create_direct_message()
         StatusWidget(direct_message)
-
-
 
 
 if __name__ == '__main__':

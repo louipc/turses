@@ -33,21 +33,21 @@ mock_api = MockApi(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 
 class AsyncApiTest(unittest.TestCase):
     def test_that_implements_abstract_base_class(self):
-         AsyncApi(MockApi,
-                  access_token_key=ACCESS_TOKEN,
-                  access_token_secret=ACCESS_TOKEN_SECRET,)
+        AsyncApi(MockApi,
+                 access_token_key=ACCESS_TOKEN,
+                 access_token_secret=ACCESS_TOKEN_SECRET,)
 
 
 class MockApiTest(unittest.TestCase):
     def test_that_implements_abstract_base_class(self):
-         MockApi(access_token_key=ACCESS_TOKEN,
-                 access_token_secret=ACCESS_TOKEN_SECRET,)
+        MockApi(access_token_key=ACCESS_TOKEN,
+                access_token_secret=ACCESS_TOKEN_SECRET,)
 
 
 class TweepyApiTest(unittest.TestCase):
     def test_that_implements_abstract_base_class(self):
-         TweepyApi(access_token_key=ACCESS_TOKEN,
-                   access_token_secret=ACCESS_TOKEN_SECRET,)
+        TweepyApi(access_token_key=ACCESS_TOKEN,
+                  access_token_secret=ACCESS_TOKEN_SECRET,)
 
 
 class HelperFunctionTest(unittest.TestCase):
@@ -83,7 +83,8 @@ class HelperFunctionTest(unittest.TestCase):
         a_timeline = Timeline()
         self.assertFalse(is_messages_timeline(a_timeline))
 
-        messages_timeline = Timeline(update_function=mock_api.get_direct_messages)
+        messages_timeline = Timeline(
+            update_function=mock_api.get_direct_messages)
         self.assertTrue(is_messages_timeline(messages_timeline))
 
     def test_is_search_timeline(self):

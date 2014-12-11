@@ -190,10 +190,8 @@ class MockApi(ApiAdapter):
     def get_list_members(self, list):
         pass
 
-
     def subscribe_to_list(self, list):
         pass
 
     def get_list_subscribers(self, list):
         pass
-

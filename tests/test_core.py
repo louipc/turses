@@ -121,8 +121,8 @@ class ControllerTest(unittest.TestCase):
     def setUp(self):
         self.timelines = TimelineList()
         self.controller = Controller(ui=Mock(),
-                                api=MockApi('foo', 'bar'),
-                                timelines=self.timelines)
+                                     api=MockApi('foo', 'bar'),
+                                     timelines=self.timelines)
 
     def test_append_home_timeline(self):
         self.controller.append_home_timeline()

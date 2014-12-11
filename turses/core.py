@@ -212,10 +212,7 @@ class InputHandler(object):
         return len(key) >= 2 and 'mouse' in key[0]
 
 
-
 # Decorators
-
-
 def has_active_status(func):
     """
     `func` only is executed if there is a active status.
@@ -338,11 +335,12 @@ class Controller(Observer):
         if not hasattr(self, 'loop'):
             # Creating the main loop for the first time
             self.input_handler = InputHandler(self)
-            self.loop = urwid.MainLoop(self.ui,
-                                       configuration.palette,
-                                       handle_mouse=True,
-                                       unhandled_input=self.input_handler.handle,
-                                       input_filter=self.input_handler.filter_input)
+            self.loop = urwid.MainLoop(
+                self.ui,
+                configuration.palette,
+                handle_mouse=True,
+                unhandled_input=self.input_handler.handle,
+                input_filter=self.input_handler.filter_input)
 
             # Authenticate API just before starting main loop
             self.authenticate_api()
@@ -1072,7 +1070,8 @@ class Controller(Observer):
         status = self.timelines.active_status
 
         if is_DM(status):
-            self.error_message(_('You can\'t retweet or favorite direct messages'))
+            self.error_message(
+                _('You can\'t retweet or favorite direct messages'))
             return
 
         self._retweet(status)
@@ -1137,7 +1136,8 @@ class Controller(Observer):
             return
 
         author = status.authors_username
-        if author != self.user.screen_name and status.user != self.user.screen_name:
+        if (author != self.user.screen_name
+                and status.user != self.user.screen_name):
             self.error_message(_('You can only delete your own tweets'))
             return
 

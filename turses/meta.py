@@ -214,8 +214,8 @@ class Updatable:
 
 def notify(func):
     """
-    Wrap an instance method `func`, calling the instance's `notify` method after
-    executing `func`.
+    Wrap an instance method `func`, calling the instance's `notify` method
+    after executing `func`.
     """
     @wraps(func)
     def wrapper(self, *args, **kwargs):

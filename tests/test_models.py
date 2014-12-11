@@ -697,7 +697,9 @@ class TimelineListTest(ActiveListTest):
         relative_index = self.timeline_list.active_index_relative_to_visible
         self.assertEqual(relative_index, 2)
 
-    def test_consistent_visible_timelines_when_deleting_rightmost_timeline(self):
+    def test_consistent_visible_timelines_when_deleting_rightmost_timeline(
+            self):
+
         self.append_timeline()
         self.append_timeline()
         self.append_timeline()
@@ -728,7 +730,8 @@ class TimelineListTest(ActiveListTest):
         relative_index = self.timeline_list.active_index_relative_to_visible
         self.assertEqual(relative_index, 1)
 
-    def test_delete_active_timeline_with_one_visible_timeline_in_the_left(self):
+    def test_delete_active_timeline_with_one_visible_timeline_in_the_left(
+            self):
         self.append_timeline()
         self.append_timeline()
 
@@ -740,7 +743,9 @@ class TimelineListTest(ActiveListTest):
         self.assertEqual(self.active_index(), 0)
         self.assert_visible([0])
 
-    def test_delete_active_timeline_with_one_visible_timeline_in_the_middle(self):
+    def test_delete_active_timeline_with_one_visible_timeline_in_the_middle(
+            self):
+
         self.append_timeline()
         self.append_timeline()
         self.append_timeline()
@@ -753,7 +758,7 @@ class TimelineListTest(ActiveListTest):
 
         self.timeline_list.activate_next()
         self.timeline_list.activate_next()
-        
+
         self.assertEqual(self.active_index(), 2)
         self.assert_visible([2])
 
@@ -763,7 +768,9 @@ class TimelineListTest(ActiveListTest):
         self.assertEqual(self.active_index(), 2)
         self.assert_visible([2])
 
-    def test_delete_active_timeline_with_one_visible_timeline_in_the_right(self):
+    def test_delete_active_timeline_with_one_visible_timeline_in_the_right(
+            self):
+
         self.append_timeline()
         self.append_timeline()
         self.append_timeline()

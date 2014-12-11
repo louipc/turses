@@ -68,13 +68,12 @@ def get_authorization_tokens():
         print e
         return None
 
-
     authorization_url = urljoin(BASE_URL, '/oauth/authorize')
     authorization_url_with_token = urljoin(authorization_url,
                                            '?oauth_token=%s' % oauth_token)
     print
-    print  _('Please visit the following page to retrieve the pin code needed '
-             'to obtain an Authorization Token:')
+    print _('Please visit the following page to retrieve the pin code needed '
+            'to obtain an Authorization Token:')
     print
     print authorization_url_with_token
     print
@@ -99,6 +98,7 @@ def get_authorization_tokens():
         print e
         return None
 
+
 def get_temporary_tokens(oauth_client):
     """
     Request temporary OAuth tokens using the provided `oauth_client`; these
@@ -116,7 +116,6 @@ def get_temporary_tokens(oauth_client):
 
     response, content = oauth_client.request(request_token_url, 'GET')
 
-
     status_code = int(response['status'])
     if status_code == HTTP_OK:
         response_content = dict(parse_qsl(content))
@@ -126,8 +125,10 @@ def get_temporary_tokens(oauth_client):
 
         return (oauth_token, oauth_token_secret)
     else:
-        error_message = _('Twitter responded with an HTTP %s code.' % str(status_code))
+        error_message = _('Twitter responded with an HTTP %s code.' %
+                          (str(status_code)))
         raise Exception(error_message)
+
 
 def get_access_tokens(oauth_client, pin_code):
     """
@@ -142,9 +143,10 @@ def get_access_tokens(oauth_client, pin_code):
     """
     access_token_url = urljoin(BASE_URL, '/oauth/access_token')
 
+    oauth_verifier_with_pin = 'oauth_verifier=%s' % pin_code
     response, content = oauth_client.request(access_token_url,
                                              method='POST',
-                                             body='oauth_verifier=%s' % pin_code)
+                                             body=oauth_verifier_with_pin)
 
     status_code = int(response['status'])
 
@@ -152,9 +154,9 @@ def get_access_tokens(oauth_client, pin_code):
         access_token = dict(parse_qsl(content))
         return access_token
     else:
-        error_message = _('Twitter responded with an HTTP %s code.' % str(status_code))
+        error_message = _('Twitter responded with an HTTP %s code.' %
+                          (str(status_code)))
         raise Exception(error_message)
-
 
 
 class ApiAdapter(object):
@@ -397,7 +399,6 @@ class AsyncApi(ApiAdapter):
     @wrap_exceptions
     def reply(self, status, text):
         self._api.reply(status, text)
-
 
     @async
     @wrap_exceptions
