@@ -53,6 +53,5 @@ class ObservableTest(unittest.TestCase):
         self.assertFalse(self.observer.update.called)
 
 
-
 if __name__ == '__main__':
     unittest.main()

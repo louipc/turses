@@ -50,7 +50,8 @@ TEST_REQUIREMENTS = list(REQUIREMENTS)
 TEST_REQUIREMENTS.extend(["mock", "pytest", "coverage", "tox"])
 
 try:
-    long_description = open("README.rst").read() + "\n\n" + open("HISTORY.rst").read()
+    long_description = open("README.rst").read() + "\n\n" + open(
+        "HISTORY.rst").read()
 except IOError:
     long_description = __doc__
 
@@ -65,8 +66,7 @@ setup(name=NAME,
       keywords="twitter client, curses, console, twitter",
       packages=find_packages(exclude=["tests"]),
       entry_points={
-          'console_scripts':
-            ['turses = turses.cli:main']
+          'console_scripts': ['turses = turses.cli:main']
       },
       classifiers=[
           "Development Status :: 4 - Beta",

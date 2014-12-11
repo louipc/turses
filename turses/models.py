@@ -95,7 +95,7 @@ class TimelineList(UnsortedActiveList, Observable):
             right_indexes = self.visible[old_index_in_visible + 1:]
             # decrement those that are in the right of the deleted one
             self.visible = left_indexes + [index - 1 for index in right_indexes
-                                                               if index]
+                                           if index]
         elif len(self.visible) == 1:
             visible_index = self.visible[0]
             if not self.is_valid_index(visible_index):
@@ -221,8 +221,8 @@ class TimelineList(UnsortedActiveList, Observable):
         `Timeline` objects contained in those positions.
         """
         if self.is_valid_index(one) and self.is_valid_index(other):
-            self.timelines[one], self.timelines[other] = \
-                    self.timelines[other], self.timelines[one]
+            self.timelines[one], self.timelines[other] = (
+                self.timelines[other], self.timelines[one])
 
     def _mark_read(self):
         if self.has_timelines():

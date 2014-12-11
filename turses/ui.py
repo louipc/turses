@@ -32,10 +32,10 @@ from turses.utils import encode, is_hashtag, is_username, is_url
 
 
 def surround_with_spaces(s):
-    return ' '.join(['', s , ''])
+    return ' '.join(['', s, ''])
+
 
 # - Text parsing --------------------------------------------------------------
-
 def apply_attribute(string,
                     hashtag='hashtag',
                     attag='attag',
@@ -214,8 +214,8 @@ def map_attributes(status, hashtag, attag, url):
         entity_text = status_text[starts:ends]
 
         if attribute == url and len(mapping) == 3:
-            ## if the text is a url and a third element is included in the
-            ## tuple; the third element is the original URL
+            # if the text is a url and a third element is included in the
+            # tuple; the third element is the original URL
             entity_text = mapping[2]
 
         # append normal text before the text with an attribute
@@ -510,7 +510,6 @@ class Banner(WidgetWrap):
             "",
             _("Configuration and token files reside under"),
             _("your $HOME directory ({0})").format(home_dir),
-            #"",
             "",
             "    ~                                              ",
             "    |+.turses/                                     ",
@@ -947,7 +946,8 @@ class TimelinesBuffer(ScrollableWidgetWrap):
         ScrollableWidgetWrap.__init__(self, widget)
 
     def _build_widget(self, timelines, **kwargs):
-        timeline_widgets = [TimelineWidget(timeline, **kwargs) for timeline in timelines]
+        timeline_widgets = [TimelineWidget(timeline, **kwargs)
+                            for timeline in timelines]
         return Columns(timeline_widgets)
 
     def render_timelines(self, timelines, **kwargs):
@@ -1037,7 +1037,8 @@ class StatusWidget(WidgetWrap):
         divider = configuration.styles.get('status_divider', False)
 
         header = AttrMap(Text(header_text), 'header')
-        sanitized_text = [sanitize(t) for t in text] if isinstance(text, list) else sanitize(text)
+        sanitized_text = ([sanitize(t) for t in text]
+                          if isinstance(text, list) else sanitize(text))
         body = Padding(AttrMap(Text(sanitized_text), 'body'), left=1, right=1)
 
         border_attr = 'line'
@@ -1087,11 +1088,13 @@ class StatusWidget(WidgetWrap):
 
         # reply
         if status.is_reply:
-            reply = surround_with_spaces(configuration.styles['reply_indicator'])
+            reply = surround_with_spaces(
+                configuration.styles['reply_indicator'])
 
         # retweet
         if status.is_retweet:
-            retweeted = surround_with_spaces(configuration.styles['retweet_indicator'])
+            retweeted = surround_with_spaces(
+                configuration.styles['retweet_indicator'])
             # `username` is the author of the original tweet
             username = status.author
             # `retweeter` is the user who made the RT
@@ -1221,13 +1224,15 @@ class UserInfo(WidgetWrap):
         # Last n statuses
         # TODO: make it configurable
         statuses_to_show = configuration.styles['statuses_in_user_info']
-        status_widgets = [StatusWidget(status) for status in last_statuses[:statuses_to_show]]
+        status_widgets = [StatusWidget(status)
+                          for status in last_statuses[:statuses_to_show]]
         widgets.extend(status_widgets)
 
         pile = Pile(widgets)
 
-        super(UserInfo, self).__init__(LineBox(title='@{0}'.format(user.screen_name),
-                                       original_widget=pile))
+        super(UserInfo, self).__init__(
+            LineBox(title='@{0}'.format(user.screen_name),
+                    original_widget=pile))
 
 
 def sanitize(text):
@@ -1235,6 +1240,7 @@ def sanitize(text):
         return html_unescape(text)
     else:
         return text
+
 
 def html_unescape(string):
     """Unescape HTML entities from ``string``."""
@@ -1246,4 +1252,3 @@ def html_unescape(string):
             return m.group(0)
 
     return re.sub(r'&([^;]+);', entity_replacer, string)
-

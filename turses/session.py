@@ -92,7 +92,8 @@ def clean_timeline_list_string(timeline_list_string):
     `timeline_list_string`.
     """
     timeline_names = [name.strip() for name in timeline_list_string.split(',')]
-    return [name.lower() for name in timeline_names if not invalid_name_re.match(name)]
+    return [name.lower()
+            for name in timeline_names if not invalid_name_re.match(name)]
 
 
 class Session:

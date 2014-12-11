@@ -4,30 +4,21 @@ from sys import path
 path.append('../')
 import unittest
 
-from . import create_status, create_direct_message
-
 from turses.api.debug import MockApi
-from turses.models import Timeline, TimelineList
+from turses.models import TimelineList
 from turses.session import (
     Session,
-
     clean_timeline_list_string,
 )
 from turses.api.helpers import (
     is_home_timeline,
     is_mentions_timeline,
-    is_favorites_timeline,
     is_messages_timeline,
-    is_own_timeline,
     is_search_timeline,
-    is_user_timeline,
-    is_retweets_of_me_timeline,
-    is_thread_timeline,
 )
 
 
 mock_api = MockApi('foo', 'bar')
-
 
 
 class SessionTest(unittest.TestCase):
@@ -49,8 +40,9 @@ class SessionTest(unittest.TestCase):
         self.assertEqual(clean_timeline_list_string('  home,mentions '),
                          ['home', 'mentions'])
 
-        self.assertEqual(clean_timeline_list_string('mentions, favorites, messages, own_tweets'),
-                         ['mentions', 'favorites', 'messages', 'own_tweets'])
+        self.assertEqual(clean_timeline_list_string(
+            'mentions, favorites, messages, own_tweets'),
+            ['mentions', 'favorites', 'messages', 'own_tweets'])
 
     def test_custom_session(self):
         """
@@ -70,7 +62,9 @@ class SessionTest(unittest.TestCase):
         self.assertTrue(is_search_timeline(timeline_list[2]))
 
         self.assertEqual(timeline_list.visible_timelines,
-                         [timeline_list[0], timeline_list[1], timeline_list[2]])
+                         [timeline_list[0],
+                          timeline_list[1],
+                          timeline_list[2]])
 
         # now let's append the buffers in the background
         buffers_string = 'messages'

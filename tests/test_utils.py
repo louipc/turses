@@ -45,8 +45,5 @@ class UtilsTest(unittest.TestCase):
     def test_is_valid_search_text(self):
         pass
 
-
-
-
 if __name__ == '__main__':
     unittest.main()

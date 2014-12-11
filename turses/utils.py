@@ -6,9 +6,7 @@ This module contains functions used across different modules.
 
 from re import findall
 from re import compile as compile_regex
-from subprocess import call
 from sys import stdout
-from os import devnull
 from functools import partial
 
 
@@ -50,6 +48,7 @@ def encode(string):
     except (AttributeError, TypeError):
         return string
 
+
 # For Python < 2.7
 # Code borrowed from python 2.7.3 stdlib
 def total_ordering(cls):
@@ -70,8 +69,9 @@ def total_ordering(cls):
     }
     roots = set(dir(cls)) & set(convert)
     if not roots:
-        raise ValueError('must define at least one ordering operation: < > <= >=')
-    root = max(roots) # prefer __lt__ to __le__ to __gt__ to __ge__
+        raise ValueError(
+            'must define at least one ordering operation: < > <= >=')
+    root = max(roots)  # prefer __lt__ to __le__ to __gt__ to __ge__
     for opname, opfunc in convert[root]:
         if opname not in roots:
             opfunc.__name__ = opname

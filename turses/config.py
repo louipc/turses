@@ -75,9 +75,9 @@ from turses.api.base import get_authorization_tokens
 KEY_BINDINGS = {
     # motion
     'up':
-         ('k', _('scroll up')),
+        ('k', _('scroll up')),
     'down':
-         ('j', _('scroll down')),
+        ('j', _('scroll down')),
     'left':
         ('h', _('activate the timeline on the left')),
     'right':
@@ -89,7 +89,7 @@ KEY_BINDINGS = {
 
     # buffers
     'activate_first_buffer':
-       ('a', _('activate first buffer')),
+        ('a', _('activate first buffer')),
     'activate_last_buffer':
         ('e', _('activate last buffer')),
     'shift_buffer_beggining':
@@ -133,7 +133,8 @@ KEY_BINDINGS = {
     'update_all':
         ('S', _('refresh all the timelines')),
     'tweet_hashtag':
-        ('H', _('compose a tweet with the same hashtags as the focused status')),
+        ('H', _(
+            'compose a tweet with the same hashtags as the focused status')),
     'fav':
         ('b', _('mark focused tweet as favorite')),
     'delete_fav':
@@ -163,11 +164,13 @@ KEY_BINDINGS = {
     'search_user':
         ('@', _('open a timeline with the tweets of the specified user')),
     'user_timeline':
-        ('+', _('open a timeline with the tweets of the focused status\' author')),
+        ('+', _(
+            'open a timeline with the tweets of the focused status\' author')),
     'thread':
         ('T', _('open the thread of the focused status')),
     'hashtags':
-        ('L', _('open a search timeline with the hashtags of the focused status')),
+        ('L', _(
+            'open a search timeline with the hashtags of the focused status')),
     'retweets_of_me':
         ('I', _('open a timeline with your tweets that have been retweeted')),
 
@@ -299,7 +302,7 @@ def validate_color(colorstring):
     return colorstring if colorstring in VALID_COLORS else ''
 
 PALETTE = [
-    #Tabs
+    # Tabs
     ['active_tab',  'white', 'dark blue'],
     ['visible_tab', 'yellow', 'dark blue'],
     ['inactive_tab', 'dark blue', ''],
@@ -334,8 +337,10 @@ STYLES = {
     # TODO: make time string configurable
     'reply_indicator': '@',
     'retweet_indicator': 'RT',
-    'header_template': ' {username}{retweeted}{retweeter} - {time}{reply}{retweet_count} ',
-    'dm_template': ' {sender_screen_name} => {recipient_screen_name} - {time} ',
+    'header_template': (
+        ' {username}{retweeted}{retweeter} - {time}{reply}{retweet_count} '),
+    'dm_template': (
+        ' {sender_screen_name} => {recipient_screen_name} - {time} '),
     'tab_template': '{timeline_name} [{unread}]',
     'box_around_status': True,
     'status_divider': False,
@@ -356,8 +361,8 @@ UPDATE_FREQUENCY = 300
 USE_HTTPS = True
 
 TWITTER = {
-  'update_frequency': UPDATE_FREQUENCY,
-  'use_https': USE_HTTPS,
+    'update_frequency': UPDATE_FREQUENCY,
+    'use_https': USE_HTTPS,
 }
 
 # Environment
@@ -395,8 +400,10 @@ SECTION_TOKEN = 'token'
 def print_deprecation_notice():
     print "NOTE:"
     print
-    print "The configuration file in %s has been deprecated." % LEGACY_CONFIG_FILE
-    print "A new configuration directory is being generated in %s." % CONFIG_PATH
+    print "The configuration file in %s has been deprecated." % (
+        LEGACY_CONFIG_FILE)
+    print "A new configuration directory is being generated in %s." % (
+        CONFIG_PATH)
     print
 
 
@@ -453,7 +460,8 @@ class Configuration(object):
             try:
                 mkdir(CONFIG_PATH)
             except:
-                print encode(_('Error creating config directory in %s' % CONFIG_DIR))
+                print encode(_('Error creating config directory in %s' % (
+                    CONFIG_DIR)))
                 self.exit_with_code(3)
 
     def parse_args(self, cli_args):
@@ -469,11 +477,13 @@ class Configuration(object):
         if cli_args.config:
             self.config_file = cli_args.config
         elif cli_args.account:
-            self.config_file = path.join(CONFIG_PATH, '%s.config' % cli_args.account)
+            self.config_file = path.join(CONFIG_PATH, '%s.config' % (
+                cli_args.account))
 
         # path to token file
         if cli_args.account:
-            self.token_file = path.join(CONFIG_PATH, '%s.token' % cli_args.account)
+            self.token_file = path.join(CONFIG_PATH, '%s.token' % (
+                cli_args.account))
 
         # session
         if cli_args.session:
@@ -534,16 +544,16 @@ class Configuration(object):
             label_name, fg, bg = label[0], label[1], label[2]
 
             # fg
-            if conf.has_option(SECTION_PALETTE, label_name) and \
-                validate_color(conf.get(SECTION_PALETTE, label_name)):
+            if (conf.has_option(SECTION_PALETTE, label_name) and
+                    validate_color(conf.get(SECTION_PALETTE, label_name))):
                 pass
             else:
                 conf.set(SECTION_PALETTE, label_name, fg)
 
-            #bg
+            # bg
             label_name_bg = label_name + '_bg'
-            if conf.has_option(SECTION_PALETTE, label_name_bg) and \
-                validate_color(conf.get(SECTION_PALETTE, label_name_bg)):
+            if (conf.has_option(SECTION_PALETTE, label_name_bg) and
+                    validate_color(conf.get(SECTION_PALETTE, label_name_bg))):
                 pass
             else:
                 conf.set(SECTION_PALETTE, label_name_bg, bg)
@@ -570,7 +580,8 @@ class Configuration(object):
             self.parse_token_file(LEGACY_TOKEN_FILE)
             remove(LEGACY_TOKEN_FILE)
             if (hasattr(self, 'oauth_token') and
-                hasattr(self, 'oauth_token_secret')):
+                    hasattr(self, 'oauth_token_secret')):
+
                 self.generate_token_file(self.token_file,
                                          self.oauth_token,
                                          self.oauth_token_secret)
@@ -618,17 +629,20 @@ class Configuration(object):
             self.oauth_token = conf.get(SECTION_TOKEN, 'oauth_token')
 
         if conf.has_option(SECTION_TOKEN, 'oauth_token'):
-            self.oauth_token_secret = conf.get(SECTION_TOKEN, 'oauth_token_secret')
+            self.oauth_token_secret = conf.get(
+                SECTION_TOKEN, 'oauth_token_secret')
 
     def _set_color(self, color_label, custom_fg=None, custom_bg=None):
         for color in self.palette:
             label, fg, bg = color[0], color[1], color[2]
             if label == color_label:
-                color[1] = custom_fg if validate_color(custom_fg) is not None else fg
-                color[2] = custom_bg if validate_color(custom_bg) is not None else bg
+                color[1] = (custom_fg
+                            if validate_color(custom_fg) is not None else fg)
+                color[2] = (custom_bg
+                            if validate_color(custom_bg) is not None else bg)
 
     def _set_key_binding(self, binding, new_key):
-        if not binding in self.key_bindings:
+        if binding not in self.key_bindings:
             return
 
         key, description = self.key_bindings[binding]
@@ -666,7 +680,8 @@ class Configuration(object):
         print encode(_('Generated configuration file in %s')) % config_file
 
     def _config_generation_error(self, config_file):
-        print encode(_('Unable to generate configuration file in %s')) % config_file
+        print encode(_('Unable to generate configuration file in %s')) % (
+            config_file)
         self.exit_with_code(2)
 
     def generate_token_file(self,
@@ -698,9 +713,11 @@ class Configuration(object):
 
     def _parse_twitter(self, conf):
         if conf.has_option(SECTION_TWITTER, 'update_frequency'):
-            self.twitter['update_frequency'] = conf.getint(SECTION_TWITTER, 'update_frequency')
+            self.twitter['update_frequency'] = conf.getint(SECTION_TWITTER,
+                                                           'update_frequency')
         if conf.has_option(SECTION_TWITTER, 'use_https'):
-            self.twitter['use_https'] = conf.getboolean(SECTION_TWITTER, 'use_https')
+            self.twitter['use_https'] = conf.getboolean(SECTION_TWITTER,
+                                                        'use_https')
 
     def _parse_key_bindings(self, conf):
         for binding in self.key_bindings:
@@ -734,8 +751,8 @@ class Configuration(object):
                 elif style == 'statuses_in_user_info':
                     self.styles[style] = conf.getint(SECTION_STYLES, style)
                 else:
-                    self.styles[style] = unicode(conf.get(SECTION_STYLES, style),
-                                                 'utf-8')
+                    self.styles[style] = unicode(
+                        conf.get(SECTION_STYLES, style), 'utf-8')
 
     def _parse_debug(self, conf):
         if conf.has_option(SECTION_DEBUG, 'logging_level'):
@@ -748,7 +765,8 @@ class Configuration(object):
         if conf.has_option(SECTION_TOKEN, 'oauth_token'):
             self.oauth_token = conf.get(SECTION_TOKEN, 'oauth_token')
         if conf.has_option(SECTION_TOKEN, 'oauth_token_secret'):
-            self.oauth_token_secret = conf.get(SECTION_TOKEN, 'oauth_token_secret')
+            self.oauth_token_secret = conf.get(SECTION_TOKEN,
+                                               'oauth_token_secret')
 
     def authorize_new_account(self):
         access_tokens = get_authorization_tokens()
