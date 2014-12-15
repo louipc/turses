@@ -165,14 +165,14 @@ class TweepyApi(BaseTweepyApi, ApiAdapter):
     def init_api(self):
         oauth_handler = TweepyOAuthHandler(
             self._consumer_key,
-            self._consumer_secret,
-            secure=configuration.twitter['use_https'])
+            self._consumer_secret)
+
+        oauth_handler.secure = configuration.twitter['use_https']
 
         oauth_handler.set_access_token(self._access_token_key,
                                        self._access_token_secret)
 
-        self._api = BaseTweepyApi(oauth_handler,
-                                  secure=configuration.twitter['use_https'])
+        self._api = BaseTweepyApi(oauth_handler)
 
     @to_user
     def verify_credentials(self):
