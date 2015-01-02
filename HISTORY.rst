@@ -1,3 +1,8 @@
+0.3.0
+------
+- Upgrade Tweepy dependency to 3.1
+- Drop oauthlib dependency
+
 0.2.23
 ------
 - Upgrade Tweepy dependency to 2.3
