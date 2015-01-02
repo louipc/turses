@@ -1,12 +1,12 @@
 turses
 ======
 
-.. image:: https://api.travis-ci.org/alejandrogomez/turses.png?branch=master
+.. image:: https://api.travis-ci.org/dialelo/turses.png?branch=master
 .. image:: https://pypip.in/v/turses/badge.png
     :target: https://crate.io/packages/turses
 .. image:: https://pypip.in/d/turses/badge.png
     :target: https://crate.io/packages/turses
-.. image:: https://d2weczhvl823v0.cloudfront.net/alejandrogomez/turses/trend.png
+.. image:: https://d2weczhvl823v0.cloudfront.net/dialelo/turses/trend.png
    :alt: Bitdeli badge
    :target: https://bitdeli.com/free
 
@@ -15,7 +15,7 @@ A Twitter client for the console.
 
 A session with multiple columns running on ``urxvt``:
 
-.. image:: http://alejandrogomez.github.com/img/turses_screenshot.png
+.. image:: http://dialelo.github.com/img/turses_screenshot.png
 
 The goal of the project is to build a full-featured, lightweight, and extremely
 configurable Twitter client.
@@ -69,12 +69,12 @@ Development
 
 The code is hosted on a `git repo`_.
 
-.. _`git repo`: http://github.com/alejandrogomez/turses
+.. _`git repo`: http://github.com/dialelo/turses
 
 A list of tasks can be found on the on the `issue tracker`_. Feel free to
 submit issues, feature requests or participate in ongoing discussions.
 
-.. _`issue tracker`: http://github.com/alejandrogomez/turses/issues
+.. _`issue tracker`: http://github.com/dialelo/turses/issues
 
 If you feel hackish, reading the `dev docs`_ is recommended.
 
