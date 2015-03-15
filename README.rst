@@ -15,7 +15,7 @@ A Twitter client for the console.
 
 A session with multiple columns running on ``urxvt``:
 
-.. image:: http://dialelo.github.com/img/turses_screenshot.png
+.. image:: ./docs/images/turses_urxvt.png
 
 The goal of the project is to build a full-featured, lightweight, and extremely
 configurable Twitter client.
@@ -103,4 +103,3 @@ Authors
 .. _`Nicolas Paris`: http://github.com/Nic0
 
 See ``AUTHORS`` for a full list of contributors.
-
