@@ -41,6 +41,7 @@ NAME = "turses"
 REQUIREMENTS = [
     "urwid",
     "tweepy==3.1.0",
+    "future",
 ]
 if version_info[:2] == (2, 6):
     REQUIREMENTS.append("argparse")
@@ -77,6 +78,9 @@ setup(name=NAME,
           "Operating System :: MacOS",
           "Programming Language :: Python :: 2.6",
           "Programming Language :: Python :: 2.7",
+          "Programming Language :: Python :: 3.3",
+          "Programming Language :: Python :: 3.4",
+          "Programming Language :: Python :: 3.5",
           "Topic :: Communications",
       ],
       install_requires=REQUIREMENTS,
