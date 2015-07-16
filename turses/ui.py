@@ -3,12 +3,18 @@
 """
 This module contains the curses UI widgets.
 """
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from past.utils import old_div
+from builtins import object
 
 import os
 import logging
 import re
 from gettext import gettext as _
-from htmlentitydefs import entitydefs
+from html.entities import entitydefs
 
 
 from urwid import (AttrMap, WidgetWrap, Padding, Divider, SolidFill,
@@ -29,6 +35,7 @@ from turses.config import (MOTION_KEY_BINDINGS, BUFFERS_KEY_BINDINGS,
                            configuration)
 from turses.models import is_DM, TWEET_MAXIMUM_CHARACTERS
 from turses.utils import encode, is_hashtag, is_username, is_url
+from future.utils import with_metaclass
 
 
 def surround_with_spaces(s):
@@ -56,7 +63,7 @@ def apply_attribute(string,
     >>> apply_attribute('turses')
     u'turses'
     """
-    string = unicode(string)
+    string = str(string)
 
     if is_hashtag(string):
         return (hashtag, string)
@@ -110,7 +117,7 @@ def parse_attributes(text,
         tweet.insert(index, u' ')
 
     # remove trailing withespace
-    if tweet and isinstance(tweet[-1], basestring):
+    if tweet and isinstance(tweet[-1], str):
         tweet[-1] = tweet[-1][:-1]
 
     return tweet
@@ -203,7 +210,7 @@ def map_attributes(status, hashtag, attag, url):
                                             url=url)
 
     text = []
-    status_text = unicode(status.text)
+    status_text = str(status.text)
     # start from the beggining
     index = 0
     for mapping in attribute_mappings:
@@ -440,7 +447,7 @@ class CursesInterface(WidgetWrap):
     def hide_editor(self, done_signal_handler):
         try:
             disconnect_signal(self._editor, 'done', done_signal_handler)
-        except Exception, message:
+        except Exception as message:
             # `disconnect_signal` raises an exception if no signal was
             # connected from `self._editor`. we can safely ignore it.
             logging.exception(message)
@@ -539,10 +546,8 @@ class Banner(WidgetWrap):
 # - Editors -------------------------------------------------------------------
 
 
-class BaseEditor(WidgetWrap):
+class BaseEditor(with_metaclass(signals.MetaSignals, WidgetWrap)):
     """Base class for editors."""
-
-    __metaclass__ = signals.MetaSignals
     signals = ['done']
 
     def __init__(self,
@@ -605,10 +610,8 @@ class BaseEditor(WidgetWrap):
         emit_signal(self, 'done', content)
 
 
-class TextEditor(BaseEditor):
+class TextEditor(with_metaclass(signals.MetaSignals, BaseEditor)):
     """Editor for creating arbitrary text."""
-
-    __metaclass__ = signals.MetaSignals
     signals = ['done']
 
     def __init__(self,
@@ -623,10 +626,8 @@ class TextEditor(BaseEditor):
         self._wrap(self.editor)
 
 
-class TweetEditor(BaseEditor):
+class TweetEditor(with_metaclass(signals.MetaSignals, BaseEditor)):
     """Editor for creating tweets."""
-
-    __metaclass__ = signals.MetaSignals
     signals = ['done']
 
     def __init__(self,
@@ -658,10 +659,8 @@ class TweetEditor(BaseEditor):
             self.emit_done_signal(self.editor.get_edit_text())
 
 
-class DmEditor(TweetEditor):
+class DmEditor(with_metaclass(signals.MetaSignals, TweetEditor)):
     """Editor for creating DMs."""
-
-    __metaclass__ = signals.MetaSignals
     signals = ['done']
 
     def __init__(self,
@@ -721,7 +720,7 @@ class TabsWidget(WidgetWrap):
         self._w = Text(text)
 
     def append_tab(self, tab):
-        self.tabs.append(unicode(tab))
+        self.tabs.append(str(tab))
         self._update_text()
 
     def delete_current_tab(self):
@@ -774,7 +773,7 @@ class StatusBar(WidgetWrap):
 # - Base list widgets ---------------------------------------------------------
 
 
-class Scrollable:
+class Scrollable(object):
     """A interface that makes widgets *scrollable*."""
     def scroll_up(self):
         raise NotImplementedError
@@ -877,7 +876,7 @@ class HelpBuffer(ScrollableWidgetWrap):
         self.items = []
         self.create_help_buffer()
 
-        offset = int(len(self.items) / 5)
+        offset = int(old_div(len(self.items), 5))
         ScrollableWidgetWrap.__init__(self,
                                       ScrollableListBox(self.items,
                                                         offset=offset,))
@@ -1104,7 +1103,7 @@ class StatusWidget(WidgetWrap):
         # create header
         styles = configuration.styles
         header_template = ' ' + styles.get('header_template') + ' '
-        header = unicode(header_template).format(
+        header = str(header_template).format(
             username=username,
             retweeted=retweeted,
             retweeter=retweeter,
@@ -1118,7 +1117,7 @@ class StatusWidget(WidgetWrap):
     def _dm_header(self, dm):
         dm_template = ''.join([' ', configuration.styles['dm_template'], ' '])
         relative_created_at = dm.relative_created_at
-        header = unicode(dm_template).format(
+        header = str(dm_template).format(
             sender_screen_name=dm.sender_screen_name,
             recipient_screen_name=dm.recipient_screen_name,
             time=relative_created_at,
@@ -1185,12 +1184,10 @@ class BoxDecoration(WidgetDecoration, WidgetWrap):
 # - User ----------------------------------------------------------------------
 
 
-class UserInfo(WidgetWrap):
+class UserInfo(with_metaclass(signals.MetaSignals, WidgetWrap)):
     """
     A widget for displaying a Twitter user info.
     """
-
-    __metaclass__ = signals.MetaSignals
     signals = ['done']
 
     def __init__(self, user, last_statuses):
@@ -1236,7 +1233,7 @@ class UserInfo(WidgetWrap):
 
 
 def sanitize(text):
-    if isinstance(text, unicode):
+    if isinstance(text, str):
         return html_unescape(text)
     else:
         return text

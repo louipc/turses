@@ -3,11 +3,15 @@
 """
 This module contains abstract classes and decorators.
 """
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 
 import logging
 from abc import ABCMeta, abstractmethod, abstractproperty
 from functools import wraps
 from threading import Thread
+from future.utils import with_metaclass
 
 
 # - Decorators ----------------------------------------------------------------
@@ -29,7 +33,7 @@ def wrap_exceptions(func):
 
         try:
             result = func(self, *args, **kwargs)
-        except Exception, message:
+        except Exception as message:
             if callable(on_error):
                 logging.exception(message)
                 on_error()
@@ -71,7 +75,7 @@ def filter_result(func, filter_func=None):
 # - Abstract classes ----------------------------------------------------------
 
 # FIXME: Use urwid.MonitoredFocusList
-class ActiveList(object):
+class ActiveList(with_metaclass(ABCMeta, object)):
     """
     A list that contains an *active* element.
 
@@ -81,7 +85,6 @@ class ActiveList(object):
     :func:`turses.meta.ActiveList.activate_last`.
     methods.
     """
-    __metaclass__ = ABCMeta
 
     NULL_INDEX = -1
 
@@ -154,7 +157,7 @@ class UnsortedActiveList(ActiveList):
         pass
 
 
-class Updatable:
+class Updatable(with_metaclass(ABCMeta, object)):
     """
     An abstract class for making a class *updatable*.
 
@@ -165,8 +168,6 @@ class Updatable:
     :func:`~turses.meta.Updatable.update_callback` is called, passing it the
     result.
     """
-
-    __metaclass__ = ABCMeta
 
     def __init__(self,
                  update_function=None,
@@ -230,7 +231,7 @@ def notify(func):
     return wrapper
 
 
-class Observable:
+class Observable(object):
     """
     An implementation of the *observer* pattern.
 
@@ -253,13 +254,11 @@ class Observable:
             observer.update()
 
 
-class Observer:
+class Observer(with_metaclass(ABCMeta, object)):
     """
     An abstract class that can subscribe to updates from
     :class:`~turses.meta.Observable` instances.
     """
-
-    __metaclass__ = ABCMeta
 
     @abstractmethod
     def update(self):

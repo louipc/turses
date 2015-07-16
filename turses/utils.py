@@ -3,7 +3,7 @@
 """
 This module contains functions used across different modules.
 """
-
+import sys
 from re import findall
 from re import compile as compile_regex
 from sys import stdout
@@ -27,7 +27,8 @@ def matches_word(regex, word):
 # username
 username_regex = compile_regex(r'[A-Za-z0-9_]+')
 is_username = partial(matches_word, username_regex)
-sanitize_username = partial(filter, is_username)
+def sanitize_username(username):
+    return ''.join(filter(is_username, username))
 prepend_at = lambda username: '@%s' % username
 
 # hashtag
@@ -43,9 +44,12 @@ def get_urls(text):
 
 
 def encode(string):
-    try:
-        return string.encode(stdout.encoding, 'replace')
-    except (AttributeError, TypeError):
+    if sys.version_info < (3,):
+        try:
+            return string.encode(stdout.encoding, 'replace')
+        except (AttributeError, TypeError):
+            return string
+    else:
         return string
 
 

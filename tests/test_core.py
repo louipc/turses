@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from sys import path
-path.append('../')
+import sys
+sys.path.append('../')
 import unittest
 
 from mock import Mock
 
-from . import create_status
+from tests import create_status
 from turses.models import TimelineList
 from turses.api.helpers import (
     is_home_timeline,
@@ -35,7 +35,7 @@ class InputHandlerTest(unittest.TestCase):
 
             self.key_handler.handle(key)
 
-            self.failUnless(handler.called)
+            self.assertTrue(handler.called)
 
     def does_not_execute(self, commands):
         """Assert that calling the key handlers `handle` method with all
@@ -47,7 +47,7 @@ class InputHandlerTest(unittest.TestCase):
 
             self.key_handler.handle(key)
 
-            self.failIf(handler.called)
+            self.assertFalse(handler.called)
 
     def key(self, command):
         key, _ = configuration.key_bindings[command]

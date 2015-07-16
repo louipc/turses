@@ -1,11 +1,11 @@
 APPNAME=turses
 
 PY=python
-DIST=$(PY) setup.py sdist
+DIST=python setup.py sdist
 PIPI=pip install
 PIPFLAGS=--ignore-installed --no-deps
 
-TESTRUNNER=py.test
+TESTRUNNER=pytest
 COVERTESTFLAGS=--with-coverage --cover-package=turses --cover-html
 WATCHTESTFLAGS=--verbosity=0
 
