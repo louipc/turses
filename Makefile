@@ -1,7 +1,7 @@
 APPNAME=turses
 
 PY=python
-DIST=python setup.py sdist
+DIST=$(PY) setup.py sdist
 PIPI=pip install
 PIPFLAGS=--ignore-installed --no-deps
 
