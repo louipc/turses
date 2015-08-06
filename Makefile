@@ -32,7 +32,7 @@ coverage: pyc
 pyc:
 	find . -name "*.pyc" -exec rm {} \;
 
-release: test bump publish tag push
+release: bump publish tag push
 
 bump:
 	$(EDITOR) HISTORY.rst turses/__init__.py

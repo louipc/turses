@@ -1,3 +1,8 @@
+0.3.1
+------
+- Upgrade Tweepy dependency to 3.3
+- Python 3 port by Douglas Larocca
+
 0.3.0
 ------
 - Upgrade Tweepy dependency to 3.1
