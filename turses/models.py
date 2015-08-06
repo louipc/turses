@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """
 This module contains the data structures that power ``turses`` and
 the Twitter entities represented into it.
@@ -465,7 +464,7 @@ class Status(object):
         """Return a human readable string representing the posting time."""
         # This code is borrowed from `python-twitter` library
         fudge = 1.25
-        delta = long(time.time()) - timestamp_from_datetime(self.created_at)
+        delta = time.time() - timestamp_from_datetime(self.created_at)
 
         if delta < (1 * fudge):
             return "a second ago"

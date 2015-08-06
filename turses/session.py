@@ -54,10 +54,13 @@ named ``interactions`` by executing:
     # or, alternatively
     $ turses --session interactions
 """
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 
 import re
 import logging
-from ConfigParser import RawConfigParser
+from configparser import RawConfigParser
 from os import path
 from gettext import gettext as _
 
@@ -96,7 +99,7 @@ def clean_timeline_list_string(timeline_list_string):
             for name in timeline_names if not invalid_name_re.match(name)]
 
 
-class Session:
+class Session(object):
     """Loads and saves sessions."""
 
     def __init__(self, api):

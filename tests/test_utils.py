@@ -1,3 +1,4 @@
+#
 # -*- coding: utf-8 -*-
 
 from sys import path
@@ -12,21 +13,21 @@ class UtilsTest(unittest.TestCase):
     def test_is_username(self):
         valid = ['dialelo', 'mental_floss', '4n_4Wfu1_US3RN4M3']
         for user in valid:
-            self.failUnless(is_username(user))
+            self.assertTrue(is_username(user))
 
         invalid = ['-asd', 'adsd?']
 
         for user in invalid:
-            self.failIf(is_username(user))
+            self.assertFalse(is_username(user))
 
     def test_is_hashtag(self):
         valid = ['#turses', '#cúrcuma', '#4n_4Wfu1_H45hT46']
         for hashtag in valid:
-            self.failUnless(is_hashtag(hashtag))
+            self.assertTrue(is_hashtag(hashtag))
 
         invalid = ['s#turses', '#']
         for hashtag in invalid:
-            self.failIf(is_hashtag(hashtag))
+            self.assertFalse(is_hashtag(hashtag))
 
     def test_sanitize_username(self):
         dirty_and_clean = [

@@ -4,7 +4,7 @@ from sys import path
 path.append('../')
 import unittest
 
-from . import create_status, create_direct_message
+from tests import create_status, create_direct_message
 
 from turses.models import Timeline
 from turses.api.base import AsyncApi

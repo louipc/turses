@@ -1,27 +1,28 @@
 # -*- coding: utf-8 -*-
+import sys
+sys.path.append('../')
 
-from sys import path
-path.append('../')
 import unittest
 from datetime import datetime
 
 from mock import MagicMock
 
 from tests import create_status, create_direct_message
-from tests.test_meta import ActiveListTest
+from test_meta import ActiveListTest
 
 from turses.utils import prepend_at
 from turses.models import is_DM, Timeline, TimelineList
+
 
 
 class StatusTest(unittest.TestCase):
     def test_is_DM(self):
         # status is NOT a DM
         status = create_status()
-        self.failIf(is_DM(status))
+        self.assertFalse(is_DM(status))
 
         dm = create_direct_message()
-        self.failUnless(is_DM(dm))
+        self.assertTrue(is_DM(dm))
 
     # properties
 
@@ -92,7 +93,7 @@ class StatusTest(unittest.TestCase):
         # must return `None`
         status = create_status(user=user)
         recipient_own_tweet = status.dm_recipients_username(user)
-        self.failIf(recipient_own_tweet)
+        self.assertFalse(recipient_own_tweet)
 
     def test_dm_recipients_username_dm(self):
         # authenticating user
@@ -225,7 +226,7 @@ class TimelineTest(ActiveListTest):
         self.assertEqual(self.timeline.unread_count, 0)
 
         # new statuses
-        statuses = [create_status(id=id_num) for id_num in xrange(2, 10)]
+        statuses = [create_status(id=id_num) for id_num in range(2, 10)]
         self.timeline.add_statuses(statuses)
         self.assertEqual(self.timeline.unread_count, len(statuses))
 
@@ -423,11 +424,11 @@ class TimelineListTest(ActiveListTest):
         self.timeline_list = TimelineList()
 
     def test_has_timelines_false_if_empty(self):
-        self.failIf(self.timeline_list.has_timelines())
+        self.assertFalse(self.timeline_list.has_timelines())
 
     def test_has_timelines_true_otherwise(self):
         self.append_timeline()
-        self.failUnless(self.timeline_list.has_timelines())
+        self.assertTrue(self.timeline_list.has_timelines())
 
     def test_null_index_with_no_timelines(self):
         self.assert_null_index()

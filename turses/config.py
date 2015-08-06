@@ -57,9 +57,14 @@ If you want to generate a configuration file, you can do so executing:
 
     $ turses -g /path/to/file
 """
+from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import object
 
 from sys import exit
-from ConfigParser import RawConfigParser
+from configparser import RawConfigParser
 from os import getenv, path, mkdir, remove
 from functools import partial
 from gettext import gettext as _
@@ -398,13 +403,13 @@ SECTION_TOKEN = 'token'
 
 
 def print_deprecation_notice():
-    print "NOTE:"
-    print
-    print "The configuration file in %s has been deprecated." % (
-        LEGACY_CONFIG_FILE)
-    print "A new configuration directory is being generated in %s." % (
-        CONFIG_PATH)
-    print
+    print("NOTE:")
+    print()
+    print("The configuration file in %s has been deprecated." % (
+        LEGACY_CONFIG_FILE))
+    print("A new configuration directory is being generated in %s." % (
+        CONFIG_PATH))
+    print()
 
 
 def invert_command_map(bindings):
@@ -412,7 +417,7 @@ def invert_command_map(bindings):
     Invert configuration keybindings to make reverse lookups faster
     """
     command_map = {}
-    for command, (key, _) in bindings.iteritems():
+    for command, (key, _) in bindings.items():
         command_map[key] = command
     return command_map
 
@@ -460,8 +465,8 @@ class Configuration(object):
             try:
                 mkdir(CONFIG_PATH)
             except:
-                print encode(_('Error creating config directory in %s' % (
-                    CONFIG_DIR)))
+                print(encode(_('Error creating config directory in %s' % (
+                    CONFIG_DIR))))
                 self.exit_with_code(3)
 
     def parse_args(self, cli_args):
@@ -673,15 +678,15 @@ class Configuration(object):
         self._add_section_styles(conf)
         self._add_section_debug(conf)
 
-        with open(config_file, 'wb') as config:
+        with open(config_file, 'w') as config:
             conf.write(config)
 
     def _config_generation_success(self, config_file):
-        print encode(_('Generated configuration file in %s')) % config_file
+        print(encode(_('Generated configuration file in %s')) % config_file)
 
     def _config_generation_error(self, config_file):
-        print encode(_('Unable to generate configuration file in %s')) % (
-            config_file)
+        print(encode(_('Unable to generate configuration file in %s')) % (
+            config_file))
         self.exit_with_code(2)
 
     def generate_token_file(self,
@@ -696,10 +701,10 @@ class Configuration(object):
         conf.set(SECTION_TOKEN, 'oauth_token', oauth_token)
         conf.set(SECTION_TOKEN, 'oauth_token_secret', oauth_token_secret)
 
-        with open(token_file, 'wb') as tokens:
+        with open(token_file, 'w') as tokens:
             conf.write(tokens)
 
-        print encode(_('your account has been saved'))
+        print(encode(_('your account has been saved')))
 
     def parse_config_file(self, config_file):
         conf = RawConfigParser()
@@ -751,7 +756,7 @@ class Configuration(object):
                 elif style == 'statuses_in_user_info':
                     self.styles[style] = conf.getint(SECTION_STYLES, style)
                 else:
-                    self.styles[style] = unicode(
+                    self.styles[style] = str(
                         conf.get(SECTION_STYLES, style), 'utf-8')
 
     def _parse_debug(self, conf):
