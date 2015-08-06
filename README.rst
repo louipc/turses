@@ -2,13 +2,6 @@ turses
 ======
 
 .. image:: https://api.travis-ci.org/dialelo/turses.png?branch=master
-.. image:: https://pypip.in/v/turses/badge.png
-    :target: https://crate.io/packages/turses
-.. image:: https://pypip.in/d/turses/badge.png
-    :target: https://crate.io/packages/turses
-.. image:: https://d2weczhvl823v0.cloudfront.net/dialelo/turses/trend.png
-   :alt: Bitdeli badge
-   :target: https://bitdeli.com/free
 
 
 A Twitter client for the console.
