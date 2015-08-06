@@ -5,7 +5,7 @@ DIST=$(PY) setup.py sdist
 PIPI=pip install
 PIPFLAGS=--ignore-installed --no-deps
 
-TESTRUNNER=pytest
+TESTRUNNER=py.test
 COVERTESTFLAGS=--with-coverage --cover-package=turses --cover-html
 WATCHTESTFLAGS=--verbosity=0
 
