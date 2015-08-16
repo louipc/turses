@@ -756,8 +756,7 @@ class Configuration(object):
                 elif style == 'statuses_in_user_info':
                     self.styles[style] = conf.getint(SECTION_STYLES, style)
                 else:
-                    self.styles[style] = str(
-                        conf.get(SECTION_STYLES, style), 'utf-8')
+                    self.styles[style] = conf.get(SECTION_STYLES, style)
 
     def _parse_debug(self, conf):
         if conf.has_option(SECTION_DEBUG, 'logging_level'):
