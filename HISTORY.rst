@@ -23,7 +23,7 @@
 0.2.20
 ------
 - Mouse scrolling support (thanks to Wes Turner)
-- Bugfix: Escape HTML entities without borking tweet text (thanks to David Tiersch)
+- Bugfix: Escape HTML entities without borking tweet text (thanks to Denise Tiersch)
 
 0.2.19
 ------
