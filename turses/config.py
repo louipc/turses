@@ -704,7 +704,7 @@ class Configuration(object):
         with open(token_file, 'w') as tokens:
             conf.write(tokens)
 
-        print(encode(_('your account has been saved')))
+        print(encode(_('Your account has been saved')))
 
     def parse_config_file(self, config_file):
         conf = RawConfigParser()
