@@ -18,7 +18,7 @@ from turses.meta import (ActiveList, UnsortedActiveList, Updatable, Observable,
 from turses.utils import prepend_at, sanitize_username, is_hashtag
 
 
-TWEET_MAXIMUM_CHARACTERS = 140
+TWEET_MAXIMUM_CHARACTERS = 280
 STATUS_URL_TEMPLATE = 'https://twitter.com/#!/{user}/status/{id}'
 
 
