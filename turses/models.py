@@ -19,7 +19,7 @@ from turses.utils import prepend_at, sanitize_username, is_hashtag
 
 
 TWEET_MAXIMUM_CHARACTERS = 280
-STATUS_URL_TEMPLATE = 'https://twitter.com/#!/{user}/status/{id}'
+STATUS_URL_TEMPLATE = 'https://twitter.com/{user}/status/{id}'
 
 
 def is_DM(status):
