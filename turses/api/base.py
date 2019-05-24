@@ -19,7 +19,7 @@ import tweepy
 
 from turses.models import is_DM
 from turses.utils import encode
-from turses.meta import async, wrap_exceptions
+from turses.meta import async_thread, wrap_exceptions
 from future.utils import with_metaclass
 
 
@@ -305,54 +305,54 @@ class AsyncApi(ApiAdapter):
     def get_user(self, screen_name):
         return self._api.get_user(screen_name)
 
-    @async
+    @async_thread
     @wrap_exceptions
     def update(self, text):
         self._api.update(text)
 
-    @async
+    @async_thread
     @wrap_exceptions
     def reply(self, status, text):
         self._api.reply(status, text)
 
-    @async
+    @async_thread
     @wrap_exceptions
     def retweet(self, status):
         self._api.retweet(status)
 
-    @async
+    @async_thread
     @wrap_exceptions
     def destroy_status(self, status):
         self._api.destroy_status(status)
 
-    @async
+    @async_thread
     @wrap_exceptions
     def destroy_direct_message(self, status):
         self._api.destroy_direct_message(status)
 
-    @async
+    @async_thread
     @wrap_exceptions
     def direct_message(self, screen_name, text):
         self._api.direct_message(screen_name, text)
 
-    @async
+    @async_thread
     @wrap_exceptions
     def create_friendship(self, screen_name):
         self._api.create_friendship(screen_name)
 
-    @async
+    @async_thread
     @wrap_exceptions
     def destroy_friendship(self, screen_name):
         self._api.destroy_friendship(screen_name)
 
-    @async
+    @async_thread
     @wrap_exceptions
     def create_favorite(self, status):
         if is_DM(status) or status.is_favorite:
             raise Exception
         self._api.create_favorite(status)
 
-    @async
+    @async_thread
     @wrap_exceptions
     def destroy_favorite(self, status):
         self._api.destroy_favorite(status)

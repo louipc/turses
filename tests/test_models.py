@@ -8,7 +8,7 @@ from datetime import datetime
 from mock import MagicMock
 
 from tests import create_status, create_direct_message
-from test_meta import ActiveListTest
+from tests.test_meta import ActiveListTest
 
 from turses.utils import prepend_at
 from turses.models import is_DM, Timeline, TimelineList
