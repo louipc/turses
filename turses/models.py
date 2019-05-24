@@ -7,11 +7,7 @@ the Twitter entities represented into it.
 import time
 from bisect import insort
 from calendar import timegm
-
-try:
-    from functools import total_ordering
-except ImportError:
-    from turses.utils import total_ordering
+from functools import total_ordering
 
 from turses.meta import (ActiveList, UnsortedActiveList, Updatable, Observable,
                          notify)
