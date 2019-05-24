@@ -3,15 +3,10 @@
 """
 This module contains abstract classes and decorators.
 """
-from future import standard_library
-standard_library.install_aliases()
-from builtins import object
-
 import logging
 from abc import ABCMeta, abstractmethod, abstractproperty
 from functools import wraps
 from threading import Thread
-from future.utils import with_metaclass
 
 
 # - Decorators ----------------------------------------------------------------
@@ -75,7 +70,7 @@ def filter_result(func, filter_func=None):
 # - Abstract classes ----------------------------------------------------------
 
 # FIXME: Use urwid.MonitoredFocusList
-class ActiveList(with_metaclass(ABCMeta, object)):
+class ActiveList(metaclass=ABCMeta):
     """
     A list that contains an *active* element.
 
@@ -157,7 +152,7 @@ class UnsortedActiveList(ActiveList):
         pass
 
 
-class Updatable(with_metaclass(ABCMeta, object)):
+class Updatable(metaclass=ABCMeta):
     """
     An abstract class for making a class *updatable*.
 
@@ -231,7 +226,7 @@ def notify(func):
     return wrapper
 
 
-class Observable(object):
+class Observable:
     """
     An implementation of the *observer* pattern.
 
@@ -254,7 +249,7 @@ class Observable(object):
             observer.update()
 
 
-class Observer(with_metaclass(ABCMeta, object)):
+class Observer(metaclass=ABCMeta):
     """
     An abstract class that can subscribe to updates from
     :class:`~turses.meta.Observable` instances.

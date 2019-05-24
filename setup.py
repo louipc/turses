@@ -41,10 +41,7 @@ NAME = "turses"
 REQUIREMENTS = [
     "urwid==2.0.1",
     "tweepy==3.7.0",
-    "future==0.17.1",
 ]
-if version_info[:2] == (2, 6):
-    REQUIREMENTS.append("argparse")
 
 TEST_REQUIREMENTS = list(REQUIREMENTS)
 TEST_REQUIREMENTS.extend(["mock", "pytest", "coverage", "tox"])
@@ -76,8 +73,6 @@ setup(name=NAME,
           "Natural Language :: English",
           "Operating System :: POSIX :: Linux",
           "Operating System :: MacOS",
-          "Programming Language :: Python :: 2.6",
-          "Programming Language :: Python :: 2.7",
           "Programming Language :: Python :: 3.3",
           "Programming Language :: Python :: 3.4",
           "Programming Language :: Python :: 3.5",
