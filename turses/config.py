@@ -300,6 +300,7 @@ VALID_COLORS = [
 def validate_color(colorstring):
     return colorstring if colorstring in VALID_COLORS else ''
 
+
 PALETTE = [
     # Tabs
     ['active_tab',  'white', 'dark blue'],
@@ -411,7 +412,7 @@ def invert_command_map(bindings):
     Invert configuration keybindings to make reverse lookups faster
     """
     command_map = {}
-    for command, (key, _) in bindings.items():
+    for command, (key, val) in bindings.items():
         command_map[key] = command
     return command_map
 
@@ -458,7 +459,7 @@ class Configuration:
         if not path.isdir(CONFIG_PATH):
             try:
                 mkdir(CONFIG_PATH)
-            except:
+            except Exception:
                 print(encode(_('Error creating config directory in %s' % (
                     CONFIG_DIR))))
                 self.exit_with_code(3)

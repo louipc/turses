@@ -35,6 +35,7 @@ def check_update_function_name(timeline, update_function_name=None):
 
     return update_function.__name__ == update_function_name
 
+
 is_home_timeline = partial(check_update_function_name,
                            update_function_name='get_home_timeline')
 is_mentions_timeline = partial(check_update_function_name,

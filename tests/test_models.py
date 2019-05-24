@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-import sys
-sys.path.append('../')
-
 import unittest
 from datetime import datetime
 
@@ -12,7 +9,6 @@ from tests.test_meta import ActiveListTest
 
 from turses.utils import prepend_at
 from turses.models import is_DM, Timeline, TimelineList
-
 
 
 class StatusTest(unittest.TestCase):

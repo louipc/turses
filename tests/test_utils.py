@@ -1,8 +1,4 @@
-#
 # -*- coding: utf-8 -*-
-
-from sys import path
-path.append('../')
 import unittest
 
 from turses.utils import is_username, is_hashtag, sanitize_username
@@ -45,6 +41,7 @@ class UtilsTest(unittest.TestCase):
 
     def test_is_valid_search_text(self):
         pass
+
 
 if __name__ == '__main__':
     unittest.main()

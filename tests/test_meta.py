@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-
-from sys import path
-path.append('../')
 import unittest
 
 from mock import Mock

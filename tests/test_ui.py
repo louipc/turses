@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-
-from sys import path
-path.append('../')
 import unittest
 
 from turses.ui import StatusWidget, map_attributes, parse_attributes
@@ -108,7 +105,7 @@ class AttributeTest(unittest.TestCase):
                  u'text': u'Python'},
             ],
             u'urls': [],
-            }
+        }
         retweet = create_status(text=text,
                                 entities=entities,
                                 is_retweet=True,
@@ -136,7 +133,7 @@ class AttributeTest(unittest.TestCase):
             ],
             u'hashtags': [],
             u'urls': [],
-            }
+        }
         tweet = create_status(text=text,
                               entities=entities,)
 

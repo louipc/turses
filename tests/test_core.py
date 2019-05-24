@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import sys
-sys.path.append('../')
-import unittest
-
 from mock import Mock
+import unittest
 
 from tests import create_status
 from turses.models import TimelineList

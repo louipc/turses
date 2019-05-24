@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-
-from sys import path
-path.append('../')
 import unittest
 
 from tests import create_status, create_direct_message

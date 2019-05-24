@@ -45,7 +45,7 @@ def set_title(string):
         else:
             # terminal
             stdout.write("\x1b]2;%s\x07" % string)
-    except:
+    except Exception:
         pass
 
 
@@ -165,7 +165,7 @@ def main():
 
     try:
         turses.start()
-    except:
+    except Exception:
         # A unexpected exception occurred, open the debugger in debug mode
         if args.debug or args.offline:
             import pdb

@@ -7,11 +7,7 @@ the Twitter entities represented into it.
 import time
 from bisect import insort
 from calendar import timegm
-
-try:
-    from functools import total_ordering
-except ImportError:
-    from turses.utils import total_ordering
+from functools import total_ordering
 
 from turses.meta import (ActiveList, UnsortedActiveList, Updatable, Observable,
                          notify)
@@ -306,7 +302,9 @@ class Timeline(ActiveList, Updatable):
 
         # keep the same tweet as the active when inserting statuses
         active = self.active
-        is_more_recent_status = lambda a, b: a.created_at < b.created_at
+
+        def is_more_recent_status(a, b):
+            return a.created_at < b.created_at
 
         if active and is_more_recent_status(active, new_status):
             self.activate_next()
