@@ -39,9 +39,9 @@ import turses
 NAME = "turses"
 
 REQUIREMENTS = [
-    "urwid==1.3.0",
-    "tweepy==3.1.0",
-    "future==0.14.3",
+    "urwid==2.0.1",
+    "tweepy==3.7.0",
+    "future==0.17.1",
 ]
 if version_info[:2] == (2, 6):
     REQUIREMENTS.append("argparse")
