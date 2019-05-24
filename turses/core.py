@@ -3,8 +3,6 @@
 """
 This module contains the controller and key handling logic of turses.
 """
-from builtins import object
-
 import signal
 import logging
 from gettext import gettext as _
@@ -40,7 +38,7 @@ def merge_dicts(*args):
     return result
 
 
-class InputHandler(object):
+class InputHandler:
     """
     Maps user input to calls to :class:`Controller` functions.
     """
