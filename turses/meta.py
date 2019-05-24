@@ -45,7 +45,7 @@ def wrap_exceptions(func):
     return wrapper
 
 
-def async(func):
+def async_thread(func):
     """
     Decorator for executing a function in a separate :class:`threading.Thread`.
     """

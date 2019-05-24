@@ -15,7 +15,7 @@ import urwid
 from tweepy import TweepError
 
 from turses.utils import get_urls
-from turses.meta import async, wrap_exceptions, Observer
+from turses.meta import async_thread, wrap_exceptions, Observer
 from turses.config import configuration
 from turses.utils import is_username
 from turses.models import (
@@ -302,7 +302,7 @@ class Controller(Observer):
         self.api.init_api(on_error=self.api_init_error,
                           on_success=self.init_timelines,)
 
-    @async
+    @async_thread
     def init_timelines(self):
         # API has to be authenticated
         while (not self.api.is_authenticated):
@@ -571,7 +571,7 @@ class Controller(Observer):
                              on_error=timeline_not_fetched,
                              on_success=timeline_fetched)
 
-    @async
+    @async_thread
     def append_search_timeline(self, query):
         text = query.strip()
         if not is_valid_search_text(text):
@@ -593,7 +593,7 @@ class Controller(Observer):
                              on_error=timeline_not_created,
                              on_success=timeline_created)
 
-    @async
+    @async_thread
     def append_retweets_of_me_timeline(self):
         success_message = _('Your retweeted tweet timeline created')
         timeline_created = partial(self.info_message,
@@ -607,7 +607,7 @@ class Controller(Observer):
                              on_error=timeline_not_created,
                              on_success=timeline_created)
 
-    @async
+    @async_thread
     def update_all_timelines(self):
         for timeline in self.timelines:
             timeline.update()
@@ -663,7 +663,7 @@ class Controller(Observer):
             tweet.read = True
         self.update_header()
 
-    @async
+    @async_thread
     def update_active_timeline(self):
         """Update the active timeline and draw the timeline buffers."""
         if self.timelines.has_timelines():
@@ -677,7 +677,7 @@ class Controller(Observer):
                 self.draw_timelines()
             self.info_message('%s updated' % active_timeline.name)
 
-    @async
+    @async_thread
     def update_active_timeline_with_newer_statuses(self):
         """
         Updates the active timeline with newer tweets than the active.
@@ -687,7 +687,7 @@ class Controller(Observer):
         if active_status:
             active_timeline.update(since_id=active_status.id)
 
-    @async
+    @async_thread
     def update_active_timeline_with_older_statuses(self):
         """
         Updates the active timeline with older tweets than the active.
