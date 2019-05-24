@@ -3,13 +3,6 @@
 """
 This module contains the curses UI widgets.
 """
-from __future__ import division
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from past.utils import old_div
-from builtins import object
-
 import os
 import logging
 import re
@@ -35,7 +28,6 @@ from turses.config import (MOTION_KEY_BINDINGS, BUFFERS_KEY_BINDINGS,
                            configuration)
 from turses.models import is_DM, TWEET_MAXIMUM_CHARACTERS
 from turses.utils import encode, is_hashtag, is_username, is_url
-from future.utils import with_metaclass
 
 
 def surround_with_spaces(s):
@@ -546,7 +538,7 @@ class Banner(WidgetWrap):
 # - Editors -------------------------------------------------------------------
 
 
-class BaseEditor(with_metaclass(signals.MetaSignals, WidgetWrap)):
+class BaseEditor(WidgetWrap, metaclass=signals.MetaSignals):
     """Base class for editors."""
     signals = ['done']
 
@@ -610,7 +602,7 @@ class BaseEditor(with_metaclass(signals.MetaSignals, WidgetWrap)):
         emit_signal(self, 'done', content)
 
 
-class TextEditor(with_metaclass(signals.MetaSignals, BaseEditor)):
+class TextEditor(BaseEditor, metaclass=signals.MetaSignals):
     """Editor for creating arbitrary text."""
     signals = ['done']
 
@@ -626,7 +618,7 @@ class TextEditor(with_metaclass(signals.MetaSignals, BaseEditor)):
         self._wrap(self.editor)
 
 
-class TweetEditor(with_metaclass(signals.MetaSignals, BaseEditor)):
+class TweetEditor(BaseEditor, metaclass=signals.MetaSignals):
     """Editor for creating tweets."""
     signals = ['done']
 
@@ -659,7 +651,7 @@ class TweetEditor(with_metaclass(signals.MetaSignals, BaseEditor)):
             self.emit_done_signal(self.editor.get_edit_text())
 
 
-class DmEditor(with_metaclass(signals.MetaSignals, TweetEditor)):
+class DmEditor(TweetEditor, metaclass=signals.MetaSignals):
     """Editor for creating DMs."""
     signals = ['done']
 
@@ -773,7 +765,7 @@ class StatusBar(WidgetWrap):
 # - Base list widgets ---------------------------------------------------------
 
 
-class Scrollable(object):
+class Scrollable:
     """A interface that makes widgets *scrollable*."""
     def scroll_up(self):
         raise NotImplementedError
@@ -876,7 +868,7 @@ class HelpBuffer(ScrollableWidgetWrap):
         self.items = []
         self.create_help_buffer()
 
-        offset = int(old_div(len(self.items), 5))
+        offset = int(len(self.items) // 5)
         ScrollableWidgetWrap.__init__(self,
                                       ScrollableListBox(self.items,
                                                         offset=offset,))
@@ -1184,7 +1176,7 @@ class BoxDecoration(WidgetDecoration, WidgetWrap):
 # - User ----------------------------------------------------------------------
 
 
-class UserInfo(with_metaclass(signals.MetaSignals, WidgetWrap)):
+class UserInfo(WidgetWrap, metaclass=signals.MetaSignals):
     """
     A widget for displaying a Twitter user info.
     """
