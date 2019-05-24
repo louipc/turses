@@ -33,11 +33,15 @@ def _to_status(status, **kwargs):
     """
     Convert a `tweepy.Status` to a `turses.models.Status`.
     """
+    if hasattr(status, 'full_text'):
+        text = status.full_text
+    else:
+        text = status.text
     defaults = {
         'id': status.id,
         'created_at': status.created_at,
         'user': None,
-        'text': status.text,
+        'text': text,
         'is_reply': False,
         'is_retweet': False,
         'is_favorite': False,
@@ -193,29 +197,28 @@ class TweepyApi(BaseTweepyApi, ApiAdapter):
     @to_status
     @include_entities
     def get_home_timeline(self, **kwargs):
-        tweets = self._api.home_timeline(**kwargs)
-        return tweets
+        return self._api.home_timeline(tweet_mode="extended", **kwargs)
 
     @to_status
     @include_entities
     def get_user_timeline(self, screen_name, **kwargs):
-        return self._api.user_timeline(screen_name, **kwargs)
+        return self._api.user_timeline(screen_name, tweet_mode="extended", **kwargs)
 
     @to_status
     @include_entities
     def get_own_timeline(self, **kwargs):
         me = self.verify_credentials()
-        return self._api.user_timeline(screen_name=me.screen_name, **kwargs)
+        return self._api.user_timeline(screen_name=me.screen_name, tweet_mode="extended", **kwargs)
 
     @to_status
     @include_entities
     def get_mentions(self, **kwargs):
-        return self._api.mentions_timeline(**kwargs)
+        return self._api.mentions_timeline(tweet_mode="extended", **kwargs)
 
     @to_status
     @include_entities
     def get_favorites(self, **kwargs):
-        return self._api.favorites(**kwargs)
+        return self._api.favorites(tweet_mode="extended", **kwargs)
 
     @to_direct_message
     @include_entities
@@ -343,7 +346,7 @@ class TweepyApi(BaseTweepyApi, ApiAdapter):
     @to_status
     def get_list_timeline(self, a_list):
         owner = a_list.owner.screen_name
-        return self._api.list_timeline(owner=owner, slug=a_list.slug)
+        return self._api.list_timeline(owner=owner, slug=a_list.slug, tweet_mode="extended")
 
     @to_user
     def get_list_members(self, a_list):
