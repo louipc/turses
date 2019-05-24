@@ -11,7 +11,6 @@ from turses.utils import prepend_at
 from turses.models import is_DM, Timeline, TimelineList
 
 
-
 class StatusTest(unittest.TestCase):
     def test_is_DM(self):
         # status is NOT a DM
