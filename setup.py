@@ -32,7 +32,6 @@ See ``AUTHORS`` for a full list of contributors.
 """
 
 from setuptools import setup, find_packages
-from sys import version_info
 
 import turses
 

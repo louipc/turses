@@ -140,6 +140,7 @@ def _to_list(a_list, **kwargs):
     defaults.update(**kwargs)
     return List(**defaults)
 
+
 to_status = partial(filter_result,
                     filter_func=_to_status)
 to_direct_message = partial(filter_result,
@@ -259,12 +260,13 @@ class TweepyApi(BaseTweepyApi, ApiAdapter):
         By default, 20 tweets are fetched. If provided, `count` controls how
         many tweets are requested.
         """
+        count /= 2
         older = self.get_user_timeline(screen_name,
                                        max_id=tweet_id,
-                                       count=count/2)
+                                       count=count)
         newer = self.get_user_timeline(screen_name,
                                        since_id=tweet_id,
-                                       count=count/2)
+                                       count=count)
         return older + newer
 
     def get_message_thread(self, dm, **kwargs):

@@ -24,12 +24,18 @@ def matches_word(regex, word):
         return match.start() == 0 and match.end() == len(word)
     return False
 
+
+def sanitize_username(username):
+    return ''.join(filter(is_username, username))
+
+
+def prepend_at(username):
+    return '@%s' % username
+
+
 # username
 username_regex = compile_regex(r'[A-Za-z0-9_]+')
 is_username = partial(matches_word, username_regex)
-def sanitize_username(username):
-    return ''.join(filter(is_username, username))
-prepend_at = lambda username: '@%s' % username
 
 # hashtag
 hashtag_regex = compile_regex(r'#.+')
