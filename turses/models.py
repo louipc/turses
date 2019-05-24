@@ -396,7 +396,7 @@ class Timeline(ActiveList, Updatable):
         self.add_statuses(result)
 
 
-class User(object):
+class User:
     """
     A Twitter user.
     """
@@ -425,7 +425,7 @@ class User(object):
 
 
 @total_ordering
-class Status(object):
+class Status:
     """
     A Twitter status.
     """
@@ -588,7 +588,7 @@ class DirectMessage(Status):
         return None
 
 
-class List(object):
+class List:
     """
     A Twitter list.
     """

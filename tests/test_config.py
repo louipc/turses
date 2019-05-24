@@ -22,7 +22,7 @@ from turses.config import (
 )
 
 
-class Args(object):
+class Args:
     """
     Represents the arguments.
     """
