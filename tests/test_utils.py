@@ -1,8 +1,4 @@
-#
 # -*- coding: utf-8 -*-
-
-from sys import path
-path.append('../')
 import unittest
 
 from turses.utils import is_username, is_hashtag, sanitize_username

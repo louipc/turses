@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-import sys
-sys.path.append('../')
-
 import unittest
 from datetime import datetime
 

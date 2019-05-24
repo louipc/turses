@@ -3,8 +3,6 @@
 import unittest
 from mock import Mock
 from os.path import join
-from sys import path
-path.append('../')
 
 from turses.config import (
     CONFIG_PATH,

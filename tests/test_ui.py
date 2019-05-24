@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-
-from sys import path
-path.append('../')
 import unittest
 
 from turses.ui import StatusWidget, map_attributes, parse_attributes
