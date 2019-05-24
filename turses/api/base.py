@@ -8,10 +8,6 @@ It also contains `AsyncApi`, an asynchronous wrapper to `ApiAdapter` and a
 function to authorize `turses` to use a Twitter account obtaining the OAuth
 tokens.
 """
-from __future__ import print_function
-from builtins import input
-from builtins import object
-
 from abc import ABCMeta, abstractmethod
 from gettext import gettext as _
 
@@ -20,7 +16,6 @@ import tweepy
 from turses.models import is_DM
 from turses.utils import encode
 from turses.meta import async_thread, wrap_exceptions
-from future.utils import with_metaclass
 
 
 TWITTER_CONSUMER_KEY = 'OEn4hrNGknVz9ozQytoR0A'
@@ -75,7 +70,7 @@ def get_authorization_tokens():
         return None
 
 
-class ApiAdapter(with_metaclass(ABCMeta, object)):
+class ApiAdapter(metaclass=ABCMeta):
     """
     A simplified version of the API to use as an adapter for a real
     implementation.

@@ -7,11 +7,7 @@ the Twitter entities represented into it.
 import time
 from bisect import insort
 from calendar import timegm
-
-try:
-    from functools import total_ordering
-except ImportError:
-    from turses.utils import total_ordering
+from functools import total_ordering
 
 from turses.meta import (ActiveList, UnsortedActiveList, Updatable, Observable,
                          notify)
@@ -396,7 +392,7 @@ class Timeline(ActiveList, Updatable):
         self.add_statuses(result)
 
 
-class User(object):
+class User:
     """
     A Twitter user.
     """
@@ -425,7 +421,7 @@ class User(object):
 
 
 @total_ordering
-class Status(object):
+class Status:
     """
     A Twitter status.
     """
@@ -588,7 +584,7 @@ class DirectMessage(Status):
         return None
 
 
-class List(object):
+class List:
     """
     A Twitter list.
     """

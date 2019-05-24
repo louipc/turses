@@ -57,12 +57,6 @@ If you want to generate a configuration file, you can do so executing:
 
     $ turses -g /path/to/file
 """
-from __future__ import print_function
-from future import standard_library
-standard_library.install_aliases()
-from builtins import str
-from builtins import object
-
 from sys import exit
 from configparser import RawConfigParser
 from os import getenv, path, mkdir, remove
@@ -422,7 +416,7 @@ def invert_command_map(bindings):
     return command_map
 
 
-class Configuration(object):
+class Configuration:
     """
     Generate and parse configuration files. When instantiated, it loads the
     defaults.
