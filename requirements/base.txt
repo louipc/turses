@@ -1,3 +1,2 @@
-httplib2==0.12.3
 urwid==2.0.1
 tweepy==3.7.0
