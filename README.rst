@@ -62,12 +62,12 @@ Development
 
 The code is hosted on a `git repo`_.
 
-.. _`git repo`: http://github.com/dialelo/turses
+.. _`git repo`: http://github.com/louipc/turses
 
 A list of tasks can be found on the on the `issue tracker`_. Feel free to
 submit issues, feature requests or participate in ongoing discussions.
 
-.. _`issue tracker`: http://github.com/dialelo/turses/issues
+.. _`issue tracker`: http://github.com/louipc/turses/issues
 
 If you feel hackish, reading the `dev docs`_ is recommended.
 
