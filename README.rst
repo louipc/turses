@@ -1,9 +1,6 @@
 turses
 ======
 
-.. image:: https://api.travis-ci.org/louipc/turses.png?branch=master
-
-
 A Twitter client for the console.
 
 A session with multiple columns running on ``urxvt``:
