@@ -1,7 +1,7 @@
 turses
 ======
 
-.. image:: https://api.travis-ci.org/dialelo/turses.png?branch=master
+.. image:: https://api.travis-ci.org/louipc/turses.png?branch=master
 
 
 A Twitter client for the console.
@@ -17,10 +17,10 @@ Documentation
 -------------
 
 The documentation for ``turses`` is `available on ReadTheDocs
-<http://turses.readthedocs.org>`_.
+<https://turses.readthedocs.org>`_.
 
 Take a look at `this screencast
-<http://www.youtube.com/watch?v=kmnEdldw7WY>`_ for an
+<https://www.youtube.com/watch?v=kmnEdldw7WY>`_ for an
 overview of the features of ``turses`` and its usage.
 
 Installation
@@ -38,7 +38,7 @@ or (but `consider using pip`_):  ::
 
     $ easy_install turses
 
-.. _`consider using pip`: http://www.pip-installer.org/en/latest/other-tools.html#pip-compared-to-easy-install
+.. _`consider using pip`: https://www.pip-installer.org/en/latest/other-tools.html#pip-compared-to-easy-install
 
 Features
 --------
@@ -62,16 +62,16 @@ Development
 
 The code is hosted on a `git repo`_.
 
-.. _`git repo`: http://github.com/louipc/turses
+.. _`git repo`: https://github.com/louipc/turses
 
 A list of tasks can be found on the on the `issue tracker`_. Feel free to
 submit issues, feature requests or participate in ongoing discussions.
 
-.. _`issue tracker`: http://github.com/louipc/turses/issues
+.. _`issue tracker`: https://github.com/louipc/turses/issues
 
 If you feel hackish, reading the `dev docs`_ is recommended.
 
-.. _`dev docs`: http://turses.readthedocs.org/en/latest/dev/internals.html
+.. _`dev docs`: https://turses.readthedocs.org/en/latest/dev/internals.html
 
 ``CONTRIBUTING.md`` contains instructions on how to contribute code.
 
@@ -92,7 +92,7 @@ Authors
 
 ``turses`` is based on `Tyrs`_ by `Nicolas Paris`_.
 
-.. _`Tyrs`: http://tyrs.nicosphere.net
-.. _`Nicolas Paris`: http://github.com/Nic0
+.. _`Tyrs`: https://github.com/Nic0/tyrs
+.. _`Nicolas Paris`: https://github.com/Nic0
 
 See ``AUTHORS`` for a full list of contributors.
